@@ -1,4 +1,6 @@
-# Speedy Git checkout for continuous integration from 30 seconds to 2 seconds
+# Faster Git checkout for continuous integration
+
+Reduce `git checkout` from 30 seconds to 2 seconds on CircleCI.
 
 The default CircleCI `checkout` step is slow because it downloads the
 entire Git repository history in two remote fetches. My company’s
@@ -10,8 +12,11 @@ reduces the checkout step time to 2 seconds.
 ## The default CircleCI `checkout` step
 
 We’ll start by analyzing the builtin CircleCI `checkout` step. The
-interesting parts of the default [CircleCI `checkout`](https://circleci.com/docs/2.0/configuration-reference/#checkout)
-step are below and the full code is available at this [GitHub Gist](https://gist.github.com/jschaf/31d88678cbf733e9bb749ec0afdcc418).
+interesting parts of the default [CircleCI `checkout`][checkout]
+step are below and the full code is available at this [GitHub Gist][checkout-gist].
+
+[checkout]: https://circleci.com/docs/2.0/configuration-reference/#checkout
+[checkout-gist]: https://gist.github.com/jschaf/31d88678cbf733e9bb749ec0afdcc418
 
 ```bash
 #!/bin/bash
@@ -48,15 +53,16 @@ The main speedup is to use a shallow clone with the `--depth=N`
 flag. A shallow clone truncates the Git history to the specified
 number of commits, typically 1 commit. CircleCI doesn’t offer a
 shallow clone option on the builtin `checkout` step because GitHub
-would prefer to [avoid the expensive
-computation](https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275)
+would prefer to [avoid the expensive computation][expensive-shallow]
 associated with shallow clones. I can’t speak to GitHub’s load but
 it’s much faster for continuous integration to clone a shallow repo of
 25MB than the full repo of 500MB.  The difference is 2 seconds instead
 of 30 seconds.  For the full code, see the
-`RUN_CHECKOUT_SHALLOW_GIT_REPO` alias in the example [CircleCI
-config](https://github.com/jschaf/ci_speed_test/blob/master/.circleci/config.yml). The
+`RUN_CHECKOUT_SHALLOW_GIT_REPO` alias in the example [CircleCI config]. The
 relevant section is below.
+
+[expensive-shallow]: https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275
+[CircleCI config]: https://github.com/jschaf/ci_speed_test/blob/master/.circleci/config.yml
 
 ```bash
 git init --quiet
@@ -82,7 +88,7 @@ The primary differences from the builtin CircleCI `checkout` step are:
     [`CIRCLECI_SHA1`](https://circleci.com/docs/2.0/env-vars/)
     environmental variable.
 
-# Errors and how to solve them
+# Common errors and solutions
 
 ## Git refusing to fetch into current branch of non-bare repository
 
