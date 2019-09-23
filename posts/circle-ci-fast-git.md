@@ -1,6 +1,8 @@
-# Faster Git checkout for continuous integration
-
-Reduce `git checkout` from 30 seconds to 2 seconds on CircleCI.
+---
+title: Faster Git checkout for continuous integration
+subtitle: Reduce `git checkout` from 30 seconds to 2 seconds on CircleCI.
+date: 2019-09-20
+---
 
 The default CircleCI `checkout` step is slow because it downloads the
 entire Git repository history in two remote fetches. My company’s
@@ -56,7 +58,7 @@ shallow clone option on the builtin `checkout` step because GitHub
 would prefer to [avoid the expensive computation][expensive-shallow]
 associated with shallow clones. I can’t speak to GitHub’s load but
 it’s much faster for continuous integration to clone a shallow repo of
-25MB than the full repo of 500MB.  The difference is 2 seconds instead
+25MB than a full repo of 500MB.  The difference is 2 seconds instead
 of 30 seconds.  For the full code, see the
 `RUN_CHECKOUT_SHALLOW_GIT_REPO` alias in the example [CircleCI config]. The
 relevant section is below.
