@@ -55,9 +55,5 @@ deploy: build
 
 .PHONY: dev
 dev: build
-  inotifywait -e close_write,moved_to,create -m posts |
-    while read -r directory events filename; do
-      echo "Detected change in ${directory}, events=${events}, filename=${filename}"
-      make build
-    done &
+	build/rebuild_on_change.sh &
 	firebase serve --host 0.0.0.0 --port $(DEV_PORT)
