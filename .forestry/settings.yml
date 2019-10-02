@@ -15,6 +15,8 @@ front_matter_path: ''
 use_front_matter_path: false
 file_template: ":filename:"
 build:
+  preview_env:
+  - FIREBASE_TOKEN=1/4aTSMmJo7K0ScDhRKyAaeSIf_dZT-X7jh9tagHSddok
   preview_output_directory: dist
   preview_docker_image: https://cloud.docker.com/u/jschaf/repository/docker/jschaf/blog-builder
   mount_path: "/home/blog-builder/b2"
