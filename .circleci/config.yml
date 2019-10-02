@@ -1,8 +1,10 @@
 version: 2
 jobs:
-  build:
+  deploy:
     docker:
-      - image: circleci/ruby:2.4.1
+      - image: jschaf/blog-builder
     steps:
       - checkout
-      - run: echo "A first hello"
+      - run:
+          name: Deploying the site
+          command: make deploy
