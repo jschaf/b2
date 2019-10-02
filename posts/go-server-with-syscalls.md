@@ -4,7 +4,7 @@ subtitle: A web-server with Linux syscalls.
 date: 2019-03-12
 
 ---
-Test: One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
+One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
 
 **Completed Code at Github**: [scratch_server.go](https://gist.github.com/jschaf/93f37aedb5327c54cb356b2f1f0427e3)
 
