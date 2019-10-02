@@ -19,4 +19,4 @@ build:
   preview_docker_image: https://cloud.docker.com/u/jschaf/repository/docker/jschaf/blog-builder
   mount_path: "/home/blog-builder/b2"
   working_dir: "/srv"
-  instant_preview_command: make build
+  instant_preview_command: make dev
