@@ -2,9 +2,9 @@
 title: Create a Go web server from scratch with Linux system calls
 subtitle: A web-server with Linux syscalls.
 date: 2019-03-12
----
 
-One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
+---
+Test: One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
 
 **Completed Code at Github**: [scratch_server.go](https://gist.github.com/jschaf/93f37aedb5327c54cb356b2f1f0427e3)
 
@@ -12,25 +12,26 @@ One itch I’ve wanted to scratch for a while is to create a web-server from scr
 
 The Go `net` package is a full-featured, production ready library. We’ll skip the following features:
 
-- HTTP [100 Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100) support
-- TLS
-- Most error checking
-- Persistent and chunked connections
-- HTTP Redirects
-- Deadline and cancellation
-- Non-blocking sockets
+* HTTP [100 Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100) support
+* TLS
+* Most error checking
+* Persistent and chunked connections
+* HTTP Redirects
+* Deadline and cancellation
+* Non-blocking sockets
 
 ## Overview
 
 The steps follow the same structure as this in-depth [Medium article](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa):
 
-- Create the socket - [socket](http://man7.org/linux/man-pages/man2/socket.2.html)
-- Identify the socket by binding it to a socket address - [bind](http://man7.org/linux/man-pages/man2/bind.2.html)
-- Allow connections to the socket - [listen](http://man7.org/linux/man-pages/man2/listen.2.html)
-- `while true` serve requests:
-    - Create a new socket to read and write data - [accept](http://man7.org/linux/man-pages/man2/accept.2.html)
-    - Parse the HTTP request - [read](http://man7.org/linux/man-pages/man2/read.2.html)
-    - Write the response - [write](http://man7.org/linux/man-pages/man2/write.2.html)
+* Create the socket - [socket](http://man7.org/linux/man-pages/man2/socket.2.html)
+* Identify the socket by binding it to a socket address - [bind](http://man7.org/linux/man-pages/man2/bind.2.html)
+* Allow connections to the socket - [listen](http://man7.org/linux/man-pages/man2/listen.2.html)
+* `while true` serve requests:
+  * Create a new socket to read and write data - [accept](http://man7.org/linux/man-pages/man2/accept.2.html)
+  * Parse the HTTP request - [read](http://man7.org/linux/man-pages/man2/read.2.html)
+  * Write the response - [write](http://man7.org/linux/man-pages/man2/write.2.html)
+
 ## **Struct for socket file descriptor**
 
 Create a struct to hold the descriptor to implement `Read`, `Write` and `Accept`.
@@ -54,7 +55,6 @@ func (ns netSocket) Read(p []byte) (int, error) {
 }
 
 // Other methods omitted.
-
 ```
 
 ## Create, bind and listen on the socket
@@ -100,7 +100,6 @@ func newNetSocket(ip net.IP, port int) (*netSocket, error) {
 }
 ```
 
-
 The breakdown of steps 1, 2 and 3 from the above code snippet:
 
 1. `socket(domain, type, protocol)` creates an endpoint for communication and returns a descriptor.
@@ -132,16 +131,13 @@ func (ns *netSocket) Accept() (*netSocket, error) {
     }
     return &netSocket{nfd}, nil
 }
-
 ```
-
 
 `accept(socket, sockaddr, address_len)` gets the first pending connection, creates a new socket and allocates a file descriptor. By default, `accept` blocks until there is an incoming connection.
 
 ### Parse read request
 
 Next, parse the HTTP request by `read`ing the newly accepted socket. Use the `textproto` library to avoid tedious header parsing.
-
 
 ``` go
 func parseRequest(c *netSocket) (*request, error) {
@@ -177,11 +173,10 @@ func parseRequest(c *netSocket) (*request, error) {
     req.body = body
     return req, nil
 }
-
 ```
 
-
 ## Write response
+
 Write the response in the accepted socket `rw`.
 
 ``` go
@@ -190,5 +185,4 @@ io.WriteString(rw, "HTTP/1.1 200 OK\r\n"+
             "Content-Length: 20\r\n"+
             "\r\n"+
             "<h1>hello world</h1>")
-
 ```
