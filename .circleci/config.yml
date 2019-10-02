@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  deploy:
+  deploy_site:
     docker:
       - image: jschaf/blog-builder
     steps:
@@ -8,3 +8,9 @@ jobs:
       - run:
           name: Deploying the site
           command: make deploy
+
+workflows:
+  version: 2
+  deploy_workflow:
+    jobs:
+      - deploy_site
