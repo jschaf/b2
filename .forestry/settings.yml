@@ -15,8 +15,8 @@ front_matter_path: ''
 use_front_matter_path: false
 file_template: ":filename:"
 build:
-  install_dependencies_command: npm install
-  preview_docker_image: node:10
-  mount_path: "/srv"
+  preview_output_directory: dist
+  preview_docker_image: https://cloud.docker.com/u/jschaf/repository/docker/jschaf/blog-builder
+  mount_path: "/home/blog-builder/b2"
   working_dir: "/srv"
-  instant_preview_command: npm run forestry:preview
+  instant_preview_command: make build
