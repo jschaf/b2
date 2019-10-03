@@ -8,6 +8,13 @@ jobs:
       - run:
           name: Deploying the site
           command: make deploy
+  build_docker:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Building blog-builder image
+          command: make push-docker-image
 
 workflows:
   version: 2

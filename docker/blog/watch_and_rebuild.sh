@@ -23,7 +23,7 @@ function watch() {
       --monitor --format '%e %f' "${POSTS_DIR}" |
       while read -r events filename; do
         echo "Detected change. events=${events}, filename=${filename}"
-        make build
+        make html
       done
 }
 
