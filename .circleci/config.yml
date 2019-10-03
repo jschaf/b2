@@ -21,3 +21,4 @@ workflows:
   deploy_workflow:
     jobs:
       - deploy_site
+      - build_docker
