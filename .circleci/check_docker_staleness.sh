@@ -38,9 +38,3 @@ if [[ "${precheck_status}" == 'fresh' ]]; then
   circleci task halt
   exit 0
 fi
-
-printf '
-# Installing Docker image because it is stale
-=============================================\n'
-
-make docker-image
