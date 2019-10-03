@@ -6,6 +6,8 @@ IMAGE := jschaf/blog-builder:latest
 
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 .PHONY: js
 js: $(DIST_DIR)
@@ -26,7 +28,7 @@ html: clean $(DIST_DIR)
 docker-image: $(BUILD_DIR)/.docker-blog
 
 # An empty target so Make will only run docker build if the contents change.
-$(BUILD_DIR)/.docker-blog: $(wildcard $(DOCKER_DIR)/*)
+$(BUILD_DIR)/.docker-blog: $(BUILD_DIR) $(wildcard $(DOCKER_DIR)/*)
 	docker build $(DOCKER_DIR) -t jschaf/blog-builder && touch $(BUILD_DIR)/.docker-blog
 
 .PHONY: push-docker-image
