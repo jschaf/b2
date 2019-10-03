@@ -26,11 +26,16 @@ jobs:
           command: .circleci/check_docker_staleness.sh
       - run:
           name: Pulling last Docker image to use as cache
-          command: docker pull jschaf/blog-builder:latest
+          command: |
+            docker pull jschaf/blog-builder:latest &
+            docker pull golang:1.12.9 &
+            docker pull node:10.15.3 &
+            wait
       - run:
           name: Building Docker image
           command: |
-            make EXTRA_DOCKER_BUILD_ARGS=--cache-from=jschaf/blog-builder:latest docker-image
+            images='jschaf/blog-builder:latest,golang:1.12.9,node:10.15.3'
+            make EXTRA_DOCKER_BUILD_ARGS="--cache-from=${images}" docker-image
             cp .circleci/docker_cache_key .circleci/docker_precheck_cache_key
       - run:
           name: Pushing Docker image

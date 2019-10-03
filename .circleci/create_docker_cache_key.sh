@@ -19,7 +19,7 @@ cache_key_file='.circleci/docker_cache_key'
 # If you change the logic for either building the Docker image, update
 # this key to the current time. It's easier to change it here than changing
 # the cache name in .circleci/config.yml.
-cache_bust_key='2019-10-03T19:49'
+cache_bust_key='2019-10-03T04:33'
 
 printf '\nWriting current Docker cache key to %s.\n\n' ${cache_key_file}
 echo "# Combined cache key hashes
