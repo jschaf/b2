@@ -30,4 +30,5 @@ RUN set -eux \
     pandoc-citeproc
 RUN set -eux \
   && npm install -g firebase-tools katex
+COPY watch_and_rebuild.sh /usr/local/bin/
 WORKDIR /home/blog-builder/b2
