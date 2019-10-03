@@ -24,23 +24,13 @@ jobs:
       - run:
           name: Skipping job if the currently pushed Docker image is fresh
           command: .circleci/check_docker_staleness.sh
-      - restore_cache:
-          name: Restoring Docker image cache
-          keys: ["docker-layer-cache-v1-"]
+      - run:
+          name: Pulling last Docker image to use as cache
+          command: docker pull jschaf/blog-builder:latest
       - run:
           name: Building Docker image
           command: |
-            if [[ -f /dev/shm/blog-builder.tar.gz ]]; then
-              docker load --input /dev/shm/blog-builder.tar.gz
-            fi
-            make docker-image
-      - run:
-          name: Saving Docker image as compressed tar file
-          command: |
-            docker save jschaf/blog-builder:latest |
-                gzip > /dev/shm/blog-builder.tar.gz
-            # Copy precheck cache file to correct spot
-            cp .circleci/docker_cache_key .circleci/docker_precheck_cache_key
+            make EXTRA_DOCKER_BUILD_ARGS=--cache-from=jschaf/blog-builder:latest docker-image
       - run:
           name: Pushing Docker image
           command: |
@@ -51,10 +41,6 @@ jobs:
           name: Saving cache for node_modules precheck key
           key: docker-precheck-cache-{{ checksum ".circleci/docker_cache_key" }}
           paths: [".circleci/docker_precheck_cache_key"]
-      - save_cache:
-          name: Saving cache for Docker image
-          key: docker-layer-cache-v1-{{ epoch }}
-          paths: ["/dev/shm/blog-builder.tar.gz"]
 
   deploy_site:
     docker:

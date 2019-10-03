@@ -3,6 +3,7 @@ DEV_PORT := 8080
 BUILD_DIR := build
 DOCKER_DIR := docker/blog
 IMAGE := jschaf/blog-builder:latest
+EXTRA_DOCKER_BUILD_ARGS?=
 
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
@@ -29,7 +30,8 @@ docker-image: $(BUILD_DIR)/.docker-blog
 
 # An empty target so Make will only run docker build if the contents change.
 $(BUILD_DIR)/.docker-blog: $(BUILD_DIR) $(wildcard $(DOCKER_DIR)/*)
-	docker build $(DOCKER_DIR) -t jschaf/blog-builder && touch $(BUILD_DIR)/.docker-blog
+	docker build $(DOCKER_DIR) $(EXTRA_DOCKER_BUILD_ARGS) -t jschaf/blog-builder \
+        && touch $(BUILD_DIR)/.docker-blog
 
 .PHONY: push-docker-image
 push-docker-image: docker-image
