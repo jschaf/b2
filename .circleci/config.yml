@@ -31,6 +31,7 @@ jobs:
           name: Building Docker image
           command: |
             make EXTRA_DOCKER_BUILD_ARGS=--cache-from=jschaf/blog-builder:latest docker-image
+            cp .circleci/docker_cache_key .circleci/docker_precheck_cache_key
       - run:
           name: Pushing Docker image
           command: |
@@ -38,7 +39,7 @@ jobs:
                 docker login --username jschaf --password-stdin
             make push-docker-image
       - save_cache:
-          name: Saving cache for node_modules precheck key
+          name: Saving cache for Docker precheck key
           key: docker-precheck-cache-{{ checksum ".circleci/docker_cache_key" }}
           paths: [".circleci/docker_precheck_cache_key"]
 
