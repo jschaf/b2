@@ -24,6 +24,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 RUN set -eux \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
+    ca-certificates \
     inotify-tools \
     make \
     pandoc \
