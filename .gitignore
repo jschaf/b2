@@ -2,3 +2,5 @@
 /.firebase/hosting.ZGlzdA.cache
 /firebase-debug.log
 /build/.docker-blog
+node_modules/
+out/
