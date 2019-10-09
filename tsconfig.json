@@ -14,7 +14,7 @@
     // "sourceMap": true,                     /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
     "outDir": "./out",
-    "rootDir": "./server",
+    "rootDir": "./src",
     // "composite": true,                     /* Enable project compilation */
      "tsBuildInfoFile": "./out/tsconfig.tsbuildinfo",
     // "removeComments": true,                /* Do not emit comments to output. */

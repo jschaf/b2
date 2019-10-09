@@ -5,11 +5,27 @@ import koaBody from 'koa-body';
 // import MarkdownIt from 'markdown-it';
 import * as fs from 'fs';
 import * as zipFiles from "./zip_files";
+import flags from 'flags';
+import git from "nodegit";
+
+const gitDirFlag = flags.defineString('git-dir').setDescription('The path to the git dir.');
+flags.parse();
 
 const app = new Koa();
 
 const router = new KoaRouter();
 const BUNDLE_PREFIX = 'Content.textbundle/';
+
+console.log('!!! gitFlag', gitDirFlag.currentValue);
+
+// @ts-ignore
+const getCommitMessage = async (repoDir: string): Promise<string> => {
+  const repo: git.Repository = await git.Repository.open(repoDir);
+  const commit = await repo.getBranchCommit('master');
+  return commit.message();
+};
+
+getCommitMessage(gitDirFlag.currentValue).then(msg => console.log('MSG1' + msg)).catch(err => console.log('MSG: ' + err));
 
 router.get('/', async (ctx) => {
   ctx.response.body = 'hello, world';
@@ -20,11 +36,10 @@ router.get('/', async (ctx) => {
  * into the Git repo.
  */
 router.post('/commit_post', koaBody({multipart: true}), async (ctx) => {
-  console.log('!!! Got POST request', ctx);
+  // console.log('!!! Got POST request', ctx);
   ctx.body = 'hello world';
 
 
-  console.log('!!! files', ctx.request.files);
   if (ctx.request.files == null) {
     throw new Error("No files in request");
   }
@@ -39,11 +54,17 @@ router.post('/commit_post', koaBody({multipart: true}), async (ctx) => {
     throw new Error('Unable to find text.md in entries: '
         + entries.map(e => e.filePath));
   }
-  const text = texts[0];
-  console.log('!!! text', text.contents.toString('utf8'));
+  // const text = texts[0];
+  // console.log('!!! text', text.contents.toString('utf8'));
   // const md = new MarkdownIt();
   // const html = md.render(text.contents.toString('utf8'));
   // console.log('!!! html', html);
+
+  // Format markdown
+  // Get slug from metadata
+  // Check that git dir is clean
+  // Overwrite file posts/$SLUG.md
+  //
 
   // Decompress
 
