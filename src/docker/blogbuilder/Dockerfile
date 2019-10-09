@@ -1,7 +1,7 @@
 FROM node:12-slim as node-builder
 WORKDIR /usr/src/app
 COPY package.json package-lock.json tsconfig.json ./
-COPY server/ ./server
+COPY ../.. ./server
 RUN npm ci && npm run compile
 
 FROM node:12-slim as server
