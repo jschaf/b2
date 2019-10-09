@@ -21,13 +21,19 @@ export const createFromArray = <T>(chunks: T[]): stream.Stream => {
   return s;
 };
 
-/** Creates a UTF-8 string from a stream of bytes (Uint8Array). */
-export const toUtf8String = (data: stream.Stream): Promise<string> => {
+/** Creates a Buffer from a stream of bytes (Uint8Array). */
+export const toBuffer = (data: stream.Stream): Promise<Buffer> => {
   const chunks: Uint8Array[] = [];
   return new Promise((resolve, reject) => {
     data.on('data', chunk => chunks.push(chunk));
     data.on('error', reject);
-    data.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    data.on('end', () => resolve(Buffer.concat(chunks)))
   })
+};
+
+/** Creates a UTF-8 string from a stream of bytes (Uint8Array). */
+export const toUtf8String = async (data: stream.Stream): Promise<string> => {
+  const buf = await toBuffer(data);
+  return buf.toString('utf8');
 };
 

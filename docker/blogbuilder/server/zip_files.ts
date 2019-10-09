@@ -2,7 +2,8 @@ import * as unzip from "yauzl";
 import * as streams from './streams';
 import {SettablePromise} from "./settable_promise";
 
-export type FileEntry = { fileName: string, contents: string };
+// A single entry within a ZipFile.
+export type FileEntry = { filePath: string, contents: Buffer };
 
 /**
  * Unzips a buffer into a zip file.
@@ -23,10 +24,10 @@ export const unzipFromBuffer = (buf: Buffer): Promise<unzip.ZipFile> => {
 };
 
 /**
- * Parses a lazily loaded zip file into list of file entries, each consisting
- * of a file name and the UTF-8 string contents.
+ * Reads a lazily loaded ZipFile into list of file entries. Each entry
+ * consists of a file path and the file contents as a Buffer.
  */
-export const readFilesToMap = async (zipFile: unzip.ZipFile): Promise<FileEntry[]> => {
+export const readAllEntries = async (zipFile: unzip.ZipFile): Promise<FileEntry[]> => {
   const promisedResults = SettablePromise.create<FileEntry[]>();
   const results: Promise<FileEntry>[] = [];
 
@@ -41,8 +42,8 @@ export const readFilesToMap = async (zipFile: unzip.ZipFile): Promise<FileEntry[
       if (err) {
         return fileEntry.setReject(err);
       }
-      const contents = await streams.toUtf8String(readStream!);
-      return fileEntry.set({fileName: entry.fileName, contents});
+      const contents = await streams.toBuffer(readStream!);
+      return fileEntry.set({filePath: entry.fileName, contents});
     });
     return fileEntry;
   };

@@ -15,6 +15,8 @@
     "koa-body": "latest",
     "koa-logger": "latest",
     "koa-router": "^7.4.0",
+    "markdown-it": "^10.0.0",
+    "prettier": "1.18.2",
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
@@ -22,6 +24,8 @@
     "@types/koa": "^2.0.50",
     "@types/koa-logger": "^3.1.1",
     "@types/koa-router": "^7.0.42",
+    "@types/markdown-it": "0.0.9",
+    "@types/prettier": "1.18.3",
     "@types/yauzl": "^2.9.1",
     "jest": "^24.9.0",
     "ts-jest": "^24.1.0",
