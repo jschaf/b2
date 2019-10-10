@@ -40,7 +40,7 @@ const METADATA_SCHEMA: Schema = {
 };
 
 
-const checkYamlSchema = (metadata: any): typeof METADATA_SCHEMA => {
+const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
   for (const [key, {isRequired}] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
       throw new Error(`YAML metadata missing required key ${key}.`);
@@ -79,7 +79,8 @@ const findMetadataIndex = (tokens: Token[]): number => {
 };
 
 const parseMetadata = (token: Token): Schema => {
-  return checkYamlSchema(yaml.safeLoad(token.content));
+  const rawYaml = yaml.safeLoad(token.content);
+  return checkMetadataSchema(rawYaml);
 };
 
 const doThing = async (path: string): Promise<void> => {
@@ -100,6 +101,7 @@ const doThing = async (path: string): Promise<void> => {
   const index = findMetadataIndex(tokens);
   const metadata = parseMetadata(tokens[index]);
   tokens.splice(index, 1);
+  md.re
 };
 
 doThing('/Users/joe/gorilla.textpack').finally(() => console.log('done'));
