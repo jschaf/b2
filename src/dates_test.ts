@@ -1,3 +1,4 @@
+import * as dates from "./dates";
 import {isValidDate} from "./dates";
 
 test('isValidDate works', () => {
@@ -6,4 +7,8 @@ test('isValidDate works', () => {
   expect(isValidDate('foo')).toBe(false);
 
   expect(isValidDate(new Date('2019-10-08'))).toBe(true);
+});
+
+test('fromISO works', () => {
+  expect(dates.fromISO('2019-10-08')).toEqual(new Date('2019-10-08'));
 });

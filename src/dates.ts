@@ -9,3 +9,8 @@ export const isValidDate = (date: any): boolean => {
       // @ts-ignore - check invalid dates
       && !isNaN(date);
 };
+
+/** Returns the date from an ISO 8601 string. */
+export const fromISO = (dateString: string): Date => {
+  return new Date(dateString);
+};
