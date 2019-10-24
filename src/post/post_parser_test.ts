@@ -1,4 +1,4 @@
-import {PostParser} from './post_parser';
+import {PostNode, PostParser} from './post_parser';
 
 type Loc = { line: number, column: number, offset: number };
 type Pos = { position: { start: Loc, end: Loc, indent?: any[] } };
@@ -44,6 +44,21 @@ test('parses simple markdown', async () => {
 
   const expected = mdRoot(pos(start(1, 1, 0), end(1, 8, 7)), [
     mdHeading(1, pos(start(1, 1, 0), end(1, 8, 7), indent()), [
-      mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent()))])]);
-  expect(vFile).toEqual(expected);
+      mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent())),
+    ]),
+  ]);
+  expect(vFile).toEqual(new PostNode({}, expected));
+});
+
+test('parses front matter', async () => {
+  const vFile = await PostParser.create().parse(`# hello
+  
+  `);
+
+  const expected = mdRoot(pos(start(1, 1, 0), end(1, 8, 7)), [
+    mdHeading(1, pos(start(1, 1, 0), end(1, 8, 7), indent()), [
+      mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent())),
+    ]),
+  ]);
+  expect(vFile).toEqual(new PostNode({}, expected));
 });

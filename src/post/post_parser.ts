@@ -14,7 +14,15 @@ export class PostParser {
     return new PostParser();
   }
 
-  parse(markdown: string): unist.Node {
-    return this.processor.parse(markdown);
+  parse(markdown: string): PostNode {
+    const node = this.processor.parse(markdown);
+    return new PostNode({}, node);
+  }
+}
+
+export class PostNode {
+  constructor(
+      readonly frontMatter: unknown,
+      readonly node: unist.Node) {
   }
 }
