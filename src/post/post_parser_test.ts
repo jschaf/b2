@@ -1,4 +1,7 @@
 import {PostNode, PostParser} from './post_parser';
+import {dedent} from "../strings";
+import {PostMetadata} from "./post_metadata";
+import * as dates from '../dates';
 
 type Loc = { line: number, column: number, offset: number };
 type Pos = { position: { start: Loc, end: Loc, indent?: any[] } };
@@ -39,26 +42,25 @@ const mdText = (value: string, pos: Pos): MdNode => {
   return mdNode('text', pos, {value});
 };
 
-test('parses simple markdown', async () => {
-  const vFile = await PostParser.create().parse('# hello');
-
-  const expected = mdRoot(pos(start(1, 1, 0), end(1, 8, 7)), [
-    mdHeading(1, pos(start(1, 1, 0), end(1, 8, 7), indent()), [
-      mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent())),
-    ]),
-  ]);
-  expect(vFile).toEqual(new PostNode({}, expected));
-});
-
 test('parses front matter', async () => {
-  const vFile = await PostParser.create().parse(`# hello
-  
+  const vFile = await PostParser.create().parse(dedent`
+    # hello
+    
+    \`\`\`yaml
+    '# Metadata',
+    'slug: foo_bar',
+    'date: 2019-10-08',
+    \`\`\`
   `);
 
+  const frontMatter = PostMetadata.of({
+    slug: 'foo_bar',
+    date: dates.fromISO('2019-10-08')
+  });
   const expected = mdRoot(pos(start(1, 1, 0), end(1, 8, 7)), [
     mdHeading(1, pos(start(1, 1, 0), end(1, 8, 7), indent()), [
       mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent())),
     ]),
   ]);
-  expect(vFile).toEqual(new PostNode({}, expected));
+  expect(vFile).toEqual(new PostNode(frontMatter, expected));
 });

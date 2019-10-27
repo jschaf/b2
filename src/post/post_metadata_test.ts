@@ -1,5 +1,5 @@
 import MdIt from 'markdown-it';
-import {Metadata} from "./metadata";
+import {PostMetadata} from "./post_metadata";
 import * as dates from '../dates';
 
 
@@ -7,7 +7,7 @@ test('parses valid tokens', () => {
   const md = new MdIt();
   const tokens = md.parse('```\n# Metadata\nslug: foo_bar\ndate: 2019-10-08\n```', {});
 
-  const metadata = Metadata.parseFromMarkdownTokens(tokens);
+  const metadata = PostMetadata.parseFromMarkdownTokens(tokens);
 
   expect(metadata.schema).toEqual({
     date: dates.fromISO('2019-10-08'),
@@ -29,7 +29,7 @@ test('parses valid tokens with preceding tokens', () => {
       '```'
       ].join('\n'), {});
 
-  const metadata = Metadata.parseFromMarkdownTokens(tokens);
+  const metadata = PostMetadata.parseFromMarkdownTokens(tokens);
 
   expect(metadata.schema).toEqual({
     date: dates.fromISO('2019-10-08'),

@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as zipFiles from "./zip_files";
 import flags from 'flags';
 import git from "nodegit";
-import {Metadata} from "./post/metadata";
+import {PostMetadata} from "./post/post_metadata";
 
 const gitDirFlag = flags.defineString('git-dir').setDescription('The path to the git dir.');
 flags.parse();
@@ -44,7 +44,7 @@ const doThing = async (path: string): Promise<void> => {
   console.log('!!! text', text.contents.toString('utf8'));
   const md = new MdIt();
   const tokens = md.parse(text.contents.toString('utf8'), {});
-  const metadata = Metadata.parseFromMarkdownTokens(tokens);
+  const metadata = PostMetadata.parseFromMarkdownTokens(tokens);
 };
 
 doThing('/Users/joe/gorilla.textpack').finally(() => console.log('done'));

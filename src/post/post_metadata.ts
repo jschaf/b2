@@ -11,13 +11,17 @@ const METADATA_SCHEMA: Schema = {
 };
 
 /** The metadata for a post including title, date, draft status, and others. */
-export class Metadata {
+export class PostMetadata {
 
   private constructor(public readonly schema: Schema) {
   }
 
+  static of(schema: any): PostMetadata {
+    return new PostMetadata(checkMetadataSchema(schema));
+  }
+
   /** Parses the post metadata from an array of markdown tokens. */
-  static parseFromMarkdownTokens(tokens: Token[]): Metadata {
+  static parseFromMarkdownTokens(tokens: Token[]): PostMetadata {
     const maxTokensToSearch = 20;
     const index = tokens.findIndex(
         t => t.type === 'fence' && t.content.startsWith('# Metadata'));
@@ -28,8 +32,7 @@ export class Metadata {
 
     const token = tokens[index];
     const rawYaml = yaml.safeLoad(token.content);
-    const schema = checkMetadataSchema(rawYaml);
-    return new Metadata(schema);
+    return PostMetadata.of(rawYaml);
   }
 }
 
