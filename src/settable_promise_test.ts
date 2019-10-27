@@ -69,8 +69,8 @@ test('calls functions registered with `then`', async () => {
 
   p.set(10);
 
-  expect((await firstThen)).toBe(11);
-  expect((await secondThen)).toBe(12);
+  expect(await firstThen).toBe(11);
+  expect(await secondThen).toBe(12);
 });
 
 test('calls functions registered with `catch`', async () => {
@@ -80,8 +80,8 @@ test('calls functions registered with `catch`', async () => {
 
   p.setReject(10);
 
-  expect((await firstCatch)).toBe(11);
-  expect((await secondCatch)).toBe(12);
+  expect(await firstCatch).toBe(11);
+  expect(await secondCatch).toBe(12);
 });
 
 test('calls functions registered with `finally`', async () => {
@@ -103,13 +103,15 @@ test('calls functions registered with `finally`', async () => {
   expect(secondValue).toBe(2);
 });
 
-
-async function assertRejectsWithValue<T>(p: Promise<T>, expected: any): Promise<void> {
-try {
-  await p;
-} catch (e) {
-  expect(e).toBe(expected);
-  return;
-}
-throw new Error('Expected an error to be thrown but nothing was thrown');
+async function assertRejectsWithValue<T>(
+  p: Promise<T>,
+  expected: any
+): Promise<void> {
+  try {
+    await p;
+  } catch (e) {
+    expect(e).toBe(expected);
+    return;
+  }
+  throw new Error('Expected an error to be thrown but nothing was thrown');
 }

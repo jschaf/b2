@@ -1,20 +1,18 @@
-import * as dates from "../dates";
-import * as strings from "../strings";
-import Token from "markdown-it/lib/token";
-import yaml from "js-yaml";
+import * as dates from '../dates';
+import * as strings from '../strings';
+import Token from 'markdown-it/lib/token';
+import yaml from 'js-yaml';
 
-type Schema = Record<string, { type: 'string' | 'Date', isRequired: boolean }>;
+type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
-  slug: {type: 'string', isRequired: true},
-  date: {type: 'Date', isRequired: true},
-  publish_state: {type: 'string', isRequired: false},
+  slug: { type: 'string', isRequired: true },
+  date: { type: 'Date', isRequired: true },
+  publish_state: { type: 'string', isRequired: false },
 };
 
 /** The metadata for a post including title, date, draft status, and others. */
 export class PostMetadata {
-
-  private constructor(public readonly schema: Schema) {
-  }
+  private constructor(public readonly schema: Schema) {}
 
   static of(schema: any): PostMetadata {
     return new PostMetadata(checkMetadataSchema(schema));
@@ -24,10 +22,13 @@ export class PostMetadata {
   static parseFromMarkdownTokens(tokens: Token[]): PostMetadata {
     const maxTokensToSearch = 20;
     const index = tokens.findIndex(
-        t => t.type === 'fence' && t.content.startsWith('# Metadata'));
+      t => t.type === 'fence' && t.content.startsWith('# Metadata')
+    );
     if (index === -1) {
-      throw new Error(`Unable to find a YAML metadata section in `
-          + `the first ${maxTokensToSearch} tokens.`)
+      throw new Error(
+        `Unable to find a YAML metadata section in ` +
+          `the first ${maxTokensToSearch} tokens.`
+      );
     }
 
     const token = tokens[index];
@@ -37,7 +38,7 @@ export class PostMetadata {
 }
 
 const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
-  for (const [key, {isRequired}] of Object.entries(METADATA_SCHEMA)) {
+  for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
       throw new Error(`YAML metadata missing required key ${key}.`);
     }
@@ -45,7 +46,7 @@ const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
 
   for (const [key, value] of Object.entries(metadata)) {
     if (!METADATA_SCHEMA.hasOwnProperty(key)) {
-      throw new Error((`Extra property key ${key} in YAML.`));
+      throw new Error(`Extra property key ${key} in YAML.`);
     }
     const schemaDef = METADATA_SCHEMA[key];
     switch (schemaDef.type) {

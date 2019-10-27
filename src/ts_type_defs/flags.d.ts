@@ -1,5 +1,4 @@
 declare module 'flags' {
-
   interface Flag<T> {
     name: string;
     defaultValue: T;
@@ -20,5 +19,4 @@ declare module 'flags' {
   const defineNumber: (name: string) => Flag<number>;
   const defineStringList: (name: string) => Flag<String[]>;
   const defineMultiString: (name: string) => Flag<number>;
-
 }

@@ -1,5 +1,5 @@
-import * as dates from "./dates";
-import {isValidDate} from "./dates";
+import * as dates from './dates';
+import { isValidDate } from './dates';
 
 test('isValidDate works', () => {
   expect(isValidDate(0)).toBe(false);

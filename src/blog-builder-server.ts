@@ -4,12 +4,14 @@ import KoaRouter from 'koa-router';
 import koaBody from 'koa-body';
 import MdIt from 'markdown-it';
 import * as fs from 'fs';
-import * as zipFiles from "./zip_files";
+import * as zipFiles from './zip_files';
 import flags from 'flags';
-import git from "nodegit";
-import {PostMetadata} from "./post/post_metadata";
+import git from 'nodegit';
+import { PostMetadata } from './post/post_metadata';
 
-const gitDirFlag = flags.defineString('git-dir').setDescription('The path to the git dir.');
+const gitDirFlag = flags
+  .defineString('git-dir')
+  .setDescription('The path to the git dir.');
 flags.parse();
 
 const app = new Koa();
@@ -26,8 +28,9 @@ const getCommitMessage = async (repoDir: string): Promise<string> => {
   return commit.message();
 };
 
-getCommitMessage(gitDirFlag.currentValue).then(msg => console.log('MSG1' + msg)).catch(err => console.log('MSG: ' + err));
-
+getCommitMessage(gitDirFlag.currentValue)
+  .then(msg => console.log('MSG1' + msg))
+  .catch(err => console.log('MSG: ' + err));
 
 const doThing = async (path: string): Promise<void> => {
   const compressed = await fs.promises.readFile(path);
@@ -37,8 +40,9 @@ const doThing = async (path: string): Promise<void> => {
 
   const texts = entries.filter(e => e.filePath === BUNDLE_PREFIX + 'text.md');
   if (texts.length !== 1) {
-    throw new Error('Unable to find text.md in entries: '
-        + entries.map(e => e.filePath));
+    throw new Error(
+      'Unable to find text.md in entries: ' + entries.map(e => e.filePath)
+    );
   }
   const text = texts[0];
   console.log('!!! text', text.contents.toString('utf8'));
@@ -49,7 +53,7 @@ const doThing = async (path: string): Promise<void> => {
 
 doThing('/Users/joe/gorilla.textpack').finally(() => console.log('done'));
 
-router.get('/', async (ctx) => {
+router.get('/', async ctx => {
   ctx.response.body = 'hello, world';
 });
 
@@ -57,10 +61,9 @@ router.get('/', async (ctx) => {
  * Receives a file from a multi-part form upload and commits the markdown file
  * into the Git repo.
  */
-router.post('/commit_post', koaBody({multipart: true}), async (ctx) => {
+router.post('/commit_post', koaBody({ multipart: true }), async ctx => {
   // console.log('!!! Got POST request', ctx);
   ctx.body = 'hello world';
-
 
   // if (ctx.request.files == null) {
   //   throw new Error("No files in request");
@@ -97,7 +100,6 @@ router.post('/commit_post', koaBody({multipart: true}), async (ctx) => {
   // - katex
   // - citations
   // - compile markdown
-
 });
 
 app.use(router.routes());

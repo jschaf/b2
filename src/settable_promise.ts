@@ -3,7 +3,6 @@
  * a rejection with a method call.  The promise can only be set once.
  */
 export class SettablePromise<T> implements Promise<T> {
-
   // Override from Promise.
   readonly [Symbol.toStringTag]: string;
 
@@ -13,13 +12,15 @@ export class SettablePromise<T> implements Promise<T> {
   private wasSet: boolean = false;
 
   private constructor() {
-    this.hostPromise = new Promise((
+    this.hostPromise = new Promise(
+      (
         resolve: (value?: T | PromiseLike<T>) => void,
-        reject: (reason?: any) => void,
-    ) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
+        reject: (reason?: any) => void
+      ) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      }
+    );
   }
 
   /**
@@ -33,7 +34,8 @@ export class SettablePromise<T> implements Promise<T> {
   private assertNotYetSet(): void {
     if (this.wasSet) {
       throw new Error(
-          'Cannot set value of this SettablePromise because it was already set');
+        'Cannot set value of this SettablePromise because it was already set'
+      );
     }
   }
 
@@ -70,14 +72,23 @@ export class SettablePromise<T> implements Promise<T> {
   }
 
   then<TResult1 = T, TResult2 = never>(
-      onfulfilled?: ((value: T) => (PromiseLike<TResult1> | TResult1)) | undefined | null,
-      onrejected?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | undefined | null,
+    onfulfilled?:
+      | ((value: T) => PromiseLike<TResult1> | TResult1)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => PromiseLike<TResult2> | TResult2)
+      | undefined
+      | null
   ): Promise<TResult1 | TResult2> {
     return this.hostPromise.then(onfulfilled, onrejected);
   }
 
   catch<TResult = never>(
-      onrejected?: ((reason: any) => (PromiseLike<TResult> | TResult)) | undefined | null,
+    onrejected?:
+      | ((reason: any) => PromiseLike<TResult> | TResult)
+      | undefined
+      | null
   ): Promise<T | TResult> {
     return this.hostPromise.catch(onrejected);
   }

@@ -19,21 +19,24 @@ export const isString = (value: any): boolean => {
  *     expect(foo).toEqual('foo\n  bar');
  *
  */
-export const dedent = (literals: TemplateStringsArray, ...placeholders: string[]): string => {
-  let raw = "";
+export const dedent = (
+  literals: TemplateStringsArray,
+  ...placeholders: string[]
+): string => {
+  let raw = '';
   for (let i = 0; i < literals.length; i++) {
     raw += literals[i]
-    // Join lines when there is a suppressed newline.
-    .replace(/\\\n[ \t]*/g, "")
-    // Handle escaped backticks.
-    .replace(/\\`/g, "`");
+      // Join lines when there is a suppressed newline.
+      .replace(/\\\n[ \t]*/g, '')
+      // Handle escaped backticks.
+      .replace(/\\`/g, '`');
 
     if (i < placeholders.length) {
       raw += placeholders[i];
     }
   }
   // Calculate min line width to chop from each line.
-  const lines = raw.split("\n");
+  const lines = raw.split('\n');
   let minIndent: number | null = null;
   for (const line of lines) {
     let m = line.match(/^(\s+)\S+/);
@@ -48,11 +51,11 @@ export const dedent = (literals: TemplateStringsArray, ...placeholders: string[]
   }
 
   // Chop min indent width from each line.
-  let result = "";
+  let result = '';
   if (minIndent !== null) {
     result = lines
-    .map( l => l.charAt(0) === ' ' ? l.slice(minIndent || 0) : l)
-    .join('\n');
+      .map(l => (l.charAt(0) === ' ' ? l.slice(minIndent || 0) : l))
+      .join('\n');
   } else {
     result = raw;
   }
