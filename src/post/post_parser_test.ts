@@ -2,76 +2,56 @@ import { PostNode, PostParser } from './post_parser';
 import { dedent } from '../strings';
 import { PostMetadata } from './post_metadata';
 import * as dates from '../dates';
+import removePosition from 'unist-util-remove-position';
 
-type Loc = { line: number; column: number; offset: number };
-type Pos = { position: { start: Loc; end: Loc; indent?: any[] } };
-type MdNode = { type: string; children?: MdNode[] } & Pos;
+type MdNode = { type: string; children?: MdNode[] };
 
-const start = (
-  line: number,
-  column: number,
-  offset: number
-): { start: Loc } => {
-  return { start: { line, column, offset } };
-};
-
-const end = (line: number, column: number, offset: number): { end: Loc } => {
-  return { end: { line, column, offset } };
-};
-
-const indent = (): { indent: any[] } => {
-  return { indent: [] };
-};
-
-const pos = (
-  start: { start: Loc },
-  end: { end: Loc },
-  indent?: { indent: any[] }
-): Pos => {
-  return { position: { ...start, ...end, ...indent } };
-};
-
-const mdNode = (
-  type: string,
-  pos: Pos,
-  params: Object,
-  children?: MdNode[]
-): MdNode => {
+const mdNode = (type: string, params: Object, children?: MdNode[]): MdNode => {
   const childObj = children == null ? {} : { children };
-  return { type, ...pos, ...params, ...childObj };
+  return { type, ...params, ...childObj };
 };
 
-const mdRoot = (pos: Pos, children: MdNode[]): MdNode => {
-  return mdNode('root', pos, {}, children);
+const mdRoot = (children: MdNode[]): MdNode => {
+  return mdNode('root', {}, children);
 };
 
-const mdHeading = (depth: number, pos: Pos, children: MdNode[]): MdNode => {
-  return mdNode('heading', pos, { depth }, children);
+const mdHeading = (depth: number, children: MdNode[]): MdNode => {
+  return mdNode('heading', { depth }, children);
 };
 
-const mdText = (value: string, pos: Pos): MdNode => {
-  return mdNode('text', pos, { value });
+const mdText = (value: string): MdNode => {
+  return mdNode('text', { value });
+};
+
+const mdPara = (children: MdNode[]): MdNode => {
+  return mdNode('paragraph', {}, children);
+};
+
+const stripPositions = (node: PostNode): PostNode => {
+  const forceDelete = true;
+  return new PostNode(node.metadata, removePosition(node.node, forceDelete));
 };
 
 test('parses front matter', async () => {
-  const vFile = await PostParser.create().parse(dedent`
+  const node = await PostParser.create().parse(dedent`
     # hello
     
     \`\`\`yaml
-    '# Metadata',
-    'slug: foo_bar',
-    'date: 2019-10-08',
+    # Metadata
+    slug: foo_bar
+    date: 2019-10-08
     \`\`\`
+    
+    Hello world.
   `);
 
   const frontMatter = PostMetadata.of({
     slug: 'foo_bar',
     date: dates.fromISO('2019-10-08'),
   });
-  const expected = mdRoot(pos(start(1, 1, 0), end(1, 8, 7)), [
-    mdHeading(1, pos(start(1, 1, 0), end(1, 8, 7), indent()), [
-      mdText('hello', pos(start(1, 3, 2), end(1, 8, 7), indent())),
-    ]),
+  const expected = mdRoot([
+    mdHeading(1, [mdText('hello')]),
+    mdPara([mdText('Hello world.')]),
   ]);
-  expect(vFile).toEqual(new PostNode(frontMatter, expected));
+  expect(stripPositions(node)).toEqual(new PostNode(frontMatter, expected));
 });

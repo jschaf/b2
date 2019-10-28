@@ -3,12 +3,12 @@
  *
  * See https://stackoverflow.com/a/9436948/30900.
  */
-export const isString = (value: any): boolean => {
+export const isString = (value: unknown): value is string => {
   return typeof value === 'string' || value instanceof String;
 };
 
 /**
- * Removes leading indentation from tagged template lines.
+ * A tagged template that remove leading indentation from tagged template lines.
  *
  * For example:
  *

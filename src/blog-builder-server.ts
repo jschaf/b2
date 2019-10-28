@@ -2,12 +2,11 @@ import Koa from 'koa';
 
 import KoaRouter from 'koa-router';
 import koaBody from 'koa-body';
-import MdIt from 'markdown-it';
 import * as fs from 'fs';
 import * as zipFiles from './zip_files';
 import flags from 'flags';
 import git from 'nodegit';
-import { PostMetadata } from './post/post_metadata';
+import { PostParser } from './post/post_parser';
 
 const gitDirFlag = flags
   .defineString('git-dir')
@@ -46,9 +45,9 @@ const doThing = async (path: string): Promise<void> => {
   }
   const text = texts[0];
   console.log('!!! text', text.contents.toString('utf8'));
-  const md = new MdIt();
-  const tokens = md.parse(text.contents.toString('utf8'), {});
-  const metadata = PostMetadata.parseFromMarkdownTokens(tokens);
+  const postParser = PostParser.create();
+  const postNode = postParser.parse(text.contents.toString('utf8'));
+  console.log('!!! postNode', postNode);
 };
 
 doThing('/Users/joe/gorilla.textpack').finally(() => console.log('done'));

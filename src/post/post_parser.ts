@@ -2,8 +2,8 @@
 import unified from 'unified';
 import * as unist from 'unist';
 import remarkParse from 'remark-parse';
+import nodeRemove from 'unist-util-remove';
 import { PostMetadata } from './post_metadata';
-import * as dates from '../dates';
 
 export class PostParser {
   private readonly processor: unified.Processor<unified.Settings>;
@@ -18,13 +18,11 @@ export class PostParser {
 
   parse(markdown: string): PostNode {
     const node = this.processor.parse(markdown);
-    return new PostNode(
-      PostMetadata.of({
-        slug: 'fixme',
-        date: dates.fromISO('2019-10-20'),
-      }),
-      node
-    );
+    const metadata = PostMetadata.parseFromMarkdownAST(node);
+    const nodeSansMetadata = nodeRemove(node, PostMetadata.isMetadataNode) || {
+      type: 'root',
+    };
+    return new PostNode(metadata, nodeSansMetadata);
   }
 }
 

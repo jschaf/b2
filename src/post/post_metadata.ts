@@ -1,6 +1,8 @@
 import * as dates from '../dates';
+import * as unist from 'unist';
 import * as strings from '../strings';
-import Token from 'markdown-it/lib/token';
+import { isString } from '../strings';
+import findNode from 'unist-util-find';
 import yaml from 'js-yaml';
 
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
@@ -18,21 +20,21 @@ export class PostMetadata {
     return new PostMetadata(checkMetadataSchema(schema));
   }
 
-  /** Parses the post metadata from an array of markdown tokens. */
-  static parseFromMarkdownTokens(tokens: Token[]): PostMetadata {
-    const maxTokensToSearch = 20;
-    const index = tokens.findIndex(
-      t => t.type === 'fence' && t.content.startsWith('# Metadata')
+  static isMetadataNode(n: unist.Node): n is { type: 'code'; value: string } {
+    return (
+      n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata')
     );
-    if (index === -1) {
+  }
+
+  /** Parses the post metadata from an array of markdown tokens. */
+  static parseFromMarkdownAST(tree: unist.Node): PostMetadata {
+    const node = findNode(tree, PostMetadata.isMetadataNode);
+    if (node === undefined) {
       throw new Error(
-        `Unable to find a YAML metadata section in ` +
-          `the first ${maxTokensToSearch} tokens.`
+        "No nodes found that match YAML code block beginning with '# Metadata'."
       );
     }
-
-    const token = tokens[index];
-    const rawYaml = yaml.safeLoad(token.content);
+    const rawYaml = yaml.safeLoad(node.value);
     return PostMetadata.of(rawYaml);
   }
 }
