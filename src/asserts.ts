@@ -21,7 +21,8 @@ export class PreconditionError extends Error {
 export const checkArg = (expression: boolean, errorMsg?: string): void => {
   if (!expression) {
     throw new PreconditionError(
-        errorMsg || 'Expression evaluated to false but expected it to be true.');
+      errorMsg || 'Expression evaluated to false but expected it to be true.'
+    );
   }
 };
 
@@ -37,19 +38,25 @@ export const checkArg = (expression: boolean, errorMsg?: string): void => {
 export const checkState = (expression: boolean, errorMsg?: string): void => {
   if (!expression) {
     throw new PreconditionError(
-        errorMsg || 'Expression evaluated to false but expected it to be true.');
+      errorMsg || 'Expression evaluated to false but expected it to be true.'
+    );
   }
 };
 
 /** Ensures an expression is both defined and not null. */
-export const checkDefinedAndNotNull = <T>(expression: T| undefined | null, errorMsg?: string): T => {
+export const checkDefinedAndNotNull = <T>(
+  expression: T | undefined | null,
+  errorMsg?: string
+): T => {
   if (expression === undefined) {
     throw new PreconditionError(
-        errorMsg || 'Expression was undefined but expected a defined expression.');
+      errorMsg || 'Expression was undefined but expected a defined expression.'
+    );
   }
   if (expression === null) {
     throw new PreconditionError(
-        errorMsg || 'Expression was null but expected a non-null expression.');
+      errorMsg || 'Expression was null but expected a non-null expression.'
+    );
   }
   return expression;
 };

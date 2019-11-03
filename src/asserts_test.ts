@@ -1,7 +1,11 @@
-import {checkArg, checkDefinedAndNotNull, checkState, PreconditionError} from "./asserts";
+import {
+  checkArg,
+  checkDefinedAndNotNull,
+  checkState,
+  PreconditionError,
+} from './asserts';
 
 describe('promises', () => {
-
   describe('checkArg', () => {
     it('should not throw for true values', () => {
       checkArg(true);
@@ -45,24 +49,32 @@ describe('promises', () => {
     });
 
     it('should throw for an undefined expressions', () => {
-      expect(() => checkDefinedAndNotNull(undefined)).toThrow(PreconditionError);
+      expect(() => checkDefinedAndNotNull(undefined)).toThrow(
+        PreconditionError
+      );
     });
 
     it('should throw for an undefined expressions with custom message', () => {
-      expect(() => checkDefinedAndNotNull(undefined, 'custom message')).toThrow(/custom message/);
+      expect(() => checkDefinedAndNotNull(undefined, 'custom message')).toThrow(
+        /custom message/
+      );
     });
 
     it('should throw for an null expressions', () => {
-      expect(() => checkDefinedAndNotNull(undefined)).toThrow(PreconditionError);
+      expect(() => checkDefinedAndNotNull(undefined)).toThrow(
+        PreconditionError
+      );
     });
 
     it('should throw for an null expressions with custom message', () => {
-      expect(() => checkDefinedAndNotNull(undefined, 'my message')).toThrow(/my message/);
+      expect(() => checkDefinedAndNotNull(undefined, 'my message')).toThrow(
+        /my message/
+      );
     });
 
     it('should narrow a type to non-nullable', () => {
       const maybeTwo = (): number | undefined => 2;
-      expect(checkDefinedAndNotNull(maybeTwo()) + 1).toBe(3)
+      expect(checkDefinedAndNotNull(maybeTwo()) + 1).toBe(3);
     });
   });
 });

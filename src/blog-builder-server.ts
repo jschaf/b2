@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import flags from 'flags';
 import git from 'nodegit';
 import { PostParser } from './post/post_parser';
-import {Unzipper} from "./zip_files";
+import { Unzipper } from './zip_files';
 
 const gitDirFlag = flags
   .defineString('git-dir')

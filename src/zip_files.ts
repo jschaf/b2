@@ -2,13 +2,15 @@ import * as unzip from 'yauzl';
 import * as yazl from 'yazl';
 import * as streams from './streams';
 import { SettablePromise } from './settable_promise';
-import {checkArg} from "./asserts";
+import { checkArg } from './asserts';
 
 /** An entry from a zip file. */
 export class ZipFileEntry {
   private constructor(readonly filePath: string, readonly contents: Buffer) {
-    checkArg(filePath === '' || filePath.charAt(0) !== '/',
-        `The file path for zip file cannot be absolute but had '${filePath}'.`)
+    checkArg(
+      filePath === '' || filePath.charAt(0) !== '/',
+      `The file path for zip file cannot be absolute but had '${filePath}'.`
+    );
   }
 
   static ofBuffer(filePath: string, contents: Buffer): ZipFileEntry {
@@ -23,7 +25,7 @@ export class ZipFileEntry {
 export class Zipper {
   static async zip(entries: ZipFileEntry[]): Promise<Buffer> {
     const zipFile = new yazl.ZipFile();
-    for (const {filePath, contents} of entries) {
+    for (const { filePath, contents } of entries) {
       zipFile.addBuffer(contents, filePath);
     }
     zipFile.end();
@@ -103,4 +105,3 @@ const readAllEntries = async (
 
   return promisedResults;
 };
-

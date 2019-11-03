@@ -1,9 +1,9 @@
-import {PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX} from './post_parser';
+import { PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX } from './post_parser';
 import { dedent } from '../strings';
 import { PostMetadata } from './post_metadata';
 import * as dates from '../dates';
 import removePosition from 'unist-util-remove-position';
-import {ZipFileEntry, Zipper} from "../zip_files";
+import { ZipFileEntry, Zipper } from '../zip_files';
 
 type MdNode = { type: string; children?: MdNode[] };
 
@@ -70,7 +70,7 @@ test('parses from TextPack', async () => {
     Hello world.
   `;
   const buf = await Zipper.zip([
-      ZipFileEntry.ofUtf8(TEXT_PACK_BUNDLE_PREFIX + '/text.md', markdown),
+    ZipFileEntry.ofUtf8(TEXT_PACK_BUNDLE_PREFIX + '/text.md', markdown),
   ]);
   const node = await PostParser.create().parseTextPack(buf);
 
