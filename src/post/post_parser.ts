@@ -5,8 +5,9 @@ import remarkParse from 'remark-parse';
 import nodeRemove from 'unist-util-remove';
 import { PostMetadata } from './post_metadata';
 import {Unzipper} from "../zip_files";
+import {checkState} from "../asserts";
 
-const BUNDLE_PREFIX = 'Content.textbundle/';
+export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 
 export class PostParser {
   private readonly processor: unified.Processor<unified.Settings>;
@@ -21,7 +22,8 @@ export class PostParser {
 
   async parseTextPack(textPack: Buffer): Promise<PostNode> {
     const entries = await Unzipper.unzip(textPack);
-    const texts = entries.filter(e => e.filePath === BUNDLE_PREFIX + 'text.md');
+    const texts = entries.filter(e => e.filePath === TEXT_PACK_BUNDLE_PREFIX + '/text.md');
+    checkState(texts.length === 1, 'Expected a single text.md file in TextPack.');
     const text = texts[0];
     return this.parseMarkdown(text.contents.toString('utf8'));
   }

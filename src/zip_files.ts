@@ -4,6 +4,7 @@ import * as streams from './streams';
 import { SettablePromise } from './settable_promise';
 import {checkArg} from "./asserts";
 
+/** An entry from a zip file. */
 export class ZipFileEntry {
   private constructor(readonly filePath: string, readonly contents: Buffer) {
     checkArg(filePath === '' || filePath.charAt(0) !== '/',
