@@ -4,6 +4,9 @@ import * as unist from 'unist';
 import remarkParse from 'remark-parse';
 import nodeRemove from 'unist-util-remove';
 import { PostMetadata } from './post_metadata';
+import {Unzipper} from "../zip_files";
+
+const BUNDLE_PREFIX = 'Content.textbundle/';
 
 export class PostParser {
   private readonly processor: unified.Processor<unified.Settings>;
@@ -16,7 +19,14 @@ export class PostParser {
     return new PostParser();
   }
 
-  parse(markdown: string): PostNode {
+  async parseTextPack(textPack: Buffer): Promise<PostNode> {
+    const entries = await Unzipper.unzip(textPack);
+    const texts = entries.filter(e => e.filePath === BUNDLE_PREFIX + 'text.md');
+    const text = texts[0];
+    return this.parseMarkdown(text.contents.toString('utf8'));
+  }
+
+  parseMarkdown(markdown: string): PostNode {
     const node = this.processor.parse(markdown);
     const metadata = PostMetadata.parseFromMarkdownAST(node);
     const nodeSansMetadata = nodeRemove(node, PostMetadata.isMetadataNode) || {

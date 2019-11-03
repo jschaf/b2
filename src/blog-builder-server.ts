@@ -3,10 +3,10 @@ import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import koaBody from 'koa-body';
 import * as fs from 'fs';
-import * as zipFiles from './zip_files';
 import flags from 'flags';
 import git from 'nodegit';
 import { PostParser } from './post/post_parser';
+import {Unzipper} from "./zip_files";
 
 const gitDirFlag = flags
   .defineString('git-dir')
@@ -33,8 +33,7 @@ getCommitMessage(gitDirFlag.currentValue)
 
 const doThing = async (path: string): Promise<void> => {
   const compressed = await fs.promises.readFile(path);
-  const zipFile = await zipFiles.unzipFromBuffer(compressed);
-  const entries = await zipFiles.readAllEntries(zipFile);
+  const entries = await Unzipper.unzip(compressed);
   console.log('!!! files', JSON.stringify(entries.map(e => e.filePath)));
 
   const texts = entries.filter(e => e.filePath === BUNDLE_PREFIX + 'text.md');
@@ -46,7 +45,7 @@ const doThing = async (path: string): Promise<void> => {
   const text = texts[0];
   console.log('!!! text', text.contents.toString('utf8'));
   const postParser = PostParser.create();
-  const postNode = postParser.parse(text.contents.toString('utf8'));
+  const postNode = postParser.parseMarkdown(text.contents.toString('utf8'));
   console.log('!!! postNode', postNode);
 };
 

@@ -32,8 +32,8 @@ const stripPositions = (node: PostNode): PostNode => {
   return new PostNode(node.metadata, removePosition(node.node, forceDelete));
 };
 
-test('parses front matter', async () => {
-  const node = await PostParser.create().parse(dedent`
+test('parses from markdown', async () => {
+  const node = await PostParser.create().parseMarkdown(dedent`
     # hello
     
     \`\`\`yaml
@@ -54,4 +54,8 @@ test('parses front matter', async () => {
     mdPara([mdText('Hello world.')]),
   ]);
   expect(stripPositions(node)).toEqual(new PostNode(frontMatter, expected));
+});
+
+test('parses from TextPack', () => {
+
 });
