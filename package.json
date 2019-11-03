@@ -18,6 +18,7 @@
     "koa-body": "latest",
     "koa-logger": "latest",
     "koa-router": "^7.4.0",
+    "isomorphic-git": "^0.70.4",
     "markdown-it": "^10.0.0",
     "nodegit": "^0.26.2",
     "remark": "^11.0.1",
@@ -29,7 +30,7 @@
     "unist-util-visit": "^2.0.0",
     "vfile": "^4.0.1",
     "yauzl": "^2.10.0",
-    "yazl": "latest"
+    "yazl": "^2.5.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.20",

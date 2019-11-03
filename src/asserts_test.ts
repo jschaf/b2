@@ -38,9 +38,10 @@ describe('promises', () => {
       checkDefinedAndNotNull(a);
     });
 
-    it('should not throw for a defined value that is false', () => {
-      const a = false;
-      checkDefinedAndNotNull(a);
+    it('should not throw for a defined value that is falsy', () => {
+      checkDefinedAndNotNull(false);
+      checkDefinedAndNotNull('');
+      checkDefinedAndNotNull(0);
     });
 
     it('should throw for an undefined expressions', () => {
@@ -58,6 +59,10 @@ describe('promises', () => {
     it('should throw for an null expressions with custom message', () => {
       expect(() => checkDefinedAndNotNull(undefined, 'my message')).toThrow(/my message/);
     });
-  });
 
+    it('should narrow a type to non-nullable', () => {
+      const maybeTwo = (): number | undefined => 2;
+      expect(checkDefinedAndNotNull(maybeTwo()) + 1).toBe(3)
+    });
+  });
 });

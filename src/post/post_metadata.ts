@@ -1,20 +1,22 @@
 import * as dates from '../dates';
 import * as unist from 'unist';
 import * as strings from '../strings';
-import { isString } from '../strings';
+import {isString} from '../strings';
 import findNode from 'unist-util-find';
 import yaml from 'js-yaml';
+import {checkDefinedAndNotNull} from "../asserts";
 
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
-  slug: { type: 'string', isRequired: true },
-  date: { type: 'Date', isRequired: true },
-  publish_state: { type: 'string', isRequired: false },
+  slug: {type: 'string', isRequired: true},
+  date: {type: 'Date', isRequired: true},
+  publish_state: {type: 'string', isRequired: false},
 };
 
 /** The metadata for a post including title, date, draft status, and others. */
 export class PostMetadata {
-  private constructor(public readonly schema: Schema) {}
+  private constructor(public readonly schema: Schema) {
+  }
 
   static of(schema: any): PostMetadata {
     return new PostMetadata(checkMetadataSchema(schema));
@@ -22,25 +24,22 @@ export class PostMetadata {
 
   static isMetadataNode(n: unist.Node): n is { type: 'code'; value: string } {
     return (
-      n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata')
+        n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata')
     );
   }
 
   /** Parses the post metadata from an array of markdown tokens. */
   static parseFromMarkdownAST(tree: unist.Node): PostMetadata {
-    const node = findNode(tree, PostMetadata.isMetadataNode);
-    if (node === undefined) {
-      throw new Error(
-        "No nodes found that match YAML code block beginning with '# Metadata'."
-      );
-    }
+    const node = checkDefinedAndNotNull(
+        findNode(tree, PostMetadata.isMetadataNode),
+        "No nodes found that match YAML code block beginning with '# Metadata'.");
     const rawYaml = yaml.safeLoad(node.value);
     return PostMetadata.of(rawYaml);
   }
 }
 
 const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
-  for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
+  for (const [key, {isRequired}] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
       throw new Error(`YAML metadata missing required key ${key}.`);
     }
