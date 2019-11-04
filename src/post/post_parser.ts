@@ -1,11 +1,11 @@
 // Parser for post content.
+import remarkParse from 'remark-parse';
 import unified from 'unified';
 import * as unist from 'unist';
-import remarkParse from 'remark-parse';
 import nodeRemove from 'unist-util-remove';
-import { PostMetadata } from './post_metadata';
-import { Unzipper } from '../zip_files';
-import { checkState } from '../asserts';
+import {checkState} from '../asserts';
+import {Unzipper} from '../zip_files';
+import {PostMetadata} from './post_metadata';
 
 export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 
