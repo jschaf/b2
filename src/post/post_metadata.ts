@@ -1,10 +1,10 @@
-import * as dates from '../dates';
+import yaml from 'js-yaml';
 import * as unist from 'unist';
+import findNode from 'unist-util-find';
+import { checkDefinedAndNotNull } from '../asserts';
+import * as dates from '../dates';
 import * as strings from '../strings';
 import { isString } from '../strings';
-import findNode from 'unist-util-find';
-import yaml from 'js-yaml';
-import { checkDefinedAndNotNull } from '../asserts';
 
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
@@ -13,12 +13,23 @@ const METADATA_SCHEMA: Schema = {
   publish_state: { type: 'string', isRequired: false },
 };
 
+type Metadata = {
+  slug: string;
+  date: Date;
+  publish_state?: string;
+} & Record<string, any>;
+
 /** The metadata for a post including title, date, draft status, and others. */
 export class PostMetadata {
-  private constructor(public readonly schema: Schema) {}
+  private constructor(
+    public readonly slug: string,
+    public readonly date: Date,
+    public readonly schema: Schema
+  ) {}
 
   static of(schema: any): PostMetadata {
-    return new PostMetadata(checkMetadataSchema(schema));
+    const validated = checkMetadataSchema(schema);
+    return new PostMetadata(validated['slug'], validated['date'], validated);
   }
 
   static isMetadataNode(n: unist.Node): n is { type: 'code'; value: string } {
@@ -38,7 +49,7 @@ export class PostMetadata {
   }
 }
 
-const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
+const checkMetadataSchema = (metadata: any): Metadata => {
   for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
       throw new Error(`YAML metadata missing required key ${key}.`);
@@ -47,7 +58,10 @@ const checkMetadataSchema = (metadata: any): typeof METADATA_SCHEMA => {
 
   for (const [key, value] of Object.entries(metadata)) {
     if (!METADATA_SCHEMA.hasOwnProperty(key)) {
-      throw new Error(`Extra property key ${key} in YAML.`);
+      throw new Error(
+        `Extra property key '${key}' in YAML. ` +
+          `Expected only keys: ${Object.keys(METADATA_SCHEMA).join(', ')}`
+      );
     }
     const schemaDef = METADATA_SCHEMA[key];
     switch (schemaDef.type) {
