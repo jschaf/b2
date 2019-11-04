@@ -22,12 +22,15 @@
     "markdown-it": "^10.0.0",
     "memfs": "latest",
     "nodegit": "^0.26.2",
+    "rehype": "^9.0.0",
+    "rehype-format": "^3.0.0",
     "rehype-katex": "^2.0.0",
-    "rehype-stringify": "latest",
+    "rehype-parse": "^6.0.1",
+    "rehype-stringify": "^6.0.0",
     "remark": "^11.0.1",
     "remark-math": "^2.0.0",
     "remark-parse": "^7.0.1",
-    "remark-rehype": "latest",
+    "remark-rehype": "^5.0.0",
     "ts-node": "^8.4.1",
     "unist-util-filter": "^1.0.2",
     "unist-util-find": "^1.0.1",
@@ -36,8 +39,7 @@
     "unist-util-visit": "^2.0.0",
     "vfile": "^4.0.1",
     "yauzl": "^2.10.0",
-    "yazl": "^2.5.1",
-    "rehype-parse": "latest"
+    "yazl": "^2.5.1"
   },
   "devDependencies": {
     "@starptech/prettyhtml-hast-to-html": "^0.10.0",

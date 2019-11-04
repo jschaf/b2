@@ -2,8 +2,8 @@ import rehypeStringify from 'rehype-stringify';
 import rehypeKatex from 'rehype-katex';
 import remarkRehype from 'remark-rehype';
 import unified from 'unified';
-import {Mempost} from './mempost';
-import {PostBag} from './post_bag';
+import { Mempost } from './mempost';
+import { PostBag } from './post_bag';
 
 /**
  * Renders a post and all required assets onto a new Mempost.
@@ -13,9 +13,9 @@ export class PostRenderer {
 
   private constructor() {
     this.processor = unified()
-        .use(remarkRehype)
-        .use(rehypeKatex)
-        .use(rehypeStringify);
+      .use(remarkRehype)
+      .use(rehypeKatex)
+      .use(rehypeStringify);
   }
 
   static create(): PostRenderer {

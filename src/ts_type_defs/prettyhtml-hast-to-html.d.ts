@@ -8,6 +8,9 @@ declare module '@starptech/prettyhtml-hast-to-html' {
     tabWidth: number;
     wrapAttributes: boolean;
   }
-  const toHtml: (node: unist.Node, options?: Partial<PrettyHtmlOptions>) => string;
+  const toHtml: (
+    node: unist.Node,
+    options?: Partial<PrettyHtmlOptions>
+  ) => string;
   export = toHtml;
 }

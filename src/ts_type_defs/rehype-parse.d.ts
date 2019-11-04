@@ -1,8 +1,7 @@
 declare module 'rehype-parse' {
-  import {Plugin} from 'unified'
+  import { Plugin } from 'unified';
 
-  interface RehypeParse extends Plugin<[Partial<RehypeParseOptions>?]> {
-  }
+  interface RehypeParse extends Plugin<[Partial<RehypeParseOptions>?]> {}
 
   interface RehypeParseOptions {}
 

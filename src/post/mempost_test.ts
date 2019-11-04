@@ -1,8 +1,9 @@
-import {Mempost} from './mempost';
+import { Mempost } from './mempost';
 
 describe('Mempost', () => {
   it('should equal itself', () => {
-    expect(Mempost.ofUtf8Entry('foo', 'bar'))
-        .toEqualMempost(Mempost.ofUtf8Entry('foo', 'bar'));
+    expect(Mempost.ofUtf8Entry('foo', 'bar')).toEqualMempost(
+      Mempost.ofUtf8Entry('foo', 'bar')
+    );
   });
 });

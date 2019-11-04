@@ -1,8 +1,8 @@
 declare module 'rehype-stringify' {
-  import {Plugin} from 'unified'
+  import { Plugin } from 'unified';
 
-  interface RehypeStringify extends Plugin<[Partial<RehypeStringifyOptions>?]> {
-  }
+  interface RehypeStringify
+    extends Plugin<[Partial<RehypeStringifyOptions>?]> {}
 
   interface RehypeStringifyOptions {}
 

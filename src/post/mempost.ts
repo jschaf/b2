@@ -1,5 +1,5 @@
-import {checkState} from '../asserts';
-import {Unzipper} from '../zip_files';
+import { checkState } from '../asserts';
+import { Unzipper } from '../zip_files';
 
 /**
  * An append-only, in-memory representation of a post.
@@ -31,8 +31,10 @@ export class Mempost {
   }
 
   addEntry(path: string, contents: Buffer): void {
-    checkState(!this.entriesByPath.has(path),
-        `Expected no existing entry for path: '${path}'`);
+    checkState(
+      !this.entriesByPath.has(path),
+      `Expected no existing entry for path: '${path}'`
+    );
     this.entriesByPath.set(path, contents);
   }
 
@@ -54,4 +56,3 @@ export class Mempost {
     return this.entriesByPath[Symbol.iterator]();
   }
 }
-

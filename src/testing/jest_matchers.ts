@@ -8,8 +8,11 @@
  */
 
 import * as util from 'util';
-import {Mempost} from '../post/mempost';
-import * as prettier from 'prettier';
+import { Mempost } from '../post/mempost';
+import unified from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypeFormat from 'rehype-format';
+import rehypeStringify from 'rehype-stringify';
 
 /**
  * Converts a Buffer to a UTF-8 string if possible. Otherwise, return the buffer.
@@ -17,7 +20,7 @@ import * as prettier from 'prettier';
  * Intended purposed is to produce cleaner error messages.
  */
 const normalizeMempostBuffer = (path: string, buf: Buffer): string | Buffer => {
-  const td = new util.TextDecoder('utf8', {fatal: true});
+  const td = new util.TextDecoder('utf8', { fatal: true });
   try {
     const str = td.decode(buf);
     return normalizeMempostString(path, str);
@@ -28,22 +31,25 @@ const normalizeMempostBuffer = (path: string, buf: Buffer): string | Buffer => {
 
 const normalizeMempostString = (path: string, contents: string): string => {
   if (path.endsWith('.html')) {
-    return prettier.format(contents, {
-      parser: 'html',
-    })
+    const vFile = unified()
+      .use(rehypeParse)
+      .use(rehypeFormat)
+      .use(rehypeStringify)
+      .processSync(contents);
+    return vFile.contents.toString('utf8');
   }
   return contents;
 };
 
 function toEqualMempost(
-    this: jest.MatcherContext,
-    received: any,
-    expected: Mempost | Record<string, string>
+  this: jest.MatcherContext,
+  received: any,
+  expected: Mempost | Record<string, string>
 ): jest.CustomMatcherResult {
   if (!(received instanceof Mempost)) {
     return {
       pass: false,
-      message: () => `Expected to receive Mempost type but had ${received}`
+      message: () => `Expected to receive Mempost type but had ${received}`,
     };
   }
   const receivedObj: Record<string, string | Buffer> = {};
@@ -68,8 +74,8 @@ function toEqualMempost(
   }
   return {
     pass: !this.isNot,
-    message: () => 'Matched'
+    message: () => 'Matched',
   };
 }
 
-export const ALL_JEST_MATCHERS: jest.ExpectExtendMap = {toEqualMempost};
+export const ALL_JEST_MATCHERS: jest.ExpectExtendMap = { toEqualMempost };

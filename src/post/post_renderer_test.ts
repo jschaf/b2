@@ -1,6 +1,6 @@
-import {dedent} from '../strings';
-import {PostBag} from './post_bag';
-import {PostRenderer} from './post_renderer';
+import { dedent } from '../strings';
+import { PostBag } from './post_bag';
+import { PostRenderer } from './post_renderer';
 
 describe('PostRenderer', () => {
   it('should render a simple post', async () => {

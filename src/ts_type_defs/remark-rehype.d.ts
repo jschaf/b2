@@ -1,8 +1,7 @@
 declare module 'remark-rehype' {
-  import {Plugin} from 'unified'
+  import { Plugin } from 'unified';
 
-  interface RemarkRehype extends Plugin<[Partial<RemarkRehypeOptions>?]> {
-  }
+  interface RemarkRehype extends Plugin<[Partial<RemarkRehypeOptions>?]> {}
 
   interface RemarkRehypeOptions {}
 
