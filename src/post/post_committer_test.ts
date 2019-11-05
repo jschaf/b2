@@ -1,4 +1,5 @@
 import * as memfs from 'memfs';
+import * as path from 'path';
 import { dedent } from '../strings';
 import { PostBag } from './post_bag';
 import { PostCommitter } from './post_committer';
@@ -16,13 +17,27 @@ describe('PostCommitter', () => {
     `);
     const vol = new memfs.Volume();
 
-    await PostCommitter.forFs(memfs.createFsFromVolume(vol)).commit(
-      '/root',
+    const gitDir = '/root';
+    await PostCommitter.forFs(memfs.createFsFromVolume(vol), gitDir).commit(
       bag
     );
 
-    expect(vol.toJSON()).toEqual({
+    expect(removeGit(gitDir, vol.toJSON())).toEqual({
       '/root/posts/foo_bar.md': '# Hello\n',
     });
   });
 });
+
+const removeGit = (
+  dir: string,
+  files: Record<string, string | null>
+): Record<string, string | null> => {
+  const nonGitFiles: Record<string, string | null> = {};
+  const gitDir = path.resolve(dir, '.git');
+  for (const [filePath, content] of Object.entries(files)) {
+    if (!filePath.startsWith(gitDir)) {
+      nonGitFiles[filePath] = content;
+    }
+  }
+  return nonGitFiles;
+};
