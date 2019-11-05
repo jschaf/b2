@@ -2,6 +2,7 @@ import flags from 'flags';
 import * as fs from 'fs';
 import Koa from 'koa';
 import koaBody from 'koa-body';
+import sourceMapSupport from 'source-map-support';
 
 import KoaRouter from 'koa-router';
 import { PostBag } from './post/post_bag';
@@ -10,7 +11,6 @@ import { PostCommitter } from './post/post_committer';
 const gitDirFlag = flags
   .defineString('git-dir')
   .setDescription('The path to the git dir.');
-flags.parse();
 
 const app = new Koa();
 
@@ -23,6 +23,8 @@ const commitPost = async (textPack: Buffer): Promise<void> => {
 };
 
 if (require.main === module) {
+  sourceMapSupport.install();
+  flags.parse();
   const main = async () => {
     const textPack = await fs.promises.readFile('/Users/joe/gorilla.textpack');
     await commitPost(textPack);
