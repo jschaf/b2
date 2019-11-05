@@ -16,6 +16,20 @@ const app = new Koa();
 
 const router = new KoaRouter();
 
+const commitPost = async (textPack: Buffer): Promise<void> => {
+  const bag = await PostBag.fromTextPack(textPack);
+  const committer = PostCommitter.forFs(fs, gitDirFlag.currentValue);
+  await committer.commit(bag);
+};
+
+if (require.main === module) {
+  const main = async () => {
+    const textPack = await fs.promises.readFile('/Users/joe/gorilla.textpack');
+    await commitPost(textPack);
+  };
+  main().catch(console.log);
+}
+
 console.log('!!! gitFlag', gitDirFlag.currentValue);
 
 router.get('/', async ctx => {
@@ -35,10 +49,7 @@ router.post('/commit_post', koaBody({ multipart: true }), async ctx => {
   }
   const file = ctx.request.files.file;
   const textPack = await fs.promises.readFile(file.path);
-  const bag = await PostBag.fromTextPack(textPack);
-  const committer = PostCommitter.forFs(fs, gitDirFlag.currentValue);
-  await committer.commit(bag);
-  //  await committer.pushOrigin();
+  await commitPost(textPack);
 
   // Compile markdown to HTML
   // - katex
