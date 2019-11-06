@@ -1,4 +1,4 @@
-import { Mempost } from './mempost';
+import { Mempost } from '//post/mempost';
 
 describe('Mempost', () => {
   it('should equal itself', () => {

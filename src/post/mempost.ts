@@ -1,5 +1,5 @@
-import { checkState } from '../asserts';
-import { Unzipper } from '../zip_files';
+import { checkState } from '//asserts';
+import { Unzipper } from '//zip_files';
 
 /**
  * An append-only, in-memory representation of a post.

@@ -3,10 +3,15 @@ const { defaults: tsjPreset } = require('ts-jest/presets');
 module.exports = {
   errorOnDeprecated: true,
   clearMocks: true,
+  maxConcurrency: 20,
+  moduleFileExtensions: ['ts', 'node', 'js', 'json'],
+  moduleNameMapper: {
+    "//(.*)": "<rootDir>/src/$1",
+  },
   transform: {
     ...tsjPreset.transform,
   },
   setupFilesAfterEnv: ['./src/testing/global_jest_setup'],
   testEnvironment: 'node',
-  testMatch: ["**/*_test.js", "**/*_test.ts"]
+  testMatch: ["**/*_test.ts"]
 };

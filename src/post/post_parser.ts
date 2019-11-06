@@ -3,9 +3,9 @@ import remarkParse from 'remark-parse';
 import unified from 'unified';
 import * as unist from 'unist';
 import nodeRemove from 'unist-util-remove';
-import { checkState } from '../asserts';
-import { Unzipper } from '../zip_files';
-import { PostMetadata } from './post_metadata';
+import { checkState } from '//asserts';
+import { Unzipper } from '//zip_files';
+import { PostMetadata } from '//post/post_metadata';
 
 export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 

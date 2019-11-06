@@ -1,4 +1,4 @@
-import * as streams from './streams';
+import * as streams from '//streams';
 
 test('createFromArray creates a stream', async () => {
   const roundTrip = async (arr: any[]) =>

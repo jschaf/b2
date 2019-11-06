@@ -1,6 +1,6 @@
-import { PostMetadata } from './post_metadata';
-import * as dates from '../dates';
-import { dedent } from '../strings';
+import { PostMetadata } from '//post/post_metadata';
+import * as dates from '//dates';
+import { dedent } from '//strings';
 import unified from 'unified';
 import remarkParse from 'remark-parse';
 

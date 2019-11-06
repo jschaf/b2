@@ -1,8 +1,8 @@
 import * as unzip from 'yauzl';
 import * as yazl from 'yazl';
 import * as streams from './streams';
-import { SettablePromise } from './settable_promise';
-import { checkArg } from './asserts';
+import { SettablePromise } from '//settable_promise';
+import { checkArg } from '//asserts';
 
 /** An entry from a zip file. */
 export class ZipFileEntry {

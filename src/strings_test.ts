@@ -1,4 +1,4 @@
-import { dedent, isString } from './strings';
+import { dedent, isString } from '//strings';
 
 test('isString should work', () => {
   expect(isString(1)).toBe(false);

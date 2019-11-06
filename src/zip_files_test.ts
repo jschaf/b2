@@ -1,4 +1,4 @@
-import { Unzipper, ZipFileEntry, Zipper } from './zip_files';
+import { Unzipper, ZipFileEntry, Zipper } from '//zip_files';
 
 describe('Zipper', () => {
   it('should roundtrip with 0 entries', async () => {

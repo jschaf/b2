@@ -1,8 +1,12 @@
-import * as dates from '../dates';
-import { dedent } from '../strings';
-import { ZipFileEntry, Zipper } from '../zip_files';
-import { PostMetadata } from './post_metadata';
-import { PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX } from './post_parser';
+import * as dates from '//dates';
+import { dedent } from '//strings';
+import { ZipFileEntry, Zipper } from '//zip_files';
+import { PostMetadata } from '//post/post_metadata';
+import {
+  PostNode,
+  PostParser,
+  TEXT_PACK_BUNDLE_PREFIX,
+} from '//post/post_parser';
 import {
   mdHeading,
   mdOrderedList,

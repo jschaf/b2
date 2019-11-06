@@ -5,9 +5,9 @@ import * as isoGit from 'isomorphic-git';
 import * as path from 'path';
 import remarkStringify from 'remark-stringify';
 import unified from 'unified';
-import { checkArg, checkDefinedAndNotNull } from '../asserts';
-import { Mempost } from './mempost';
-import { PostBag } from './post_bag';
+import { checkArg, checkDefinedAndNotNull } from '//asserts';
+import { Mempost } from '//post/mempost';
+import { PostBag } from '//post/post_bag';
 
 export class PostCommitter {
   private constructor(

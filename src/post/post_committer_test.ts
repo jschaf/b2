@@ -1,8 +1,8 @@
 import * as memfs from 'memfs';
 import * as path from 'path';
-import { dedent } from '../strings';
-import { PostBag } from './post_bag';
-import { PostCommitter } from './post_committer';
+import { dedent } from '//strings';
+import { PostBag } from '//post/post_bag';
+import { PostCommitter } from '//post/post_committer';
 
 describe('PostCommitter', () => {
   it('should commit a standalone post', async () => {

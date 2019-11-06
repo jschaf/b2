@@ -1,4 +1,4 @@
-import { SettablePromise } from './settable_promise';
+import { SettablePromise } from '//settable_promise';
 
 test('resolves when set is called', async () => {
   const p = SettablePromise.create<number>();

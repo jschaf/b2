@@ -1,6 +1,10 @@
-import { checkState } from '../asserts';
-import { Unzipper, ZipFileEntry } from '../zip_files';
-import { PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX } from './post_parser';
+import { checkState } from '//asserts';
+import { Unzipper, ZipFileEntry } from '//zip_files';
+import {
+  PostNode,
+  PostParser,
+  TEXT_PACK_BUNDLE_PREFIX,
+} from '//post/post_parser';
 
 export class PostBag {
   private constructor(readonly postNode: PostNode) {}
