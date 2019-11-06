@@ -8,7 +8,7 @@ import { checkArg, checkDefinedAndNotNull } from '//asserts';
 export class ZipFileEntry {
   private constructor(readonly filePath: string, readonly contents: Buffer) {
     checkArg(
-      filePath === '' || filePath.charAt(0) !== '/',
+      filePath === '' || !filePath.startsWith('/'),
       `The file path for zip file cannot be absolute but had '${filePath}'.`
     );
   }
@@ -76,24 +76,25 @@ const readAllEntries = async (
   // Directory file names end with '/'. Entries for directories
   // themselves are optional. An entry's fileName implicitly
   // requires its parent directories to exist.
-  const isDir = (f: string): boolean => /\/$/.test(f);
+  const isDir = (f: string): boolean => f.endsWith("/");
 
   const readFileEntry = (entry: unzip.Entry): Promise<ZipFileEntry> => {
     const fileEntry = SettablePromise.create<ZipFileEntry>();
     zipFile.openReadStream(entry, async (err, readStream) => {
       if (err) {
-        return fileEntry.setReject(err);
+        fileEntry.setReject(err);
+        return;
       }
       const contents = await streams.toBuffer(
         checkDefinedAndNotNull(readStream)
       );
-      return fileEntry.set({ filePath: entry.fileName, contents });
+      fileEntry.set({ filePath: entry.fileName, contents });
     });
     return fileEntry;
   };
 
   zipFile.readEntry();
-  zipFile.on('entry', async (entry: unzip.Entry) => {
+  zipFile.on('entry', (entry: unzip.Entry) => {
     if (isDir(entry.fileName)) {
       zipFile.readEntry();
     } else {

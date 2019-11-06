@@ -39,7 +39,7 @@ export const dedent = (
   const lines = raw.split('\n');
   let minIndent: number | null = null;
   for (const line of lines) {
-    const m = line.match(/^(\s+)\S+/);
+    const m = /^(\s+)\S+/.exec(line);
     if (m) {
       const indent = m[1].length;
       if (minIndent === null) {
@@ -54,7 +54,7 @@ export const dedent = (
   let result = '';
   if (minIndent !== null) {
     result = lines
-      .map(l => (l.charAt(0) === ' ' ? l.slice(minIndent || 0) : l))
+      .map(l => (l.startsWith(' ') ? l.slice(minIndent || 0) : l))
       .join('\n');
   } else {
     result = raw;

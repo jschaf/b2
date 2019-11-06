@@ -1,13 +1,13 @@
 module.exports =  {
   parser:  '@typescript-eslint/parser',
+  parserOptions: {
+    "project": "./tsconfig.json"
+  },
   extends:  [
     'plugin:@typescript-eslint/recommended',
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
     'prettier/@typescript-eslint',
   ],
-  parserOptions:  {
-    ecmaVersion:  2018,
-    sourceType:  'module',
-  },
   rules:  {
     // Having to move functions around to work-around hoisting is annoying.
     '@typescript-eslint/no-use-before-define': 'off',
@@ -25,8 +25,21 @@ module.exports =  {
     // https://github.com/typescript-eslint/typescript-eslint/issues/363
     '@typescript-eslint/no-unused-vars': 'off',
 
-    '@typescript-eslint/explicit-function-return-type': ['warn', {
-      allowExpressions: true
-    }]
+    // Allow using async functions in callbacks. Otherwise, this will error
+    // for all async functions because they return Promise<void>.
+    // fs.readFile('file.txt', async (err, txt) => {
+    //   await doThing(err, txt);
+    // }
+    "@typescript-eslint/no-misused-promises": [
+      "error", { checksVoidReturn: false }
+    ],
+
+    // Functions as expressions are usually simple enough not to need types.
+    "@typescript-eslint/explicit-function-return-type": ["warn", {
+      allowExpressions: true,
+    }],
+
+    // Floating promises should always be handled explicitly.
+    "@typescript-eslint/no-floating-promises": ["warn"],
   },
 };

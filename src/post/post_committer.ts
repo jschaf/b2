@@ -80,9 +80,9 @@ class PostSrcRenderer {
     return new PostSrcRenderer();
   }
 
-  async render(bag: PostBag): Promise<Mempost> {
+  render(bag: PostBag): Promise<Mempost> {
     const md = this.processor.stringify(bag.postNode.node);
-    return Mempost.ofUtf8Entry(`posts/${bag.postNode.metadata.slug}.md`, md);
+    return Promise.resolve(Mempost.ofUtf8Entry(`posts/${bag.postNode.metadata.slug}.md`, md));
   }
 }
 

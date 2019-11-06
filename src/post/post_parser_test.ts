@@ -39,7 +39,7 @@ const DEFAULT_FRONTMATTER = PostMetadata.of({
   date: dates.fromISO('2019-10-08'),
 });
 
-test('parses from markdown', async () => {
+test('parses from markdown', () => {
   const markdown = withFrontMatter(
     dedent`
     # hello
@@ -48,7 +48,7 @@ test('parses from markdown', async () => {
   `,
     DEFAULT_FRONTMATTER_TEXT
   );
-  const node = await PostParser.create().parseMarkdown(markdown);
+  const node = PostParser.create().parseMarkdown(markdown);
 
   const expected = mdRoot([
     mdHeading(1, [mdText('hello')]),
@@ -59,12 +59,12 @@ test('parses from markdown', async () => {
   );
 });
 
-test('parses paragraph followed immediately by a list', async () => {
+test('parses paragraph followed immediately by a list', () => {
   const markdown = withFrontMatter(dedent`
     Hello world.
     1. text
   `);
-  const node = await PostParser.create().parseMarkdown(markdown);
+  const node = PostParser.create().parseMarkdown(markdown);
 
   const expected = mdRoot([
     mdParaText('Hello world.'),

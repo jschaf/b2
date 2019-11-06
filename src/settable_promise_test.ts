@@ -36,7 +36,7 @@ test('rejects when setReject is called', async () => {
   await assertRejectsWithValue(p, errMessage);
 });
 
-test('errors when set is called twice', async () => {
+test('errors when set is called twice', () => {
   const p = SettablePromise.create();
 
   p.set(1);

@@ -29,12 +29,12 @@ if (require.main === module) {
     const textPack = await fs.promises.readFile('/Users/joe/gorilla.textpack');
     await commitPost(textPack);
   };
-  main().catch(console.log);
+  main().catch(err => console.log(err));
 }
 
 console.log('!!! gitFlag', gitDirFlag.currentValue);
 
-router.get('/', async ctx => {
+router.get('/', ctx => {
   ctx.response.body = 'hello, world';
 });
 
