@@ -3,7 +3,11 @@ import { PostNode } from '../post_parser';
 
 type MdNode = { type: string; children?: MdNode[] };
 
-const mdNode = (type: string, params: Object, children?: MdNode[]): MdNode => {
+const mdNode = (
+  type: string,
+  params: Record<string, unknown>,
+  children?: MdNode[]
+): MdNode => {
   const childObj = children == null ? {} : { children };
   return { type, ...params, ...childObj };
 };

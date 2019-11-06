@@ -3,7 +3,7 @@ declare module 'remark-rehype' {
 
   interface RemarkRehype extends Plugin<[Partial<RemarkRehypeOptions>?]> {}
 
-  interface RemarkRehypeOptions {}
+  type RemarkRehypeOptions = {};
 
   const remarkRehype: RemarkRehype;
   export = remarkRehype;

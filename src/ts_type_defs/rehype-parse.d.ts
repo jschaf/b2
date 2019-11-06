@@ -3,7 +3,7 @@ declare module 'rehype-parse' {
 
   interface RehypeParse extends Plugin<[Partial<RehypeParseOptions>?]> {}
 
-  interface RehypeParseOptions {}
+  type RehypeParseOptions = {};
 
   const rehypeParse: RehypeParse;
   export = rehypeParse;

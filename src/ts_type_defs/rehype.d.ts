@@ -3,7 +3,7 @@ declare module 'rehype' {
 
   interface Rehype extends Plugin<[Partial<RehypeOptions>?]> {}
 
-  interface RehypeOptions {}
+  type RehypeOptions = {};
 
   const rehype: Rehype;
   export = rehype;

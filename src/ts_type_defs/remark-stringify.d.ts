@@ -4,7 +4,7 @@ declare module 'remark-stringify' {
   interface RemarkStringify
     extends Plugin<[Partial<RemarkStringifyOptions>?]> {}
 
-  interface RemarkStringifyOptions {}
+  type RemarkStringifyOptions = {};
 
   const remarkStringify: RemarkStringify;
   export = remarkStringify;

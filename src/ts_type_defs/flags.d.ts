@@ -10,13 +10,13 @@ declare module 'flags' {
     setValidator(validator: (input: string) => void): Flag<T>;
     setSecret(secret: boolean): Flag<T>;
   }
-  const parse: (argv?: String[]) => void;
+  const parse: (argv?: string[]) => void;
   const reset: () => void;
   const get: (name: string) => Flag<unknown>;
 
   const defineString: (name: string) => Flag<string>;
   const defineInteger: (name: string) => Flag<number>;
   const defineNumber: (name: string) => Flag<number>;
-  const defineStringList: (name: string) => Flag<String[]>;
+  const defineStringList: (name: string) => Flag<string[]>;
   const defineMultiString: (name: string) => Flag<number>;
 }

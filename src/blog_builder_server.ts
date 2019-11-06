@@ -25,7 +25,7 @@ const commitPost = async (textPack: Buffer): Promise<void> => {
 if (require.main === module) {
   sourceMapSupport.install();
   flags.parse();
-  const main = async () => {
+  const main = async (): Promise<void> => {
     const textPack = await fs.promises.readFile('/Users/joe/gorilla.textpack');
     await commitPost(textPack);
   };

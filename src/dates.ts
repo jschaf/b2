@@ -3,12 +3,11 @@
  *
  * See https://stackoverflow.com/questions/643782
  */
-export const isValidDate = (date: any): boolean => {
+export const isValidDate = (date: unknown): boolean => {
   return (
     !!date &&
     Object.prototype.toString.call(date) === '[object Date]' &&
-    // @ts-ignore - check invalid dates
-    !isNaN(date)
+    !isNaN(date as number)
   );
 };
 

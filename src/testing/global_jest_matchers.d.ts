@@ -1,4 +1,4 @@
-import { Mempost } from '../post/mempost';
+import { Mempost } from '//post/mempost';
 
 declare global {
   namespace jest {

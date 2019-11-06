@@ -3,7 +3,7 @@ declare module 'rehype-format' {
 
   interface RehypeFormat extends Plugin<[Partial<RehypeFormatOptions>?]> {}
 
-  interface RehypeFormatOptions {}
+  type RehypeFormatOptions = {};
 
   const rehypeFormat: RehypeFormat;
   export = rehypeFormat;

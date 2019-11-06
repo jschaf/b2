@@ -4,7 +4,7 @@ declare module 'rehype-stringify' {
   interface RehypeStringify
     extends Plugin<[Partial<RehypeStringifyOptions>?]> {}
 
-  interface RehypeStringifyOptions {}
+  type RehypeStringifyOptions = {};
 
   const rehypeStringify: RehypeStringify;
   export = rehypeStringify;

@@ -76,7 +76,7 @@ class PostSrcRenderer {
     this.processor = unified().use(remarkStringify);
   }
 
-  static create() {
+  static create(): PostSrcRenderer {
     return new PostSrcRenderer();
   }
 

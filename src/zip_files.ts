@@ -2,7 +2,7 @@ import * as unzip from 'yauzl';
 import * as yazl from 'yazl';
 import * as streams from './streams';
 import { SettablePromise } from '//settable_promise';
-import { checkArg } from '//asserts';
+import { checkArg, checkDefinedAndNotNull } from '//asserts';
 
 /** An entry from a zip file. */
 export class ZipFileEntry {
@@ -17,7 +17,7 @@ export class ZipFileEntry {
     return new ZipFileEntry(filePath, contents);
   }
 
-  static ofUtf8(filePath: string, contents: string) {
+  static ofUtf8(filePath: string, contents: string): ZipFileEntry {
     return new ZipFileEntry(filePath, Buffer.from(contents, 'utf8'));
   }
 }
@@ -58,7 +58,7 @@ const unzipFromBuffer = (buf: Buffer): Promise<unzip.ZipFile> => {
       promisedResult.setReject(err);
       return;
     }
-    promisedResult.set(zipFile!);
+    promisedResult.set(checkDefinedAndNotNull(zipFile));
   });
   return promisedResult;
 };
@@ -76,7 +76,7 @@ const readAllEntries = async (
   // Directory file names end with '/'. Entries for directories
   // themselves are optional. An entry's fileName implicitly
   // requires its parent directories to exist.
-  const isDir = (f: string) => /\/$/.test(f);
+  const isDir = (f: string): boolean => /\/$/.test(f);
 
   const readFileEntry = (entry: unzip.Entry): Promise<ZipFileEntry> => {
     const fileEntry = SettablePromise.create<ZipFileEntry>();
@@ -84,7 +84,9 @@ const readAllEntries = async (
       if (err) {
         return fileEntry.setReject(err);
       }
-      const contents = await streams.toBuffer(readStream!);
+      const contents = await streams.toBuffer(
+        checkDefinedAndNotNull(readStream)
+      );
       return fileEntry.set({ filePath: entry.fileName, contents });
     });
     return fileEntry;

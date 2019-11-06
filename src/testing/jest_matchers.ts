@@ -8,7 +8,7 @@
  */
 
 import * as util from 'util';
-import { Mempost } from '../post/mempost';
+import { Mempost } from '//post/mempost';
 import unified from 'unified';
 import rehypeParse from 'rehype-parse';
 import rehypeFormat from 'rehype-format';
@@ -43,7 +43,7 @@ const normalizeMempostString = (path: string, contents: string): string => {
 
 function toEqualMempost(
   this: jest.MatcherContext,
-  received: any,
+  received: unknown,
   expected: Mempost | Record<string, string>
 ): jest.CustomMatcherResult {
   if (!(received instanceof Mempost)) {

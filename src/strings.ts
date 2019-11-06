@@ -39,9 +39,9 @@ export const dedent = (
   const lines = raw.split('\n');
   let minIndent: number | null = null;
   for (const line of lines) {
-    let m = line.match(/^(\s+)\S+/);
+    const m = line.match(/^(\s+)\S+/);
     if (m) {
-      let indent = m[1].length;
+      const indent = m[1].length;
       if (minIndent === null) {
         minIndent = indent;
       } else {

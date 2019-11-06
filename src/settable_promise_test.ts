@@ -105,7 +105,7 @@ test('calls functions registered with `finally`', async () => {
 
 async function assertRejectsWithValue<T>(
   p: Promise<T>,
-  expected: any
+  expected: unknown
 ): Promise<void> {
   try {
     await p;

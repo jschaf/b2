@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * A Promise whose result can be set from a value, another promise, or from
  * a rejection with a method call.  The promise can only be set once.

@@ -3,7 +3,7 @@ declare module 'rehype-katex' {
 
   interface RehypeKatex extends Plugin<[Partial<RehypeKatexOptions>?]> {}
 
-  interface RehypeKatexOptions {}
+  type RehypeKatexOptions = {};
 
   const rehypeKatex: RehypeKatex;
   export = rehypeKatex;

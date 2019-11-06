@@ -1,7 +1,8 @@
 import * as streams from '//streams';
 
 test('createFromArray creates a stream', async () => {
-  const roundTrip = async (arr: any[]) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roundTrip = async (arr: any[]): Promise<any> =>
     streams.collectToArray(streams.createFromArray(arr));
 
   expect(await roundTrip([])).toStrictEqual([]);
@@ -11,7 +12,7 @@ test('createFromArray creates a stream', async () => {
 });
 
 test('toUtf8String creates a string', async () => {
-  const roundTrip = async (str: string) => {
+  const roundTrip = async (str: string): Promise<string> => {
     const codePoints = Array.from(str).map(c => Uint8Array.of(c.charCodeAt(0)));
     return streams.toUtf8String(streams.createFromArray(codePoints));
   };

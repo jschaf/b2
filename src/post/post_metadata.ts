@@ -10,13 +10,14 @@ type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
   slug: { type: 'string', isRequired: true },
   date: { type: 'Date', isRequired: true },
-  publish_state: { type: 'string', isRequired: false },
+  publishState: { type: 'string', isRequired: false },
 };
 
 type Metadata = {
   slug: string;
   date: Date;
-  publish_state?: string;
+  publishState?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
 /** The metadata for a post including title, date, draft status, and others. */
@@ -27,7 +28,7 @@ export class PostMetadata {
     public readonly schema: Schema
   ) {}
 
-  static of(schema: any): PostMetadata {
+  static of(schema: unknown): PostMetadata {
     const validated = checkMetadataSchema(schema);
     return new PostMetadata(validated['slug'], validated['date'], validated);
   }
@@ -49,6 +50,7 @@ export class PostMetadata {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const checkMetadataSchema = (metadata: any): Metadata => {
   for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
