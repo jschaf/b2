@@ -24,6 +24,27 @@ export const mdPara = (children: MdNode[]): MdNode => {
   return mdNode('paragraph', {}, children);
 };
 
+export const mdParaText = (value: string): MdNode => {
+  return mdPara([mdText(value)]);
+};
+
+export const mdOrderedList = (children: MdNode[]): MdNode => {
+  return mdNode(
+    'list',
+    {
+      ordered: true,
+      spread: false,
+      start: 1,
+      type: 'list',
+    },
+    children.map(c => (c.type === 'listItem' ? c : mdListItem([c])))
+  );
+};
+
+export const mdListItem = (children: MdNode[]): MdNode => {
+  return mdNode('listItem', { spread: false, checked: null }, children);
+};
+
 export const stripPositions = (node: PostNode): PostNode => {
   const forceDelete = true;
   return new PostNode(node.metadata, removePosition(node.node, forceDelete));

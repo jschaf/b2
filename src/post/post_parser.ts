@@ -13,7 +13,7 @@ export class PostParser {
   private readonly processor: unified.Processor<unified.Settings>;
 
   private constructor() {
-    this.processor = unified().use(remarkParse);
+    this.processor = unified().use(remarkParse, { commonmark: true });
   }
 
   static create(): PostParser {
