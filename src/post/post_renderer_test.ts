@@ -1,4 +1,4 @@
-import {withDefaultFrontMatter} from 'front_matters.ts';
+import { withDefaultFrontMatter } from '//post/testing/front_matters';
 import { dedent } from '//strings';
 import { PostBag } from '//post/post_bag';
 import { PostRenderer } from '//post/post_renderer';
