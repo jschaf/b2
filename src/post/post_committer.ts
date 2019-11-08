@@ -82,7 +82,9 @@ class PostSrcRenderer {
 
   render(bag: PostBag): Promise<Mempost> {
     const md = this.processor.stringify(bag.postNode.node);
-    return Promise.resolve(Mempost.ofUtf8Entry(`posts/${bag.postNode.metadata.slug}.md`, md));
+    return Promise.resolve(
+      Mempost.ofUtf8Entry(`posts/${bag.postNode.metadata.slug}.md`, md)
+    );
   }
 }
 

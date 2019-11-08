@@ -76,7 +76,7 @@ const readAllEntries = async (
   // Directory file names end with '/'. Entries for directories
   // themselves are optional. An entry's fileName implicitly
   // requires its parent directories to exist.
-  const isDir = (f: string): boolean => f.endsWith("/");
+  const isDir = (f: string): boolean => f.endsWith('/');
 
   const readFileEntry = (entry: unzip.Entry): Promise<ZipFileEntry> => {
     const fileEntry = SettablePromise.create<ZipFileEntry>();

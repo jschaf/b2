@@ -33,9 +33,10 @@ export class PostMetadata {
     return new PostMetadata(validated['slug'], validated['date'], validated);
   }
 
-  static isMetadataNode = (n: unist.Node): n is { type: 'code'; value: string } => (
-      n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata')
-  );
+  static isMetadataNode = (
+    n: unist.Node
+  ): n is { type: 'code'; value: string } =>
+    n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata');
 
   /** Parses the post metadata from an array of markdown tokens. */
   static parseFromMarkdownAST(tree: unist.Node): PostMetadata {

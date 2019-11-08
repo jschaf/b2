@@ -1,12 +1,14 @@
-import * as dates from '//dates';
-import { dedent } from '//strings';
-import { ZipFileEntry, Zipper } from '//zip_files';
-import { PostMetadata } from '//post/post_metadata';
 import {
   PostNode,
   PostParser,
   TEXT_PACK_BUNDLE_PREFIX,
 } from '//post/post_parser';
+import {
+  DEFAULT_FRONTMATTER,
+  withDefaultFrontMatter,
+} from '//post/testing/frontmatters';
+import { dedent } from '//strings';
+import { ZipFileEntry, Zipper } from '//zip_files';
 import {
   mdHeading,
   mdOrderedList,
@@ -16,38 +18,12 @@ import {
   stripPositions,
 } from './testing/markdown_nodes';
 
-const withFrontMatter = (
-  text: string,
-  frontMatter: string = DEFAULT_FRONTMATTER_TEXT,
-  lineNum: number = 2
-): string => {
-  const lines = text.split('\n');
-  lines.splice(lineNum, 0, ...frontMatter.split('\n'));
-  return lines.join('\n');
-};
-
-const DEFAULT_FRONTMATTER_TEXT = dedent`
-    \`\`\`yaml
-    # Metadata
-    slug: foo_bar
-    date: 2019-10-08
-    \`\`\`
-`;
-
-const DEFAULT_FRONTMATTER = PostMetadata.of({
-  slug: 'foo_bar',
-  date: dates.fromISO('2019-10-08'),
-});
-
 test('parses from markdown', () => {
-  const markdown = withFrontMatter(
-    dedent`
+  const markdown = withDefaultFrontMatter(dedent`
     # hello
     
     Hello world.
-  `,
-    DEFAULT_FRONTMATTER_TEXT
-  );
+   `);
   const node = PostParser.create().parseMarkdown(markdown);
 
   const expected = mdRoot([
@@ -60,7 +36,7 @@ test('parses from markdown', () => {
 });
 
 test('parses paragraph followed immediately by a list', () => {
-  const markdown = withFrontMatter(dedent`
+  const markdown = withDefaultFrontMatter(dedent`
     Hello world.
     1. text
   `);
@@ -74,7 +50,7 @@ test('parses paragraph followed immediately by a list', () => {
 });
 
 test('parses from TextPack', async () => {
-  const markdown = withFrontMatter(dedent`
+  const markdown = withDefaultFrontMatter(dedent`
     # hello
     
     Hello world.
