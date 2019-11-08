@@ -6,7 +6,7 @@ import {
 import {
   DEFAULT_FRONTMATTER,
   withDefaultFrontMatter,
-} from '//post/testing/frontmatters';
+} from 'front_matters.ts';
 import { dedent } from '//strings';
 import { ZipFileEntry, Zipper } from '//zip_files';
 import {

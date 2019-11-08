@@ -1,20 +1,15 @@
+import {withDefaultFrontMatter} from 'front_matters.ts';
 import { dedent } from '//strings';
 import { PostBag } from '//post/post_bag';
 import { PostRenderer } from '//post/post_renderer';
 
 describe('PostRenderer', () => {
   it('should render a simple post', async () => {
-    const md = dedent`
+    const md = withDefaultFrontMatter(dedent`
       # hello
       
-      \`\`\`yaml
-      # Metadata
-      slug: foo_bar
-      date: 2019-10-08
-      \`\`\`
-      
       Hello world.
-    `;
+    `);
     const bag = PostBag.fromMarkdown(md);
 
     const actual = await PostRenderer.create().render(bag);
