@@ -65,40 +65,6 @@ const removeQuotes = (text: string): string => {
   return text.substr(1, text.length - 2);
 };
 
-const extractImportPath = (node: ts.Node, sf: ts.SourceFile): string | null => {
-  // import $expr$ from $moduleSpecifier$;
-  if (ts.isImportDeclaration(node)) {
-    return removeQuotes(node.moduleSpecifier.getText(sf));
-  }
-
-  // export $expr$ from $moduleSpecifier$;
-  if (ts.isExportDeclaration(node)) {
-    if (node.moduleSpecifier) {
-      return removeQuotes(node.moduleSpecifier.getText(sf));
-    } else {
-      return null;
-    }
-  }
-
-  // const foo = import($arguments$);
-  if (isDynamicImport(node)) {
-    return removeQuotes(node.arguments[0].getText(sf));
-  }
-
-  // declare const foo: import($stringLiteral$);
-  if (
-    ts.isImportTypeNode(node) &&
-    ts.isLiteralTypeNode(node.argument) &&
-    ts.isStringLiteral(node.argument.literal)
-  ) {
-    // `.text` instead of `getText` because this node doesn't map to sf. It's
-    // a generated d.ts file.
-    return node.argument.literal.text;
-  }
-
-  return null;
-};
-
 const importExportVisitor = (
   ctx: ts.TransformationContext,
   sf: ts.SourceFile,
@@ -106,32 +72,50 @@ const importExportVisitor = (
   regexps: Record<string, RegExp>
 ): ts.Visitor => {
   const visitor = (node: ts.Node): ts.Node => {
-    const originalPath = extractImportPath(node, sf);
-    if (originalPath === null) {
-      return ts.visitEachChild(node, visitor, ctx);
-    }
-
-    const rewrittenPath = rewritePath(originalPath, sf, opts, regexps);
-    if (rewrittenPath === originalPath) {
-      return node;
-    }
-
-    const newNode = ts.getMutableClone(node);
-    if (ts.isImportDeclaration(newNode) || ts.isExportDeclaration(newNode)) {
+    // import $expr$ from $moduleSpecifier$;
+    // export $expr$ from $moduleSpecifier$;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      if (!node.moduleSpecifier) {
+        return node;
+      }
+      const origPath = removeQuotes(node.moduleSpecifier.getText(sf));
+      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const newNode = ts.getMutableClone(node);
       newNode.moduleSpecifier = ts.createLiteral(rewrittenPath);
-    } else if (isDynamicImport(newNode)) {
+      return newNode;
+    }
+
+    // const foo = import($arguments$);
+    if (isDynamicImport(node)) {
+      const origPath = removeQuotes(node.arguments[0].getText(sf));
+      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const newNode = ts.getMutableClone(node);
       newNode.arguments = ts.createNodeArray([
         ts.createStringLiteral(rewrittenPath),
       ]);
-    } else if (ts.isImportTypeNode(newNode)) {
-      newNode.argument = ts.createLiteralTypeNode(
-        ts.createStringLiteral(rewrittenPath)
-      );
+      return newNode;
     }
 
-    return newNode;
-  };
+    // declare const foo: import($stringLiteral$);
+    if (
+        ts.isImportTypeNode(node) &&
+        ts.isLiteralTypeNode(node.argument) &&
+        ts.isStringLiteral(node.argument.literal)
+    ) {
+      // `.text` instead of `getText` because this node doesn't map to sf. It's
+      // a generated d.ts file.
+      const origPath = node.argument.literal.text;
+      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const newNode = ts.getMutableClone(node);
+      newNode.argument = ts.createLiteralTypeNode(
+          ts.createStringLiteral(rewrittenPath)
+      );
+      return newNode;
+    }
 
+    // Everything else.
+    return ts.visitEachChild(node, visitor, ctx);
+  };
   return visitor;
 };
 
