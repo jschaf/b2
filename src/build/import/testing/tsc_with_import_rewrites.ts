@@ -4,11 +4,11 @@ import * as rewriteAbsImport from '//build/import/rewrite_abs_imports';
 
 export const compile = (
   rootNames: string[],
-  projectBaseDir: string,
   options: ts.CompilerOptions
 ): {} => {
   const compilerHost = ts.createCompilerHost(options);
   const program = ts.createProgram(rootNames, options, compilerHost);
+  const baseDir = checkDefined(options.baseUrl);
 
   const msgs = {};
 
@@ -17,8 +17,8 @@ export const compile = (
   const cancellationToken = undefined;
   const emitOnlyDtsFiles = undefined;
   const customTransformers: ts.CustomTransformers = {
-    after: [rewriteAbsImport.transformSourceFile(projectBaseDir)],
-    afterDeclarations: [rewriteAbsImport.transformBundleOrSourceFile(projectBaseDir)],
+    after: [rewriteAbsImport.transformSourceFile(baseDir)],
+    afterDeclarations: [rewriteAbsImport.transformBundleOrSourceFile(baseDir)],
   };
   const emitResult = program.emit(
     targetSourceFile,

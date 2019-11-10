@@ -1,1 +1,1 @@
-export { DEPENDENCY} from '//dependency';
+export { DEPENDENCY } from '//dependency';

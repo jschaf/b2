@@ -3,10 +3,10 @@
  * This is typically used to rewrite relative imports into absolute imports
  * and mitigate import path differences.
  */
-import {checkArg} from '//asserts';
+import { checkArg } from '//asserts';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {SyntaxKind} from 'typescript';
+import { SyntaxKind } from 'typescript';
 
 const ABS_PATH_PREFIX = '//';
 
@@ -32,7 +32,9 @@ const rewritePath = (
   const absImport = path.join(rootDir, relToRoot);
   // ../../back/db
   const relPath = path.relative(
-      path.dirname(sf.fileName), path.dirname(absImport));
+    path.dirname(sf.fileName),
+    path.dirname(absImport)
+  );
   const joined = path.join(relPath, path.basename(importPath));
   if (joined.startsWith('../') || joined.startsWith('./')) {
     return joined;
@@ -58,7 +60,7 @@ const removeQuotes = (text: string): string => {
 const createAbsImportVisitor = (
   ctx: ts.TransformationContext,
   sf: ts.SourceFile,
-  rootDir: string,
+  rootDir: string
 ): ts.Visitor => {
   const visitor = (node: ts.Node): ts.Node => {
     // import $expr$ from $moduleSpecifier$;
@@ -87,9 +89,9 @@ const createAbsImportVisitor = (
 
     // declare const foo: import($stringLiteral$);
     if (
-        ts.isImportTypeNode(node) &&
-        ts.isLiteralTypeNode(node.argument) &&
-        ts.isStringLiteral(node.argument.literal)
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
     ) {
       // `.text` instead of `getText` because this node doesn't map to sf. It's
       // a generated d.ts file.
@@ -97,7 +99,7 @@ const createAbsImportVisitor = (
       const rewrittenPath = rewritePath(origPath, rootDir, sf);
       const newNode = ts.getMutableClone(node);
       newNode.argument = ts.createLiteralTypeNode(
-          ts.createStringLiteral(rewrittenPath)
+        ts.createStringLiteral(rewrittenPath)
       );
       return newNode;
     }
@@ -124,7 +126,7 @@ export const transformBundleOrSourceFile = (
 };
 
 export const transformSourceFile = (
-    projectBaseDir: string
+  projectBaseDir: string
 ): ts.TransformerFactory<ts.SourceFile> => {
   return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sf: ts.SourceFile) =>

@@ -1,4 +1,4 @@
-import {checkArg} from '//asserts';
+import { checkArg } from '//asserts';
 import * as fs from 'fs';
 import * as path from 'path';
 
