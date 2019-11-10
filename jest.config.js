@@ -13,5 +13,6 @@ module.exports = {
   },
   setupFilesAfterEnv: ['./src/testing/global_jest_setup'],
   testEnvironment: 'node',
-  testMatch: ["**/*_test.ts"]
+  testMatch: ["**/*_test.ts"],
+  snapshotResolver: './src/testing/jest_snapshot_resolver'
 };

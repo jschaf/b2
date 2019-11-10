@@ -1,6 +1,6 @@
 import {checkDefined} from '//asserts';
+import * as files from '//files';
 import * as tscImportRewrite from '//build/import/testing/tsc_with_import_rewrites';
-import {dedent} from '//strings';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
@@ -18,6 +18,8 @@ describe('rewrite_abs_imports', () => {
 
   beforeAll(() => {
     /* eslint-disable @typescript-eslint/unbound-method */
+    // Needed to use ts.sys functions without creating an arrow function
+    // for each one.
     const parseConfigHost: ts.ParseConfigHost = {
       fileExists: ts.sys.fileExists,
       readFile: ts.sys.readFile,
@@ -37,97 +39,40 @@ describe('rewrite_abs_imports', () => {
       resolveRelativeFile('testdata/esnext_proj/child_import.ts'),
       resolveRelativeFile('testdata/esnext_proj/child/parent_import.ts'),
     ];
+
+    const outDir = checkDefined(tsConfig.options.outDir);
+    files.deleteDirectory(path.resolve(baseDir, outDir));
     tscImportRewrite.compile(rootNames, baseDir, tsConfig.options);
     /* eslint-enable */
   });
 
   it('should not rewrite relative paths', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/rel_import.js');
-
-    expect(content).toEqual(dedent`
-      import { DEPENDENCY } from "./dependency";
-      import * as dep from "./dependency";
-      export const DEP_PLUS_1 = DEPENDENCY + 1;
-      export const DEP_PLUS_100 = dep.DEPENDENCY + 100;
-    `);
+    expect(content).toMatchSnapshot();
   });
 
   it('should rewrite absolute imports', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/abs_import.js');
-
-    expect(content).toEqual(dedent`
-      import { DEPENDENCY } from "./dependency";
-      import * as dep from "./dependency";
-      export const DEP_PLUS_1 = DEPENDENCY + 1;
-      export const DEP_PLUS_100 = dep.DEPENDENCY + 100;
-    `);
+    expect(content).toMatchSnapshot();
   });
 
   it('should rewrite absolute exports', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/abs_export.js');
-
-    expect(content).toEqual(dedent`
-      export { DEPENDENCY } from "./dependency";
-    `);
+    expect(content).toMatchSnapshot();
   });
 
   it('should rewrite parent absolute paths', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/child/parent_import.js');
-
-    expect(content).toEqual(dedent`
-      import { DEPENDENCY } from "../dependency";
-      export const PARENT_DEP_1 = DEPENDENCY + 1;
-    `);
+    expect(content).toMatchSnapshot();
   });
 
   it('should rewrite absolute import type paths in .d.ts', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/abs_import_type.d.ts');
-
-    expect(content).toEqual(dedent`
-      export declare const IMPORT_TYPE: import("./dependency");
-    `);
+    expect(content).toMatchSnapshot();
   });
 
   it('should rewrite absolute import expressions', async () => {
     const content = await readRelativeFile('testdata/esnext_proj/out/abs_import_expr.js');
-
-    expect(content).toEqual(dedent`
-      export const DYNAMIC_DEP = import("./dependency").then(m => m.DEPENDENCY);
-    `);
+    expect(content).toMatchSnapshot();
   });
-
-//  it('should produce expected js output', async () => {
-//    const content = await readRelativeFile('testdata/foo.js');
-//    expect(content).toEqual(dedent`
-//        import { dummy } from "dummy-project/import/testdata/bar";
-//        import * as fs from "rewritten/fs";
-//        import { sync } from "external/glob";
-//        import { hasMagic } from "external/glob";
-//        export function dummyFs(fn) {
-//            fs.readFileSync(fn);
-//            return import("dummy-project/import/testdata/bar");
-//        }
-//        export const dummy1 = dummy + 1;
-//        export const readFile = fs.readFile;
-//        export const globSync = sync;
-//        export const hasMagic1 = hasMagic;
-//        export { dummy2 } from "dummy-project/import/testdata/bar";
-//        export * from "dummy-project/import/testdata/bar";
-//        export { dummyBar2 } from "relative";
-//      `);
-//  });
-//  it('should produce expected d.ts output', async () => {
-//    const content = await readRelativeFile('testdata/foo.d.ts');
-//    expect(content).toContain(
-//      'export { dummy2 } from "dummy-project/import/testdata/bar";'
-//    );
-//    expect(content).toContain(
-//      'export * from "dummy-project/import/testdata/bar";'
-//    );
-//  });
-//
-//  it('should prioritize alias over relative resolution', async () => {
-//    const content = await readRelativeFile('testdata/foo.d.ts');
-//    expect(content).toContain('export { dummyBar2 } from "relative";');
-//  });
 });
