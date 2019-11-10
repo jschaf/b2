@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNEXT",
+    "module": "esnext",
+    "baseUrl": ".",
+    "outDir": "./out",
+    "declaration": true,
+    "paths": {
+      "//*": ["*"]
+    }
+  }
+}

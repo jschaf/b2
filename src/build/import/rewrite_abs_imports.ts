@@ -3,19 +3,12 @@
  * This is typically used to rewrite relative imports into absolute imports
  * and mitigate import path differences.
  */
-import { checkArg, checkState } from '//asserts';
-import { dirname, resolve } from 'path';
+import {checkArg} from '//asserts';
+import * as path from 'path';
 import * as ts from 'typescript';
-import { SyntaxKind } from 'typescript';
+import {SyntaxKind} from 'typescript';
 
-export interface Opts {
-  projectBaseDir?: string;
-  project: string;
-
-  rewrite(importPath: string, sourceFilePath: string): string | undefined;
-
-  alias: Record<string, string>;
-}
+const ABS_PATH_PREFIX = '//';
 
 /**
  * Rewrite relative import to absolute import or trigger
@@ -23,32 +16,29 @@ export interface Opts {
  */
 const rewritePath = (
   importPath: string,
-  sf: ts.SourceFile,
-  opts: Opts,
-  regexps: Record<string, RegExp>
+  rootDir: string,
+  sf: ts.SourceFile
 ): string => {
-  const aliases = Object.keys(regexps);
-  for (const alias of aliases) {
-    const regex = regexps[alias];
-    if (regexps[alias].test(importPath)) {
-      return importPath.replace(regex, opts.alias[alias]);
-    }
+  if (!importPath.startsWith(ABS_PATH_PREFIX)) {
+    return importPath;
   }
+  // importPath: //back/db/orm
+  // root: /home/code
+  // sf.filename: /home/code/test/check/promises.ts
 
-  checkState(typeof opts.rewrite === 'function');
-  const newImportPath = opts.rewrite(importPath, sf.fileName);
-  if (newImportPath) {
-    return newImportPath;
+  // //back/db/orm => back/db/orm
+  const relToRoot = importPath.slice(ABS_PATH_PREFIX.length);
+  // back/db/orm => /home/code/back/db/orm
+  const absImport = path.join(rootDir, relToRoot);
+  // ../../back/db
+  const relPath = path.relative(
+      path.dirname(sf.fileName), path.dirname(absImport));
+  const joined = path.join(relPath, path.basename(importPath));
+  if (joined.startsWith('../') || joined.startsWith('./')) {
+    return joined;
+  } else {
+    return `./${joined}`;
   }
-
-  if (opts.project && opts.projectBaseDir && importPath.startsWith('.')) {
-    const path = resolve(dirname(sf.fileName), importPath).split(
-      opts.projectBaseDir
-    )[1];
-    return `${opts.project}${path}`;
-  }
-
-  return importPath;
 };
 
 const isDynamicImport = (node: ts.Node): node is ts.CallExpression => {
@@ -65,11 +55,10 @@ const removeQuotes = (text: string): string => {
   return text.substr(1, text.length - 2);
 };
 
-const importExportVisitor = (
+const createAbsImportVisitor = (
   ctx: ts.TransformationContext,
   sf: ts.SourceFile,
-  opts: Opts,
-  regexps: Record<string, RegExp>
+  rootDir: string,
 ): ts.Visitor => {
   const visitor = (node: ts.Node): ts.Node => {
     // import $expr$ from $moduleSpecifier$;
@@ -79,7 +68,7 @@ const importExportVisitor = (
         return node;
       }
       const origPath = removeQuotes(node.moduleSpecifier.getText(sf));
-      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const rewrittenPath = rewritePath(origPath, rootDir, sf);
       const newNode = ts.getMutableClone(node);
       newNode.moduleSpecifier = ts.createLiteral(rewrittenPath);
       return newNode;
@@ -88,7 +77,7 @@ const importExportVisitor = (
     // const foo = import($arguments$);
     if (isDynamicImport(node)) {
       const origPath = removeQuotes(node.arguments[0].getText(sf));
-      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const rewrittenPath = rewritePath(origPath, rootDir, sf);
       const newNode = ts.getMutableClone(node);
       newNode.arguments = ts.createNodeArray([
         ts.createStringLiteral(rewrittenPath),
@@ -105,7 +94,7 @@ const importExportVisitor = (
       // `.text` instead of `getText` because this node doesn't map to sf. It's
       // a generated d.ts file.
       const origPath = node.argument.literal.text;
-      const rewrittenPath = rewritePath(origPath, sf, opts, regexps);
+      const rewrittenPath = rewritePath(origPath, rootDir, sf);
       const newNode = ts.getMutableClone(node);
       newNode.argument = ts.createLiteralTypeNode(
           ts.createStringLiteral(rewrittenPath)
@@ -119,20 +108,8 @@ const importExportVisitor = (
   return visitor;
 };
 
-const buildTransformRegexps = (
-  alias: Record<string, string>
-): Record<string, RegExp> => {
-  return Object.keys(alias).reduce(
-    (all, regexString) => {
-      all[regexString] = new RegExp(regexString, 'gi');
-      return all;
-    },
-    {} as Record<string, RegExp>
-  );
-};
-
 export const transformBundleOrSourceFile = (
-  opts: Opts
+  projectBaseDir: string
 ): ts.TransformerFactory<ts.Bundle | ts.SourceFile> => {
   return (
     ctx: ts.TransformationContext
@@ -141,19 +118,16 @@ export const transformBundleOrSourceFile = (
       if (sf.kind !== SyntaxKind.SourceFile) {
         throw new Error('Only SourceFile transform supported');
       }
-      const regexps = buildTransformRegexps(opts.alias);
-      return ts.visitNode(sf, importExportVisitor(ctx, sf, opts, regexps));
+      return ts.visitNode(sf, createAbsImportVisitor(ctx, sf, projectBaseDir));
     };
   };
 };
 
 export const transformSourceFile = (
-  opts: Opts
+    projectBaseDir: string
 ): ts.TransformerFactory<ts.SourceFile> => {
-  const { alias = {} } = opts;
-  const regexps = buildTransformRegexps(alias);
   return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
     return (sf: ts.SourceFile) =>
-      ts.visitNode(sf, importExportVisitor(ctx, sf, opts, regexps));
+      ts.visitNode(sf, createAbsImportVisitor(ctx, sf, projectBaseDir));
   };
 };
