@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import * as unist from 'unist';
 import findNode from 'unist-util-find';
-import { checkDefinedAndNotNull } from '//asserts';
+import { checkDefined } from '//asserts';
 import * as dates from '//dates';
 import * as strings from '//strings';
 import { isString } from '//strings';
@@ -40,7 +40,7 @@ export class PostMetadata {
 
   /** Parses the post metadata from an array of markdown tokens. */
   static parseFromMarkdownAST(tree: unist.Node): PostMetadata {
-    const node = checkDefinedAndNotNull(
+    const node = checkDefined(
       findNode(tree, PostMetadata.isMetadataNode),
       "No nodes found that match YAML code block beginning with '# Metadata'."
     );

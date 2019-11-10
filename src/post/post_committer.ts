@@ -5,7 +5,7 @@ import * as isoGit from 'isomorphic-git';
 import * as path from 'path';
 import remarkStringify from 'remark-stringify';
 import unified from 'unified';
-import { checkArg, checkDefinedAndNotNull } from '//asserts';
+import { checkArg, checkDefined } from '//asserts';
 import { Mempost } from '//post/mempost';
 import { PostBag } from '//post/post_bag';
 
@@ -51,7 +51,7 @@ export class PostCommitter {
   }
 
   async pushOrigin(): Promise<void> {
-    const token = checkDefinedAndNotNull(
+    const token = checkDefined(
       process.env['GITHUB_TOKEN'],
       'No environment variable GITHUB_TOKEN'
     );

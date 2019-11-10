@@ -1,5 +1,5 @@
 {
-  "exclude": [ "node_modules"],
+  "exclude": [ "node_modules", "testdata"],
   "compilerOptions": {
     /* Basic Options */
     "incremental": true,

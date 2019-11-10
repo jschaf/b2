@@ -2,7 +2,7 @@ import * as unzip from 'yauzl';
 import * as yazl from 'yazl';
 import * as streams from './streams';
 import { SettablePromise } from '//settable_promise';
-import { checkArg, checkDefinedAndNotNull } from '//asserts';
+import { checkArg, checkDefined } from '//asserts';
 
 /** An entry from a zip file. */
 export class ZipFileEntry {
@@ -58,7 +58,7 @@ const unzipFromBuffer = (buf: Buffer): Promise<unzip.ZipFile> => {
       promisedResult.setReject(err);
       return;
     }
-    promisedResult.set(checkDefinedAndNotNull(zipFile));
+    promisedResult.set(checkDefined(zipFile));
   });
   return promisedResult;
 };
@@ -85,9 +85,7 @@ const readAllEntries = async (
         fileEntry.setReject(err);
         return;
       }
-      const contents = await streams.toBuffer(
-        checkDefinedAndNotNull(readStream)
-      );
+      const contents = await streams.toBuffer(checkDefined(readStream));
       fileEntry.set({ filePath: entry.fileName, contents });
     });
     return fileEntry;

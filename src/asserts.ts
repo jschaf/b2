@@ -44,10 +44,10 @@ export const checkState = (expression: boolean, errorMsg?: string): void => {
 };
 
 /** Ensures an expression is both defined and not null. */
-export const checkDefinedAndNotNull = <T>(
+export const checkDefined = <T>(
   expression: T | undefined | null,
   errorMsg?: string
-): T => {
+): NonNullable<T> => {
   if (expression === undefined) {
     throw new PreconditionError(
       errorMsg || 'Expression was undefined but expected a defined expression.'
@@ -58,5 +58,5 @@ export const checkDefinedAndNotNull = <T>(
       errorMsg || 'Expression was null but expected a non-null expression.'
     );
   }
-  return expression;
+  return expression as NonNullable<T>;
 };
