@@ -3,45 +3,10 @@
  * This is typically used to rewrite relative imports into absolute imports
  * and mitigate import path differences.
  */
-import { checkArg } from '//asserts';
-import * as path from 'path';
+import { checkArg, checkDefined } from '//asserts';
+import {ImportRewriter} from '//build/import/import_rewriter';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
-
-const ABS_PATH_PREFIX = '//';
-
-/**
- * Rewrite relative import to absolute import or trigger
- * rewrite callback
- */
-const rewritePath = (
-  importPath: string,
-  rootDir: string,
-  sf: ts.SourceFile
-): string => {
-  if (!importPath.startsWith(ABS_PATH_PREFIX)) {
-    return importPath;
-  }
-  // importPath: //back/db/orm
-  // root: /home/code
-  // sf.filename: /home/code/test/check/promises.ts
-
-  // //back/db/orm => back/db/orm
-  const relToRoot = importPath.slice(ABS_PATH_PREFIX.length);
-  // back/db/orm => /home/code/back/db/orm
-  const absImport = path.join(rootDir, relToRoot);
-  // ../../back/db
-  const relPath = path.relative(
-    path.dirname(sf.fileName),
-    path.dirname(absImport)
-  );
-  const joined = path.join(relPath, path.basename(importPath));
-  if (joined.startsWith('../') || joined.startsWith('./')) {
-    return joined;
-  } else {
-    return `./${joined}`;
-  }
-};
 
 const isDynamicImport = (node: ts.Node): node is ts.CallExpression => {
   return (
@@ -62,6 +27,7 @@ const createAbsImportVisitor = (
   sf: ts.SourceFile,
   rootDir: string
 ): ts.Visitor => {
+  const importRewriter = ImportRewriter.forRootDir(rootDir);
   const visitor = (node: ts.Node): ts.Node => {
     // import $expr$ from $moduleSpecifier$;
     // export $expr$ from $moduleSpecifier$;
@@ -70,7 +36,7 @@ const createAbsImportVisitor = (
         return node;
       }
       const origPath = removeQuotes(node.moduleSpecifier.getText(sf));
-      const rewrittenPath = rewritePath(origPath, rootDir, sf);
+      const rewrittenPath = importRewriter.rewrite(origPath, sf.fileName);
       const newNode = ts.getMutableClone(node);
       newNode.moduleSpecifier = ts.createLiteral(rewrittenPath);
       return newNode;
@@ -79,7 +45,7 @@ const createAbsImportVisitor = (
     // const foo = import($arguments$);
     if (isDynamicImport(node)) {
       const origPath = removeQuotes(node.arguments[0].getText(sf));
-      const rewrittenPath = rewritePath(origPath, rootDir, sf);
+      const rewrittenPath = importRewriter.rewrite(origPath, sf.fileName);
       const newNode = ts.getMutableClone(node);
       newNode.arguments = ts.createNodeArray([
         ts.createStringLiteral(rewrittenPath),
@@ -96,7 +62,7 @@ const createAbsImportVisitor = (
       // `.text` instead of `getText` because this node doesn't map to sf. It's
       // a generated d.ts file.
       const origPath = node.argument.literal.text;
-      const rewrittenPath = rewritePath(origPath, rootDir, sf);
+      const rewrittenPath = importRewriter.rewrite(origPath, sf.fileName);
       const newNode = ts.getMutableClone(node);
       newNode.argument = ts.createLiteralTypeNode(
         ts.createStringLiteral(rewrittenPath)
@@ -110,7 +76,7 @@ const createAbsImportVisitor = (
   return visitor;
 };
 
-export const transformBundleOrSourceFile = (
+export const newAfterDeclarationsTransformer = (
   projectBaseDir: string
 ): ts.TransformerFactory<ts.Bundle | ts.SourceFile> => {
   return (
@@ -125,7 +91,7 @@ export const transformBundleOrSourceFile = (
   };
 };
 
-export const transformSourceFile = (
+export const newAfterTransformer = (
   projectBaseDir: string
 ): ts.TransformerFactory<ts.SourceFile> => {
   return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
@@ -133,3 +99,12 @@ export const transformSourceFile = (
       ts.visitNode(sf, createAbsImportVisitor(ctx, sf, projectBaseDir));
   };
 };
+
+export const transform = (
+  program: ts.Program,
+  _pluginOptions: {}
+): ts.TransformerFactory<ts.SourceFile> => {
+  const projectBaseDir = checkDefined(program.getCompilerOptions().baseUrl);
+  return newAfterTransformer(projectBaseDir);
+};
+

@@ -1,2 +1,4 @@
-**/testdata/*.js
-**/testdata/*.ts
+**/out/**/*.js
+**/testdata/**/*.ts
+**/*_test_snap.ts
+

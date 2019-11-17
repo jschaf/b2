@@ -6,7 +6,8 @@
   "main": "src/blog_builder_server.ts",
   "scripts": {
     "compile": "node_modules/.bin/tsc",
-    "start": "node out/blog_builder_server.js",
+    "test_compile": "npx ts-node -r ./src/build/import/register_import_rewriter.ts ./src/hello_world.ts",
+    "start": "npx ts-node -r ./src/build/import/register_import_rewriter.ts src/blog_builder_server.ts",
     "test": "jest"
   },
   "author": "Joe Schafer",
@@ -32,6 +33,7 @@
     "remark-parse": "^7.0.1",
     "remark-rehype": "^5.0.0",
     "ts-node": "^8.4.1",
+    "ttypescript": "^1.5.8",
     "unist-util-filter": "^1.0.2",
     "unist-util-find": "^1.0.1",
     "unist-util-remove": "^1.0.3",
@@ -63,6 +65,7 @@
     "eslint-config-prettier": "^6.5.0",
     "glob": "latest",
     "jest": "^24.9.0",
+    "jsonc-parser": "^2.2.0",
     "prettier": "1.18.2",
     "source-map-support": "^0.5.16",
     "ts-jest": "^24.1.0",

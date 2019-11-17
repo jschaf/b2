@@ -1,9 +1,9 @@
-import {checkDefined} from '//asserts';
-import * as tscImportRewrite from '//build/import/testing/tsc_with_import_rewrites';
+import { checkDefined } from '//asserts';
+import * as rewriteAbsImport from '//build/import/rewrite_abs_imports';
+import { PluggableTsc, TsConfigParser } from '//build/pluggable_tsc';
 import * as files from '//files';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as ts from 'typescript';
 
 const resolveRelativeFile = (filePath: string): string => {
   return path.resolve(__dirname, filePath);
@@ -14,30 +14,9 @@ const readRelativeFile = async (filePath: string): Promise<string> => {
   return buffer.toString('utf8').trim();
 };
 
-const parseTsConfig = (baseDir: string): ts.ParsedCommandLine => {
-  /* eslint-disable @typescript-eslint/unbound-method */
-  // Needed to use ts.sys functions without creating an arrow function
-  // for each one.
-  const parseConfigHost: ts.ParseConfigHost = {
-    fileExists: ts.sys.fileExists,
-    readFile: ts.sys.readFile,
-    readDirectory: ts.sys.readDirectory,
-    useCaseSensitiveFileNames: true,
-  };
-  const config = checkDefined(ts.findConfigFile(baseDir, ts.sys.fileExists));
-  const sourceFile = ts.readJsonConfigFile(config, ts.sys.readFile);
-  /* eslint-enable */
-  return ts.parseJsonSourceFileConfigFileContent(
-      sourceFile,
-      parseConfigHost,
-      baseDir
-  );
-};
-
 describe('rewrite_abs_imports', () => {
   beforeAll(() => {
     const baseDir = path.resolve(__dirname, 'testdata/esnext_proj');
-    const tsConfig = parseTsConfig(baseDir);
     const rootNames = [
       resolveRelativeFile('testdata/esnext_proj/rel_import.ts'),
       resolveRelativeFile('testdata/esnext_proj/abs_import.ts'),
@@ -48,9 +27,16 @@ describe('rewrite_abs_imports', () => {
       resolveRelativeFile('testdata/esnext_proj/child/parent_import.ts'),
     ];
 
-    const outDir = checkDefined(tsConfig.options.outDir);
-    files.deleteDirectory(path.resolve(baseDir, outDir));
-    tscImportRewrite.compile(rootNames, tsConfig.options);
+    const tsConfig = TsConfigParser.forDirectory(baseDir).parse();
+    files.deleteDirectory(
+      path.resolve(baseDir, checkDefined(tsConfig.options.outDir))
+    );
+    const tsc = PluggableTsc.forOptions(tsConfig);
+    tsc.addAfterTransformer(rewriteAbsImport.newAfterTransformer(baseDir));
+    tsc.addAfterDeclarationsTransformer(
+      rewriteAbsImport.newAfterDeclarationsTransformer(baseDir)
+    );
+    tsc.compile(rootNames);
   });
 
   it('should not rewrite relative paths', async () => {
