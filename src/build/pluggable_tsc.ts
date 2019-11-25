@@ -1,7 +1,4 @@
 import * as path from 'path';
-import * as monkeyPatchRequire from './import/monkeypatch_node_require';
-monkeyPatchRequire.monkeyPatch();
-
 import {checkDefined} from '//asserts';
 import * as rewriteAbsImport from '//build/import/rewrite_abs_imports';
 import * as ts from 'typescript';
