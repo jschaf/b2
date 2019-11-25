@@ -31,7 +31,7 @@ const findTsConfigRootDir = (startDir: string): string | null => {
 export const monkeyPatch = (): void => {
   const rootDir = findTsConfigRootDir(__dirname);
   if (rootDir === null) {
-    throw new Error(`Unable to find package.json in ${process.cwd} or any `
+    throw new Error(`Unable to find package.json in ${__dirname} or any `
         + `parent directory.`)
   }
   const importRewriter = ImportRewriter.forRootDir(rootDir);
