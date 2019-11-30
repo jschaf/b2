@@ -24,7 +24,7 @@ test('rejects when setPromise with rejected value is called', async () => {
   const errValue = 99;
   p.setPromise(Promise.reject(errValue));
 
-  await assertRejectsWithValue(p, errValue);
+  await expect(p).rejects.toEqual(errValue);
 });
 
 test('rejects when setReject is called', async () => {
@@ -33,7 +33,7 @@ test('rejects when setReject is called', async () => {
   const errMessage = 'A message';
   p.setReject(errMessage);
 
-  await assertRejectsWithValue(p, errMessage);
+  await expect(p).rejects.toEqual(errMessage);
 });
 
 test('errors when set is called twice', () => {
@@ -59,7 +59,7 @@ test('errors when reject is called twice', async () => {
   p.setReject(1);
 
   expect(() => p.setReject(2)).toThrow();
-  await assertRejectsWithValue(p, 1);
+  await expect(p).rejects.toEqual(1);
 });
 
 test('calls functions registered with `then`', async () => {
@@ -102,16 +102,3 @@ test('calls functions registered with `finally`', async () => {
   expect(await secondFinally).toBe(10);
   expect(secondValue).toBe(2);
 });
-
-async function assertRejectsWithValue<T>(
-  p: Promise<T>,
-  expected: unknown
-): Promise<void> {
-  try {
-    await p;
-  } catch (e) {
-    expect(e).toBe(expected);
-    return;
-  }
-  throw new Error('Expected an error to be thrown but nothing was thrown');
-}
