@@ -19,6 +19,15 @@ describe('promises', () => {
     it('should throw for false expressions with custom message', () => {
       expect(() => checkArg(false, 'a message')).toThrow(/a message/);
     });
+
+    it('should narrow the type', () => {
+      const maybeStringOrNumber = (): string | number => 2;
+      const x = maybeStringOrNumber();
+
+      checkArg(typeof x === 'number');
+
+      expect(x + 1).toEqual(3);
+    });
   });
 
   describe('checkState', () => {
@@ -34,9 +43,18 @@ describe('promises', () => {
     it('should throw for false expressions with custom message', () => {
       expect(() => checkState(false, 'a message')).toThrow(/a message/);
     });
+
+    it('should narrow the type', () => {
+      const maybeStringOrNumber = (): string | number => 2;
+      const x = maybeStringOrNumber();
+
+      checkState(typeof x === 'number');
+
+      expect(x + 1).toEqual(3);
+    });
   });
 
-  describe('checkDefinedAndNotNull', () => {
+  describe('checkDefined', () => {
     it('should not throw for a defined value', () => {
       const a = 2;
       checkDefined(a);

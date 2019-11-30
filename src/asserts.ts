@@ -18,13 +18,13 @@ export class PreconditionError extends Error {
  *
  * Throws PreconditionError if the expression is false.
  */
-export const checkArg = (expression: boolean, errorMsg?: string): void => {
+export function checkArg(expression: boolean, errorMsg?: string): asserts expression {
   if (!expression) {
     throw new PreconditionError(
-      errorMsg || 'Expression evaluated to false but expected it to be true.'
+        errorMsg || 'Expression evaluated to false but expected it to be true.'
     );
   }
-};
+}
 
 /**
  * Ensures the truth of an expression involving the state of the calling instance,
@@ -35,13 +35,13 @@ export const checkArg = (expression: boolean, errorMsg?: string): void => {
  *
  * Throws PreconditionError if the expression is false.
  */
-export const checkState = (expression: boolean, errorMsg?: string): void => {
+export function checkState(expression: boolean, errorMsg?: string): asserts expression {
   if (!expression) {
     throw new PreconditionError(
-      errorMsg || 'Expression evaluated to false but expected it to be true.'
+        errorMsg || 'Expression evaluated to false but expected it to be true.'
     );
   }
-};
+}
 
 /** Ensures an expression is both defined and not null. */
 export const checkDefined = <T>(
