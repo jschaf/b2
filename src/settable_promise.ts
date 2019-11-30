@@ -58,7 +58,10 @@ export class SettablePromise<T> implements Promise<T> {
   setPromise(promise: Promise<T>): void {
     this.assertNotYetSet();
     this.wasSet = true;
-    promise.then(v => this.resolve(v), r => this.reject(r));
+    promise.then(
+      v => this.resolve(v),
+      r => this.reject(r)
+    );
   }
 
   /**

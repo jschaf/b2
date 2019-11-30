@@ -4,7 +4,7 @@
  * and mitigate import path differences.
  */
 import { checkArg, checkDefined } from '//asserts';
-import {ImportRewriter} from '//build/import/import_rewriter';
+import { ImportRewriter } from '//build/import/import_rewriter';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 
@@ -107,4 +107,3 @@ export const transform = (
   const projectBaseDir = checkDefined(program.getCompilerOptions().baseUrl);
   return newAfterTransformer(projectBaseDir);
 };
-

@@ -3,8 +3,7 @@ import * as path from 'path';
 const ABS_PATH_PREFIX = '//';
 
 export class ImportRewriter {
-  private constructor(private readonly rootDir: string) {
-  }
+  private constructor(private readonly rootDir: string) {}
 
   static forRootDir(dir: string): ImportRewriter {
     return new ImportRewriter(dir);
@@ -21,8 +20,8 @@ export class ImportRewriter {
     const relToRoot = importPath.slice(ABS_PATH_PREFIX.length);
     const absImport = path.join(this.rootDir, relToRoot);
     const relPath = path.relative(
-        path.dirname(parent),
-        path.dirname(absImport)
+      path.dirname(parent),
+      path.dirname(absImport)
     );
     const joined = path.join(relPath, path.basename(importPath));
     if (joined.startsWith('../') || joined.startsWith('./')) {
@@ -35,4 +34,3 @@ export class ImportRewriter {
     }
   }
 }
-

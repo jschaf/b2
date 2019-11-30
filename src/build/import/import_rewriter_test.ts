@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {ImportRewriter} from '//build/import/import_rewriter';
+import { ImportRewriter } from '//build/import/import_rewriter';
 
 const testRootDir = (subPath: string = '.'): string => {
   return path.join('/root/src/', subPath);

@@ -7,13 +7,12 @@ module.exports = {
 
   /** Resolves from snapshot to test path. */
   resolveTestPath: (snapshotFilePath, _snapshotExtension) => {
-    return snapshotFilePath
-    .replace('_snap', '');
+    return snapshotFilePath.replace('_snap', '');
   },
 
   /**
    * Example test path, used for preflight consistency check of the
    * implementation above.
    */
-  testPathForConsistencyCheck: 'some/example_test.ts'
+  testPathForConsistencyCheck: 'some/example_test.ts',
 };

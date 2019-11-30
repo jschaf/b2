@@ -1,12 +1,12 @@
-import {ImportRewriter} from './import_rewriter';
-import * as fs from "fs";
+import { ImportRewriter } from './import_rewriter';
+import * as fs from 'fs';
 import * as jsonc from 'jsonc-parser';
-import Module from "module";
-import * as path from "path";
+import Module from 'module';
+import * as path from 'path';
 
 const findTsConfigRootDir = (startDir: string): string | null => {
   if (startDir === '') {
-    throw new Error('Expected directory path but got empty string.')
+    throw new Error('Expected directory path but got empty string.');
   }
   let prevDir = '';
   let curDir = startDir;
@@ -16,7 +16,7 @@ const findTsConfigRootDir = (startDir: string): string | null => {
       const conf = jsonc.parse(fs.readFileSync(file).toString('utf8'));
       const rootDir = conf['compilerOptions']['rootDir'];
       if (typeof rootDir !== 'string') {
-        throw new Error(`Unable to parse rootDir from ${file}.`)
+        throw new Error(`Unable to parse rootDir from ${file}.`);
       }
       return path.resolve(curDir, rootDir);
     }
@@ -31,15 +31,21 @@ const findTsConfigRootDir = (startDir: string): string | null => {
 export const monkeyPatch = (): void => {
   const rootDir = findTsConfigRootDir(__dirname);
   if (rootDir === null) {
-    throw new Error(`Unable to find package.json in ${__dirname} or any `
-        + `parent directory.`)
+    throw new Error(
+      `Unable to find package.json in ${__dirname} or any ` +
+        `parent directory.`
+    );
   }
   const importRewriter = ImportRewriter.forRootDir(rootDir);
   //@ts-ignore
   const origResolveFilename = Module._resolveFilename;
   //@ts-ignore
   Module._resolveFilename = function(
-      request: string, parent: Module, _isMain: boolean, _options: unknown): string {
+    request: string,
+    parent: Module,
+    _isMain: boolean,
+    _options: unknown
+  ): string {
     if (parent === null) {
       return request;
     }

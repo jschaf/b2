@@ -6,13 +6,13 @@ module.exports = {
   maxConcurrency: 20,
   moduleFileExtensions: ['ts', 'node', 'js', 'json'],
   moduleNameMapper: {
-    "//(.*)": "<rootDir>/src/$1",
+    '//(.*)': '<rootDir>/src/$1',
   },
   transform: {
     ...tsjPreset.transform,
   },
   setupFilesAfterEnv: ['./src/testing/global_jest_setup'],
   testEnvironment: 'node',
-  testMatch: ["**/*_test.ts"],
-  snapshotResolver: './src/testing/jest_snapshot_resolver'
+  testMatch: ['**/*_test.ts'],
+  snapshotResolver: './src/testing/jest_snapshot_resolver',
 };

@@ -18,10 +18,13 @@ export class PreconditionError extends Error {
  *
  * Throws PreconditionError if the expression is false.
  */
-export function checkArg(expression: boolean, errorMsg?: string): asserts expression {
+export function checkArg(
+  expression: boolean,
+  errorMsg?: string
+): asserts expression {
   if (!expression) {
     throw new PreconditionError(
-        errorMsg || 'Expression evaluated to false but expected it to be true.'
+      errorMsg || 'Expression evaluated to false but expected it to be true.'
     );
   }
 }
@@ -35,10 +38,13 @@ export function checkArg(expression: boolean, errorMsg?: string): asserts expres
  *
  * Throws PreconditionError if the expression is false.
  */
-export function checkState(expression: boolean, errorMsg?: string): asserts expression {
+export function checkState(
+  expression: boolean,
+  errorMsg?: string
+): asserts expression {
   if (!expression) {
     throw new PreconditionError(
-        errorMsg || 'Expression evaluated to false but expected it to be true.'
+      errorMsg || 'Expression evaluated to false but expected it to be true.'
     );
   }
 }

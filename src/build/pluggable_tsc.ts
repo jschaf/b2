@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {checkDefined} from '//asserts';
+import { checkDefined } from '//asserts';
 import * as rewriteAbsImport from '//build/import/rewrite_abs_imports';
 import * as ts from 'typescript';
 
@@ -7,7 +7,6 @@ const tsNode = require('ts-node').register;
 
 /** Parses the tsconfig file from a directory. */
 export class TsConfigParser {
-
   private readonly parseHost: ts.ParseConfigHost = {
     fileExists: ts.sys.fileExists,
     readFile: ts.sys.readFile,
@@ -15,8 +14,7 @@ export class TsConfigParser {
     useCaseSensitiveFileNames: true,
   };
 
-  private constructor(private readonly dir: string) {
-  }
+  private constructor(private readonly dir: string) {}
 
   static forCurrentProject(): TsConfigParser {
     return TsConfigParser.forDirectory(process.cwd());
@@ -45,24 +43,25 @@ export class TsConfigParser {
     const sourceFile = ts.readJsonConfigFile(config, ts.sys.readFile);
     /* eslint-enable */
     return ts.parseJsonSourceFileConfigFileContent(
-        sourceFile,
-        this.parseHost,
-        this.dir
+      sourceFile,
+      this.parseHost,
+      this.dir
     );
   }
 }
 
 type TscTransformer<T extends ts.Node> =
-    | ts.TransformerFactory<T>
-    | ts.CustomTransformerFactory;
+  | ts.TransformerFactory<T>
+  | ts.CustomTransformerFactory;
 
 export class PluggableTsc {
   private readonly beforeTransfomers: TscTransformer<ts.SourceFile>[] = [];
   private readonly afterTransfomers: TscTransformer<ts.SourceFile>[] = [];
-  private readonly afterDeclarationsTransfomers: TscTransformer<ts.SourceFile | ts.Bundle>[] = [];
+  private readonly afterDeclarationsTransfomers: TscTransformer<
+    ts.SourceFile | ts.Bundle
+  >[] = [];
 
-  private constructor(private readonly opts: ts.ParsedCommandLine) {
-  }
+  private constructor(private readonly opts: ts.ParsedCommandLine) {}
 
   static forOptions(opts: ts.ParsedCommandLine): PluggableTsc {
     return new PluggableTsc(opts);
@@ -77,7 +76,7 @@ export class PluggableTsc {
   }
 
   addAfterDeclarationsTransformer(
-      t: TscTransformer<ts.SourceFile | ts.Bundle>
+    t: TscTransformer<ts.SourceFile | ts.Bundle>
   ): void {
     this.afterDeclarationsTransfomers.push(t);
   }
@@ -85,9 +84,9 @@ export class PluggableTsc {
   compile(rootNames: string[]): void {
     const compilerHost = ts.createCompilerHost(this.opts.options);
     const program = ts.createProgram(
-        rootNames,
-        this.opts.options,
-        compilerHost
+      rootNames,
+      this.opts.options,
+      compilerHost
     );
 
     const targetSourceFile = undefined;
@@ -100,27 +99,27 @@ export class PluggableTsc {
       afterDeclarations: this.afterDeclarationsTransfomers,
     };
     const emitResult = program.emit(
-        targetSourceFile,
-        writeFile,
-        cancellationToken,
-        emitOnlyDtsFiles,
-        customTransformers
+      targetSourceFile,
+      writeFile,
+      cancellationToken,
+      emitOnlyDtsFiles,
+      customTransformers
     );
     const allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
+      .getPreEmitDiagnostics(program)
+      .concat(emitResult.diagnostics);
 
     for (const diagnostic of allDiagnostics) {
       const file = checkDefined(diagnostic.file);
-      const {line, character} = file.getLineAndCharacterOfPosition(
-          checkDefined(diagnostic.start)
+      const { line, character } = file.getLineAndCharacterOfPosition(
+        checkDefined(diagnostic.start)
       );
       const message = ts.flattenDiagnosticMessageText(
-          diagnostic.messageText,
-          '\n'
+        diagnostic.messageText,
+        '\n'
       );
       console.log(
-          `${file.fileName} (${line + 1},${character + 1}): ${message}`
+        `${file.fileName} (${line + 1},${character + 1}): ${message}`
       );
     }
   }
@@ -131,15 +130,19 @@ if (require.main === module) {
   const dir = checkDefined(opts.options.baseUrl);
   const roots = process.argv.slice(2);
   const rewriteAbsImportAfter = rewriteAbsImport.newAfterTransformer(dir);
-  const rewriteAbsImportAfterDecl = rewriteAbsImport.newAfterDeclarationsTransformer(dir);
+  const rewriteAbsImportAfterDecl = rewriteAbsImport.newAfterDeclarationsTransformer(
+    dir
+  );
 
   if (roots.length > 0) {
     const rawTsConf = TsConfigParser.forCurrentProject().parseRaw();
     tsNode({
-      files: roots, compilerOptions: rawTsConf.compilerOptions, transformers: {
+      files: roots,
+      compilerOptions: rawTsConf.compilerOptions,
+      transformers: {
         after: [rewriteAbsImportAfter],
-        afterDeclarations: [rewriteAbsImportAfterDecl]
-      }
+        afterDeclarations: [rewriteAbsImportAfterDecl],
+      },
     });
     for (const root of roots) {
       const absPath = path.resolve(process.cwd(), root);
@@ -152,7 +155,6 @@ if (require.main === module) {
         require('./' + relPath);
       }
     }
-
   } else {
     const tsc = PluggableTsc.forOptions(opts);
     tsc.addAfterTransformer(rewriteAbsImportAfter);
