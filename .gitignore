@@ -4,3 +4,5 @@
 /build/.docker-blog
 node_modules/
 out/
+/.idea/
+/b2.iml
