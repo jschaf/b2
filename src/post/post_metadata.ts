@@ -6,7 +6,6 @@ import * as dates from '//dates';
 import * as strings from '//strings';
 import { isString } from '//strings';
 
-
 import * as toml from '@iarna/toml';
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
@@ -51,15 +50,15 @@ export class PostMetadata {
   }
 
   static isTomlFrontmatterNode = (
-      n: unist.Node
-  ): n is {type: 'toml', value: string} => {
-    return n.type === 'toml' && isString(n.value)
+    n: unist.Node
+  ): n is { type: 'toml'; value: string } => {
+    return n.type === 'toml' && isString(n.value);
   };
 
   static parseFromTomlFrontmatter(tree: unist.Node): PostMetadata {
     const node = checkDefined(
-        findNode(tree, PostMetadata.isTomlFrontmatterNode),
-        "No nodes found that match a TOML frontmatter block."
+      findNode(tree, PostMetadata.isTomlFrontmatterNode),
+      'No nodes found that match a TOML frontmatter block.'
     );
     const rawToml = toml.parse(node.value);
     return PostMetadata.of(rawToml);

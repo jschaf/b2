@@ -6,12 +6,13 @@ declare module 'remark-frontmatter' {
   type RemarkFrontmatterPreset = 'yaml' | 'toml';
   interface RemarkFrontmatterMatter {
     type: string;
-    marker: string | {open: string, close: string};
-    fence?: string | {open: string, close: string};
-    anywhere?: boolean
+    marker: string | { open: string; close: string };
+    fence?: string | { open: string; close: string };
+    anywhere?: boolean;
   }
-  type RemarkFrontmatterOptions =
-      Array<RemarkFrontmatterPreset | RemarkFrontmatterMatter>
+  type RemarkFrontmatterOptions = Array<
+    RemarkFrontmatterPreset | RemarkFrontmatterMatter
+  >;
 
   const remarkFrontmatter: RemarkFrontmatter;
   export = remarkFrontmatter;

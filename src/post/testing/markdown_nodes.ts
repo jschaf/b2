@@ -1,6 +1,6 @@
 import * as toml from '@iarna/toml';
 import removePosition from 'unist-util-remove-position';
-import {PostNode} from '../post_parser';
+import { PostNode } from '../post_parser';
 
 //type MdNode = { type: string; children?: MdNode[] };
 interface MdNode {
@@ -11,12 +11,12 @@ interface MdNode {
 }
 
 const mdNode = (
-    type: string,
-    params: Record<string, unknown>,
-    children?: MdNode[]
+  type: string,
+  params: Record<string, unknown>,
+  children?: MdNode[]
 ): MdNode => {
-  const childObj = children == null ? {} : {children};
-  return {type, ...params, ...childObj};
+  const childObj = children == null ? {} : { children };
+  return { type, ...params, ...childObj };
 };
 
 export const mdRoot = (children: MdNode[]): MdNode => {
@@ -24,7 +24,7 @@ export const mdRoot = (children: MdNode[]): MdNode => {
 };
 
 export const mdHeading = (depth: number, children: MdNode[]): MdNode => {
-  return mdNode('heading', {depth}, children);
+  return mdNode('heading', { depth }, children);
 };
 
 export const mdHeading1 = (child: string): MdNode => {
@@ -32,7 +32,7 @@ export const mdHeading1 = (child: string): MdNode => {
 };
 
 export const mdText = (value: string): MdNode => {
-  return mdNode('text', {value});
+  return mdNode('text', { value });
 };
 
 export const mdPara = (children: MdNode[]): MdNode => {
@@ -45,33 +45,34 @@ export const mdParaText = (value: string): MdNode => {
 
 export const mdOrderedList = (children: MdNode[]): MdNode => {
   return mdNode(
-      'list',
-      {
-        ordered: true,
-        spread: false,
-        start: 1,
-        type: 'list',
-      },
-      children.map(c => (c.type === 'listItem' ? c : mdListItem([c])))
+    'list',
+    {
+      ordered: true,
+      spread: false,
+      start: 1,
+      type: 'list',
+    },
+    children.map(c => (c.type === 'listItem' ? c : mdListItem([c])))
   );
 };
 
 export const mdListItem = (children: MdNode[]): MdNode => {
-  return mdNode('listItem', {spread: false, checked: null}, children);
+  return mdNode('listItem', { spread: false, checked: null }, children);
 };
 
 export const mdFrontmatterToml = (value: toml.JsonMap): MdNode => {
-  let raw = toml.stringify(value)
-      .trimEnd()
-      .replace(/T00:00:00.000Z/, '');
+  let raw = toml
+    .stringify(value)
+    .trimEnd()
+    .replace(/T00:00:00.000Z/, '');
   return {
     type: 'toml',
-    value: raw
+    value: raw,
   };
 };
 
 export const mdCode = (value: string): MdNode => {
-  return mdNode('code', {value});
+  return mdNode('code', { value });
 };
 
 export const stripPositions = (node: PostNode): PostNode => {

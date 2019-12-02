@@ -4,9 +4,9 @@ import remarkFrontmatter from 'remark-frontmatter';
 import unified from 'unified';
 import * as unist from 'unist';
 import nodeRemove from 'unist-util-remove';
-import {checkState} from '//asserts';
-import {Unzipper} from '//zip_files';
-import {PostMetadata} from '//post/post_metadata';
+import { checkState } from '//asserts';
+import { Unzipper } from '//zip_files';
+import { PostMetadata } from '//post/post_metadata';
 
 export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 
@@ -15,8 +15,8 @@ export class PostParser {
 
   private constructor() {
     this.processor = unified()
-        .use(remarkParse, {commonmark: true})
-        .use(remarkFrontmatter, ['toml']);
+      .use(remarkParse, { commonmark: true })
+      .use(remarkFrontmatter, ['toml']);
   }
 
   static create(): PostParser {
@@ -26,11 +26,11 @@ export class PostParser {
   async parseTextPack(textPack: Buffer): Promise<PostNode> {
     const entries = await Unzipper.unzip(textPack);
     const texts = entries.filter(
-        e => e.filePath === TEXT_PACK_BUNDLE_PREFIX + '/text.md'
+      e => e.filePath === TEXT_PACK_BUNDLE_PREFIX + '/text.md'
     );
     checkState(
-        texts.length === 1,
-        'Expected a single text.md file in TextPack.'
+      texts.length === 1,
+      'Expected a single text.md file in TextPack.'
     );
     const text = texts[0];
     return this.parseMarkdown(text.contents.toString('utf8'));
@@ -53,6 +53,5 @@ export class PostParser {
 }
 
 export class PostNode {
-  constructor(readonly metadata: PostMetadata, readonly node: unist.Node) {
-  }
+  constructor(readonly metadata: PostMetadata, readonly node: unist.Node) {}
 }

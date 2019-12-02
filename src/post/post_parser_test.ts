@@ -1,4 +1,4 @@
-import {PostMetadata} from '//post/post_metadata';
+import { PostMetadata } from '//post/post_metadata';
 import {
   PostNode,
   PostParser,
@@ -8,15 +8,17 @@ import {
   DEFAULT_FRONTMATTER,
   withDefaultFrontMatter,
 } from '//post/testing/front_matters';
-import {dedent} from '//strings';
-import {ZipFileEntry, Zipper} from '//zip_files';
+import { dedent } from '//strings';
+import { ZipFileEntry, Zipper } from '//zip_files';
 import {
   mdHeading,
   mdOrderedList,
   mdParaText,
   mdRoot,
-  mdText, mdFrontmatterToml,
-  stripPositions, mdHeading1,
+  mdText,
+  mdFrontmatterToml,
+  stripPositions,
+  mdHeading1,
 } from '//post/testing/markdown_nodes';
 import * as dates from '//dates';
 
@@ -33,7 +35,7 @@ test('parses from markdown', () => {
     mdParaText('Hello world.'),
   ]);
   expect(stripPositions(node)).toEqual(
-      new PostNode(DEFAULT_FRONTMATTER, expected)
+    new PostNode(DEFAULT_FRONTMATTER, expected)
   );
 });
 
@@ -67,12 +69,12 @@ test('parses from TextPack', async () => {
     mdParaText('Hello world.'),
   ]);
   expect(stripPositions(node)).toEqual(
-      new PostNode(DEFAULT_FRONTMATTER, expected)
+    new PostNode(DEFAULT_FRONTMATTER, expected)
   );
 });
 
 test('parses from frontmatter markdown', async () => {
-  const slug = "foo_qux";
+  const slug = 'foo_qux';
   const date = '2019-10-17';
   const markdown = dedent`
     +++
@@ -86,13 +88,10 @@ test('parses from frontmatter markdown', async () => {
   const node = PostParser.create().parseFrontmatterMarkdown(markdown);
 
   const expected = mdRoot([
-    mdFrontmatterToml({slug, date: dates.fromISO(date)}),
-    mdHeading1("Hello"),
+    mdFrontmatterToml({ slug, date: dates.fromISO(date) }),
+    mdHeading1('Hello'),
   ]);
   expect(stripPositions(node)).toEqual(
-      new PostNode(
-          PostMetadata.of({slug, date: dates.fromISO(date)}),
-          expected
-      ));
-
+    new PostNode(PostMetadata.of({ slug, date: dates.fromISO(date) }), expected)
+  );
 });
