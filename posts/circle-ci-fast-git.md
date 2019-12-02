@@ -1,8 +1,11 @@
----
-title: Faster Git checkout for continuous integration
-subtitle: Reduce `git checkout` from 30 seconds to 2 seconds on CircleCI.
-date: 2019-09-20
----
++++
+slug = "circle_ci_fast_git"
+date = 2019-09-20
++++
+
+# Faster Git checkout for continuous integration
+
+> Reduce `git checkout` from 30 seconds to 2 seconds on CircleCI.
 
 The default CircleCI `checkout` step is slow because it downloads the
 entire Git repository history in two remote fetches. My company’s

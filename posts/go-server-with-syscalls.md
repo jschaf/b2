@@ -1,8 +1,11 @@
----
-title: Create a Go web server from scratch with Linux system calls
-subtitle: A web-server with Linux syscalls.
-date: 2019-03-12
----
++++
+slug = "go_server_with_syscalls"
+date = 2019-03-12
++++
+
+# Create a Go web server from scratch with Linux system calls
+
+> A web-server with Linux syscalls.
 
 One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
 

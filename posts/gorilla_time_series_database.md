@@ -1,3 +1,8 @@
++++
+slug = "gorilla_time_series_database"
+date = 2019-11-21
++++
+
 # Gorilla Time Series Database
 
 Gorilla is an in-memory, time series database from Facebook optimized for writes, reading data in a few milliseconds, and high availability. At its core, Gorilla is a 26-hour write-through cache backed by durable storage in HBase. Gorilla optimizes for four attributes:
@@ -7,7 +12,6 @@ Gorilla is an in-memory, time series database from Facebook optimized for writes
 3.  Reads in under one millisecond and fast scans over all in-memory data in tens of milliseconds.
 4.  Reliability requirements. Gorilla always serves reads even if a server crashes or when an entire region fails.
 
-![](assets/Image%209-30-19,%201-05%20AM.png)
 Gorilla compromises on the following attributes:
 
 - Flexibility. The only supported data type is a named stream with 64 bit floating point values. Higher level abstractions can be built on top of Gorilla.

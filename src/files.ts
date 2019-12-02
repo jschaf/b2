@@ -19,3 +19,18 @@ export const deleteDirectory = (dir: string): void => {
   }
   fs.rmdirSync(dir);
 };
+
+/** Finds the nearest parent directory that contains a .git folder. */
+export const findGitDirectory = (dir: string): string => {
+  checkArg(dir.length > 0, 'Directory cannot be empty.');
+  const parents = dir.split(path.sep);
+  while (parents.length > 0) {
+    const dir = parents.join(path.sep);
+    const gitPath = path.join(dir, '.git');
+    if (fs.existsSync(gitPath)) {
+      return path.normalize(gitPath);
+    }
+    parents.pop();
+  }
+  throw new Error(`Unable to find .git dir in any parent starting from ${dir}`);
+};

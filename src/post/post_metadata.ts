@@ -6,6 +6,8 @@ import * as dates from '//dates';
 import * as strings from '//strings';
 import { isString } from '//strings';
 
+
+import * as toml from '@iarna/toml';
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
   slug: { type: 'string', isRequired: true },
@@ -47,13 +49,28 @@ export class PostMetadata {
     const rawYaml = yaml.safeLoad(node.value);
     return PostMetadata.of(rawYaml);
   }
+
+  static isTomlFrontmatterNode = (
+      n: unist.Node
+  ): n is {type: 'toml', value: string} => {
+    return n.type === 'toml' && isString(n.value)
+  };
+
+  static parseFromTomlFrontmatter(tree: unist.Node): PostMetadata {
+    const node = checkDefined(
+        findNode(tree, PostMetadata.isTomlFrontmatterNode),
+        "No nodes found that match a TOML frontmatter block."
+    );
+    const rawToml = toml.parse(node.value);
+    return PostMetadata.of(rawToml);
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const checkMetadataSchema = (metadata: any): Metadata => {
   for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
     if (isRequired && !metadata.hasOwnProperty(key)) {
-      throw new Error(`YAML metadata missing required key ${key}.`);
+      throw new Error(`Metadata missing required key: '${key}'.`);
     }
   }
 
