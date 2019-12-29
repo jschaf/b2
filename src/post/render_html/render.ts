@@ -1,6 +1,7 @@
 import rehypeStringify from 'rehype-stringify';
 import rehypeKatex from 'rehype-katex';
 import remarkRehype from 'remark-rehype';
+import rehypeDocument from 'rehype-document';
 import unified from 'unified';
 import { Mempost } from '//post/mempost';
 import { PostBag } from '//post/post_bag';
@@ -8,18 +9,19 @@ import { PostBag } from '//post/post_bag';
 /**
  * Renders a post and all required assets onto a new Mempost.
  */
-export class PostRenderer {
+export class PostHtmlRenderer {
   private readonly processor: unified.Processor<unified.Settings>;
 
   private constructor() {
     this.processor = unified()
-      .use(remarkRehype)
-      .use(rehypeKatex)
-      .use(rehypeStringify);
+        .use(remarkRehype)
+        .use(rehypeKatex)
+        .use(rehypeDocument)
+        .use(rehypeStringify);
   }
 
-  static create(): PostRenderer {
-    return new PostRenderer();
+  static create(): PostHtmlRenderer {
+    return new PostHtmlRenderer();
   }
   /**
    * Renders a post from an existing Mempost into an HTML representation on a new Mempost.

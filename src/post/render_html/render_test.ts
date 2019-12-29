@@ -1,9 +1,9 @@
 import { withDefaultFrontMatter } from '//post/testing/front_matters';
 import { dedent } from '//strings';
 import { PostBag } from '//post/post_bag';
-import { PostRenderer } from '//post/post_renderer';
+import { PostHtmlRenderer } from '//post/render_html/render';
 
-describe('PostRenderer', () => {
+describe('PostHtmlRenderer', () => {
   it('should render a simple post', async () => {
     const md = withDefaultFrontMatter(dedent`
       # hello
@@ -12,12 +12,19 @@ describe('PostRenderer', () => {
     `);
     const bag = PostBag.fromMarkdown(md);
 
-    const actual = await PostRenderer.create().render(bag);
+    const actual = await PostHtmlRenderer.create().render(bag);
 
     expect(actual).toEqualMempost({
       'index.html': `
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
         <h1>hello</h1>
         <p>Hello world.</p>
+        </html>
       `,
     });
   });

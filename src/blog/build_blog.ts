@@ -1,5 +1,5 @@
 import * as files from '//files';
-import { PostRenderer } from '//post/post_renderer';
+import {PostHtmlRenderer} from '//post/render_html/render';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PostBag } from '//post/post_bag';
@@ -9,7 +9,7 @@ const buildBlog = async (): Promise<void> => {
   const rootDir = path.dirname(gitDir);
   const postsDir = path.join(rootDir, 'posts');
   // Find bare files
-  const postRenderer = PostRenderer.create();
+  const postRenderer = PostHtmlRenderer.create();
   const markdowns = await fs.promises.readdir(postsDir);
   await Promise.all(
     markdowns.map(
@@ -21,9 +21,8 @@ const buildBlog = async (): Promise<void> => {
           console.log('!!! Skipping because not .md file or is index.md');
           return;
         }
-        const md = fs
-          .readFileSync(path.join(postsDir, mdPath))
-          .toString('utf8');
+        const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
+        const md = buf.toString('utf8');
         const postBag = PostBag.fromTomlFrontmatterMarkdown(md);
         const mp = await postRenderer.render(postBag);
         const slug = (postBag.postNode.metadata.schema[
