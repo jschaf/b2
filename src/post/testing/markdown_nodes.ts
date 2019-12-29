@@ -1,8 +1,7 @@
+import {removePositionInfo} from '//unist/nodes';
 import * as toml from '@iarna/toml';
-import removePosition from 'unist-util-remove-position';
 import { PostNode } from '../post_parser';
 
-//type MdNode = { type: string; children?: MdNode[] };
 interface MdNode {
   type: string;
   children?: MdNode[];
@@ -76,6 +75,6 @@ export const mdCode = (value: string): MdNode => {
 };
 
 export const stripPositions = (node: PostNode): PostNode => {
-  const forceDelete = true;
-  return new PostNode(node.metadata, removePosition(node.node, forceDelete));
+  removePositionInfo(node.node);
+  return node;
 };
