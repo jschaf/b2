@@ -14,10 +14,10 @@ export class PostHtmlRenderer {
 
   private constructor() {
     this.processor = unified()
-        .use(remarkRehype)
-        .use(rehypeKatex)
-        .use(rehypeDocument)
-        .use(rehypeStringify);
+      .use(remarkRehype)
+      .use(rehypeKatex)
+      .use(rehypeDocument)
+      .use(rehypeStringify);
   }
 
   static create(): PostHtmlRenderer {

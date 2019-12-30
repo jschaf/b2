@@ -1,4 +1,4 @@
-import {findNode} from '//unist/nodes';
+import { findNode } from '//unist/nodes';
 import yaml from 'js-yaml';
 import * as unist from 'unist';
 import { checkDefined } from '//asserts';

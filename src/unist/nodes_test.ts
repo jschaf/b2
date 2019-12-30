@@ -1,6 +1,11 @@
-import {lossyClone} from '//objects';
-import {mdPara, mdRoot, mdText} from '//post/testing/markdown_nodes';
-import {findNode, NodeVisitor, preOrderGenerator, visitInPlace} from '//unist/nodes';
+import { lossyClone } from '//objects';
+import { mdPara, mdRoot, mdText } from '//post/testing/markdown_nodes';
+import {
+  findNode,
+  NodeVisitor,
+  preOrderGenerator,
+  visitInPlace,
+} from '//unist/nodes';
 import * as unist from 'unist';
 
 type Ancestors = unist.Node[];
@@ -15,7 +20,7 @@ describe('preOrderGenerator', () => {
     const n2 = mdPara([n2a]);
     const n0 = mdRoot([n1, n2]);
 
-    for (const {node, ancestors} of preOrderGenerator(n0)) {
+    for (const { node, ancestors } of preOrderGenerator(n0)) {
       nodes.push([node, ancestors.map(lossyClone)]);
     }
 
@@ -26,7 +31,7 @@ describe('preOrderGenerator', () => {
       [n1b, [n0, n1]],
       [n2, [n0]],
       [n2a, [n0, n2]],
-    ])
+    ]);
   });
 });
 
@@ -72,7 +77,7 @@ describe('findNode', () => {
 
   it('should find the first para node', () => {
     let isPara = (n: unist.Node): n is { type: 'paragraph' } =>
-        n.type === 'paragraph';
+      n.type === 'paragraph';
 
     expect(findNode(n0, isPara)).toEqual(n1);
   });

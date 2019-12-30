@@ -9,7 +9,8 @@
     "test_compile": "npx ts-node -r ./src/build/import/register_import_rewriter.ts ./src/hello_world.ts",
     "start": "npx ts-node -r ./src/build/import/register_import_rewriter.ts src/blog_builder_server.ts",
     "blog": "npx ts-node -r ./src/build/import/register_import_rewriter.ts src/blog/build_blog.ts",
-    "test": "jest"
+    "test": "jest",
+    "fmt": "npx prettier --write 'src/**/*.ts' 'src/**/*.js' '**/*.json' 'posts/**/*.md'"
   },
   "author": "Joe Schafer",
   "license": "Apache-2.0",

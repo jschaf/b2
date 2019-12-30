@@ -1,5 +1,5 @@
 import * as files from '//files';
-import {PostHtmlRenderer} from '//post/render_html/render';
+import { PostHtmlRenderer } from '//post/render_html/render';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PostBag } from '//post/post_bag';

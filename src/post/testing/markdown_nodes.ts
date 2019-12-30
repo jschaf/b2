@@ -1,4 +1,4 @@
-import {removePositionInfo} from '//unist/nodes';
+import { removePositionInfo } from '//unist/nodes';
 import * as toml from '@iarna/toml';
 import { PostNode } from '../post_parser';
 
