@@ -6,54 +6,53 @@ export type NodeAncestors = unist.Node[];
 export type NodeVisitor = (n: unist.Node, ancestors: NodeAncestors) => void
 export type NodeTest<T extends unist.Node> = (n: unist.Node, ancestors: unist.Node[]) => n is T;
 
-/** Applies the visitor to all nodes under n in a pre-order traversal. */
-export const visitInPlace = (node: unist.Node, visitor: NodeVisitor): void => {
+type NodeIterResult = {node: unist.Node, ancestors: NodeAncestors}
+
+/** Generates a pre-order traversal starting at tree. */
+export function* preOrderGenerator(tree: unist.Node): Generator<NodeIterResult, void> {
   const ancestors: unist.Node[] = [];
 
-  const visit = (n: unist.Node) => {
-    visitor(n, ancestors);
+  function* visit(n: unist.Node): Generator<NodeIterResult, void> {
+    yield {node: n, ancestors};
 
     if (hasChildren(n)) {
       ancestors.push(n);
       for (const c of n.children) {
-        visit(c);
+        for (const child of visit(c)) {
+          yield {node: child.node, ancestors}
+        }
       }
       ancestors.pop();
     }
-  };
+  }
 
-  visit(node);
+  for (const r of visit(tree)) {
+    yield r;
+  }
+}
+
+/** Applies the visitor to all nodes under n in a pre-order traversal. */
+export const visitInPlace = (tree: unist.Node, visitor: NodeVisitor): void => {
+  for (const {node, ancestors} of preOrderGenerator(tree)) {
+    visitor(node, ancestors);
+  }
 };
 
 /**
- * Returns the first node that matches the type guard.
+ * Returns the first node that matches the type guard from a pre-order
+ * traversal.
  *
  * If no node matches, returns null.
  */
 export const findNode = <T extends unist.Node>(
     tree: unist.Node, test: NodeTest<T>,
     ): T | null => {
-  const ancestors: unist.Node[] = [];
-
-  const visit = (n: unist.Node): T | null => {
-    if (test(n, ancestors)) {
-      return n;
+  for (const {node, ancestors} of preOrderGenerator(tree)) {
+    if (test(node, ancestors)) {
+      return node;
     }
-
-    if (hasChildren(n)) {
-      ancestors.push(n);
-      for (const c of n.children) {
-        const r = visit(c);
-        if (r !== null) {
-          return r;
-        }
-      }
-      ancestors.pop();
-    }
-    return null;
-  };
-
-  return visit(tree);
+  }
+  return null;
 };
 
 export const removePositionInfo = (tree: unist.Node): void => {
