@@ -16,12 +16,8 @@ describe('PostHtmlRenderer', () => {
 
     expect(actual).toEqualMempost({
       'index.html': `
-        <!doctype html>
-        <html lang="en">
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
+        <html>
+        <head></head>
         <h1>hello</h1>
         <p>Hello world.</p>
         </html>
