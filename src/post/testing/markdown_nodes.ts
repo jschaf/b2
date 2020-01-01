@@ -50,7 +50,14 @@ export const mdOrderedList = (children: BlockContent[]): mdast.List => {
 };
 
 export const mdListItem = (children: mdast.BlockContent[]): mdast.ListItem => {
-  return { type: 'listItem', spread: false, checked: undefined, children };
+  return {
+    type: 'listItem',
+    spread: false,
+    // Unified parses the checked property as null but the type is boolean or
+    // undefined.
+    checked: (null as unknown) as boolean,
+    children,
+  };
 };
 
 export const mdFrontmatterToml = (value: toml.JsonMap): mdast.Content => {
