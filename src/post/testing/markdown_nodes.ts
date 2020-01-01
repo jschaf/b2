@@ -5,16 +5,20 @@ import { BlockContent } from 'mdast';
 import { PostNode } from '../post_parser';
 import * as mdast from 'mdast';
 
-export const mdEmphasis = (
-  children: mdast.PhrasingContent[]
-): mdast.Emphasis => {
-  return { type: 'emphasis', children };
-};
-
 export const mdBlockquote = (
   children: mdast.BlockContent[]
 ): mdast.Blockquote => {
   return { type: 'blockquote', children };
+};
+
+export const mdBreak = (): mdast.Break => {
+  return { type: 'break' };
+};
+
+export const mdEmphasis = (
+  children: mdast.PhrasingContent[]
+): mdast.Emphasis => {
+  return { type: 'emphasis', children };
 };
 
 export const mdEmphasisText = (text: string): mdast.Emphasis => {

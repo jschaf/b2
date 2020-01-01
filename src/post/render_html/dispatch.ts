@@ -1,3 +1,4 @@
+import { BreakRenderer } from '//post/render_html/break';
 import { CodeRenderer } from '//post/render_html/code';
 import { EmphasisRenderer } from '//post/render_html/emphasis';
 import { HeadingRenderer } from '//post/render_html/heading';
@@ -22,6 +23,7 @@ export class RenderDispatcher {
       RenderDispatcher.instance = new RenderDispatcher(new Map());
       const rd = RenderDispatcher.instance;
       const defaults: [string, HastRenderer][] = [
+        ['break', BreakRenderer.create()],
         ['code', CodeRenderer.create()],
         ['emphasis', EmphasisRenderer.create(rd)],
         ['heading', HeadingRenderer.create(rd)],

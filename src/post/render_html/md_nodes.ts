@@ -4,6 +4,10 @@ import * as mdast from 'mdast';
 
 // Utilities for working with Markdown AST (mdast).
 
+export const isBreak = (n: unist.Node): n is mdast.Break => {
+  return n.type === 'break';
+};
+
 export const isBlockquote = (n: unist.Node): n is mdast.Blockquote => {
   return n.type === 'blockquote' && isParent(n);
 };
