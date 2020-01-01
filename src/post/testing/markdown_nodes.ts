@@ -1,18 +1,40 @@
+import { checkDefined } from '//asserts';
 import { removePositionInfo } from '//unist/nodes';
 import * as toml from '@iarna/toml';
 import { BlockContent } from 'mdast';
 import { PostNode } from '../post_parser';
 import * as mdast from 'mdast';
 
+export const mdEmphasis = (
+  children: mdast.PhrasingContent[]
+): mdast.Emphasis => {
+  return { type: 'emphasis', children };
+};
+
+export const mdBlockquote = (
+  children: mdast.BlockContent[]
+): mdast.Blockquote => {
+  return { type: 'blockquote', children };
+};
+
+export const mdEmphasisText = (text: string): mdast.Emphasis => {
+  return mdEmphasis([mdText(text)]);
+};
+
 export const mdRoot = (children: mdast.Content[]): mdast.Root => {
   return { type: 'root', children };
 };
 
 export const mdHeading = (
-  depth: 1 | 2 | 3 | 4 | 5 | 6,
+  heading: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6',
   children: mdast.PhrasingContent[]
 ): mdast.Heading => {
-  return { type: 'heading', depth, children };
+  const match = checkDefined(
+    heading.match(/h(\d)/),
+    'heading regex must match'
+  );
+  const depth = +match[1] as 1 | 2 | 3 | 4 | 5 | 6;
+  return { type: 'heading', depth: depth, children };
 };
 
 export const mdHeading1 = (child: string): mdast.Heading => {
@@ -65,7 +87,8 @@ export const mdFrontmatterToml = (value: toml.JsonMap): mdast.Content => {
     .stringify(value)
     .trimEnd()
     .replace(/T00:00:00.000Z/, '');
-  // The typings for mdast don't allow anything except a whitelist.
+  // The typings for mdast don't allow anything except whitelisted types.
+  // Force add toml as a supported type..
   return ({
     type: 'toml',
     value: raw,

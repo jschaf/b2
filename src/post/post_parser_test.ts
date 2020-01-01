@@ -31,7 +31,7 @@ test('parses from markdown', () => {
   const node = PostParser.create().parseMarkdown(markdown);
 
   const expected = mdRoot([
-    mdHeading(1, [mdText('hello')]),
+    mdHeading('h1', [mdText('hello')]),
     mdParaText('Hello world.'),
   ]);
   expect(stripPositions(node)).toEqual(
@@ -65,7 +65,7 @@ test('parses from TextPack', async () => {
   const node = await PostParser.create().parseTextPack(buf);
 
   const expected = mdRoot([
-    mdHeading(1, [mdText('hello')]),
+    mdHeading('h1', [mdText('hello')]),
     mdParaText('Hello world.'),
   ]);
   expect(stripPositions(node)).toEqual(

@@ -1,5 +1,6 @@
 import * as unist from 'unist';
 import * as hast from 'hast-format';
+import * as objects from '//objects';
 
 // Shortcuts for creating HTML AST nodes (hast).
 // https://github.com/syntax-tree/hastscript
@@ -14,7 +15,11 @@ export const hastElem = (
 ): hast.Element => {
   // We use the dispatcher to figure out what to render so we don't know the
   // types ahead of time.
-  return { type: 'element', tagName, children: children as any };
+  return hastElemWithProps(tagName, {}, children);
+};
+
+export const hastElemText = (tagName: string, text: string): hast.Element => {
+  return hastElemWithProps(tagName, {}, [hastText(text)]);
 };
 
 export const hastElemWithProps = (
@@ -23,11 +28,14 @@ export const hastElemWithProps = (
   children: unist.Node[] = []
 ): hast.Element => {
   // We use the dispatcher to figure out what to render so we don't know the
-  // types ahead of time.
-  return {
+  // types of the children ahead of time so use any.
+  const base: hast.Element = {
     type: 'element',
     tagName,
-    properties: props,
     children: children as any,
   };
+  if (!objects.isEmpty(props)) {
+    base.properties = props;
+  }
+  return base;
 };

@@ -4,6 +4,10 @@ import * as mdast from 'mdast';
 
 // Utilities for working with Markdown AST (mdast).
 
+export const isBlockquote = (n: unist.Node): n is mdast.Blockquote => {
+  return n.type === 'blockquote' && isParent(n);
+};
+
 export const isCode = (n: unist.Node): n is mdast.Code => {
   const hasLang = n.lang === undefined || isString(n.lang);
   const hasMeta = n.meta === undefined || isString(n.meta);
@@ -12,7 +16,13 @@ export const isCode = (n: unist.Node): n is mdast.Code => {
 
 export const isHeading = (n: unist.Node): n is mdast.Heading => {
   const d = n.depth as number;
-  return n.type === 'heading' && Number.isInteger(d) && d > 0 && d < 7;
+  return (
+    n.type === 'heading' && Number.isInteger(d) && d > 0 && d < 7 && isParent(n)
+  );
+};
+
+export const isEmphasis = (n: unist.Node): n is mdast.Emphasis => {
+  return n.type === 'emphasis' && isParent(n);
 };
 
 export const isParagraph = (n: unist.Node): n is mdast.Paragraph => {

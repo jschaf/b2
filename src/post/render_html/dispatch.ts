@@ -1,4 +1,5 @@
 import { CodeRenderer } from '//post/render_html/code';
+import { EmphasisRenderer } from '//post/render_html/emphasis';
 import { HeadingRenderer } from '//post/render_html/heading';
 import { ParagraphRenderer } from '//post/render_html/paragraph';
 import { HastRenderer } from '//post/render_html/render';
@@ -22,6 +23,7 @@ export class RenderDispatcher {
       const rd = RenderDispatcher.instance;
       const defaults: [string, HastRenderer][] = [
         ['code', CodeRenderer.create()],
+        ['emphasis', EmphasisRenderer.create(rd)],
         ['heading', HeadingRenderer.create(rd)],
         ['paragraph', ParagraphRenderer.create(rd)],
         ['text', TextRenderer.create()],
