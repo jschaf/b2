@@ -31,9 +31,9 @@ class HastCompiler {
   }
 
   asUnifiedAttacher(): unified.Attacher<[], {}> {
-    const compilerThis = this;
+    const thisCompiler = this;
     return function(this: unified.Processor<{}>): unified.Transformer {
-      return compilerThis.compile.bind(compilerThis);
+      return thisCompiler.compile.bind(thisCompiler);
     };
   }
 }

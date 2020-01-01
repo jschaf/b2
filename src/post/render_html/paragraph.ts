@@ -1,5 +1,5 @@
 import { RenderDispatcher } from '//post/render_html/dispatch';
-import { htmlNode } from '//post/render_html/hast_nodes';
+import { hastElem } from '//post/render_html/hast_nodes';
 import { checkNodeType } from '//post/render_html/md_nodes';
 import { HastRenderer } from '//post/render_html/render';
 import { renderChildren } from '//post/render_html/renders';
@@ -17,6 +17,6 @@ export class ParagraphRenderer implements HastRenderer {
   render(node: unist.Node, vf: vfile.VFile): Error | unist.Node {
     checkNodeType(node, 'paragraph', md_nodes.isParagraph);
     const childRenders = renderChildren(node, vf, this.dispatcher);
-    return htmlNode('p', {}, childRenders);
+    return hastElem('p', childRenders);
   }
 }

@@ -1,5 +1,5 @@
 import { RenderDispatcher } from '//post/render_html/dispatch';
-import { htmlNode } from '//post/render_html/hast_nodes';
+import { hastElem } from '//post/render_html/hast_nodes';
 import { checkNodeType } from '//post/render_html/md_nodes';
 import { HastRenderer } from '//post/render_html/render';
 import { renderChildren } from '//post/render_html/renders';
@@ -16,8 +16,7 @@ export class HeadingRenderer implements HastRenderer {
 
   render(node: unist.Node, vf: vfile.VFile): Error | unist.Node {
     checkNodeType(node, 'heading', md_nodes.isHeading);
-    console.log('!!! Rendering heading: ' + node.depth);
     const childRenders = renderChildren(node, vf, this.dispatcher);
-    return htmlNode('h' + node.depth, {}, childRenders);
+    return hastElem('h' + node.depth, childRenders);
   }
 }

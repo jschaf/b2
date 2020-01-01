@@ -53,6 +53,7 @@
     "@starptech/prettyhtml-hast-to-html": "^0.10.0",
     "@starptech/rehype-minify-whitespace": "^0.10.0",
     "@types/glob": "^7.1.1",
+    "@types/hast-format": "^2.3.0",
     "@types/jest": "^24.0.20",
     "@types/js-yaml": "^3.12.1",
     "@types/koa": "^2.0.50",

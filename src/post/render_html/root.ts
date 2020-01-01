@@ -1,5 +1,5 @@
 import { RenderDispatcher } from '//post/render_html/dispatch';
-import { htmlNode } from '//post/render_html/hast_nodes';
+import { hastElem } from '//post/render_html/hast_nodes';
 import { HastRenderer } from '//post/render_html/render';
 import { renderChildren } from '//post/render_html/renders';
 import * as unist from 'unist';
@@ -15,6 +15,6 @@ export class RootRenderer implements HastRenderer {
 
   render(node: mdast.Root, vf: vfile.VFile): Error | unist.Node {
     const results = renderChildren(node, vf, this.dispatcher);
-    return htmlNode('body', {}, results);
+    return hastElem('body', results);
   }
 }

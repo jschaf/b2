@@ -1,3 +1,4 @@
+import { hastText } from '//post/render_html/hast_nodes';
 import { checkNodeType } from '//post/render_html/md_nodes';
 import { HastRenderer } from '//post/render_html/render';
 import * as unist from 'unist';
@@ -13,6 +14,6 @@ export class TextRenderer implements HastRenderer {
 
   render(node: unist.Node, _vf: vfile.VFile): Error | unist.Node {
     checkNodeType(node, 'text', md_nodes.isText);
-    return { type: 'text', value: node.value };
+    return hastText(node.value);
   }
 }
