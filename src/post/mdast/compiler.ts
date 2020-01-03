@@ -19,6 +19,7 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['inlineCode', nc.InlineCodeCompiler.create],
   ['link', nc.LinkCompiler.create],
   ['paragraph', nc.ParagraphCompiler.create],
+  ['strong', nc.StrongCompiler.create],
   ['text', nc.TextCompiler.create],
   ['toml', nc.TomlCompiler.create],
   ['root', nc.RootCompiler.create],

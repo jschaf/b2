@@ -299,6 +299,27 @@ export class RootCompiler implements MdastNodeCompiler {
 }
 
 /**
+ * Compiles an mdast strong block to hast, like:
+ *
+ *     This is **strong** and so is __this__.
+ *
+ * https://github.com/syntax-tree/mdast#strong
+ */
+export class StrongCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static create(compiler: MdastCompiler): StrongCompiler {
+    return new StrongCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+    md.checkType(node, 'strong', md.isStrong);
+    const children = this.compiler.compileChildren(node, postAST);
+    return hastElem('strong', children);
+  }
+}
+
+/**
  * Compiles a literal mdast text to hast.
  *
  * https://github.com/syntax-tree/mdast#text

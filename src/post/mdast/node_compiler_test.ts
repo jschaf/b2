@@ -5,19 +5,7 @@ import {
   hastText,
 } from '//post/hast/hast_nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
-import {
-  BlockquoteCompiler,
-  BreakCompiler,
-  CodeCompiler,
-  DeleteCompiler,
-  EmphasisCompiler,
-  FootnoteCompiler,
-  FootnoteReferenceCompiler,
-  HeadingCompiler,
-  InlineCodeCompiler,
-  LinkCompiler,
-  TomlCompiler,
-} from '//post/mdast/node_compiler';
+import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import * as unistNodes from '//unist/nodes';
@@ -32,7 +20,7 @@ describe('BlockquoteCompiler', () => {
     );
     const c = MdastCompiler.createDefault();
 
-    const hast = BlockquoteCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.BlockquoteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
       hastElem('blockquote', [
@@ -47,7 +35,7 @@ describe('BreakCompiler', () => {
   it('should compile a break', () => {
     const p = PostAST.create(md.lineBreak());
 
-    const hast = BreakCompiler.create().compileNode(p.mdastNode, p);
+    const hast = nc.BreakCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(hastElem('break'));
   });
@@ -58,7 +46,7 @@ describe('CodeCompiler', () => {
     let code = 'function foo() {}';
     const p = PostAST.create(md.codeWithLang('javascript', code));
 
-    const hast = CodeCompiler.create().compileNode(p.mdastNode, p);
+    const hast = nc.CodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
       hastElem('pre', [
@@ -73,7 +61,7 @@ describe('CodeCompiler', () => {
     let code = 'function foo() {}';
     const post = PostAST.create(md.code(code));
 
-    const hast = CodeCompiler.create().compileNode(post.mdastNode, post);
+    const hast = nc.CodeCompiler.create().compileNode(post.mdastNode, post);
 
     expect(hast).toEqual(hastElem('pre', [hastElem('code', [hastText(code)])]));
   });
@@ -86,7 +74,7 @@ describe('DeleteCompiler', () => {
     );
     const c = MdastCompiler.createDefault();
 
-    const hast = DeleteCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.DeleteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
       hastElem('del', [hastText('first'), hastElemText('em', 'second')])
@@ -100,7 +88,7 @@ describe('EmphasisCompiler', () => {
     const p = PostAST.create(md.emphasisText(content));
     const c = MdastCompiler.createDefault();
 
-    const hast = EmphasisCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.EmphasisCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(hastElem('em', [hastText(content)]));
   });
@@ -111,10 +99,10 @@ describe('FootnoteCompiler', () => {
     const p = PostAST.create(md.footnote([md.text('inline fn')]));
     const c = MdastCompiler.createDefault();
 
-    const hast = FootnoteCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.FootnoteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-      FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1))
+      nc.FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1))
     );
   });
 });
@@ -124,9 +112,12 @@ describe('FootnoteReferenceCompiler', () => {
     const id = 'my-fn-ref';
     const p = PostAST.create(md.footnoteRef(id));
 
-    const hast = FootnoteReferenceCompiler.create().compileNode(p.mdastNode, p);
+    const hast = nc.FootnoteReferenceCompiler.create().compileNode(
+      p.mdastNode,
+      p
+    );
 
-    expect(hast).toEqual(FootnoteReferenceCompiler.makeHastNode(id));
+    expect(hast).toEqual(nc.FootnoteReferenceCompiler.makeHastNode(id));
   });
 });
 
@@ -136,7 +127,7 @@ describe('HeadingCompiler', () => {
     const p = PostAST.create(md.heading('h3', [md.text(content)]));
     const c = MdastCompiler.createDefault();
 
-    const hast = HeadingCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.HeadingCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(hastElem('h3', [hastText(content)]));
   });
@@ -147,7 +138,7 @@ describe('HeadingCompiler', () => {
     );
     const c = MdastCompiler.createDefault();
 
-    const hast = HeadingCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.HeadingCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
       hastElem('h1', [hastText('start'), hastElemText('em', 'mid')])
@@ -160,7 +151,7 @@ describe('InlineCodeCompiler', () => {
     const value = 'let a = 2';
     const p = PostAST.create(md.inlineCode(value));
 
-    const hast = InlineCodeCompiler.create().compileNode(p.mdastNode, p);
+    const hast = nc.InlineCodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(hastElemText('code', value));
   });
@@ -173,10 +164,25 @@ describe('LinkCompiler', () => {
     const p = PostAST.create(md.linkText(url, value));
     const c = MdastCompiler.createDefault();
 
-    const hast = LinkCompiler.create(c).compileNode(p.mdastNode, p);
+    const hast = nc.LinkCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
       hastElemWithProps('a', { href: url }, [hastText(value)])
+    );
+  });
+});
+
+describe('StrongCompiler', () => {
+  it('should compile a strong', () => {
+    const a = 'alpha';
+    const b = 'bravo';
+    const p = PostAST.create(md.strong([md.text(a), md.emphasisText(b)]));
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.StrongCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(
+      hastElem('strong', [hastText(a), hastElemText('em', b)])
     );
   });
 });
@@ -185,7 +191,7 @@ describe('TomlCompiler', () => {
   it('should ignore toml nodes', () => {
     const p = PostAST.create(md.toml({ foo: 'bar' }));
 
-    const hast = TomlCompiler.create().compileNode(p.mdastNode, p);
+    const hast = nc.TomlCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(unistNodes.ignored());
   });

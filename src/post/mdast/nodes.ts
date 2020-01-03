@@ -188,6 +188,18 @@ export const isRoot = (n: unist.Node): n is mdast.Root => {
   return n.type === 'root' && isParent(n);
 };
 
+export const strong = (children: mdast.PhrasingContent[]): mdast.Strong => {
+  return { type: 'strong', children };
+};
+
+export const strongText = (value: string): mdast.Strong => {
+  return strong([text(value)]);
+};
+
+export const isStrong = (n: unist.Node): n is mdast.Strong => {
+  return n.type === 'strong' && isParent(n);
+};
+
 export const text = (value: string): mdast.Text => {
   return { type: 'text', value };
 };
