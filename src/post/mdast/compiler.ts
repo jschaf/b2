@@ -8,7 +8,7 @@ import {
   EmphasisCompiler,
   FootnoteCompiler,
   FootnoteReferenceCompiler,
-  HeadingCompiler,
+  HeadingCompiler, InlineCodeCompiler,
   MdastNodeCompiler,
   ParagraphCompiler,
   RootCompiler,
@@ -30,6 +30,7 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['footnote', FootnoteCompiler.create],
   ['footnoteReference', FootnoteReferenceCompiler.create],
   ['heading', HeadingCompiler.create],
+  ['inlineCode', InlineCodeCompiler.create],
   ['paragraph', ParagraphCompiler.create],
   ['text', TextCompiler.create],
   ['toml', TomlCompiler.create],
@@ -52,16 +53,19 @@ export class MdastCompiler {
     return new MdastCompiler(new Map<string, NewNodeCompiler>(m));
   }
 
+  /** Compiles the entire post AST into a single hast node. */
   compile(postAST: PostAST): unist.Node {
     checkArg(postAST.mdastNode.type !== unistNodes.IGNORED_TYPE);
     return this.compileNode(postAST.mdastNode, postAST);
   }
 
+  /** Compiles a single mdast node from a  post AST into a single hast node. */
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     const c = this.getNodeCompiler(node.type);
     return c.compileNode(node, postAST);
   }
 
+  /** Compiles all children of an mdast node into an array of hast nodes. */
   compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
     const results: unist.Node[] = [];
     for (const child of parent.children) {

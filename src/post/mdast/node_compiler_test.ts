@@ -13,7 +13,7 @@ import {
   EmphasisCompiler,
   FootnoteCompiler,
   FootnoteReferenceCompiler,
-  HeadingCompiler,
+  HeadingCompiler, InlineCodeCompiler,
   TomlCompiler,
 } from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
@@ -152,6 +152,18 @@ describe('HeadingCompiler', () => {
     );
   });
 });
+
+describe('InlineCodeCompiler', () => {
+  it('should compile inline code', () => {
+    const value = 'let a = 2';
+    const p = PostAST.create(md.inlineCode(value));
+
+    const hast = InlineCodeCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(hastElemText('code', value));
+  });
+});
+
 describe('TomlCompiler', () => {
   it('should ignore toml nodes', () => {
     const p = PostAST.create(md.toml({ foo: 'bar' }));

@@ -1,6 +1,6 @@
 import { checkDefined, checkState } from '//asserts';
 import { MdastCompiler } from '//post/mdast/compiler';
-import { hastElem, hastElemWithProps, hastText } from '//post/hast/hast_nodes';
+import {hastElem, hastElemText, hastElemWithProps, hastText} from '//post/hast/hast_nodes';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
@@ -207,6 +207,27 @@ export class HeadingCompiler implements MdastNodeCompiler {
     return hastElem('h' + node.depth, children);
   }
 }
+
+/**
+ * Compiles an mdast inline code block to hast, like:
+ *
+ *     Foo bar `let a = 2;`.
+ *
+ * https://github.com/syntax-tree/mdast#inlinecode
+ */
+export class InlineCodeCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): InlineCodeCompiler {
+    return new InlineCodeCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+    md.checkType(node, 'inline code', md.isInlineCode);
+    return hastElemText('code', node.value);
+  }
+}
+
 
 /**
  * Compiles an mdast paragraph to hast, like:

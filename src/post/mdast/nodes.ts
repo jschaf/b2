@@ -122,6 +122,15 @@ export const isHeading = (n: unist.Node): n is mdast.Heading => {
   );
 };
 
+export const inlineCode = (value: string): mdast.InlineCode => {
+  return {type: 'inlineCode', value: value};
+};
+
+export const isInlineCode = (n: unist.Node): n is mdast.InlineCode => {
+  return n.type === 'inlineCode' && isLiteral(n);
+};
+
+
 export const listItem = (children: mdast.BlockContent[]): mdast.ListItem => {
   return {
     type: 'listItem',
@@ -200,6 +209,10 @@ export const isToml = (n: unist.Node): n is Toml => {
 
 export const isParent = (n: unist.Node): n is unist.Parent => {
   return Array.isArray(n.children);
+};
+
+export const isLiteral = (n: unist.Node): n is unist.Literal => {
+  return n.value && isString(n.value);
 };
 
 export function checkType<T extends unist.Node>(
