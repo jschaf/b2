@@ -173,8 +173,8 @@ describe('ImageCompiler', () => {
 });
 
 describe('ImageReferenceCompiler', () => {
-  it('should compile a dangling image reference node', () => {
-    let imgRef = md.imageRefProps('alpha', md.ReferenceType.Full, {
+  it('should compile a dangling image reference node (full)', () => {
+    let imgRef = md.imageRefProps('alpha', md.RefType.Full, {
       alt: 'alt',
     });
     const p = PostAST.create(imgRef);
@@ -193,9 +193,9 @@ describe('ImageReferenceCompiler', () => {
     const alt = 'alt';
     const title = 'title';
     const src = 'http://bravo.com';
-    let imgRef = md.imageRefProps(id, md.ReferenceType.Full, { alt });
+    let imgRef = md.imageRefProps(id, md.RefType.Full, { alt });
     const p = PostAST.create(imgRef);
-    p.defsById.set(id, md.definitionProps(id, src, { title }));
+    p.addDefinition(md.definitionProps(id, src, { title }));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.ImageReferenceCompiler.create(c).compileNode(

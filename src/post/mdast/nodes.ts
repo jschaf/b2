@@ -164,18 +164,18 @@ export const isImage = (n: unist.Node): n is mdast.Image => {
   return n.type === 'image' && isResource(n) && isAlternative(n);
 };
 
-type ImageRefProps = { label?: string; alt?: string };
+export type ImageRefProps = { label?: string; alt?: string };
 
 export const imageRef = (
   id: string,
-  ref: ReferenceType
+  ref: RefType
 ): mdast.ImageReference => {
   return imageRefProps(id, ref, {});
 };
 
 export const imageRefProps = (
   id: string,
-  ref: ReferenceType,
+  ref: RefType,
   props: ImageRefProps
 ): mdast.ImageReference => {
   return {
@@ -211,6 +211,18 @@ export const linkText = (url: string, value: string): mdast.Link => {
 
 export const isLink = (n: unist.Node): n is mdast.Link => {
   return n.type === 'link' && isResource(n);
+};
+
+export const linkRef = (id: string, refType: RefType, children: mdast.StaticPhrasingContent[]): mdast.LinkReference => {
+  return {type: 'linkReference', identifier: id, referenceType: refType, children};
+};
+
+export const linkRefText = (id: string, refType: RefType, value: string): mdast.LinkReference => {
+  return linkRef(id, refType, [text(value)]);
+};
+
+export const isLinkReference = (n: unist.Node): n is mdast.LinkReference => {
+  return n.type === 'linkReference' && isParent(n) && isReference(n);
 };
 
 export const listItem = (children: mdast.BlockContent[]): mdast.ListItem => {
@@ -310,11 +322,11 @@ export const isParent = (n: unist.Node): n is unist.Parent => {
 };
 
 /**
- * ReferenceType represents a marker that is associated to another node.
+ * RefType represents a marker that is associated to another node.
  *
  * https://github.com/syntax-tree/mdast#reference
  */
-export const enum ReferenceType {
+export const enum RefType {
   /** The reference is implicit, its identifier inferred from its content. */
   Shortcut = 'shortcut',
   /** The reference is explicit, its identifier inferred from its content. */
@@ -343,9 +355,9 @@ export const isAssociation = (
 export const isReference = (n: unist.Node): n is WithNode<mdast.Reference> => {
   let rt = n.referenceType;
   const isValidRef =
-    rt === ReferenceType.Shortcut ||
-    rt === ReferenceType.Collapsed ||
-    rt === ReferenceType.Full;
+    rt === RefType.Shortcut ||
+    rt === RefType.Collapsed ||
+    rt === RefType.Full;
   return isValidRef && isAssociation(n);
 };
 
@@ -375,4 +387,18 @@ const isNonEmptyString = (s: any): s is string => {
 export const stripPositions = (node: PostNode): PostNode => {
   removePositionInfo(node.node);
   return node;
+};
+
+/**
+ * Normalizes a link label according to commonmark.
+ *
+ * https://spec.commonmark.org/0.29/#matches
+ */
+export const normalizeLabel = (l: string): string => {
+  // Perform Unicode case fold.
+  const lowered = l.toLowerCase();
+  // Strip leading and trailing whitespace.
+  const trimmed = lowered.trim();
+  // Collapse consecutive internal whitespace to a single space.
+  return trimmed.replace(/\s+/g, ' ');
 };

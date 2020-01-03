@@ -1,4 +1,4 @@
-import { checkDefined, checkState } from '//asserts';
+import {checkDefined, checkState} from '//asserts';
 import * as unistNodes from '//unist/nodes';
 import * as md from '//post/mdast/nodes';
 import * as mdast from 'mdast';
@@ -11,17 +11,19 @@ import * as unist from 'unist';
 export class PostAST {
   static readonly INLINE_FOOTNOTE_DATA_KEY = 'generated_footnote_id';
 
-  private constructor(
-    readonly mdastNode: unist.Node,
-    readonly defsById: Map<string, mdast.Definition>,
-    readonly fnDefsById: Map<string, mdast.FootnoteDefinition>
-  ) {}
+  // Visible for testing.
+  readonly defsById: Map<string, mdast.Definition> = new Map();
+  readonly fnDefsById: Map<string, mdast.FootnoteDefinition> = new Map();
+
+  // TODO: use actual vfile.
+  private constructor(readonly mdastNode: unist.Node) {
+  }
 
   static create(n: unist.Node): PostAST {
-    const defs = extractDefsById(n);
-    const fnDefs = extractFnDefs(n);
-    // TODO: use actual vfile.
-    return new PostAST(n, defs, fnDefs);
+    let p = new PostAST(n);
+    addAllDefs(p);
+    addAllFnDefs(p);
+    return p;
   }
 
   static inlineFootnotePrefix = 'gen-';
@@ -29,28 +31,70 @@ export class PostAST {
   static newInlineFootnoteId(id: number): string {
     return PostAST.inlineFootnotePrefix + id;
   }
+
+  addDefinition(def: mdast.Definition): void {
+    const id = def.identifier;
+    checkDefined(id, 'Definition must have an id');
+    checkState(id !== '', 'Definition id must not be empty');
+    // The commonmark spec says labels are case-insensitive.
+    // https://spec.commonmark.org/0.29/#matches.
+    const normalizedId = md.normalizeLabel(id);
+    if (this.defsById.has(normalizedId)) {
+      // Commonmark says the first definition takes precedence. Error since we
+      // don't want to support that. Also applies in addFootnoteDef.
+      // https://spec.commonmark.org/0.29/#example-173
+      throw new Error(`Duplicate definition id=${id}, normalized=${normalizedId}`);
+    }
+    this.defsById.set(normalizedId, def);
+  }
+
+  getDefinition(id: string): mdast.Definition | null {
+    const nId = md.normalizeLabel(id);
+    return this.defsById.get(nId) || null;
+  }
+
+  addFootnoteDef(def: mdast.FootnoteDefinition): void {
+    const id = def.identifier;
+    checkDefined(id, 'Footnote definition must have an identifier');
+    checkState(id !== '', 'Footnote definition identifier must not be empty');
+    // The commonmark spec says labels are case-insensitive.
+    // https://spec.commonmark.org/0.29/#matches.
+    const normalizedId = md.normalizeLabel(id);
+    checkState(
+        !normalizedId.startsWith(PostAST.inlineFootnotePrefix),
+        `Footnote definition id=${normalizedId} must not start `
+            +`with ${PostAST.inlineFootnotePrefix}`
+    );
+    if (this.fnDefsById.has(normalizedId)) {
+      throw new Error(`Duplicate footnote definition id=${id}, normalized=${normalizedId}`);
+    }
+    this.fnDefsById.set(normalizedId, def);
+  }
+
+  addInlineFootnoteDef(nextSeq: number, def: mdast.Footnote): void {
+    // Skipping normalization since we generate already normalized labels.
+    const fnId = PostAST.inlineFootnotePrefix + nextSeq;
+    // Store the ID so we can render the footnote reference.
+    unistNodes.ensureDataAttr(def).data[
+        PostAST.INLINE_FOOTNOTE_DATA_KEY
+        ] = fnId;
+    const fnDef = md.footnoteDef(fnId, [md.paragraph(def.children)]);
+    this.fnDefsById.set(fnId, fnDef);
+  }
+
+  getFootnoteDef(id: string): mdast.FootnoteDefinition | null {
+    const nId = md.normalizeLabel(id);
+    return this.fnDefsById.get(nId) || null;
+  }
 }
 
-const extractDefsById = (tree: unist.Node): Map<string, mdast.Definition> => {
-  const defsById = new Map<string, mdast.Definition>();
-  for (const { node } of unistNodes.preOrderGenerator(tree)) {
+const addAllDefs = (p: PostAST): void => {
+  for (const {node} of unistNodes.preOrderGenerator(p.mdastNode)) {
     if (!md.isDefinition(node)) {
       continue;
     }
-    const id = node.identifier;
-    checkDefined(id, 'Definition must have an id');
-    checkState(id !== '', 'Definition id must not be empty');
-    if (defsById.has(id)) {
-      // Commonmark says the first definition takes precedence. Error since we
-      // don't want to support that.
-      // https://spec.commonmark.org/0.28/#example-169
-      throw new Error(`Duplicate definition id ${id}`);
-    }
-    // The commonmark spec says labels are case-insensitive. We'll ignore that.
-    // https://spec.commonmark.org/0.28/#matches.
-    defsById.set(id, node);
+    p.addDefinition(node);
   }
-  return defsById;
 };
 
 /**
@@ -74,46 +118,14 @@ const extractDefsById = (tree: unist.Node): Map<string, mdast.Definition> => {
  * For an interactive example, see:
  * https://astexplorer.net/#/gist/da878645e2b95030e1233407fd797f35/5e6eea3911b89f429f90330a8864820129eae1d5
  */
-const extractFnDefs = (
-  tree: unist.Node
-): Map<string, mdast.FootnoteDefinition> => {
-  const fnDefsById: Map<string, mdast.FootnoteDefinition> = new Map();
-  const prefix = PostAST.inlineFootnotePrefix;
-
-  // Extract footnote definitions first because the identifiers are defined in
-  // the text so they take precedence over inline footnote definitions.
-  for (const { node } of unistNodes.preOrderGenerator(tree)) {
-    if (!md.isFootnoteDefinition(node)) {
-      continue;
-    }
-    let id = node.identifier;
-    checkDefined(id, 'Footnote definition must have an identifier');
-    checkState(id !== '', 'Footnote definition identifier must not be empty');
-    checkState(
-      !id.startsWith(prefix),
-      `Footnote definition must not start with ${prefix}`
-    );
-    if (fnDefsById.has(id)) {
-      throw new Error(`Duplicate footnote definition identifier: '${id}'`);
-    }
-    fnDefsById.set(id, node);
-  }
-
-  // Extract inline footnotes.
+const addAllFnDefs = (p: PostAST): void => {
   let nextInlineId = 1;
-  for (const { node } of unistNodes.preOrderGenerator(tree)) {
-    if (!md.isFootnote(node)) {
-      continue;
+  for (const {node} of unistNodes.preOrderGenerator(p.mdastNode)) {
+    if (md.isFootnoteDefinition(node)) {
+      p.addFootnoteDef(node);
+    } else if (md.isFootnote(node)) {
+      p.addInlineFootnoteDef(nextInlineId, node);
+      nextInlineId++;
     }
-    const fnId = prefix + nextInlineId;
-    // Store the ID so we can render the footnote reference.
-    unistNodes.ensureDataAttr(node).data[
-      PostAST.INLINE_FOOTNOTE_DATA_KEY
-    ] = fnId;
-    nextInlineId++;
-    const fnDef = md.footnoteDef(fnId, [md.paragraph(node.children)]);
-    fnDefsById.set(fnId, fnDef);
   }
-
-  return fnDefsById;
 };

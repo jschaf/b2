@@ -273,9 +273,9 @@ export class ImageReferenceCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'imageReference', md.isImageRef);
-    const id = node.identifier;
-    let def = postAST.defsById.get(id);
-    if (def === undefined) {
+    const id = md.normalizeLabel(node.identifier);
+    let def = postAST.getDefinition(id);
+    if (def === null) {
       return h.danglingImageRef(node);
     }
     const src = encodeURI(def.url.trim());

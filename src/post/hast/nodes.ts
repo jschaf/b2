@@ -1,4 +1,4 @@
-import { ReferenceType } from '//post/mdast/nodes';
+import { RefType } from '//post/mdast/nodes';
 import * as unist from 'unist';
 import * as hast from 'hast-format';
 import * as objects from '//objects';
@@ -8,19 +8,35 @@ import * as mdast from 'mdast';
 // https://github.com/syntax-tree/hastscript
 
 /**
- * Returns the content of an image reference rather than its definition.
+ * Returns the markdown representation of an image reference rather than its
+ * definition.
  *
  * Used when no definition is found matching the node's identifier.
+ *
+ * https://spec.commonmark.org/0.28/#images
  */
 export const danglingImageRef = (n: mdast.ImageReference): hast.Text => {
+  const id = n.label || n.identifier;
   switch (n.referenceType) {
-    case ReferenceType.Collapsed:
-      return text(`![${n.alt}][]`);
-    case ReferenceType.Full:
-      return text(`![${n.alt}][${n.label || n.identifier}]`);
+    case RefType.Collapsed:
+      return text(`![${id}][]`);
+    case RefType.Full:
+      return text(`![${n.alt}][${id}]`);
+    case RefType.Shortcut:
+      return text(`![${id}]`);
     default:
       throw new Error('unreachable');
   }
+};
+
+/**
+ * Returns the markdown representation of a link reference rather than its
+ * definition.
+ *
+ * Used when no definition is found matching the node's identifier.
+ */
+export const danglingLinkRef = (_n: mdast.LinkReference, _children: unist.Node[]): hast.Element => {
+  return elemText('p', 'foo');
 };
 
 /** Creates a hast element using tagName and children. */
