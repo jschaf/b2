@@ -1,6 +1,18 @@
 import { checkDefined } from '//asserts';
 import { PostAST } from '//post/post_ast';
-import {BreakCompiler, CodeCompiler, DeleteCompiler, EmphasisCompiler, FootnoteCompiler, FootnoteReferenceCompiler, HeadingCompiler, MdastNodeCompiler, ParagraphCompiler, RootCompiler, TextCompiler} from '//post/mdast/node_compiler';
+import {
+  BreakCompiler,
+  CodeCompiler,
+  DeleteCompiler,
+  EmphasisCompiler,
+  FootnoteCompiler,
+  FootnoteReferenceCompiler,
+  HeadingCompiler,
+  MdastNodeCompiler,
+  ParagraphCompiler,
+  RootCompiler,
+  TextCompiler,
+} from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 
 type NewNodeCompiler = (parent: MdastCompiler) => MdastNodeCompiler;

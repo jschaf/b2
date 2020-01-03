@@ -1,7 +1,6 @@
 import { checkDefined, checkState } from '//asserts';
-import { mdFootnoteDef, mdPara } from '//post/testing/markdown_nodes';
 import * as unistNodes from '//unist/nodes';
-import * as md_nodes from '//post/mdast/nodes';
+import * as md from '//post/mdast/nodes';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
 
@@ -52,15 +51,15 @@ export class PostAST {
  * https://astexplorer.net/#/gist/da878645e2b95030e1233407fd797f35/5e6eea3911b89f429f90330a8864820129eae1d5
  */
 const extractFnDefs = (
-  md: unist.Node
+  tree: unist.Node
 ): Map<string, mdast.FootnoteDefinition> => {
   const fnDefsById: Map<string, mdast.FootnoteDefinition> = new Map();
   const prefix = PostAST.inlineFootnotePrefix;
 
   // Extract footnote definitions first because the identifiers are defined in
   // the text so they take precedence over inline footnote definitions.
-  for (const { node } of unistNodes.preOrderGenerator(md)) {
-    if (!md_nodes.isFootnoteDefinition(node)) {
+  for (const { node } of unistNodes.preOrderGenerator(tree)) {
+    if (!md.isFootnoteDefinition(node)) {
       continue;
     }
     let id = node.identifier;
@@ -78,8 +77,8 @@ const extractFnDefs = (
 
   // Extract inline footnotes.
   let nextInlineId = 1;
-  for (const { node } of unistNodes.preOrderGenerator(md)) {
-    if (!md_nodes.isFootnote(node)) {
+  for (const { node } of unistNodes.preOrderGenerator(tree)) {
+    if (!md.isFootnote(node)) {
       continue;
     }
     const fnId = prefix + nextInlineId;
@@ -88,7 +87,7 @@ const extractFnDefs = (
       PostAST.INLINE_FOOTNOTE_DATA_KEY
     ] = fnId;
     nextInlineId++;
-    const fnDef = mdFootnoteDef(fnId, [mdPara(node.children)]);
+    const fnDef = md.footnoteDef(fnId, [md.paragraph(node.children)]);
     fnDefsById.set(fnId, fnDef);
   }
 

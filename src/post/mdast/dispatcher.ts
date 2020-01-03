@@ -1,4 +1,16 @@
-import {BreakCompiler, CodeCompiler, DeleteCompiler, EmphasisCompiler, FootnoteCompiler, FootnoteReferenceCompiler, HeadingCompiler, MdastNodeCompiler, ParagraphCompiler, RootCompiler, TextCompiler} from '//post/mdast/node_compiler';
+import {
+  BreakCompiler,
+  CodeCompiler,
+  DeleteCompiler,
+  EmphasisCompiler,
+  FootnoteCompiler,
+  FootnoteReferenceCompiler,
+  HeadingCompiler,
+  MdastNodeCompiler,
+  ParagraphCompiler,
+  RootCompiler,
+  TextCompiler,
+} from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 
 /** Chooses the correct compiler for an mdast node. */

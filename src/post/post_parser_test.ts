@@ -1,3 +1,4 @@
+import * as md from '//post/mdast/nodes';
 import { PostMetadata } from '//post/post_metadata';
 import {
   PostNode,
@@ -10,16 +11,6 @@ import {
 } from '//post/testing/front_matters';
 import { dedent } from '//strings';
 import { ZipFileEntry, Zipper } from '//zip_files';
-import {
-  mdHeading,
-  mdOrderedList,
-  mdParaText,
-  mdRoot,
-  mdText,
-  mdFrontmatterToml,
-  stripPositions,
-  mdHeading1,
-} from '//post/testing/markdown_nodes';
 import * as dates from '//dates';
 
 test('parses from markdown', () => {
@@ -30,11 +21,11 @@ test('parses from markdown', () => {
    `);
   const node = PostParser.create().parseMarkdown(markdown);
 
-  const expected = mdRoot([
-    mdHeading('h1', [mdText('hello')]),
-    mdParaText('Hello world.'),
+  const expected = md.root([
+    md.heading('h1', [md.text('hello')]),
+    md.paragraphText('Hello world.'),
   ]);
-  expect(stripPositions(node)).toEqual(
+  expect(md.stripPositions(node)).toEqual(
     new PostNode(DEFAULT_FRONTMATTER, expected)
   );
 });
@@ -42,15 +33,15 @@ test('parses from markdown', () => {
 test('parses paragraph followed immediately by a list', () => {
   const markdown = withDefaultFrontMatter(dedent`
     Hello world.
-    1. text
+    1. md.text
   `);
   const node = PostParser.create().parseMarkdown(markdown);
 
-  const expected = mdRoot([
-    mdParaText('Hello world.'),
-    mdOrderedList([mdParaText('text')]),
+  const expected = md.root([
+    md.paragraphText('Hello world.'),
+    md.orderedList([md.paragraphText('md.text')]),
   ]);
-  expect(stripPositions(node).node).toEqual(expected);
+  expect(md.stripPositions(node).node).toEqual(expected);
 });
 
 test('parses from TextPack', async () => {
@@ -64,11 +55,11 @@ test('parses from TextPack', async () => {
   ]);
   const node = await PostParser.create().parseTextPack(buf);
 
-  const expected = mdRoot([
-    mdHeading('h1', [mdText('hello')]),
-    mdParaText('Hello world.'),
+  const expected = md.root([
+    md.heading('h1', [md.text('hello')]),
+    md.paragraphText('Hello world.'),
   ]);
-  expect(stripPositions(node)).toEqual(
+  expect(md.stripPositions(node)).toEqual(
     new PostNode(DEFAULT_FRONTMATTER, expected)
   );
 });
@@ -87,11 +78,11 @@ test('parses from frontmatter markdown', async () => {
 
   const node = PostParser.create().parseFrontmatterMarkdown(markdown);
 
-  const expected = mdRoot([
-    mdFrontmatterToml({ slug, date: dates.fromISO(date) }),
-    mdHeading1('Hello'),
+  const expected = md.root([
+    md.mdFrontmatterToml({ slug, date: dates.fromISO(date) }),
+    md.headingText('h1', 'Hello'),
   ]);
-  expect(stripPositions(node)).toEqual(
+  expect(md.stripPositions(node)).toEqual(
     new PostNode(PostMetadata.of({ slug, date: dates.fromISO(date) }), expected)
   );
 });

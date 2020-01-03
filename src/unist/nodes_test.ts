@@ -1,5 +1,5 @@
 import { lossyClone } from '//objects';
-import { mdPara, mdRoot, mdText } from '//post/testing/markdown_nodes';
+import * as md from '//post/mdast/nodes';
 import {
   findNode,
   NodeVisitor,
@@ -13,12 +13,12 @@ type Ancestors = unist.Node[];
 describe('preOrderGenerator', () => {
   it('should iterate in preOrder', () => {
     const nodes: [unist.Node, Ancestors][] = [];
-    const n1a = mdText('1 left');
-    const n1b = mdText('1 mid');
-    const n1 = mdPara([n1a, n1b]);
-    const n2a = mdText('2 left');
-    const n2 = mdPara([n2a]);
-    const n0 = mdRoot([n1, n2]);
+    const n1a = md.text('1 left');
+    const n1b = md.text('1 mid');
+    const n1 = md.paragraph([n1a, n1b]);
+    const n2a = md.text('2 left');
+    const n2 = md.paragraph([n2a]);
+    const n0 = md.root([n1, n2]);
 
     for (const { node, ancestors } of preOrderGenerator(n0)) {
       nodes.push([node, ancestors.map(lossyClone)]);
@@ -41,12 +41,12 @@ describe('visitInPlace', () => {
     const visitor: NodeVisitor = (n, ancestors) => {
       nodes.push([n, ancestors.map(a => lossyClone(a))]);
     };
-    const n1a = mdText('1 left');
-    const n1b = mdText('1 mid');
-    const n1 = mdPara([n1a, n1b]);
-    const n2a = mdText('2 left');
-    const n2 = mdPara([n2a]);
-    const n0 = mdRoot([n1, n2]);
+    const n1a = md.text('1 left');
+    const n1b = md.text('1 mid');
+    const n1 = md.paragraph([n1a, n1b]);
+    const n2a = md.text('2 left');
+    const n2 = md.paragraph([n2a]);
+    const n0 = md.root([n1, n2]);
 
     visitInPlace(n0, visitor);
 
@@ -62,12 +62,12 @@ describe('visitInPlace', () => {
 });
 
 describe('findNode', () => {
-  const n1a = mdText('1 left');
-  const n1b = mdText('1 mid');
-  const n1 = mdPara([n1a, n1b]);
-  const n2a = mdText('2 left');
-  const n2 = mdPara([n2a]);
-  const n0 = mdRoot([n1, n2]);
+  const n1a = md.text('1 left');
+  const n1b = md.text('1 mid');
+  const n1 = md.paragraph([n1a, n1b]);
+  const n2a = md.text('2 left');
+  const n2 = md.paragraph([n2a]);
+  const n0 = md.root([n1, n2]);
 
   it('should find the root node', () => {
     let isRoot = (n: unist.Node): n is { type: 'root' } => n.type === 'root';
@@ -75,7 +75,7 @@ describe('findNode', () => {
     expect(findNode(n0, isRoot)).toEqual(n0);
   });
 
-  it('should find the first para node', () => {
+  it('should find the first paragraph node', () => {
     let isPara = (n: unist.Node): n is { type: 'paragraph' } =>
       n.type === 'paragraph';
 

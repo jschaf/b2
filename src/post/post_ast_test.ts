@@ -1,48 +1,43 @@
+import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
-import {
-  mdInlineFootnote,
-  mdFootnoteDef,
-  mdFootnoteRef,
-  mdPara,
-  mdParaText,
-  mdRoot,
-  mdText,
-} from '//post/testing/markdown_nodes';
 
 describe('PostAST', () => {
   it('should parse a simple mdast', () => {
-    const md = mdRoot([mdPara([mdText('hello')])]);
+    const m = md.root([md.paragraph([md.text('hello')])]);
 
-    const ast = PostAST.create(md);
+    const p = PostAST.create(m);
 
-    expect(ast.mdastNode).toEqual(md);
-    expect(ast.fnDefsById).toEqual(new Map());
+    expect(p.mdastNode).toEqual(m);
+    expect(p.fnDefsById).toEqual(new Map());
   });
 
   it('should extract footnote definitions', () => {
-    let fnDef1 = mdFootnoteDef('1', [mdParaText('fn def')]);
-    const md = mdRoot([mdPara([mdText('hello'), mdFootnoteRef('1')]), fnDef1]);
+    let fnDef1 = md.footnoteDef('1', [md.paragraphText('fn def')]);
+    const m = md.root([
+      md.paragraph([md.text('hello'), md.footnoteRef('1')]),
+      fnDef1,
+    ]);
 
-    const ast = PostAST.create(md);
+    const p = PostAST.create(m);
 
-    expect(ast.mdastNode).toEqual(md);
-    expect(ast.fnDefsById).toEqual(new Map([['1', fnDef1]]));
+    expect(p.mdastNode).toEqual(m);
+    expect(p.fnDefsById).toEqual(new Map([['1', fnDef1]]));
   });
 
   it('should extract inline footnote definitions', () => {
-    let inlineFn1 = mdInlineFootnote([mdText('inline fn')]);
-    let inlineFn2 = mdInlineFootnote([mdText('inline fn 2')]);
-    const md = mdRoot([mdPara([mdText('hello'), inlineFn1, inlineFn2])]);
+    let inlineFn1 = md.footnote([md.text('inline fn')]);
+    let inlineFn2 = md.footnote([md.text('inline fn 2')]);
+    const m = md.root([md.paragraph([md.text('hello'), inlineFn1, inlineFn2])]);
 
-    const ast = PostAST.create(md);
+    const p = PostAST.create(m);
 
-    expect(ast.mdastNode).toEqual(md);
+    expect(p.mdastNode).toEqual(m);
     const id1 = PostAST.newInlineFootnoteId(1);
     const id2 = PostAST.newInlineFootnoteId(2);
-    expect(ast.fnDefsById).toEqual(
+    expect(p.fnDefsById).toEqual(
       new Map([
-        [id1, mdFootnoteDef(id1, [mdPara(inlineFn1.children)])],
-        [id2, mdFootnoteDef(id2, [mdPara(inlineFn2.children)])],
+        [id1, md.footnoteDef(id1, [md.paragraph(inlineFn1.children)])],
+        [id2, md.footnoteDef(id2, [md.paragraph(inlineFn2.children)])],
       ])
     );
   });

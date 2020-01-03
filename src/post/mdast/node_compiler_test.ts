@@ -1,35 +1,47 @@
 import { MdastCompiler } from '//post/mdast/compiler';
-import {hastElem, hastElemText, hastElemWithProps, hastText} from '//post/hast/hast_nodes';
-import {BlockquoteCompiler, BreakCompiler, CodeCompiler, DeleteCompiler, EmphasisCompiler, FootnoteCompiler, FootnoteReferenceCompiler, HeadingCompiler} from '//post/mdast/node_compiler';
-import { PostAST } from '//post/post_ast';
 import {
-  mdBlockquote, mdBreak, mdCode, mdCodeWithLang, mdDelete,
-  mdEmphasisText, mdFootnoteRef, mdHeading, mdInlineFootnote,
-  mdPara,
-  mdParaText, mdText,
-} from '//post/testing/markdown_nodes';
+  hastElem,
+  hastElemText,
+  hastElemWithProps,
+  hastText,
+} from '//post/hast/hast_nodes';
+import {
+  BlockquoteCompiler,
+  BreakCompiler,
+  CodeCompiler,
+  DeleteCompiler,
+  EmphasisCompiler,
+  FootnoteCompiler,
+  FootnoteReferenceCompiler,
+  HeadingCompiler,
+} from '//post/mdast/node_compiler';
+import * as md from '//post/mdast/nodes';
+import { PostAST } from '//post/post_ast';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
     const p = PostAST.create(
-        mdBlockquote([mdParaText('first'), mdPara([mdEmphasisText('second')])])
+      md.blockquote([
+        md.paragraphText('first'),
+        md.paragraph([md.emphasisText('second')]),
+      ])
     );
     const c = MdastCompiler.createDefault();
 
     const hast = BlockquoteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-        hastElem('blockquote', [
-          hastElemText('p', 'first'),
-          hastElem('p', [hastElemText('em', 'second')]),
-        ])
+      hastElem('blockquote', [
+        hastElemText('p', 'first'),
+        hastElem('p', [hastElemText('em', 'second')]),
+      ])
     );
   });
 });
 
 describe('BreakCompiler', () => {
   it('should compile a break', () => {
-    const p = PostAST.create(mdBreak());
+    const p = PostAST.create(md.lineBreak());
 
     const hast = BreakCompiler.create().compileNode(p.mdastNode, p);
 
@@ -40,22 +52,22 @@ describe('BreakCompiler', () => {
 describe('CodeCompiler', () => {
   it('should compile code with a lang', () => {
     let code = 'function foo() {}';
-    const p = PostAST.create(mdCodeWithLang('javascript', code));
+    const p = PostAST.create(md.codeWithLang('javascript', code));
 
     const hast = CodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-        hastElem('pre', [
-          hastElemWithProps('code', { className: ['lang-javascript'] }, [
-            hastText(code),
-          ]),
-        ])
+      hastElem('pre', [
+        hastElemWithProps('code', { className: ['lang-javascript'] }, [
+          hastText(code),
+        ]),
+      ])
     );
   });
 
   it('should compile code without a lang', () => {
     let code = 'function foo() {}';
-    const post = PostAST.create(mdCode(code));
+    const post = PostAST.create(md.code(code));
 
     const hast = CodeCompiler.create().compileNode(post.mdastNode, post);
 
@@ -66,14 +78,14 @@ describe('CodeCompiler', () => {
 describe('DeleteCompiler', () => {
   it('should compile a delete', () => {
     const p = PostAST.create(
-        mdDelete([mdText('first'), mdEmphasisText('second')])
+      md.deleted([md.text('first'), md.emphasisText('second')])
     );
     const c = MdastCompiler.createDefault();
 
     const hast = DeleteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-        hastElem('del', [hastText('first'), hastElemText('em', 'second')])
+      hastElem('del', [hastText('first'), hastElemText('em', 'second')])
     );
   });
 });
@@ -81,7 +93,7 @@ describe('DeleteCompiler', () => {
 describe('EmphasisCompiler', () => {
   it('should compile emphasis with only text', () => {
     const content = 'foobar';
-    const p = PostAST.create(mdEmphasisText(content));
+    const p = PostAST.create(md.emphasisText(content));
     const c = MdastCompiler.createDefault();
 
     const hast = EmphasisCompiler.create(c).compileNode(p.mdastNode, p);
@@ -92,13 +104,13 @@ describe('EmphasisCompiler', () => {
 
 describe('FootnoteCompiler', () => {
   it('should compile a footnote', () => {
-    const p = PostAST.create(mdInlineFootnote([mdText('inline fn')]));
+    const p = PostAST.create(md.footnote([md.text('inline fn')]));
     const c = MdastCompiler.createDefault();
 
     const hast = FootnoteCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-        FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1))
+      FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1))
     );
   });
 });
@@ -106,7 +118,7 @@ describe('FootnoteCompiler', () => {
 describe('FootnoteReferenceCompiler', () => {
   it('should compile a footnote reference', () => {
     const id = 'my-fn-ref';
-    const p = PostAST.create(mdFootnoteRef(id));
+    const p = PostAST.create(md.footnoteRef(id));
 
     const hast = FootnoteReferenceCompiler.create().compileNode(p.mdastNode, p);
 
@@ -117,7 +129,7 @@ describe('FootnoteReferenceCompiler', () => {
 describe('HeadingCompiler', () => {
   it('should compile a heading with only text', () => {
     const content = 'foobar';
-    const p = PostAST.create(mdHeading('h3', [mdText(content)]));
+    const p = PostAST.create(md.heading('h3', [md.text(content)]));
     const c = MdastCompiler.createDefault();
 
     const hast = HeadingCompiler.create(c).compileNode(p.mdastNode, p);
@@ -127,15 +139,14 @@ describe('HeadingCompiler', () => {
 
   it('should compile a heading with other content', () => {
     const p = PostAST.create(
-        mdHeading('h1', [mdText('start'), mdEmphasisText('mid')])
+      md.heading('h1', [md.text('start'), md.emphasisText('mid')])
     );
     const c = MdastCompiler.createDefault();
 
     const hast = HeadingCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(
-        hastElem('h1', [hastText('start'), hastElemText('em', 'mid')])
+      hastElem('h1', [hastText('start'), hastElemText('em', 'mid')])
     );
   });
 });
-

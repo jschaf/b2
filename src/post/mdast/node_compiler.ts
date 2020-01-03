@@ -1,10 +1,9 @@
-import {checkDefined, checkState} from '//asserts';
-import {MdastCompiler} from '//post/mdast/compiler';
-import {hastElem, hastElemWithProps, hastText} from '//post/hast/hast_nodes';
+import { checkDefined, checkState } from '//asserts';
+import { MdastCompiler } from '//post/mdast/compiler';
+import { hastElem, hastElemWithProps, hastText } from '//post/hast/hast_nodes';
 import * as md from '//post/mdast/nodes';
-import {PostAST} from '//post/post_ast';
-import {mdFootnoteRef} from '//post/testing/markdown_nodes';
-import {isString} from '//strings';
+import { PostAST } from '//post/post_ast';
+import { isString } from '//strings';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
 
@@ -20,8 +19,7 @@ export interface MdastNodeCompiler {
  *     > baz qux
  */
 export class BlockquoteCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): BlockquoteCompiler {
     return new BlockquoteCompiler(compiler);
@@ -40,8 +38,7 @@ export class BlockquoteCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#break
  */
 export class BreakCompiler implements MdastNodeCompiler {
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): BreakCompiler {
     return new BreakCompiler();
@@ -61,8 +58,7 @@ export class BreakCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#code
  */
 export class CodeCompiler implements MdastNodeCompiler {
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): CodeCompiler {
     return new CodeCompiler();
@@ -81,15 +77,14 @@ export class CodeCompiler implements MdastNodeCompiler {
 }
 
 /**
- * Compiles deleted markdown text to hast, like:
+ * Compiles deleted mdast text to hast, like:
  *
  *     Lorem ipsum ~~this is deleted~~.
  *
  * https://github.com/syntax-tree/mdast#delete
  */
 export class DeleteCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): DeleteCompiler {
     return new DeleteCompiler(compiler);
@@ -103,15 +98,14 @@ export class DeleteCompiler implements MdastNodeCompiler {
 }
 
 /**
- * Compiles emphasized markdown text to hast, like:
+ * Compiles emphasized mdast text to hast, like:
  *
  *     Foo bar *this is emphasized* and _so is this_.
  *
  * https://github.com/syntax-tree/mdast#emphasis
  */
 export class EmphasisCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): EmphasisCompiler {
     return new EmphasisCompiler(compiler);
@@ -125,15 +119,14 @@ export class EmphasisCompiler implements MdastNodeCompiler {
 }
 
 /**
- * Compiles an inline footnote definition to hast, like:
+ * Compiles an mdast inline footnote definition to hast, like:
  *
  *      Foo bar [^inline footnote] qux.
  *
  * https://github.com/syntax-tree/mdast#footnote
  */
 export class FootnoteCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): FootnoteCompiler {
     return new FootnoteCompiler(compiler);
@@ -142,25 +135,25 @@ export class FootnoteCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'footnote', md.isFootnote);
     const data = checkDefined(
-        node.data,
-        'Expected data attr to exist on footnote type.'
+      node.data,
+      'Expected data attr to exist on footnote type.'
     );
     let key = PostAST.INLINE_FOOTNOTE_DATA_KEY;
     const fnId = checkDefined(
-        data[key],
-        `Expected a footnote ID to exist on data attr with key: ${key}`
+      data[key],
+      `Expected a footnote ID to exist on data attr with key: ${key}`
     );
     checkState(
-        isString(fnId),
-        `Expected data.${key} to be a string but was ${fnId}`
+      isString(fnId),
+      `Expected data.${key} to be a string but was ${fnId}`
     );
-    const fnRef = mdFootnoteRef(fnId);
+    const fnRef = md.footnoteRef(fnId);
     return this.compiler.compileNode(fnRef, postAST);
   }
 }
 
 /**
- * Compiles a footnote reference to hast, like:
+ * Compiles an mdast footnote reference to hast, like:
  *
  *      Foo bar [^1] qux.
  *
@@ -169,8 +162,7 @@ export class FootnoteCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#footnotereference
  */
 export class FootnoteReferenceCompiler implements MdastNodeCompiler {
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): FootnoteReferenceCompiler {
     return new FootnoteReferenceCompiler();
@@ -186,8 +178,8 @@ export class FootnoteReferenceCompiler implements MdastNodeCompiler {
   }
 
   static makeHastNode(fnId: string) {
-    return hastElemWithProps('sup', {id: `fn-ref-${fnId}`}, [
-      hastElemWithProps('a', {href: `#fn-${fnId}`, className: ['fn-ref']}, [
+    return hastElemWithProps('sup', { id: `fn-ref-${fnId}` }, [
+      hastElemWithProps('a', { href: `#fn-${fnId}`, className: ['fn-ref'] }, [
         hastText(fnId),
       ]),
     ]);
@@ -195,15 +187,14 @@ export class FootnoteReferenceCompiler implements MdastNodeCompiler {
 }
 
 /**
- * Compiles a mdast heading to hast, like:
+ * Compiles an mdast heading to hast, like:
  *
  *     # Alpha
  *
  * https://github.com/syntax-tree/mdast#heading
  */
 export class HeadingCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): HeadingCompiler {
     return new HeadingCompiler(compiler);
@@ -224,8 +215,7 @@ export class HeadingCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#paragraph
  */
 export class ParagraphCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): ParagraphCompiler {
     return new ParagraphCompiler(compiler);
@@ -244,27 +234,26 @@ export class ParagraphCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#root
  */
 export class RootCompiler implements MdastNodeCompiler {
-  private constructor(private readonly compiler: MdastCompiler) {
-  }
+  private constructor(private readonly compiler: MdastCompiler) {}
 
   static create(compiler: MdastCompiler): RootCompiler {
     return new RootCompiler(compiler);
   }
 
   compileNode(node: mdast.Root, postAST: PostAST): unist.Node {
+    md.checkType(node, 'root', md.isRoot);
     const children = this.compiler.compileChildren(node, postAST);
     return hastElem('body', children);
   }
 }
 
 /**
- * Compiles literal mdast text to hast.
+ * Compiles a literal mdast text to hast.
  *
  * https://github.com/syntax-tree/mdast#text
  */
 export class TextCompiler implements MdastNodeCompiler {
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): TextCompiler {
     return new TextCompiler();
