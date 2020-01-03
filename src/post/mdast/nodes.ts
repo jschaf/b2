@@ -206,6 +206,7 @@ export const linkText = (url: string, value: string): mdast.Link => {
   return link(url, [text(value)]);
 };
 
+export type LinkRefProps = { label?: string };
 export const isLink = (n: unist.Node): n is mdast.Link => {
   return n.type === 'link' && isResource(n);
 };
@@ -215,10 +216,20 @@ export const linkRef = (
   refType: RefType,
   children: mdast.StaticPhrasingContent[]
 ): mdast.LinkReference => {
+  return linkRefProps(id, refType, {}, children);
+};
+
+export const linkRefProps = (
+  id: string,
+  refType: RefType,
+  props: LinkRefProps,
+  children: mdast.StaticPhrasingContent[]
+): mdast.LinkReference => {
   return {
     type: 'linkReference',
     identifier: id,
     referenceType: refType,
+    ...props,
     children,
   };
 };

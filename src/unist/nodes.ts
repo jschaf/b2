@@ -91,6 +91,14 @@ export const isNode = (n: unknown): n is unist.Node => {
   return isObject(n) && isString(n.type) && n.type !== '';
 };
 
+export type Text = { type: 'text'; value: string };
+
+export const text = (value: string): Text => ({ type: 'text', value });
+
+export const isText = (n: unist.Node): n is Text => {
+  return n.type === 'text' && isString(n.value);
+};
+
 interface NodeWithData extends unist.Node {
   data: unist.Data;
 }
@@ -109,6 +117,25 @@ interface IgnoredNode extends unist.Node {
 }
 
 /** A node that should be ignored. */
+// TODO: replace with empty array
 export const ignored = (): IgnoredNode => {
   return { type: IGNORED_TYPE };
+};
+
+export const mergeAdjacentText = (src: unist.Node[]): unist.Node[] => {
+  if (src.length === 0) {
+    return src;
+  }
+
+  const dest = [src[0]];
+  for (let i = 1; i < src.length; i++) {
+    const s = src[i];
+    const d = dest[dest.length - 1];
+    if (isText(s) && isText(d)) {
+      d.value += s.value;
+    } else {
+      dest.push(s);
+    }
+  }
+  return dest;
 };

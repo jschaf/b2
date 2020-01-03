@@ -3,6 +3,7 @@ import * as unist from 'unist';
 import * as hast from 'hast-format';
 import * as objects from '//objects';
 import * as mdast from 'mdast';
+import * as unistNodes from '//unist/nodes';
 
 // Shortcuts for creating HTML AST nodes (hast).
 // https://github.com/syntax-tree/hastscript
@@ -16,6 +17,7 @@ import * as mdast from 'mdast';
  * https://spec.commonmark.org/0.28/#images
  */
 export const danglingImageRef = (n: mdast.ImageReference): hast.Text => {
+  // Prefer the label since the identifier is normalized.
   const id = n.label || n.identifier;
   switch (n.referenceType) {
     case RefType.Collapsed:
@@ -36,10 +38,23 @@ export const danglingImageRef = (n: mdast.ImageReference): hast.Text => {
  * Used when no definition is found matching the node's identifier.
  */
 export const danglingLinkRef = (
-  _n: mdast.LinkReference,
-  _children: unist.Node[]
-): hast.Element => {
-  return elemText('p', 'foo');
+  n: mdast.LinkReference,
+  childrenCompiler: (n: mdast.LinkReference) => unist.Node[]
+): unist.Node[] => {
+  const children = childrenCompiler(n);
+  const merge = unistNodes.mergeAdjacentText;
+  // Prefer the label since the identifier is normalized.
+  const id = n.label || n.identifier;
+  switch (n.referenceType) {
+    case RefType.Collapsed:
+      return merge([text('['), ...children, text('][]')]);
+    case RefType.Full:
+      return merge([text('['), ...children, text(`][${id}]`)]);
+    case RefType.Shortcut:
+      return merge([text('['), ...children, text(']')]);
+    default:
+      throw new Error('unreachable');
+  }
 };
 
 /** Creates a hast element using tagName and children. */

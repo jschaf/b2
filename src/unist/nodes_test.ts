@@ -2,8 +2,11 @@ import { lossyClone } from '//objects';
 import * as md from '//post/mdast/nodes';
 import {
   findNode,
+  isText,
+  mergeAdjacentText,
   NodeVisitor,
   preOrderGenerator,
+  text,
   visitInPlace,
 } from '//unist/nodes';
 import * as unist from 'unist';
@@ -81,4 +84,27 @@ describe('findNode', () => {
 
     expect(findNode(n0, isPara)).toEqual(n1);
   });
+});
+
+describe('mergeAdjacentText', () => {
+  const o = { type: 'o' };
+  const t = text;
+  const data: [string, unist.Node[], unist.Node[]][] = [
+    ['empty', [], []],
+    ['1 text', [t('foo')], [t('foo')]],
+    ['1 other', [o], [o]],
+    ['2 text', [t('foo'), t('bar')], [t('foobar')]],
+    ['3 text', [t('a'), t('b'), t('c')], [t('abc')]],
+    ['split text', [t('a'), t('b'), o, t('c'), t('d')], [t('ab'), o, t('cd')]],
+  ];
+  const fmt = (ns: unist.Node[]): string =>
+    '[' +
+    ns.map(n => (isText(n) ? n.value : `{type=${n.type}}`)).join(',') +
+    ']';
+  for (const [name, input, expected] of data) {
+    it(`${name}: input=${fmt(input)}, expected=${fmt(expected)}`, () => {
+      const nodes = mergeAdjacentText(input);
+      expect(nodes).toEqual(expected);
+    });
+  }
 });
