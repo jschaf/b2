@@ -1,11 +1,6 @@
 import { checkDefined, checkState } from '//asserts';
 import { MdastCompiler } from '//post/mdast/compiler';
-import {
-  hastElem,
-  hastElemText,
-  hastElemWithProps, hastRaw,
-  hastText,
-} from '//post/hast/hast_nodes';
+import * as h from '//post/hast/nodes';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
@@ -34,7 +29,7 @@ export class BlockquoteCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'blockquote', md.isBlockquote);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('blockquote', children);
+    return h.elem('blockquote', children);
   }
 }
 
@@ -52,7 +47,7 @@ export class BreakCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'break', md.isBreak);
-    return hastElem('break');
+    return h.elem('break');
   }
 }
 
@@ -76,9 +71,7 @@ export class CodeCompiler implements MdastNodeCompiler {
     if (isString(node.lang) && node.lang !== '') {
       props.className = ['lang-' + node.lang.trim()];
     }
-    return hastElem('pre', [
-      hastElemWithProps('code', props, [hastText(node.value)]),
-    ]);
+    return h.elem('pre', [h.elemProps('code', props, [h.text(node.value)])]);
   }
 }
 
@@ -99,7 +92,7 @@ export class DeleteCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'delete', md.isDelete);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('del', children);
+    return h.elem('del', children);
   }
 }
 
@@ -120,7 +113,7 @@ export class EmphasisCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'emphasis', md.isEmphasis);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('em', children);
+    return h.elem('em', children);
   }
 }
 
@@ -184,9 +177,9 @@ export class FootnoteReferenceCompiler implements MdastNodeCompiler {
   }
 
   static makeHastNode(fnId: string) {
-    return hastElemWithProps('sup', { id: `fn-ref-${fnId}` }, [
-      hastElemWithProps('a', { href: `#fn-${fnId}`, className: ['fn-ref'] }, [
-        hastText(fnId),
+    return h.elemProps('sup', { id: `fn-ref-${fnId}` }, [
+      h.elemProps('a', { href: `#fn-${fnId}`, className: ['fn-ref'] }, [
+        h.text(fnId),
       ]),
     ]);
   }
@@ -209,7 +202,7 @@ export class HeadingCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'heading', md.isHeading);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('h' + node.depth, children);
+    return h.elem('h' + node.depth, children);
   }
 }
 
@@ -221,8 +214,7 @@ export class HeadingCompiler implements MdastNodeCompiler {
  * https://github.com/syntax-tree/mdast#html
  */
 export class HTMLCompiler implements MdastNodeCompiler {
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): HTMLCompiler {
     return new HTMLCompiler();
@@ -230,7 +222,7 @@ export class HTMLCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'html', md.isHTML);
-    return hastRaw(node.value);
+    return h.raw(node.value);
   }
 }
 
@@ -250,7 +242,7 @@ export class InlineCodeCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'inline code', md.isInlineCode);
-    return hastElemText('code', node.value);
+    return h.elemText('code', node.value);
   }
 }
 
@@ -275,7 +267,7 @@ export class LinkCompiler implements MdastNodeCompiler {
       props.title = node.title;
     }
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElemWithProps('a', props, children);
+    return h.elemProps('a', props, children);
   }
 }
 
@@ -296,7 +288,7 @@ export class ParagraphCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'paragraph', md.isParagraph);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('p', children);
+    return h.elem('p', children);
   }
 }
 
@@ -315,7 +307,7 @@ export class RootCompiler implements MdastNodeCompiler {
   compileNode(node: mdast.Root, postAST: PostAST): unist.Node {
     md.checkType(node, 'root', md.isRoot);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('body', children);
+    return h.elem('body', children);
   }
 }
 
@@ -336,7 +328,7 @@ export class StrongCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, postAST: PostAST): unist.Node {
     md.checkType(node, 'strong', md.isStrong);
     const children = this.compiler.compileChildren(node, postAST);
-    return hastElem('strong', children);
+    return h.elem('strong', children);
   }
 }
 
@@ -354,7 +346,7 @@ export class TextCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'text', md.isText);
-    return hastText(node.value);
+    return h.text(node.value);
   }
 }
 

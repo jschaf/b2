@@ -123,7 +123,7 @@ export const isHeading = (n: unist.Node): n is mdast.Heading => {
 };
 
 export const html = (value: string): mdast.HTML => {
-  return {type: 'html', value};
+  return { type: 'html', value };
 };
 
 export const isHTML = (n: unist.Node): n is mdast.HTML => {

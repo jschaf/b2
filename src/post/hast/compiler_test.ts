@@ -1,11 +1,11 @@
 import { HastCompiler } from '//post/hast/compiler';
-import { hastElem, hastElemText } from '//post/hast/hast_nodes';
+import * as h from '//post/hast/nodes';
 
 describe('HastCompiler', () => {
   it('should compile body > p', () => {
-    const h = hastElem('body', [hastElemText('p', 'foo bar')]);
+    const a = h.elem('body', [h.elemText('p', 'foo bar')]);
 
-    const html = HastCompiler.create().compile(h);
+    const html = HastCompiler.create().compile(a);
 
     expect(html).toEqual('<body><p>foo bar</p></body>');
   });
