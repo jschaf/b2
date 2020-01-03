@@ -258,6 +258,33 @@ export class ImageCompiler implements MdastNodeCompiler {
 }
 
 /**
+ * Compiles an mdast imageReference node to hast, like:
+ *
+ *     ![alpha][bravo]
+ *
+ * https://github.com/syntax-tree/mdast#imagereference
+ */
+export class ImageReferenceCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static create(compiler: MdastCompiler): ImageReferenceCompiler {
+    return new ImageReferenceCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+    md.checkType(node, 'imageReference', md.isImageRef);
+    const id = node.identifier;
+    let def = postAST.defsById.get(id);
+    if (def === undefined) {
+      return h.danglingImageRef(node);
+    }
+    const src = encodeURI(def.url.trim());
+    const img = md.imageProps(src, { title: def.title, alt: node.alt });
+    return this.compiler.compileNode(img, postAST);
+  }
+}
+
+/**
  * Compiles an mdast inline code block to hast, like:
  *
  *     Foo bar `let a = 2;`.

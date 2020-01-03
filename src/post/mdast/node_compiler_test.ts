@@ -172,6 +172,41 @@ describe('ImageCompiler', () => {
   });
 });
 
+describe('ImageReferenceCompiler', () => {
+  it('should compile a dangling image reference node', () => {
+    let imgRef = md.imageRefProps('alpha', md.ReferenceType.Full, {
+      alt: 'alt',
+    });
+    const p = PostAST.create(imgRef);
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.ImageReferenceCompiler.create(c).compileNode(
+      p.mdastNode,
+      p
+    );
+
+    expect(hast).toEqual(h.danglingImageRef(imgRef));
+  });
+
+  it('should compile an image reference node', () => {
+    const id = 'alpha';
+    const alt = 'alt';
+    const title = 'title';
+    const src = 'http://bravo.com';
+    let imgRef = md.imageRefProps(id, md.ReferenceType.Full, { alt });
+    const p = PostAST.create(imgRef);
+    p.defsById.set(id, md.definitionProps(id, src, { title }));
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.ImageReferenceCompiler.create(c).compileNode(
+      p.mdastNode,
+      p
+    );
+
+    expect(hast).toEqual(h.elemProps('img', { src, title, alt }));
+  });
+});
+
 describe('InlineCodeCompiler', () => {
   it('should compile inline code', () => {
     const value = 'let a = 2';

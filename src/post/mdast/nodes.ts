@@ -1,6 +1,6 @@
 import { checkDefined } from '//asserts';
 import { PostNode } from '//post/post_parser';
-import { isString } from '//strings';
+import { isOptionalString, isString } from '//strings';
 import { removePositionInfo } from '//unist/nodes';
 import * as tomlLib from '@iarna/toml';
 import * as mdast from 'mdast';
@@ -9,6 +9,7 @@ import * as unist from 'unist';
 
 // Utilities for working with Markdown AST (mdast).
 
+// break is a keyword so use lineBreak.
 export const lineBreak = (): mdast.Break => {
   return { type: 'break' };
 };
@@ -40,6 +41,25 @@ export const isCode = (n: unist.Node): n is mdast.Code => {
   return n.type === 'code' && hasLang && hasMeta;
 };
 
+type DefinitionProps = { label?: string; title?: string };
+
+export const definition = (id: string, url: string): mdast.Definition => {
+  return definitionProps(id, url, {});
+};
+
+export const definitionProps = (
+  id: string,
+  url: string,
+  props: DefinitionProps
+): mdast.Definition => {
+  return { type: 'definition', identifier: id, url, ...props };
+};
+
+export const isDefinition = (n: unist.Node): n is mdast.Definition => {
+  return n.type === 'definition' && isAssociation(n) && isResource(n);
+};
+
+// delete is a keyword so use deleted.
 export const deleted = (children: mdast.PhrasingContent[]): mdast.Delete => {
   return { type: 'delete', children };
 };
@@ -142,6 +162,32 @@ export const imageProps = (url: string, props: ImageProps): mdast.Image => {
 
 export const isImage = (n: unist.Node): n is mdast.Image => {
   return n.type === 'image' && isResource(n) && isAlternative(n);
+};
+
+type ImageRefProps = { label?: string; alt?: string };
+
+export const imageRef = (
+  id: string,
+  ref: ReferenceType
+): mdast.ImageReference => {
+  return imageRefProps(id, ref, {});
+};
+
+export const imageRefProps = (
+  id: string,
+  ref: ReferenceType,
+  props: ImageRefProps
+): mdast.ImageReference => {
+  return {
+    type: 'imageReference',
+    identifier: id,
+    referenceType: ref,
+    ...props,
+  };
+};
+
+export const isImageRef = (n: unist.Node): n is mdast.ImageReference => {
+  return n.type === 'imageReference' && isReference(n) && isAlternative(n);
 };
 
 export const inlineCode = (value: string): mdast.InlineCode => {
@@ -255,15 +301,6 @@ export const isToml = (n: unist.Node): n is Toml => {
   return n.type === 'toml' && isString(n.value);
 };
 
-export const isAlternative = (
-  n: unist.Node
-): n is unist.Node & mdast.Alternative => {
-  if (n.alt) {
-    return isString(n.alt);
-  }
-  return true;
-};
-
 export const isLiteral = (n: unist.Node): n is unist.Literal => {
   return n.value && isString(n.value);
 };
@@ -272,9 +309,49 @@ export const isParent = (n: unist.Node): n is unist.Parent => {
   return Array.isArray(n.children);
 };
 
-export const isResource = (n: unist.Node): n is unist.Node & mdast.Resource => {
-  const isValidTitle = n.title ? isString(n.title) : true;
-  return n.url && isString(n.url) && isValidTitle;
+/**
+ * ReferenceType represents a marker that is associated to another node.
+ *
+ * https://github.com/syntax-tree/mdast#reference
+ */
+export const enum ReferenceType {
+  /** The reference is implicit, its identifier inferred from its content. */
+  Shortcut = 'shortcut',
+  /** The reference is explicit, its identifier inferred from its content. */
+  Collapsed = 'collapsed',
+  /** The reference is explicit, its identifier explicitly set. */
+  Full = 'full',
+}
+
+// Combine Node and an mdast mixin. Necessary since the guards below take
+// a unist.Node but return a guard on the mixin. This type makes the mixin also
+// a node.
+type WithNode<T> = unist.Node & T;
+
+export const isAlternative = (
+  n: unist.Node
+): n is WithNode<mdast.Alternative> => {
+  return isOptionalString(n.alt);
+};
+
+export const isAssociation = (
+  n: unist.Node
+): n is WithNode<mdast.Association> => {
+  return isNonEmptyString(n.identifier) && isOptionalString(n.label);
+};
+
+export const isReference = (n: unist.Node): n is WithNode<mdast.Reference> => {
+  let rt = n.referenceType;
+  const isValidRef =
+    rt === ReferenceType.Shortcut ||
+    rt === ReferenceType.Collapsed ||
+    rt === ReferenceType.Full;
+  return isValidRef && isAssociation(n);
+};
+
+export const isResource = (n: unist.Node): n is WithNode<mdast.Resource> => {
+  const isValidTitle = n.title ? isNonEmptyString(n.title) : true;
+  return n.url && isNonEmptyString(n.url) && isValidTitle;
 };
 
 export function checkType<T extends unist.Node>(
@@ -294,6 +371,7 @@ export function checkType<T extends unist.Node>(
 const isNonEmptyString = (s: any): s is string => {
   return isString(s) && s !== '';
 };
+
 export const stripPositions = (node: PostNode): PostNode => {
   removePositionInfo(node.node);
   return node;

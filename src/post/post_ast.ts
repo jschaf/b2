@@ -13,13 +13,15 @@ export class PostAST {
 
   private constructor(
     readonly mdastNode: unist.Node,
+    readonly defsById: Map<string, mdast.Definition>,
     readonly fnDefsById: Map<string, mdast.FootnoteDefinition>
   ) {}
 
-  static create(md: unist.Node): PostAST {
-    const fnDefs = extractFnDefs(md);
+  static create(n: unist.Node): PostAST {
+    const defs = extractDefsById(n);
+    const fnDefs = extractFnDefs(n);
     // TODO: use actual vfile.
-    return new PostAST(md, fnDefs);
+    return new PostAST(n, defs, fnDefs);
   }
 
   static inlineFootnotePrefix = 'gen-';
@@ -28,6 +30,28 @@ export class PostAST {
     return PostAST.inlineFootnotePrefix + id;
   }
 }
+
+const extractDefsById = (tree: unist.Node): Map<string, mdast.Definition> => {
+  const defsById = new Map<string, mdast.Definition>();
+  for (const { node } of unistNodes.preOrderGenerator(tree)) {
+    if (!md.isDefinition(node)) {
+      continue;
+    }
+    const id = node.identifier;
+    checkDefined(id, 'Definition must have an id');
+    checkState(id !== '', 'Definition id must not be empty');
+    if (defsById.has(id)) {
+      // Commonmark says the first definition takes precedence. Error since we
+      // don't want to support that.
+      // https://spec.commonmark.org/0.28/#example-169
+      throw new Error(`Duplicate definition id ${id}`);
+    }
+    // The commonmark spec says labels are case-insensitive. We'll ignore that.
+    // https://spec.commonmark.org/0.28/#matches.
+    defsById.set(id, node);
+  }
+  return defsById;
+};
 
 /**
  * Extract all footnote definitions to a map of the footnote identifier to the

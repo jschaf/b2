@@ -8,6 +8,15 @@ export const isString = (value: unknown): value is string => {
 };
 
 /**
+ * Returns true if value is a string or undefined (but not null).
+ */
+export const isOptionalString = (
+  value: unknown
+): value is string | undefined => {
+  return value === undefined || isString(value);
+};
+
+/**
  * A tagged template that remove leading indentation from tagged template lines.
  *
  * For example:
@@ -51,7 +60,7 @@ export const dedent = (
   }
 
   // Chop min indent width from each line.
-  let result = '';
+  let result: string;
   if (minIndent !== null) {
     result = lines
       .map(l => (l.startsWith(' ') ? l.slice(minIndent || 0) : l))

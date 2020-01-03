@@ -1,4 +1,4 @@
-import { dedent, isString } from '//strings';
+import { dedent, isOptionalString, isString } from '//strings';
 
 test('isString should work', () => {
   expect(isString(1)).toBe(false);
@@ -6,10 +6,24 @@ test('isString should work', () => {
   expect(isString(null)).toBe(false);
   expect(isString(undefined)).toBe(false);
   expect(isString({})).toBe(false);
+  expect(isString([])).toBe(false);
 
   expect(isString('')).toBe(true);
   // noinspection JSPrimitiveTypeWrapperUsage
   expect(isString(new String())).toBe(true);
+});
+
+test('isOptionalString should work', () => {
+  expect(isOptionalString(1)).toBe(false);
+  expect(isOptionalString(false)).toBe(false);
+  expect(isOptionalString(null)).toBe(false);
+  expect(isOptionalString({})).toBe(false);
+  expect(isOptionalString([])).toBe(false);
+
+  expect(isOptionalString(undefined)).toBe(true);
+  expect(isOptionalString('')).toBe(true);
+  // noinspection JSPrimitiveTypeWrapperUsage
+  expect(isOptionalString(new String())).toBe(true);
 });
 
 describe('dedent', () => {

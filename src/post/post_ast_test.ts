@@ -11,6 +11,17 @@ describe('PostAST', () => {
     expect(p.fnDefsById).toEqual(new Map());
   });
 
+  it('should extract link definitions', () => {
+    let id = 'myDef';
+    let def1 = md.definitionProps(id, 'bravo', { title: 'title' });
+    const m = md.root([md.paragraphText('hello'), def1]);
+
+    const p = PostAST.create(m);
+
+    expect(p.mdastNode).toEqual(m);
+    expect(p.defsById).toEqual(new Map([[id, def1]]));
+  });
+
   it('should extract footnote definitions', () => {
     let fnDef1 = md.footnoteDef('1', [md.paragraphText('fn def')]);
     const m = md.root([
