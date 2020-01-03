@@ -16,6 +16,7 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['footnote', nc.FootnoteCompiler.create],
   ['footnoteReference', nc.FootnoteReferenceCompiler.create],
   ['heading', nc.HeadingCompiler.create],
+  ['html', nc.HTMLCompiler.create],
   ['inlineCode', nc.InlineCodeCompiler.create],
   ['link', nc.LinkCompiler.create],
   ['paragraph', nc.ParagraphCompiler.create],

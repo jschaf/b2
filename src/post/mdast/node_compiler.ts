@@ -3,7 +3,7 @@ import { MdastCompiler } from '//post/mdast/compiler';
 import {
   hastElem,
   hastElemText,
-  hastElemWithProps,
+  hastElemWithProps, hastRaw,
   hastText,
 } from '//post/hast/hast_nodes';
 import * as md from '//post/mdast/nodes';
@@ -210,6 +210,27 @@ export class HeadingCompiler implements MdastNodeCompiler {
     md.checkType(node, 'heading', md.isHeading);
     const children = this.compiler.compileChildren(node, postAST);
     return hastElem('h' + node.depth, children);
+  }
+}
+
+/**
+ * Compiles an mdast html node to hast, like:
+ *
+ *     <div></div>
+ *
+ * https://github.com/syntax-tree/mdast#html
+ */
+export class HTMLCompiler implements MdastNodeCompiler {
+  private constructor() {
+  }
+
+  static create(): HTMLCompiler {
+    return new HTMLCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+    md.checkType(node, 'html', md.isHTML);
+    return hastRaw(node.value);
   }
 }
 

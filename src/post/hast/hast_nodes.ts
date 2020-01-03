@@ -5,6 +5,14 @@ import * as objects from '//objects';
 // Shortcuts for creating HTML AST nodes (hast).
 // https://github.com/syntax-tree/hastscript
 
+export interface Raw extends unist.Literal {
+  type: 'raw';
+}
+
+export const hastRaw = (text: string): Raw => {
+  return { type: 'raw', value: text };
+};
+
 export const hastText = (text: string): hast.Text => {
   return { type: 'text', value: text };
 };

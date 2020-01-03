@@ -122,6 +122,14 @@ export const isHeading = (n: unist.Node): n is mdast.Heading => {
   );
 };
 
+export const html = (value: string): mdast.HTML => {
+  return {type: 'html', value};
+};
+
+export const isHTML = (n: unist.Node): n is mdast.HTML => {
+  return n.type === 'html' && isLiteral(n);
+};
+
 export const inlineCode = (value: string): mdast.InlineCode => {
   return { type: 'inlineCode', value: value };
 };
