@@ -1,48 +1,32 @@
 import { checkArg, checkDefined } from '//asserts';
 import { PostAST } from '//post/post_ast';
-import {
-  BlockquoteCompiler,
-  BreakCompiler,
-  CodeCompiler,
-  DeleteCompiler,
-  EmphasisCompiler,
-  FootnoteCompiler,
-  FootnoteReferenceCompiler,
-  HeadingCompiler,
-  InlineCodeCompiler,
-  LinkCompiler,
-  MdastNodeCompiler,
-  ParagraphCompiler,
-  RootCompiler,
-  TextCompiler,
-  TomlCompiler,
-} from '//post/mdast/node_compiler';
+import * as nc from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 import * as unistNodes from '//unist/nodes';
 
-export type NewNodeCompiler = (parent: MdastCompiler) => MdastNodeCompiler;
+export type NewNodeCompiler = (parent: MdastCompiler) => nc.MdastNodeCompiler;
 export type NodeCompilerEntries = [string, NewNodeCompiler][];
 
 export const newDefaultCompilers: () => NodeCompilerEntries = () => [
-  ['blockquote', BlockquoteCompiler.create],
-  ['break', BreakCompiler.create],
-  ['code', CodeCompiler.create],
-  ['delete', DeleteCompiler.create],
-  ['emphasis', EmphasisCompiler.create],
-  ['footnote', FootnoteCompiler.create],
-  ['footnoteReference', FootnoteReferenceCompiler.create],
-  ['heading', HeadingCompiler.create],
-  ['inlineCode', InlineCodeCompiler.create],
-  ['link', LinkCompiler.create],
-  ['paragraph', ParagraphCompiler.create],
-  ['text', TextCompiler.create],
-  ['toml', TomlCompiler.create],
-  ['root', RootCompiler.create],
+  ['blockquote', nc.BlockquoteCompiler.create],
+  ['break', nc.BreakCompiler.create],
+  ['code', nc.CodeCompiler.create],
+  ['delete', nc.DeleteCompiler.create],
+  ['emphasis', nc.EmphasisCompiler.create],
+  ['footnote', nc.FootnoteCompiler.create],
+  ['footnoteReference', nc.FootnoteReferenceCompiler.create],
+  ['heading', nc.HeadingCompiler.create],
+  ['inlineCode', nc.InlineCodeCompiler.create],
+  ['link', nc.LinkCompiler.create],
+  ['paragraph', nc.ParagraphCompiler.create],
+  ['text', nc.TextCompiler.create],
+  ['toml', nc.TomlCompiler.create],
+  ['root', nc.RootCompiler.create],
 ];
 
 /** Compiles an mdast node into a hast node. */
 export class MdastCompiler {
-  private readonly subCompilers: Map<string, MdastNodeCompiler> = new Map();
+  private readonly subCompilers: Map<string, nc.MdastNodeCompiler> = new Map();
 
   private constructor(
     private readonly subCompilersFactory: Map<string, NewNodeCompiler>
@@ -81,7 +65,7 @@ export class MdastCompiler {
     return results;
   }
 
-  private getNodeCompiler(type: string): MdastNodeCompiler {
+  private getNodeCompiler(type: string): nc.MdastNodeCompiler {
     const c = this.subCompilers.get(type);
     if (c !== undefined) {
       return c;
