@@ -104,3 +104,7 @@ export const raw = (value: string): Raw => {
 export const text = (value: string): hast.Text => {
   return { type: 'text', value };
 };
+
+export const normalizeUri = (uri: string): string => {
+  return encodeURI(uri.trim());
+};

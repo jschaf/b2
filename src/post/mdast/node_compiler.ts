@@ -1,6 +1,6 @@
 import { checkDefined, checkState } from '//asserts';
-import { MdastCompiler } from '//post/mdast/compiler';
 import * as h from '//post/hast/nodes';
+import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
@@ -272,12 +272,11 @@ export class ImageReferenceCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'imageReference', md.isImageRef);
-    const id = md.normalizeLabel(node.identifier);
-    let def = postAST.getDefinition(id);
+    let def = postAST.getDefinition(node.identifier);
     if (def === null) {
       return [h.danglingImageRef(node)];
     }
-    const src = encodeURI(def.url.trim());
+    const src = h.normalizeUri(def.url);
     const img = md.imageProps(src, { title: def.title, alt: node.alt });
     return this.compiler.compileNode(img, postAST);
   }
@@ -319,12 +318,44 @@ export class LinkCompiler implements MdastNodeCompiler {
 
   compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'link', md.isLink);
-    const props: Partial<mdast.Link> = { href: encodeURI(node.url.trim()) };
+    const props: Partial<mdast.Link> = { href: h.normalizeUri(node.url) };
     if (node.title) {
       props.title = node.title;
     }
     const children = this.compiler.compileChildren(node, postAST);
     return [h.elemProps('a', props, children)];
+  }
+}
+
+/**
+ * Compiles an mdast link reference to hast, like:
+ *
+ *     [alpha][bravo]
+ *
+ * https://github.com/syntax-tree/mdast#linkreference
+ */
+export class LinkReferenceCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static create(compiler: MdastCompiler): LinkReferenceCompiler {
+    return new LinkReferenceCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'linkReference', md.isLinkRef);
+    const def = postAST.getDefinition(node.identifier);
+    if (def === null) {
+      const c = (n: mdast.LinkReference) =>
+        this.compiler.compileChildren(n, postAST);
+      return h.danglingLinkRef(node, c);
+    }
+
+    const props: md.LinkProps = {};
+    if (def.title) {
+      props.title = def.title;
+    }
+    const link = md.linkProps(def.url, props, node.children);
+    return this.compiler.compileNode(link, postAST);
   }
 }
 

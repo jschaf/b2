@@ -199,7 +199,17 @@ export const link = (
   url: string,
   children: mdast.StaticPhrasingContent[]
 ): mdast.Link => {
-  return { type: 'link', url, children };
+  return linkProps(url, {}, children);
+};
+
+export type LinkProps = { title?: string };
+
+export const linkProps = (
+  url: string,
+  props: LinkProps,
+  children: mdast.StaticPhrasingContent[]
+): mdast.Link => {
+  return { type: 'link', url, ...props, children };
 };
 
 export const linkText = (url: string, value: string): mdast.Link => {

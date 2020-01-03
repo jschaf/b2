@@ -2,7 +2,9 @@ import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
+import { RefType } from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
+import * as mdast from 'mdast';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
@@ -227,6 +229,42 @@ describe('LinkCompiler', () => {
     const hast = nc.LinkCompiler.create(c).compileNode(p.mdastNode, p);
 
     expect(hast).toEqual([h.elemProps('a', { href: url }, [h.text(value)])]);
+  });
+});
+
+describe('LinkReferenceCompiler', () => {
+  it('should compile a dangling link reference node', () => {
+    const id = 'alpha';
+    const text = 'bravo';
+    let lr = md.linkRefText(id, RefType.Full, text);
+    const p = PostAST.create(lr);
+    const c = MdastCompiler.createDefault();
+    let childrenCompiler = (n: mdast.LinkReference) => c.compileChildren(n, p);
+
+    const hast = nc.LinkReferenceCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(h.danglingLinkRef(lr, childrenCompiler));
+  });
+
+  it('should compile a link reference', () => {
+    const id = 'alpha';
+    const url = 'http://example';
+    let lr = md.linkRef(id, RefType.Full, [
+      md.emphasisText('foo'),
+      md.text('bar'),
+    ]);
+    const p = PostAST.create(lr);
+    p.addDefinition(md.definitionProps(id, url, { title: 'title' }));
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.LinkReferenceCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual([
+      h.elemProps('a', { href: url, title: 'title' }, [
+        h.elemText('em', 'foo'),
+        h.text('bar'),
+      ]),
+    ]);
   });
 });
 

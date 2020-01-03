@@ -21,6 +21,7 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['imageReference', nc.ImageReferenceCompiler.create],
   ['inlineCode', nc.InlineCodeCompiler.create],
   ['link', nc.LinkCompiler.create],
+  ['linkReference', nc.LinkReferenceCompiler.create],
   ['paragraph', nc.ParagraphCompiler.create],
   ['strong', nc.StrongCompiler.create],
   ['text', nc.TextCompiler.create],
