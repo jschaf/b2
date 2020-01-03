@@ -1,16 +1,6 @@
 import { checkDefined } from '//asserts';
-import { BreakCompiler } from '//post/mdast/break';
-import { CodeCompiler } from '//post/mdast/code';
-import { DeleteCompiler } from '//post/mdast/delete';
-import { EmphasisCompiler } from '//post/mdast/emphasis';
-import { FootnoteCompiler } from '//post/mdast/footnote';
-import { FootnoteReferenceCompiler } from '//post/mdast/footnote_reference';
-import { HeadingCompiler } from '//post/mdast/heading';
-import { ParagraphCompiler } from '//post/mdast/paragraph';
-import { RootCompiler } from '//post/mdast/root';
-import { TextCompiler } from '//post/mdast/text';
 import { PostAST } from '//post/post_ast';
-import { MdastNodeCompiler } from '//post/mdast/node_compiler';
+import {BreakCompiler, CodeCompiler, DeleteCompiler, EmphasisCompiler, FootnoteCompiler, FootnoteReferenceCompiler, HeadingCompiler, MdastNodeCompiler, ParagraphCompiler, RootCompiler, TextCompiler} from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 
 type NewNodeCompiler = (parent: MdastCompiler) => MdastNodeCompiler;

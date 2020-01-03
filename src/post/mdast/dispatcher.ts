@@ -1,14 +1,4 @@
-import { BreakCompiler } from '//post/mdast/break';
-import { CodeCompiler } from '//post/mdast/code';
-import { DeleteCompiler } from '//post/mdast/delete';
-import { EmphasisCompiler } from '//post/mdast/emphasis';
-import { FootnoteCompiler } from '//post/mdast/footnote';
-import { FootnoteReferenceCompiler } from '//post/mdast/footnote_reference';
-import { HeadingCompiler } from '//post/mdast/heading';
-import { ParagraphCompiler } from '//post/mdast/paragraph';
-import { MdastNodeCompiler } from '//post/mdast/node_compiler';
-import { RootCompiler } from '//post/mdast/root';
-import { TextCompiler } from '//post/mdast/text';
+import {BreakCompiler, CodeCompiler, DeleteCompiler, EmphasisCompiler, FootnoteCompiler, FootnoteReferenceCompiler, HeadingCompiler, MdastNodeCompiler, ParagraphCompiler, RootCompiler, TextCompiler} from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 
 /** Chooses the correct compiler for an mdast node. */

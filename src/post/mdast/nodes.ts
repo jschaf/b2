@@ -65,7 +65,7 @@ export const isParent = (n: unist.Node): n is unist.Parent => {
   return Array.isArray(n.children);
 };
 
-export function checkNodeType<T extends unist.Node>(
+export function checkType<T extends unist.Node>(
   node: unist.Node,
   name: string,
   check: (n: unist.Node) => n is T

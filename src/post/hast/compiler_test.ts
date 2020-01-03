@@ -1,5 +1,5 @@
 import { HastCompiler } from '//post/hast/compiler';
-import { hastElem, hastElemText } from '//post/mdast/hast_nodes';
+import { hastElem, hastElemText } from '//post/hast/hast_nodes';
 
 describe('HastCompiler', () => {
   it('should compile body > p', () => {

@@ -1,7 +1,7 @@
 import { checkDefined, checkState } from '//asserts';
 import { mdFootnoteDef, mdPara } from '//post/testing/markdown_nodes';
 import * as unistNodes from '//unist/nodes';
-import * as md_nodes from '//post/mdast/md_nodes';
+import * as md_nodes from '//post/mdast/nodes';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
 
