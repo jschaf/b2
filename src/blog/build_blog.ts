@@ -1,5 +1,6 @@
 import * as files from '//files';
-import { PostHtmlRenderer } from '//post/render_html/render';
+import { PostCompiler } from '//post/compiler';
+import { PostAST } from '//post/post_ast';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PostBag } from '//post/post_bag';
@@ -9,7 +10,8 @@ const buildBlog = async (): Promise<void> => {
   const rootDir = path.dirname(gitDir);
   const postsDir = path.join(rootDir, 'posts');
   // Find bare files
-  const postRenderer = PostHtmlRenderer.create();
+  const postCompiler = PostCompiler.create();
+
   const markdowns = await fs.promises.readdir(postsDir);
   await Promise.all(
     markdowns.map(
@@ -24,7 +26,8 @@ const buildBlog = async (): Promise<void> => {
         const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
         const md = buf.toString('utf8');
         const postBag = PostBag.fromTomlFrontmatterMarkdown(md);
-        const mp = await postRenderer.render(postBag);
+        const postAST = PostAST.create(postBag.postNode.node);
+        const mp = postCompiler.compileToMempost(postAST);
         const slug = (postBag.postNode.metadata.schema[
           'slug'
         ] as unknown) as string;

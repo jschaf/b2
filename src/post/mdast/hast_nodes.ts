@@ -13,7 +13,7 @@ export const hastElem = (
   tagName: string,
   children: unist.Node[] = []
 ): hast.Element => {
-  // We use the dispatcher to figure out what to render so we don't know the
+  // We use the dispatcher to figure out what to compileNode so we don't know the
   // types ahead of time.
   return hastElemWithProps(tagName, {}, children);
 };
@@ -27,7 +27,7 @@ export const hastElemWithProps = (
   props: hast.Properties,
   children: unist.Node[] = []
 ): hast.Element => {
-  // We use the dispatcher to figure out what to render so we don't know the
+  // We use the dispatcher to figure out what to compileNode so we don't know the
   // types of the children ahead of time so use any.
   const base: hast.Element = {
     type: 'element',

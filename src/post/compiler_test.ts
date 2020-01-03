@@ -1,18 +1,20 @@
+import { PostCompiler } from '//post/compiler';
+import { PostAST } from '//post/post_ast';
+import { PostBag } from '//post/post_bag';
 import { withDefaultFrontMatter } from '//post/testing/front_matters';
 import { dedent } from '//strings';
-import { PostBag } from '//post/post_bag';
-import { PostHtmlRenderer } from '//post/render_html/render';
 
-describe('PostHtmlRenderer', () => {
-  it('should render a simple post', async () => {
+describe('PostCompiler', () => {
+  it('should compile a simple post', async () => {
     const md = withDefaultFrontMatter(dedent`
       # hello
       
       Hello world.
     `);
     const bag = PostBag.fromMarkdown(md);
+    const ast = PostAST.create(bag.postNode.node);
 
-    const actual = await PostHtmlRenderer.create().render(bag);
+    const actual = PostCompiler.create().compileToMempost(ast);
 
     expect(actual).toEqualMempost({
       'index.html': `

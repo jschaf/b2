@@ -56,7 +56,7 @@ router.post('/commit_post', koaBody({ multipart: true }), async ctx => {
   // Compile markdown to HTML
   // - katex
   // - citations
-  // - compile markdown
+  // - compileNode markdown
 });
 
 app.use(router.routes());

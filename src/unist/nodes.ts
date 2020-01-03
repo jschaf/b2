@@ -90,3 +90,14 @@ export const hasChildren = (
 export const isNode = (n: unknown): n is unist.Node => {
   return isObject(n) && isString(n.type) && n.type !== '';
 };
+
+interface NodeWithData extends unist.Node {
+  data: unist.Data;
+}
+
+export const ensureDataAttr = (n: unist.Node): NodeWithData => {
+  if (!n.data) {
+    n.data = {};
+  }
+  return n as NodeWithData;
+};

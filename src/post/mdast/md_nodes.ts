@@ -18,6 +18,30 @@ export const isCode = (n: unist.Node): n is mdast.Code => {
   return n.type === 'code' && hasLang && hasMeta;
 };
 
+export const isDelete = (n: unist.Node): n is mdast.Delete => {
+  return n.type === 'delete' && isParent(n);
+};
+
+export const isFootnote = (n: unist.Node): n is mdast.Footnote => {
+  return n.type === 'footnote' && isParent(n);
+};
+
+export const isFootnoteDefinition = (
+  n: unist.Node
+): n is mdast.FootnoteDefinition => {
+  return (
+    n.type === 'footnoteDefinition' &&
+    isParent(n) &&
+    isNonEmptyString(n.identifier)
+  );
+};
+
+export const isFootnoteReference = (
+  n: unist.Node
+): n is mdast.FootnoteReference => {
+  return n.type === 'footnoteReference' && isNonEmptyString(n.identifier);
+};
+
 export const isHeading = (n: unist.Node): n is mdast.Heading => {
   const d = n.depth as number;
   return (
@@ -54,3 +78,7 @@ export function checkNodeType<T extends unist.Node>(
     throw new Error(`Expected ${name} node but had: ${noChildren}`);
   }
 }
+
+const isNonEmptyString = (s: any): s is string => {
+  return isString(s) && s !== '';
+};

@@ -19,7 +19,7 @@ trap 'exit $?' SIGINT SIGTERM
 trap cleanup_on_exit EXIT
 
 function watch() {
-  inotifywait --event close_write,moved_to,create \
+  inotifywait --event close_write,moved_to,createDefault \
       --monitor --format '%e %f' "${POSTS_DIR}" |
       while read -r events filename; do
         echo "Detected change. events=${events}, filename=${filename}"
