@@ -6,11 +6,10 @@ import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
-import * as unistNodes from '//unist/nodes';
 
 /** Compiler for a single mdast node. */
 export interface MdastNodeCompiler {
-  compileNode(node: unist.Node, ast: PostAST): unist.Node;
+  compileNode(node: unist.Node, ast: PostAST): unist.Node[];
 }
 
 /**
@@ -28,10 +27,10 @@ export class BlockquoteCompiler implements MdastNodeCompiler {
     return new BlockquoteCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'blockquote', md.isBlockquote);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('blockquote', children);
+    return [h.elem('blockquote', children)];
   }
 }
 
@@ -47,9 +46,9 @@ export class BreakCompiler implements MdastNodeCompiler {
     return new BreakCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'break', md.isBreak);
-    return h.elem('break');
+    return [h.elem('break')];
   }
 }
 
@@ -67,20 +66,20 @@ export class CodeCompiler implements MdastNodeCompiler {
     return new CodeCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'code', md.isCode);
     const props: Record<string, unknown> = {};
     if (isString(node.lang) && node.lang !== '') {
       props.className = ['lang-' + node.lang.trim()];
     }
-    return h.elem('pre', [h.elemProps('code', props, [h.text(node.value)])]);
+    return [h.elem('pre', [h.elemProps('code', props, [h.text(node.value)])])];
   }
 }
 
 /**
  * Compiles deleted mdast text to hast, like:
  *
- *     Lorem ipsum ~~this is deleted~~.
+ *     Foo bar ~~this is deleted~~.
  *
  * https://github.com/syntax-tree/mdast#delete
  */
@@ -91,10 +90,10 @@ export class DeleteCompiler implements MdastNodeCompiler {
     return new DeleteCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'delete', md.isDelete);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('del', children);
+    return [h.elem('del', children)];
   }
 }
 
@@ -112,10 +111,10 @@ export class EmphasisCompiler implements MdastNodeCompiler {
     return new EmphasisCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'emphasis', md.isEmphasis);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('em', children);
+    return [h.elem('em', children)];
   }
 }
 
@@ -133,7 +132,7 @@ export class FootnoteCompiler implements MdastNodeCompiler {
     return new FootnoteCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'footnote', md.isFootnote);
     const data = checkDefined(
       node.data,
@@ -169,13 +168,13 @@ export class FootnoteReferenceCompiler implements MdastNodeCompiler {
     return new FootnoteReferenceCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'footnoteReference', md.isFootnoteReference);
     const fnId = node.identifier;
     // There's also node.label which mdast defines as the original value of
     // the normalized node.identifier field.  We'll only use node.identifier
     // since I'm not sure when the label would ever be different than the ID.
-    return FootnoteReferenceCompiler.makeHastNode(fnId);
+    return [FootnoteReferenceCompiler.makeHastNode(fnId)];
   }
 
   static makeHastNode(fnId: string) {
@@ -201,10 +200,10 @@ export class HeadingCompiler implements MdastNodeCompiler {
     return new HeadingCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'heading', md.isHeading);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('h' + node.depth, children);
+    return [h.elem('h' + node.depth, children)];
   }
 }
 
@@ -222,9 +221,9 @@ export class HTMLCompiler implements MdastNodeCompiler {
     return new HTMLCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'html', md.isHTML);
-    return h.raw(node.value);
+    return [h.raw(node.value)];
   }
 }
 
@@ -242,7 +241,7 @@ export class ImageCompiler implements MdastNodeCompiler {
     return new ImageCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'image', md.isImage);
     const props: { src: string; alt?: string; title?: string } = {
       src: node.url,
@@ -253,7 +252,7 @@ export class ImageCompiler implements MdastNodeCompiler {
     if (node.title) {
       props.title = node.title;
     }
-    return h.elemProps('img', props);
+    return [h.elemProps('img', props)];
   }
 }
 
@@ -271,12 +270,12 @@ export class ImageReferenceCompiler implements MdastNodeCompiler {
     return new ImageReferenceCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'imageReference', md.isImageRef);
     const id = md.normalizeLabel(node.identifier);
     let def = postAST.getDefinition(id);
     if (def === null) {
-      return h.danglingImageRef(node);
+      return [h.danglingImageRef(node)];
     }
     const src = encodeURI(def.url.trim());
     const img = md.imageProps(src, { title: def.title, alt: node.alt });
@@ -298,9 +297,9 @@ export class InlineCodeCompiler implements MdastNodeCompiler {
     return new InlineCodeCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'inline code', md.isInlineCode);
-    return h.elemText('code', node.value);
+    return [h.elemText('code', node.value)];
   }
 }
 
@@ -318,14 +317,14 @@ export class LinkCompiler implements MdastNodeCompiler {
     return new LinkCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'link', md.isLink);
     const props: Partial<mdast.Link> = { href: encodeURI(node.url.trim()) };
     if (node.title) {
       props.title = node.title;
     }
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elemProps('a', props, children);
+    return [h.elemProps('a', props, children)];
   }
 }
 
@@ -343,10 +342,10 @@ export class ParagraphCompiler implements MdastNodeCompiler {
     return new ParagraphCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'paragraph', md.isParagraph);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('p', children);
+    return [h.elem('p', children)];
   }
 }
 
@@ -362,10 +361,10 @@ export class RootCompiler implements MdastNodeCompiler {
     return new RootCompiler(compiler);
   }
 
-  compileNode(node: mdast.Root, postAST: PostAST): unist.Node {
+  compileNode(node: mdast.Root, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'root', md.isRoot);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('body', children);
+    return [h.elem('body', children)];
   }
 }
 
@@ -383,10 +382,10 @@ export class StrongCompiler implements MdastNodeCompiler {
     return new StrongCompiler(compiler);
   }
 
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'strong', md.isStrong);
     const children = this.compiler.compileChildren(node, postAST);
-    return h.elem('strong', children);
+    return [h.elem('strong', children)];
   }
 }
 
@@ -402,9 +401,9 @@ export class TextCompiler implements MdastNodeCompiler {
     return new TextCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'text', md.isText);
-    return h.text(node.value);
+    return [h.text(node.value)];
   }
 }
 
@@ -420,8 +419,8 @@ export class TomlCompiler implements MdastNodeCompiler {
     return new TomlCompiler();
   }
 
-  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'toml', md.isToml);
-    return unistNodes.ignored();
+    return [];
   }
 }

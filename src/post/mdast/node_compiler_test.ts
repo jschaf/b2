@@ -3,7 +3,6 @@ import { MdastCompiler } from '//post/mdast/compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
-import * as unistNodes from '//unist/nodes';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
@@ -17,12 +16,12 @@ describe('BlockquoteCompiler', () => {
 
     const hast = nc.BlockquoteCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(
+    expect(hast).toEqual([
       h.elem('blockquote', [
         h.elemText('p', 'first'),
         h.elem('p', [h.elemText('em', 'second')]),
-      ])
-    );
+      ]),
+    ]);
   });
 });
 
@@ -32,7 +31,7 @@ describe('BreakCompiler', () => {
 
     const hast = nc.BreakCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elem('break'));
+    expect(hast).toEqual([h.elem('break')]);
   });
 });
 
@@ -43,11 +42,11 @@ describe('CodeCompiler', () => {
 
     const hast = nc.CodeCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(
+    expect(hast).toEqual([
       h.elem('pre', [
         h.elemProps('code', { className: ['lang-javascript'] }, [h.text(code)]),
-      ])
-    );
+      ]),
+    ]);
   });
 
   it('should compile code without a lang', () => {
@@ -56,7 +55,7 @@ describe('CodeCompiler', () => {
 
     const hast = nc.CodeCompiler.create().compileNode(post.mdastNode, post);
 
-    expect(hast).toEqual(h.elem('pre', [h.elem('code', [h.text(code)])]));
+    expect(hast).toEqual([h.elem('pre', [h.elem('code', [h.text(code)])])]);
   });
 });
 
@@ -69,9 +68,9 @@ describe('DeleteCompiler', () => {
 
     const hast = nc.DeleteCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(
-      h.elem('del', [h.text('first'), h.elemText('em', 'second')])
-    );
+    expect(hast).toEqual([
+      h.elem('del', [h.text('first'), h.elemText('em', 'second')]),
+    ]);
   });
 });
 
@@ -83,7 +82,7 @@ describe('EmphasisCompiler', () => {
 
     const hast = nc.EmphasisCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elem('em', [h.text(content)]));
+    expect(hast).toEqual([h.elem('em', [h.text(content)])]);
   });
 });
 
@@ -94,9 +93,9 @@ describe('FootnoteCompiler', () => {
 
     const hast = nc.FootnoteCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(
-      nc.FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1))
-    );
+    expect(hast).toEqual([
+      nc.FootnoteReferenceCompiler.makeHastNode(PostAST.newInlineFootnoteId(1)),
+    ]);
   });
 });
 
@@ -110,7 +109,7 @@ describe('FootnoteReferenceCompiler', () => {
       p
     );
 
-    expect(hast).toEqual(nc.FootnoteReferenceCompiler.makeHastNode(id));
+    expect(hast).toEqual([nc.FootnoteReferenceCompiler.makeHastNode(id)]);
   });
 });
 
@@ -122,7 +121,7 @@ describe('HeadingCompiler', () => {
 
     const hast = nc.HeadingCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elem('h3', [h.text(content)]));
+    expect(hast).toEqual([h.elem('h3', [h.text(content)])]);
   });
 
   it('should compile a heading with other content', () => {
@@ -133,9 +132,9 @@ describe('HeadingCompiler', () => {
 
     const hast = nc.HeadingCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(
-      h.elem('h1', [h.text('start'), h.elemText('em', 'mid')])
-    );
+    expect(hast).toEqual([
+      h.elem('h1', [h.text('start'), h.elemText('em', 'mid')]),
+    ]);
   });
 });
 
@@ -146,7 +145,7 @@ describe('HTMLCompiler', () => {
 
     const hast = nc.HTMLCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.raw(a));
+    expect(hast).toEqual([h.raw(a)]);
   });
 });
 
@@ -157,7 +156,7 @@ describe('ImageCompiler', () => {
 
     const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elemProps('img', { src }));
+    expect(hast).toEqual([h.elemProps('img', { src })]);
   });
 
   it('should compile an image with a title and alt attr', () => {
@@ -168,7 +167,7 @@ describe('ImageCompiler', () => {
 
     const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elemProps('img', { src, title, alt }));
+    expect(hast).toEqual([h.elemProps('img', { src, title, alt })]);
   });
 });
 
@@ -185,7 +184,7 @@ describe('ImageReferenceCompiler', () => {
       p
     );
 
-    expect(hast).toEqual(h.danglingImageRef(imgRef));
+    expect(hast).toEqual([h.danglingImageRef(imgRef)]);
   });
 
   it('should compile an image reference node', () => {
@@ -203,7 +202,7 @@ describe('ImageReferenceCompiler', () => {
       p
     );
 
-    expect(hast).toEqual(h.elemProps('img', { src, title, alt }));
+    expect(hast).toEqual([h.elemProps('img', { src, title, alt })]);
   });
 });
 
@@ -214,7 +213,7 @@ describe('InlineCodeCompiler', () => {
 
     const hast = nc.InlineCodeCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elemText('code', value));
+    expect(hast).toEqual([h.elemText('code', value)]);
   });
 });
 
@@ -227,7 +226,7 @@ describe('LinkCompiler', () => {
 
     const hast = nc.LinkCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elemProps('a', { href: url }, [h.text(value)]));
+    expect(hast).toEqual([h.elemProps('a', { href: url }, [h.text(value)])]);
   });
 });
 
@@ -240,7 +239,7 @@ describe('StrongCompiler', () => {
 
     const hast = nc.StrongCompiler.create(c).compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(h.elem('strong', [h.text(a), h.elemText('em', b)]));
+    expect(hast).toEqual([h.elem('strong', [h.text(a), h.elemText('em', b)])]);
   });
 });
 
@@ -250,6 +249,6 @@ describe('TomlCompiler', () => {
 
     const hast = nc.TomlCompiler.create().compileNode(p.mdastNode, p);
 
-    expect(hast).toEqual(unistNodes.ignored());
+    expect(hast).toEqual([]);
   });
 });

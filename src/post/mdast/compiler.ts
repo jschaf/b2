@@ -45,13 +45,13 @@ export class MdastCompiler {
   }
 
   /** Compiles the entire post AST into a single hast node. */
-  compile(postAST: PostAST): unist.Node {
+  compile(postAST: PostAST): unist.Node[] {
     checkArg(postAST.mdastNode.type !== unistNodes.IGNORED_TYPE);
     return this.compileNode(postAST.mdastNode, postAST);
   }
 
-  /** Compiles a single mdast node from a  post AST into a single hast node. */
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node {
+  /** Compiles a single mdast node from a post AST into a single hast node. */
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     const c = this.getNodeCompiler(node.type);
     return c.compileNode(node, postAST);
   }
@@ -60,11 +60,10 @@ export class MdastCompiler {
   compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
     const results: unist.Node[] = [];
     for (const child of parent.children) {
-      const r = this.compileNode(child, postAST);
-      if (r.type === unistNodes.IGNORED_TYPE) {
-        continue;
+      const rs = this.compileNode(child, postAST);
+      for (const r of rs) {
+        results.push(r);
       }
-      results.push(r);
     }
     return results;
   }
