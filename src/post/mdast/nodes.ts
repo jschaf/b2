@@ -123,13 +123,27 @@ export const isHeading = (n: unist.Node): n is mdast.Heading => {
 };
 
 export const inlineCode = (value: string): mdast.InlineCode => {
-  return {type: 'inlineCode', value: value};
+  return { type: 'inlineCode', value: value };
 };
 
 export const isInlineCode = (n: unist.Node): n is mdast.InlineCode => {
   return n.type === 'inlineCode' && isLiteral(n);
 };
 
+export const link = (
+  url: string,
+  children: mdast.StaticPhrasingContent[]
+): mdast.Link => {
+  return { type: 'link', url, children };
+};
+
+export const linkText = (url: string, value: string): mdast.Link => {
+  return link(url, [text(value)]);
+};
+
+export const isLink = (n: unist.Node): n is mdast.Link => {
+  return n.type === 'link' && isResource(n);
+};
 
 export const listItem = (children: mdast.BlockContent[]): mdast.ListItem => {
   return {
@@ -213,6 +227,11 @@ export const isParent = (n: unist.Node): n is unist.Parent => {
 
 export const isLiteral = (n: unist.Node): n is unist.Literal => {
   return n.value && isString(n.value);
+};
+
+export const isResource = (n: unist.Node): n is unist.Node & mdast.Resource => {
+  const isValidTitle = n.title ? isString(n.title) : true;
+  return n.url && isString(n.url) && isValidTitle;
 };
 
 export function checkType<T extends unist.Node>(

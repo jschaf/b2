@@ -13,7 +13,9 @@ import {
   EmphasisCompiler,
   FootnoteCompiler,
   FootnoteReferenceCompiler,
-  HeadingCompiler, InlineCodeCompiler,
+  HeadingCompiler,
+  InlineCodeCompiler,
+  LinkCompiler,
   TomlCompiler,
 } from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
@@ -161,6 +163,21 @@ describe('InlineCodeCompiler', () => {
     const hast = InlineCodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual(hastElemText('code', value));
+  });
+});
+
+describe('LinkCompiler', () => {
+  it('should compile a link without a title', () => {
+    let url = 'www.example.com';
+    let value = 'text';
+    const p = PostAST.create(md.linkText(url, value));
+    const c = MdastCompiler.createDefault();
+
+    const hast = LinkCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(
+      hastElemWithProps('a', { href: url }, [hastText(value)])
+    );
   });
 });
 
