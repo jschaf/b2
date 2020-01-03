@@ -2,7 +2,7 @@ import { checkDefined } from '//asserts';
 import { PostNode } from '//post/post_parser';
 import { isString } from '//strings';
 import { removePositionInfo } from '//unist/nodes';
-import * as toml from '@iarna/toml';
+import * as tomlLib from '@iarna/toml';
 import * as mdast from 'mdast';
 import { BlockContent } from 'mdast';
 import * as unist from 'unist';
@@ -173,6 +173,31 @@ export const isText = (n: unist.Node): n is mdast.Text => {
   return n.type === 'text' && isString(n.value);
 };
 
+interface Toml extends mdast.Literal {
+  type: 'toml';
+}
+
+export const toml = (map: tomlLib.JsonMap): BlockContent => {
+  let raw = tomlLib.stringify(map).trimEnd();
+  // The mdast typings only allow known types.
+  return ({
+    type: 'toml',
+    value: raw,
+  } as unknown) as mdast.BlockContent;
+};
+
+export const tomlFrontmatter = (map: tomlLib.JsonMap): mdast.BlockContent => {
+  const t = toml(map);
+  checkType(t, 'toml', isToml);
+  // Normalize date.
+  t.value = t.value.replace(/T00:00:00.000Z/, '');
+  return (t as unknown) as mdast.BlockContent;
+};
+
+export const isToml = (n: unist.Node): n is Toml => {
+  return n.type === 'toml' && isString(n.value);
+};
+
 export const isParent = (n: unist.Node): n is unist.Parent => {
   return Array.isArray(n.children);
 };
@@ -193,18 +218,6 @@ export function checkType<T extends unist.Node>(
 
 const isNonEmptyString = (s: any): s is string => {
   return isString(s) && s !== '';
-};
-export const mdFrontmatterToml = (value: toml.JsonMap): mdast.Content => {
-  let raw = toml
-    .stringify(value)
-    .trimEnd()
-    .replace(/T00:00:00.000Z/, '');
-  // The typings for mdast don't allow anything except whitelisted types.
-  // Force add toml as a supported type.
-  return ({
-    type: 'toml',
-    value: raw,
-  } as unknown) as mdast.Content;
 };
 export const stripPositions = (node: PostNode): PostNode => {
   removePositionInfo(node.node);

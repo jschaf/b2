@@ -1,10 +1,10 @@
-import { MdastCompiler } from '//post/mdast/compiler';
 import {
   hastElem,
   hastElemText,
   hastElemWithProps,
   hastText,
 } from '//post/hast/hast_nodes';
+import { MdastCompiler } from '//post/mdast/compiler';
 import {
   BlockquoteCompiler,
   BreakCompiler,
@@ -14,9 +14,11 @@ import {
   FootnoteCompiler,
   FootnoteReferenceCompiler,
   HeadingCompiler,
+  TomlCompiler,
 } from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
+import * as unistNodes from '//unist/nodes';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
@@ -148,5 +150,14 @@ describe('HeadingCompiler', () => {
     expect(hast).toEqual(
       hastElem('h1', [hastText('start'), hastElemText('em', 'mid')])
     );
+  });
+});
+describe('TomlCompiler', () => {
+  it('should ignore toml nodes', () => {
+    const p = PostAST.create(md.toml({ foo: 'bar' }));
+
+    const hast = TomlCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(unistNodes.ignored());
   });
 });

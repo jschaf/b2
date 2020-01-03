@@ -6,6 +6,7 @@ import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
+import * as unistNodes from '//unist/nodes';
 
 /** Compiler for a single mdast node. */
 export interface MdastNodeCompiler {
@@ -262,5 +263,23 @@ export class TextCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'text', md.isText);
     return hastText(node.value);
+  }
+}
+
+/**
+ * Compiles a literal mdast text to hast.
+ *
+ * https://github.com/syntax-tree/mdast#text
+ */
+export class TomlCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): TomlCompiler {
+    return new TomlCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+    md.checkType(node, 'toml', md.isToml);
+    return unistNodes.ignored();
   }
 }

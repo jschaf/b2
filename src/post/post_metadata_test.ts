@@ -23,7 +23,7 @@ test('parses valid tokens', () => {
 test('parses valid tokens from toml frontmatter', () => {
   const slug = 'qux_bar';
   let date = dates.fromISO('2019-05-18');
-  const tree = md.root([md.mdFrontmatterToml({ slug, date })]);
+  const tree = md.root([md.tomlFrontmatter({ slug, date })]);
 
   const metadata = PostMetadata.parseFromTomlFrontmatter(tree);
 

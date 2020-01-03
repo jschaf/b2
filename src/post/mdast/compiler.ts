@@ -1,6 +1,7 @@
-import { checkDefined } from '//asserts';
+import { checkArg, checkDefined } from '//asserts';
 import { PostAST } from '//post/post_ast';
 import {
+  BlockquoteCompiler,
   BreakCompiler,
   CodeCompiler,
   DeleteCompiler,
@@ -12,41 +13,47 @@ import {
   ParagraphCompiler,
   RootCompiler,
   TextCompiler,
+  TomlCompiler,
 } from '//post/mdast/node_compiler';
 import * as unist from 'unist';
+import * as unistNodes from '//unist/nodes';
 
-type NewNodeCompiler = (parent: MdastCompiler) => MdastNodeCompiler;
-type NodeCompilerMap = Map<string, NewNodeCompiler>;
+export type NewNodeCompiler = (parent: MdastCompiler) => MdastNodeCompiler;
+export type NodeCompilerEntries = [string, NewNodeCompiler][];
 
-export const newDefaultCompilers: () => Map<string, NewNodeCompiler> = () =>
-  new Map<string, NewNodeCompiler>([
-    ['break', () => BreakCompiler.create()],
-    ['code', () => CodeCompiler.create()],
-    ['delete', c => DeleteCompiler.create(c)],
-    ['emphasis', c => EmphasisCompiler.create(c)],
-    ['footnote', c => FootnoteCompiler.create(c)],
-    ['footnoteReference', () => FootnoteReferenceCompiler.create()],
-    ['heading', c => HeadingCompiler.create(c)],
-    ['paragraph', c => ParagraphCompiler.create(c)],
-    ['text', () => TextCompiler.create()],
-    ['root', c => RootCompiler.create(c)],
-  ]);
+export const newDefaultCompilers: () => NodeCompilerEntries = () => [
+  ['blockquote', BlockquoteCompiler.create],
+  ['break', BreakCompiler.create],
+  ['code', CodeCompiler.create],
+  ['delete', DeleteCompiler.create],
+  ['emphasis', EmphasisCompiler.create],
+  ['footnote', FootnoteCompiler.create],
+  ['footnoteReference', FootnoteReferenceCompiler.create],
+  ['heading', HeadingCompiler.create],
+  ['paragraph', ParagraphCompiler.create],
+  ['text', TextCompiler.create],
+  ['toml', TomlCompiler.create],
+  ['root', RootCompiler.create],
+];
 
 /** Compiles an mdast node into a hast node. */
 export class MdastCompiler {
   private readonly subCompilers: Map<string, MdastNodeCompiler> = new Map();
 
-  private constructor(private readonly subCompilersFactory: NodeCompilerMap) {}
+  private constructor(
+    private readonly subCompilersFactory: Map<string, NewNodeCompiler>
+  ) {}
 
   static createDefault(): MdastCompiler {
     return MdastCompiler.create(newDefaultCompilers());
   }
 
-  static create(m: NodeCompilerMap): MdastCompiler {
-    return new MdastCompiler(m);
+  static create(m: [string, NewNodeCompiler][]): MdastCompiler {
+    return new MdastCompiler(new Map<string, NewNodeCompiler>(m));
   }
 
   compile(postAST: PostAST): unist.Node {
+    checkArg(postAST.mdastNode.type !== unistNodes.IGNORED_TYPE);
     return this.compileNode(postAST.mdastNode, postAST);
   }
 
@@ -56,7 +63,15 @@ export class MdastCompiler {
   }
 
   compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
-    return parent.children.map(c => this.compileNode(c, postAST));
+    const results: unist.Node[] = [];
+    for (const child of parent.children) {
+      const r = this.compileNode(child, postAST);
+      if (r.type === unistNodes.IGNORED_TYPE) {
+        continue;
+      }
+      results.push(r);
+    }
+    return results;
   }
 
   private getNodeCompiler(type: string): MdastNodeCompiler {

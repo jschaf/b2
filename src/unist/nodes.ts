@@ -101,3 +101,14 @@ export const ensureDataAttr = (n: unist.Node): NodeWithData => {
   }
   return n as NodeWithData;
 };
+
+export const IGNORED_TYPE = '<IGNORED>';
+
+interface IgnoredNode extends unist.Node {
+  type: typeof IGNORED_TYPE;
+}
+
+/** A node that should be ignored. */
+export const ignored = (): IgnoredNode => {
+  return { type: IGNORED_TYPE };
+};
