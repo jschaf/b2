@@ -166,10 +166,7 @@ export const isImage = (n: unist.Node): n is mdast.Image => {
 
 export type ImageRefProps = { label?: string; alt?: string };
 
-export const imageRef = (
-  id: string,
-  ref: RefType
-): mdast.ImageReference => {
+export const imageRef = (id: string, ref: RefType): mdast.ImageReference => {
   return imageRefProps(id, ref, {});
 };
 
@@ -213,15 +210,28 @@ export const isLink = (n: unist.Node): n is mdast.Link => {
   return n.type === 'link' && isResource(n);
 };
 
-export const linkRef = (id: string, refType: RefType, children: mdast.StaticPhrasingContent[]): mdast.LinkReference => {
-  return {type: 'linkReference', identifier: id, referenceType: refType, children};
+export const linkRef = (
+  id: string,
+  refType: RefType,
+  children: mdast.StaticPhrasingContent[]
+): mdast.LinkReference => {
+  return {
+    type: 'linkReference',
+    identifier: id,
+    referenceType: refType,
+    children,
+  };
 };
 
-export const linkRefText = (id: string, refType: RefType, value: string): mdast.LinkReference => {
+export const linkRefText = (
+  id: string,
+  refType: RefType,
+  value: string
+): mdast.LinkReference => {
   return linkRef(id, refType, [text(value)]);
 };
 
-export const isLinkReference = (n: unist.Node): n is mdast.LinkReference => {
+export const isLinkRef = (n: unist.Node): n is mdast.LinkReference => {
   return n.type === 'linkReference' && isParent(n) && isReference(n);
 };
 
@@ -355,9 +365,7 @@ export const isAssociation = (
 export const isReference = (n: unist.Node): n is WithNode<mdast.Reference> => {
   let rt = n.referenceType;
   const isValidRef =
-    rt === RefType.Shortcut ||
-    rt === RefType.Collapsed ||
-    rt === RefType.Full;
+    rt === RefType.Shortcut || rt === RefType.Collapsed || rt === RefType.Full;
   return isValidRef && isAssociation(n);
 };
 

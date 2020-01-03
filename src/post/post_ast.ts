@@ -1,4 +1,4 @@
-import {checkDefined, checkState} from '//asserts';
+import { checkDefined, checkState } from '//asserts';
 import * as unistNodes from '//unist/nodes';
 import * as md from '//post/mdast/nodes';
 import * as mdast from 'mdast';
@@ -16,8 +16,7 @@ export class PostAST {
   readonly fnDefsById: Map<string, mdast.FootnoteDefinition> = new Map();
 
   // TODO: use actual vfile.
-  private constructor(readonly mdastNode: unist.Node) {
-  }
+  private constructor(readonly mdastNode: unist.Node) {}
 
   static create(n: unist.Node): PostAST {
     let p = new PostAST(n);
@@ -43,7 +42,9 @@ export class PostAST {
       // Commonmark says the first definition takes precedence. Error since we
       // don't want to support that. Also applies in addFootnoteDef.
       // https://spec.commonmark.org/0.29/#example-173
-      throw new Error(`Duplicate definition id=${id}, normalized=${normalizedId}`);
+      throw new Error(
+        `Duplicate definition id=${id}, normalized=${normalizedId}`
+      );
     }
     this.defsById.set(normalizedId, def);
   }
@@ -61,12 +62,14 @@ export class PostAST {
     // https://spec.commonmark.org/0.29/#matches.
     const normalizedId = md.normalizeLabel(id);
     checkState(
-        !normalizedId.startsWith(PostAST.inlineFootnotePrefix),
-        `Footnote definition id=${normalizedId} must not start `
-            +`with ${PostAST.inlineFootnotePrefix}`
+      !normalizedId.startsWith(PostAST.inlineFootnotePrefix),
+      `Footnote definition id=${normalizedId} must not start ` +
+        `with ${PostAST.inlineFootnotePrefix}`
     );
     if (this.fnDefsById.has(normalizedId)) {
-      throw new Error(`Duplicate footnote definition id=${id}, normalized=${normalizedId}`);
+      throw new Error(
+        `Duplicate footnote definition id=${id}, normalized=${normalizedId}`
+      );
     }
     this.fnDefsById.set(normalizedId, def);
   }
@@ -76,8 +79,8 @@ export class PostAST {
     const fnId = PostAST.inlineFootnotePrefix + nextSeq;
     // Store the ID so we can render the footnote reference.
     unistNodes.ensureDataAttr(def).data[
-        PostAST.INLINE_FOOTNOTE_DATA_KEY
-        ] = fnId;
+      PostAST.INLINE_FOOTNOTE_DATA_KEY
+    ] = fnId;
     const fnDef = md.footnoteDef(fnId, [md.paragraph(def.children)]);
     this.fnDefsById.set(fnId, fnDef);
   }
@@ -89,7 +92,7 @@ export class PostAST {
 }
 
 const addAllDefs = (p: PostAST): void => {
-  for (const {node} of unistNodes.preOrderGenerator(p.mdastNode)) {
+  for (const { node } of unistNodes.preOrderGenerator(p.mdastNode)) {
     if (!md.isDefinition(node)) {
       continue;
     }
@@ -120,7 +123,7 @@ const addAllDefs = (p: PostAST): void => {
  */
 const addAllFnDefs = (p: PostAST): void => {
   let nextInlineId = 1;
-  for (const {node} of unistNodes.preOrderGenerator(p.mdastNode)) {
+  for (const { node } of unistNodes.preOrderGenerator(p.mdastNode)) {
     if (md.isFootnoteDefinition(node)) {
       p.addFootnoteDef(node);
     } else if (md.isFootnote(node)) {

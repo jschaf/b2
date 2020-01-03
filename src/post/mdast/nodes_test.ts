@@ -1,5 +1,5 @@
 import * as dates from '//dates';
-import {normalizeLabel} from '//post/mdast/nodes';
+import { normalizeLabel } from '//post/mdast/nodes';
 import * as md from '//post/mdast/nodes';
 
 describe('tomlFrontmatter', () => {

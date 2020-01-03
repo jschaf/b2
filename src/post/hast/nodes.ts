@@ -35,7 +35,10 @@ export const danglingImageRef = (n: mdast.ImageReference): hast.Text => {
  *
  * Used when no definition is found matching the node's identifier.
  */
-export const danglingLinkRef = (_n: mdast.LinkReference, _children: unist.Node[]): hast.Element => {
+export const danglingLinkRef = (
+  _n: mdast.LinkReference,
+  _children: unist.Node[]
+): hast.Element => {
   return elemText('p', 'foo');
 };
 

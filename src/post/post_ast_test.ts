@@ -1,5 +1,5 @@
 import * as md from '//post/mdast/nodes';
-import {PostAST} from '//post/post_ast';
+import { PostAST } from '//post/post_ast';
 import * as mdast from 'mdast';
 
 describe('PostAST', () => {
@@ -13,7 +13,7 @@ describe('PostAST', () => {
   });
 
   describe('link definition extraction', () => {
-    const defA = md.definitionProps('a', 'a-url', {title: 'a-title'});
+    const defA = md.definitionProps('a', 'a-url', { title: 'a-title' });
     const defB = md.definition('b', 'b-url');
     const defC = md.definition('  \t\nc  c\n\t', 'c-url');
     const defD = md.definition('D  d', 'd-url');
@@ -21,7 +21,14 @@ describe('PostAST', () => {
     type LinkDefEntries = [string, mdast.Definition][];
     const linkDefTests: [string, mdast.Content[], LinkDefEntries][] = [
       ['1 def', [defA], [['a', defA]]],
-      ['2 defs', [defA, defB], [['a', defA], ['b', defB]]],
+      [
+        '2 defs',
+        [defA, defB],
+        [
+          ['a', defA],
+          ['b', defB],
+        ],
+      ],
       ['whitespace', [defC], [['c c', defC]]],
       ['case folding', [defD], [['d d', defD]]],
     ];
@@ -58,13 +65,34 @@ describe('PostAST', () => {
     type FnDefEntries = [string, mdast.FootnoteDefinition][];
     const tests: [string, mdast.Content[], FnDefEntries][] = [
       ['1 def', [defA], [['1', defA]]],
-      ['2 defs', [defA, defB], [['1', defA], ['b', defB]]],
+      [
+        '2 defs',
+        [defA, defB],
+        [
+          ['1', defA],
+          ['b', defB],
+        ],
+      ],
       ['whitespace', [defC], [['c c', defC]]],
       ['case folding', [defD], [['d d', defD]]],
 
       ['1 inline def', [inA], [[id1, inDefA]]],
-      ['2 inline defs', [inA, inB], [[id1, inDefA], [id2, inDefB]]],
-      ['mixed inline', [inA, md.html('<br>'), inB], [[id1, inDefA], [id2, inDefB]]],
+      [
+        '2 inline defs',
+        [inA, inB],
+        [
+          [id1, inDefA],
+          [id2, inDefB],
+        ],
+      ],
+      [
+        'mixed inline',
+        [inA, md.html('<br>'), inB],
+        [
+          [id1, inDefA],
+          [id2, inDefB],
+        ],
+      ],
     ];
     for (const [name, children, expected] of tests) {
       it(`should handle ${name}`, () => {
