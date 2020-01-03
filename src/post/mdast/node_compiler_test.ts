@@ -150,6 +150,28 @@ describe('HTMLCompiler', () => {
   });
 });
 
+describe('ImageCompiler', () => {
+  it('should compile an image without any props', () => {
+    const src = 'http://example.com';
+    const p = PostAST.create(md.image(src));
+
+    const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(h.elemProps('img', { src }));
+  });
+
+  it('should compile an image with a title and alt attr', () => {
+    const src = 'http://example.com';
+    const title = 'my title';
+    const alt = 'alt text';
+    const p = PostAST.create(md.imageProps(src, { title, alt }));
+
+    const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual(h.elemProps('img', { src, title, alt }));
+  });
+});
+
 describe('InlineCodeCompiler', () => {
   it('should compile inline code', () => {
     const value = 'let a = 2';

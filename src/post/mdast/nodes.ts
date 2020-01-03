@@ -130,6 +130,20 @@ export const isHTML = (n: unist.Node): n is mdast.HTML => {
   return n.type === 'html' && isLiteral(n);
 };
 
+type ImageProps = Omit<mdast.Resource, 'url'> & mdast.Alternative;
+
+export const image = (url: string): mdast.Image => {
+  return imageProps(url, {});
+};
+
+export const imageProps = (url: string, props: ImageProps): mdast.Image => {
+  return { type: 'image', url, ...props };
+};
+
+export const isImage = (n: unist.Node): n is mdast.Image => {
+  return n.type === 'image' && isResource(n) && isAlternative(n);
+};
+
 export const inlineCode = (value: string): mdast.InlineCode => {
   return { type: 'inlineCode', value: value };
 };
@@ -241,12 +255,21 @@ export const isToml = (n: unist.Node): n is Toml => {
   return n.type === 'toml' && isString(n.value);
 };
 
-export const isParent = (n: unist.Node): n is unist.Parent => {
-  return Array.isArray(n.children);
+export const isAlternative = (
+  n: unist.Node
+): n is unist.Node & mdast.Alternative => {
+  if (n.alt) {
+    return isString(n.alt);
+  }
+  return true;
 };
 
 export const isLiteral = (n: unist.Node): n is unist.Literal => {
   return n.value && isString(n.value);
+};
+
+export const isParent = (n: unist.Node): n is unist.Parent => {
+  return Array.isArray(n.children);
 };
 
 export const isResource = (n: unist.Node): n is unist.Node & mdast.Resource => {

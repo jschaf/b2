@@ -18,6 +18,8 @@ export interface MdastNodeCompiler {
  *
  *     > foo bar
  *     > baz qux
+ *
+ * https://github.com/syntax-tree/mdast#blockquote
  */
 export class BlockquoteCompiler implements MdastNodeCompiler {
   private constructor(private readonly compiler: MdastCompiler) {}
@@ -223,6 +225,35 @@ export class HTMLCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
     md.checkType(node, 'html', md.isHTML);
     return h.raw(node.value);
+  }
+}
+
+/**
+ * Compiles an mdast image node to hast, like:
+ *
+ *     ![alpha](https://example.com/favicon.ico "bravo")
+ *
+ * https://github.com/syntax-tree/mdast#image
+ */
+export class ImageCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): ImageCompiler {
+    return new ImageCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node {
+    md.checkType(node, 'image', md.isImage);
+    const props: { src: string; alt?: string; title?: string } = {
+      src: node.url,
+    };
+    if (node.alt) {
+      props.alt = node.alt;
+    }
+    if (node.title) {
+      props.title = node.title;
+    }
+    return h.elemProps('img', props);
   }
 }
 
