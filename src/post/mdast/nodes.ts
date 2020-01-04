@@ -379,6 +379,14 @@ export const isText = (n: unist.Node): n is mdast.Text => {
   return n.type === 'text' && isString(n.value);
 };
 
+export const thematicBreak = (): mdast.ThematicBreak => {
+  return { type: 'thematicBreak' };
+};
+
+export const isThematicBreak = (n: unist.Node): n is mdast.ThematicBreak => {
+  return n.type === 'thematicBreak';
+};
+
 interface Toml extends mdast.Literal {
   type: 'toml';
 }
@@ -469,7 +477,7 @@ export function checkType<T extends unist.Node>(
   }
 }
 
-const isNonEmptyString = (s: any): s is string => {
+const isNonEmptyString = (s: unknown): s is string => {
   return isString(s) && s !== '';
 };
 

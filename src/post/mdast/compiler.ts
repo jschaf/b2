@@ -27,6 +27,7 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['paragraph', nc.ParagraphCompiler.create],
   ['strong', nc.StrongCompiler.create],
   ['text', nc.TextCompiler.create],
+  ['thematicBreak', nc.ThematicBreakCompiler.create],
   ['toml', nc.TomlCompiler.create],
   ['root', nc.RootCompiler.create],
 ];

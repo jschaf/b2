@@ -375,6 +375,16 @@ describe('StrongCompiler', () => {
   });
 });
 
+describe('ThematicBreakCompiler', () => {
+  it('should compile a thematicBreak node', () => {
+    const p = PostAST.create(md.thematicBreak());
+
+    const hast = nc.ThematicBreakCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual([h.elem('hr')]);
+  });
+});
+
 describe('TomlCompiler', () => {
   it('should ignore toml nodes', () => {
     const p = PostAST.create(md.toml({ foo: 'bar' }));

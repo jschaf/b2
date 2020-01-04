@@ -557,6 +557,30 @@ export class TextCompiler implements MdastNodeCompiler {
 }
 
 /**
+ * Compiles an mdast thematicBreak to hast, like:
+ *
+ *     foo bar
+ *
+ *     ***
+ *
+ *     baz
+ *
+ * https://github.com/syntax-tree/mdast#thematicbreak
+ */
+export class ThematicBreakCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): ThematicBreakCompiler {
+    return new ThematicBreakCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'thematicBreak', md.isThematicBreak);
+    return [h.elem('hr')];
+  }
+}
+
+/**
  * Compiles a literal mdast text to hast.
  *
  * https://github.com/syntax-tree/mdast#text
