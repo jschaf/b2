@@ -1,4 +1,6 @@
 import { checkDefined } from '//asserts';
+import { isOptionalBoolean } from '//booleans';
+import { isOptionalNumber } from '//post/numbers';
 import { PostNode } from '//post/post_parser';
 import { isOptionalString, isString } from '//strings';
 import { removePositionInfo } from '//unist/nodes';
@@ -256,15 +258,71 @@ export const isLinkRef = (n: unist.Node): n is mdast.LinkReference => {
   return n.type === 'linkReference' && isParent(n) && isReference(n);
 };
 
-export const listItem = (children: mdast.BlockContent[]): mdast.ListItem => {
-  return {
+type ListProps = { ordered?: boolean; checked?: boolean; spread?: boolean };
+
+export const listProps = (
+  props: ListProps,
+  children: mdast.ListContent[]
+): mdast.List => {
+  return { type: 'list', ...props, children };
+};
+
+export const list = (children: mdast.ListContent[]): mdast.List => {
+  return listProps({}, children);
+};
+
+export const listText = (items: string[]): mdast.List => {
+  const listItems = items.map(i => listItem([paragraphText(i)]));
+  return list(listItems);
+};
+
+export const isList = (n: unist.Node): n is mdast.List => {
+  return (
+    n.type === 'list' &&
+    isParent(n) &&
+    isOptionalBoolean(n.ordered) &&
+    isOptionalBoolean(n.spread) &&
+    isOptionalNumber(n.start)
+  );
+};
+
+export type ListItemProps = { checked?: boolean; spread?: boolean };
+
+export const listItemProps = (
+  props: ListItemProps,
+  children: mdast.BlockContent[]
+): mdast.ListItem => {
+  const li: mdast.ListItem = {
     type: 'listItem',
     spread: false,
-    // Unified parses the checked property as null but the type is boolean or
-    // undefined.
-    checked: (null as unknown) as boolean,
+    ...props,
     children,
   };
+  if (li.checked === undefined) {
+    // Unified parses the checked property as null but the type is boolean or
+    // undefined.
+    li.checked = (null as unknown) as boolean;
+  }
+  return li;
+};
+
+export const listItem = (children: mdast.BlockContent[]): mdast.ListItem => {
+  return listItemProps({}, children);
+};
+
+export const listItemText = (value: string): mdast.ListItem => {
+  return listItem([paragraphText(value)]);
+};
+
+export const isListItem = (n: unist.Node): n is mdast.ListItem => {
+  // The mdast parser uses null for checked instead of undefined.
+  const isCheckedValid = isOptionalBoolean(n.checked) || n.checked === null;
+  return (
+    n.type === 'listItem' &&
+    isParent(n) &&
+    isCheckedValid &&
+    isOptionalBoolean(n.spread)
+  );
 };
 
 export const orderedList = (children: BlockContent[]): mdast.List => {

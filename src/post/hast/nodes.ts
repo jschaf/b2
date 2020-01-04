@@ -1,3 +1,4 @@
+import { isOptionalObject } from '//objects';
 import { RefType } from '//post/mdast/nodes';
 import * as unist from 'unist';
 import * as hast from 'hast-format';
@@ -107,4 +108,13 @@ export const text = (value: string): hast.Text => {
 
 export const normalizeUri = (uri: string): string => {
   return encodeURI(uri.trim());
+};
+
+export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
+  return (
+    n.type === 'element' &&
+    n.tagName === tagName &&
+    isOptionalObject(n.properties) &&
+    Array.isArray(n.children)
+  );
 };

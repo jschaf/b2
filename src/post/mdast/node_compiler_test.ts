@@ -1,10 +1,12 @@
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
+import { ListItemCompiler } from '//post/mdast/node_compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
 import { RefType } from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import * as mdast from 'mdast';
+import * as unist from 'unist';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
@@ -266,6 +268,51 @@ describe('LinkReferenceCompiler', () => {
       ]),
     ]);
   });
+});
+
+describe('ListItemCompiler', () => {
+  const a = 'alpha';
+  const b = 'bravo';
+  const para = md.paragraphText;
+  const pTag = (value: string) => h.elemText('p', value);
+  const t = h.text;
+  const checkbox = ListItemCompiler.checkbox;
+  type Data = [string, md.ListItemProps, mdast.BlockContent[], unist.Node[]];
+  const testData: Data[] = [
+    ['tight, not checkbox', {}, [para(b)], [t(b)]],
+    ['tight, checked', { checked: true }, [para(a)], [checkbox(true), t(a)]],
+    [
+      'tight, unchecked',
+      { checked: false },
+      [para(a)],
+      [checkbox(false), t(a)],
+    ],
+    ['loose, not checkbox', { spread: true }, [para(b)], [pTag(b)]],
+    [
+      'loose, checked',
+      { spread: true, checked: true },
+      [para(a)],
+      [checkbox(true), pTag(a)],
+    ],
+    [
+      'loose, unchecked',
+      { spread: true, checked: false },
+      [para(a)],
+      [checkbox(false), pTag(a)],
+    ],
+    ['tight, multiple para', {}, [para(a), para(b)], [t(a), t(b)]],
+  ];
+
+  for (const [name, props, input, expected] of testData) {
+    it(`should compile ${name} list`, () => {
+      const p = PostAST.create(md.listItemProps(props, input));
+      const c = MdastCompiler.createDefault();
+
+      const hast = nc.ListItemCompiler.create(c).compileNode(p.mdastNode, p);
+
+      expect(hast).toEqual([h.elem('li', expected)]);
+    });
+  }
 });
 
 describe('StrongCompiler', () => {

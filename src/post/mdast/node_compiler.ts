@@ -1,10 +1,12 @@
 import { checkDefined, checkState } from '//asserts';
+import { isBoolean } from '//booleans';
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
 import * as mdast from 'mdast';
+import * as hast from 'hast-format';
 import * as unist from 'unist';
 
 /** Compiler for a single mdast node. */
@@ -356,6 +358,80 @@ export class LinkReferenceCompiler implements MdastNodeCompiler {
     }
     const link = md.linkProps(def.url, props, node.children);
     return this.compiler.compileNode(link, postAST);
+  }
+}
+
+enum ListItemCheckedState {
+  Normal,
+  Checked,
+  Unchecked,
+}
+
+const getListItemCheckState = (n: mdast.ListItem): ListItemCheckedState => {
+  if (n.checked === null || n.checked === undefined) {
+    return ListItemCheckedState.Normal;
+  } else if (n.checked) {
+    return ListItemCheckedState.Checked;
+  } else {
+    return ListItemCheckedState.Unchecked;
+  }
+};
+
+/**
+ * Compiles an mdast list item to hast, like:
+ *
+ *     - foo bar
+ *
+ * https://github.com/syntax-tree/mdast#listitem
+ */
+export class ListItemCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static create(compiler: MdastCompiler): ListItemCompiler {
+    return new ListItemCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'listItem', md.isListItem);
+    const children = this.compiler.compileChildren(node, postAST);
+    const isLoose = node.spread === true;
+
+    switch (getListItemCheckState(node)) {
+      case ListItemCheckedState.Normal:
+        if (isLoose) {
+          return [h.elem('li', children)];
+        } else {
+          const unwrapped = ListItemCompiler.unwrapParagraphs(children);
+          return [h.elem('li', unwrapped)];
+        }
+
+      case ListItemCheckedState.Checked:
+      case ListItemCheckedState.Unchecked:
+        checkState(isBoolean(node.checked));
+        const checkbox = ListItemCompiler.checkbox(node.checked);
+        if (isLoose) {
+          return [h.elem('li', [checkbox, ...children])];
+        } else {
+          const unwrapped = ListItemCompiler.unwrapParagraphs(children);
+          return [h.elem('li', [checkbox, ...unwrapped])];
+        }
+    }
+  }
+
+  static checkbox(checked: boolean): hast.Element {
+    return h.elemProps('input', { type: 'checkbox', checked, disabled: true });
+  }
+
+  private static unwrapParagraphs(children: unist.Node[]): unist.Node[] {
+    const rs = [];
+    for (const c of children) {
+      if (h.isElem('p', c)) {
+        rs.push(...c.children);
+      } else {
+        rs.push(c);
+      }
+    }
+    return rs;
   }
 }
 
