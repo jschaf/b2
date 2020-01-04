@@ -38,9 +38,9 @@ export const codeWithLang = (lang: string, code: string): mdast.Code => {
 };
 
 export const isCode = (n: unist.Node): n is mdast.Code => {
-  const hasLang = n.lang === undefined || isString(n.lang);
-  const hasMeta = n.meta === undefined || isString(n.meta);
-  return n.type === 'code' && hasLang && hasMeta;
+  // The mdast parser uses null for meta instead of undefined.
+  const hasMeta = isOptionalString(n.meta) || n.meta === null;
+  return n.type === 'code' && isOptionalString(n.lang) && hasMeta;
 };
 
 type DefinitionProps = { label?: string; title?: string };
@@ -277,12 +277,14 @@ export const listText = (items: string[]): mdast.List => {
 };
 
 export const isList = (n: unist.Node): n is mdast.List => {
+  // The mdast parser uses null for start instead of undefined.
+  const isValidStart = isOptionalNumber(n.start) || n.start === null;
   return (
     n.type === 'list' &&
     isParent(n) &&
     isOptionalBoolean(n.ordered) &&
     isOptionalBoolean(n.spread) &&
-    isOptionalNumber(n.start)
+    isValidStart
   );
 };
 
