@@ -25,8 +25,9 @@ export class PostAST {
     return p;
   }
 
-  static inlineFootnotePrefix = 'gen-';
+  private static inlineFootnotePrefix = 'gen-';
 
+  // visible for testing.
   static newInlineFootnoteId(id: number): string {
     return PostAST.inlineFootnotePrefix + id;
   }

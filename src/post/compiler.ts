@@ -6,7 +6,7 @@ import * as md from '//post/mdast/nodes';
 import { Mempost } from '//post/mempost';
 import { PostAST } from '//post/post_ast';
 
-/** Compiles a post AST into a mempost ready to saved to a file system. */
+/** Compiles a post AST into a mempost ready to be saved to a file system. */
 export class PostCompiler {
   private constructor(
     private readonly mdastCompiler: MdastCompiler,

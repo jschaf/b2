@@ -172,8 +172,8 @@ export class FootnoteReferenceCompiler implements MdastNodeCompiler {
     md.checkType(node, 'footnoteReference', md.isFootnoteReference);
     const fnId = node.identifier;
     // There's also node.label which mdast defines as the original value of
-    // the normalized node.identifier field.  We'll only use node.identifier
-    // since I'm not sure when the label would ever be different than the ID.
+    // the normalized node.identifier field. Using identifier since it's
+    // normalized.
     return [FootnoteReferenceCompiler.makeHastNode(fnId)];
   }
 
