@@ -1,11 +1,10 @@
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
-import { ListItemCompiler } from '//post/mdast/node_compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
-import { RefType } from '//post/mdast/nodes';
 import { PostAST } from '//post/post_ast';
 import * as mdast from 'mdast';
+import * as hast from 'hast-format';
 import * as unist from 'unist';
 
 describe('BlockquoteCompiler', () => {
@@ -238,7 +237,7 @@ describe('LinkReferenceCompiler', () => {
   it('should compile a dangling link reference node', () => {
     const id = 'alpha';
     const text = 'bravo';
-    let lr = md.linkRefText(id, RefType.Full, text);
+    let lr = md.linkRefText(id, md.RefType.Full, text);
     const p = PostAST.create(lr);
     const c = MdastCompiler.createDefault();
     let childrenCompiler = (n: mdast.LinkReference) => c.compileChildren(n, p);
@@ -251,7 +250,7 @@ describe('LinkReferenceCompiler', () => {
   it('should compile a link reference', () => {
     const id = 'alpha';
     const url = 'http://example';
-    let lr = md.linkRef(id, RefType.Full, [
+    let lr = md.linkRef(id, md.RefType.Full, [
       md.emphasisText('foo'),
       md.text('bar'),
     ]);
@@ -270,13 +269,61 @@ describe('LinkReferenceCompiler', () => {
   });
 });
 
+describe('ListCompiler', () => {
+  const a = 'alpha';
+  const b = 'bravo';
+  const spreadListItem = (cs: mdast.BlockContent[]) =>
+    md.listItemProps({ spread: true }, cs);
+  const para = md.paragraphText;
+  const pTag = (value: string) => h.elemText('p', value);
+  const checkbox = nc.ListItemCompiler.checkbox;
+
+  const testData: [string, mdast.List, hast.Element][] = [
+    [
+      'unordered, tight, 1 item',
+      md.list([md.listItemText(b)]),
+      h.elem('ul', [h.elemText('li', b)]),
+    ],
+    [
+      'ordered, loose, 2 items',
+      md.listProps({ spread: true, ordered: true }, [
+        spreadListItem([para(a)]),
+        spreadListItem([para(b)]),
+      ]),
+      h.elem('ol', [h.elem('li', [pTag(a)]), h.elem('li', [pTag(b)])]),
+    ],
+    [
+      'ordered, tight, some checkboxes',
+      md.listProps({ ordered: true }, [
+        md.listItemProps({ checked: true }, [para(a)]),
+        md.listItemProps({ checked: false }, [para(b)]),
+      ]),
+      h.elemProps('ol', { className: [nc.ListCompiler.CHECKBOX_CLASS_NAME] }, [
+        h.elem('li', [checkbox(true), h.text(a)]),
+        h.elem('li', [checkbox(false), h.text(b)]),
+      ]),
+    ],
+  ];
+
+  for (const [name, input, expected] of testData) {
+    it(`should compile ${name}`, () => {
+      const p = PostAST.create(input);
+      const c = MdastCompiler.createDefault();
+
+      const hast = nc.ListCompiler.create(c).compileNode(p.mdastNode, p);
+
+      expect(hast).toEqual([expected]);
+    });
+  }
+});
+
 describe('ListItemCompiler', () => {
   const a = 'alpha';
   const b = 'bravo';
   const para = md.paragraphText;
   const pTag = (value: string) => h.elemText('p', value);
   const t = h.text;
-  const checkbox = ListItemCompiler.checkbox;
+  const checkbox = nc.ListItemCompiler.checkbox;
   type Data = [string, md.ListItemProps, mdast.BlockContent[], unist.Node[]];
   const testData: Data[] = [
     ['tight, not checkbox', {}, [para(b)], [t(b)]],

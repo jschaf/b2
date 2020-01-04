@@ -3,6 +3,7 @@ import { isBoolean } from '//booleans';
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
+import { isNumber } from '//post/numbers';
 import { PostAST } from '//post/post_ast';
 import { isString } from '//strings';
 import * as mdast from 'mdast';
@@ -358,6 +359,47 @@ export class LinkReferenceCompiler implements MdastNodeCompiler {
     }
     const link = md.linkProps(def.url, props, node.children);
     return this.compiler.compileNode(link, postAST);
+  }
+}
+
+/**
+ * Compiles an mdast list to hast, like:
+ *
+ *     - foo
+ *     - bar
+ *
+ * https://github.com/syntax-tree/mdast#list
+ */
+export class ListCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static CHECKBOX_CLASS_NAME = 'task-list';
+
+  static create(compiler: MdastCompiler): ListCompiler {
+    return new ListCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'list', md.isList);
+    const tag = node.ordered ? 'ol' : 'ul';
+    const props: Record<string, unknown> = {};
+    if (isNumber(node.start) && node.start !== 1) {
+      props.start = node.start;
+    }
+    if (ListCompiler.hasCheckboxItem(node)) {
+      props.className = [ListCompiler.CHECKBOX_CLASS_NAME];
+    }
+    const children = this.compiler.compileChildren(node, postAST);
+    return [h.elemProps(tag, props, children)];
+  }
+
+  private static hasCheckboxItem(node: mdast.List): boolean {
+    for (const child of node.children) {
+      if (isBoolean(child.checked)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
