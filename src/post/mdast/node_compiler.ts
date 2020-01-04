@@ -367,16 +367,6 @@ enum ListItemCheckedState {
   Unchecked,
 }
 
-const getListItemCheckState = (n: mdast.ListItem): ListItemCheckedState => {
-  if (n.checked === null || n.checked === undefined) {
-    return ListItemCheckedState.Normal;
-  } else if (n.checked) {
-    return ListItemCheckedState.Checked;
-  } else {
-    return ListItemCheckedState.Unchecked;
-  }
-};
-
 /**
  * Compiles an mdast list item to hast, like:
  *
@@ -396,7 +386,7 @@ export class ListItemCompiler implements MdastNodeCompiler {
     const children = this.compiler.compileChildren(node, postAST);
     const isLoose = node.spread === true;
 
-    switch (getListItemCheckState(node)) {
+    switch (ListItemCompiler.getCheckedState(node)) {
       case ListItemCheckedState.Normal:
         if (isLoose) {
           return [h.elem('li', children)];
@@ -432,6 +422,16 @@ export class ListItemCompiler implements MdastNodeCompiler {
       }
     }
     return rs;
+  }
+
+  private static getCheckedState(n: mdast.ListItem): ListItemCheckedState {
+    if (n.checked === null || n.checked === undefined) {
+      return ListItemCheckedState.Normal;
+    } else if (n.checked) {
+      return ListItemCheckedState.Checked;
+    } else {
+      return ListItemCheckedState.Unchecked;
+    }
   }
 }
 
