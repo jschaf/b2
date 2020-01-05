@@ -371,6 +371,101 @@ export const isStrong = (n: unist.Node): n is mdast.Strong => {
   return n.type === 'strong' && isParent(n);
 };
 
+export type TableProps = { align?: mdast.AlignType[] };
+
+export const tableProps = (
+  props: TableProps,
+  children: mdast.TableContent[]
+): mdast.Table => {
+  return { type: 'table', ...props, children };
+};
+
+export type TableShortcutRow =
+  | mdast.TableRow
+  | mdast.PhrasingContent[][]
+  | mdast.TableCell[]
+  | mdast.PhrasingContent[];
+
+/**
+ * Creates an mdast table.
+ *
+ * Allows omitting intermediate tableRow and tableCell nodes since they can
+ * usually be inferred. The rows in the example below each produce identical
+ * rows.
+ *
+ *     table([
+ *         [text('a'), [text('b'), text('c')]],
+ *         [text('a'), tableCell([text('b'), text('c')])],
+ *         tableRow([tableCellText('a'), tableCell([text('b'), text('c')])]),
+ *     ])
+ */
+export const table = (children: TableShortcutRow[]): mdast.Table => {
+  const rows: mdast.TableRow[] = [];
+  for (const child of children) {
+    if (Array.isArray(child)) {
+      // A shortcut for a row of an array of content.
+      const rowContent: mdast.TableCell[] = [];
+      for (const cellOrContent of child) {
+        if (Array.isArray(cellOrContent)) {
+          // A shortcut for a table cell with an array of children.
+          rowContent.push(tableCell(cellOrContent));
+        } else if (isTableCell(cellOrContent)) {
+          rowContent.push(cellOrContent);
+        } else if (isPhrasingContent(cellOrContent)) {
+          // A shortcut for a table cell with a single child.
+          rowContent.push(tableCell([cellOrContent]));
+        } else {
+          throw new Error('unknown node for building a table cell');
+        }
+      }
+      rows.push(tableRow(rowContent));
+    } else if (isTableRow(child)) {
+      rows.push(child);
+    } else {
+      throw new Error('unknown node for building a table row');
+    }
+  }
+  if (rows.length > 0) {
+    const numCells = rows[0].children.length;
+    for (const row of rows) {
+      if (row.children.length !== numCells) {
+        const r = JSON.stringify(row.children);
+        throw new Error(
+          `Uneven table, 1st row had ${numCells} cells but ` +
+            `found row with ${row.children.length} cells: ${r}`
+        );
+      }
+    }
+  }
+  return tableProps({}, rows);
+};
+
+export const isTable = (n: unist.Node): n is mdast.Table => {
+  return n.type === 'table' && isParent(n);
+};
+
+export const tableRow = (children: mdast.RowContent[]): mdast.TableRow => {
+  return { type: 'tableRow', children };
+};
+
+export const isTableRow = (n: unist.Node): n is mdast.TableRow => {
+  return n.type === 'tableRow' && isParent(n);
+};
+
+export const tableCell = (
+  children: mdast.PhrasingContent[]
+): mdast.TableCell => {
+  return { type: 'tableCell', children };
+};
+
+export const tableCellText = (value: string): mdast.TableCell => {
+  return tableCell([text(value)]);
+};
+
+export const isTableCell = (n: unist.Node): n is mdast.TableCell => {
+  return n.type === 'tableCell' && isParent(n);
+};
+
 export const text = (value: string): mdast.Text => {
   return { type: 'text', value };
 };
@@ -449,6 +544,30 @@ export const isAssociation = (
   n: unist.Node
 ): n is WithNode<mdast.Association> => {
   return isNonEmptyString(n.identifier) && isOptionalString(n.label);
+};
+
+export const isPhrasingContent = (
+  n: unist.Node
+): n is mdast.PhrasingContent => {
+  return isLink(n) || isLinkRef(n) || isStaticPhrasingContent(n);
+};
+
+export const isStaticPhrasingContent = (
+  n: unist.Node
+): n is mdast.StaticPhrasingContent => {
+  return (
+    isText(n) ||
+    isEmphasis(n) ||
+    isStrong(n) ||
+    isDelete(n) ||
+    isHTML(n) ||
+    isInlineCode(n) ||
+    isBreak(n) ||
+    isImage(n) ||
+    isImageRef(n) ||
+    isFootnote(n) ||
+    isFootnoteReference(n)
+  );
 };
 
 export const isReference = (n: unist.Node): n is WithNode<mdast.Reference> => {

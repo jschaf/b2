@@ -375,6 +375,58 @@ describe('StrongCompiler', () => {
   });
 });
 
+describe('TableCompiler', () => {
+  const a = 'alpha';
+  const b = 'bravo';
+  const tr = (...cs: hast.Element[]) => h.elem('tr', cs);
+  const td = (...cs: unist.Node[]) => h.elem('td', cs);
+  type Data = [string, mdast.Table, hast.Element];
+  const testData: Data[] = [
+    [
+      '1 row, no-align',
+      md.table([[md.text(a)]]),
+      h.elem('table', [h.elem('thead', [tr(td(h.text(a)))])]),
+    ],
+    [
+      '2 row, simple',
+      md.table([[md.text(a)], [md.emphasisText(b)]]),
+      h.elem('table', [
+        h.elem('thead', [tr(td(h.text(a)))]),
+        h.elem('tbody', [tr(td(h.elemText('em', b)))]),
+      ]),
+    ],
+  ];
+  for (const [name, input, expected] of testData) {
+    it(name, () => {
+      const p = PostAST.create(input);
+      const c = MdastCompiler.createDefault();
+
+      const hast = nc.TableCompiler.create(c).compileNode(p.mdastNode, p);
+
+      expect(hast).toEqual([expected]);
+    });
+  }
+
+  it('should compile a table node', () => {
+    const p = PostAST.create(
+      md.table([
+        md.tableRow([md.tableCellText(a)]),
+        md.tableRow([md.tableCell([md.emphasisText(b)])]),
+      ])
+    );
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.TableCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual([
+      h.elem('table', [
+        h.elem('thead', [h.elem('tr', [h.elemText('td', a)])]),
+        h.elem('tbody', [h.elem('tr', [h.elem('td', [h.elemText('em', b)])])]),
+      ]),
+    ]);
+  });
+});
+
 describe('ThematicBreakCompiler', () => {
   it('should compile a thematicBreak node', () => {
     const p = PostAST.create(md.thematicBreak());

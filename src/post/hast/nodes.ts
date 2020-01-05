@@ -15,7 +15,7 @@ import * as unistNodes from '//unist/nodes';
  *
  * Used when no definition is found matching the node's identifier.
  *
- * https://spec.commonmark.org/0.28/#images
+ * https://spec.commonmark.org/0.29/#images
  */
 export const danglingImageRef = (n: mdast.ImageReference): hast.Text => {
   // Prefer the label since the identifier is normalized.

@@ -581,6 +581,53 @@ export class ThematicBreakCompiler implements MdastNodeCompiler {
 }
 
 /**
+ * Compiles an mdast table to hast, like:
+ *
+ *     | foo | bar |
+ *     | --- | --- |
+ *     | baz | qux |
+ *
+ *  The table compiler also handles TableRow and TableCell because it's easier
+ *  to determine whether to use <th> or <td>.
+ *
+ * https://github.com/syntax-tree/mdast#table
+ */
+export class TableCompiler implements MdastNodeCompiler {
+  private constructor(private readonly compiler: MdastCompiler) {}
+
+  static create(compiler: MdastCompiler): TableCompiler {
+    return new TableCompiler(compiler);
+  }
+
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'table', md.isTable);
+    const rows: hast.Element[] = [];
+    for (const rowNode of node.children) {
+      md.checkType(rowNode, 'table row', md.isTableRow);
+      const cells: hast.Element[] = [];
+
+      for (const cellNode of rowNode.children) {
+        md.checkType(cellNode, 'table cell', md.isTableCell);
+        const c = this.compiler.compileChildren(cellNode, postAST);
+        cells.push(h.elem('td', c));
+      }
+
+      const tr = h.elem('tr', cells);
+      rows.push(tr);
+    }
+
+    const head = h.elem('thead', [rows[0]]);
+    const tableChildren = [head];
+    if (rows.length > 1) {
+      const body = h.elem('tbody', rows.slice(1));
+      tableChildren.push(body);
+    }
+
+    return [h.elem('table', tableChildren)];
+  }
+}
+
+/**
  * Compiles a literal mdast text to hast.
  *
  * https://github.com/syntax-tree/mdast#text
