@@ -478,6 +478,30 @@ export class ListItemCompiler implements MdastNodeCompiler {
 }
 
 /**
+ * A compiler that skips processing an mdast node by returning an empty array.
+ *
+ * This compiler is useful for mdast nodes that shouldn't appear in the output,
+ * like:
+ *
+ * - toml and yaml frontmatter
+ * - link definitions
+ * - footnote definitions
+ *
+ * https://github.com/syntax-tree/mdast#paragraph
+ */
+export class NoopCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): NoopCompiler {
+    return new NoopCompiler();
+  }
+
+  compileNode(_node: unist.Node, _ast: PostAST): unist.Node[] {
+    return [];
+  }
+}
+
+/**
  * Compiles an mdast paragraph to hast, like:
  *
  *     Foo bar.
