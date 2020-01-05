@@ -12,7 +12,7 @@ describe('PostCompiler', () => {
       Hello world.
     `);
     const bag = PostBag.fromMarkdown(md);
-    const ast = PostAST.create(bag.postNode.node);
+    const ast = PostAST.fromMdast(bag.postNode.node);
 
     const actual = PostCompiler.create().compileToMempost(ast);
 

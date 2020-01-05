@@ -6,7 +6,7 @@ describe('PostAST', () => {
   it('should parse a simple mdast', () => {
     const m = md.root([md.paragraph([md.text('hello')])]);
 
-    const p = PostAST.create(m);
+    const p = PostAST.fromMdast(m);
 
     expect(p.mdastNode).toEqual(m);
     expect(p.fnDefsById).toEqual(new Map());
@@ -34,12 +34,12 @@ describe('PostAST', () => {
     ];
     for (const [name, children, expected] of linkDefTests) {
       it(`should handle ${name}`, () => {
-        const p = PostAST.create(md.root(children));
+        const p = PostAST.fromMdast(md.root(children));
         expect(p.defsById).toEqual(new Map(expected));
       });
 
       it(`should be able to getDefinition for ${name}`, () => {
-        const p = PostAST.create(md.root(children));
+        const p = PostAST.fromMdast(md.root(children));
         for (const [key, def] of expected) {
           expect(p.getDefinition(key)).toEqual(def);
           expect(p.getDefinition(key.toUpperCase())).toEqual(def);
@@ -96,12 +96,12 @@ describe('PostAST', () => {
     ];
     for (const [name, children, expected] of tests) {
       it(`should handle ${name}`, () => {
-        const p = PostAST.create(md.root(children));
+        const p = PostAST.fromMdast(md.root(children));
         expect(p.fnDefsById).toEqual(new Map(expected));
       });
 
       it(`should be able to getFnDef for ${name}`, () => {
-        const p = PostAST.create(md.root(children));
+        const p = PostAST.fromMdast(md.root(children));
         for (const [key, def] of expected) {
           expect(p.getFootnoteDef(key)).toEqual(def);
         }

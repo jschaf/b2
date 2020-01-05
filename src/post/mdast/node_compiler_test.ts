@@ -9,7 +9,7 @@ import * as unist from 'unist';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
-    const p = PostAST.create(
+    const p = PostAST.fromMdast(
       md.blockquote([
         md.paragraphText('first'),
         md.paragraph([md.emphasisText('second')]),
@@ -30,7 +30,7 @@ describe('BlockquoteCompiler', () => {
 
 describe('BreakCompiler', () => {
   it('should compile a break', () => {
-    const p = PostAST.create(md.lineBreak());
+    const p = PostAST.fromMdast(md.lineBreak());
 
     const hast = nc.BreakCompiler.create().compileNode(p.mdastNode, p);
 
@@ -41,7 +41,7 @@ describe('BreakCompiler', () => {
 describe('CodeCompiler', () => {
   it('should compile code with a lang', () => {
     let code = 'function foo() {}';
-    const p = PostAST.create(md.codeWithLang('javascript', code));
+    const p = PostAST.fromMdast(md.codeWithLang('javascript', code));
 
     const hast = nc.CodeCompiler.create().compileNode(p.mdastNode, p);
 
@@ -54,7 +54,7 @@ describe('CodeCompiler', () => {
 
   it('should compile code without a lang', () => {
     let code = 'function foo() {}';
-    const post = PostAST.create(md.code(code));
+    const post = PostAST.fromMdast(md.code(code));
 
     const hast = nc.CodeCompiler.create().compileNode(post.mdastNode, post);
 
@@ -64,7 +64,7 @@ describe('CodeCompiler', () => {
 
 describe('DeleteCompiler', () => {
   it('should compile a delete', () => {
-    const p = PostAST.create(
+    const p = PostAST.fromMdast(
       md.deleted([md.text('first'), md.emphasisText('second')])
     );
     const c = MdastCompiler.createDefault();
@@ -80,7 +80,7 @@ describe('DeleteCompiler', () => {
 describe('EmphasisCompiler', () => {
   it('should compile emphasis with only text', () => {
     const content = 'foobar';
-    const p = PostAST.create(md.emphasisText(content));
+    const p = PostAST.fromMdast(md.emphasisText(content));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.EmphasisCompiler.create(c).compileNode(p.mdastNode, p);
@@ -91,7 +91,7 @@ describe('EmphasisCompiler', () => {
 
 describe('FootnoteCompiler', () => {
   it('should compile a footnote', () => {
-    const p = PostAST.create(md.footnote([md.text('inline fn')]));
+    const p = PostAST.fromMdast(md.footnote([md.text('inline fn')]));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.FootnoteCompiler.create(c).compileNode(p.mdastNode, p);
@@ -105,7 +105,7 @@ describe('FootnoteCompiler', () => {
 describe('FootnoteReferenceCompiler', () => {
   it('should compile a footnote reference', () => {
     const id = 'my-fn-ref';
-    const p = PostAST.create(md.footnoteRef(id));
+    const p = PostAST.fromMdast(md.footnoteRef(id));
 
     const hast = nc.FootnoteReferenceCompiler.create().compileNode(
       p.mdastNode,
@@ -119,7 +119,7 @@ describe('FootnoteReferenceCompiler', () => {
 describe('HeadingCompiler', () => {
   it('should compile a heading with only text', () => {
     const content = 'foobar';
-    const p = PostAST.create(md.heading('h3', [md.text(content)]));
+    const p = PostAST.fromMdast(md.heading('h3', [md.text(content)]));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.HeadingCompiler.create(c).compileNode(p.mdastNode, p);
@@ -128,7 +128,7 @@ describe('HeadingCompiler', () => {
   });
 
   it('should compile a heading with other content', () => {
-    const p = PostAST.create(
+    const p = PostAST.fromMdast(
       md.heading('h1', [md.text('start'), md.emphasisText('mid')])
     );
     const c = MdastCompiler.createDefault();
@@ -144,7 +144,7 @@ describe('HeadingCompiler', () => {
 describe('HTMLCompiler', () => {
   it('should compile a html node', () => {
     const a = '<div><alpha></alpha></div>';
-    const p = PostAST.create(md.html(a));
+    const p = PostAST.fromMdast(md.html(a));
 
     const hast = nc.HTMLCompiler.create().compileNode(p.mdastNode, p);
 
@@ -155,7 +155,7 @@ describe('HTMLCompiler', () => {
 describe('ImageCompiler', () => {
   it('should compile an image without any props', () => {
     const src = 'http://example.com';
-    const p = PostAST.create(md.image(src));
+    const p = PostAST.fromMdast(md.image(src));
 
     const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
 
@@ -166,7 +166,7 @@ describe('ImageCompiler', () => {
     const src = 'http://example.com';
     const title = 'my title';
     const alt = 'alt text';
-    const p = PostAST.create(md.imageProps(src, { title, alt }));
+    const p = PostAST.fromMdast(md.imageProps(src, { title, alt }));
 
     const hast = nc.ImageCompiler.create().compileNode(p.mdastNode, p);
 
@@ -179,7 +179,7 @@ describe('ImageReferenceCompiler', () => {
     let imgRef = md.imageRefProps('alpha', md.RefType.Full, {
       alt: 'alt',
     });
-    const p = PostAST.create(imgRef);
+    const p = PostAST.fromMdast(imgRef);
     const c = MdastCompiler.createDefault();
 
     const hast = nc.ImageReferenceCompiler.create(c).compileNode(
@@ -196,7 +196,7 @@ describe('ImageReferenceCompiler', () => {
     const title = 'title';
     const src = 'http://bravo.com';
     let imgRef = md.imageRefProps(id, md.RefType.Full, { alt });
-    const p = PostAST.create(imgRef);
+    const p = PostAST.fromMdast(imgRef);
     p.addDefinition(md.definitionProps(id, src, { title }));
     const c = MdastCompiler.createDefault();
 
@@ -212,7 +212,7 @@ describe('ImageReferenceCompiler', () => {
 describe('InlineCodeCompiler', () => {
   it('should compile inline code', () => {
     const value = 'let a = 2';
-    const p = PostAST.create(md.inlineCode(value));
+    const p = PostAST.fromMdast(md.inlineCode(value));
 
     const hast = nc.InlineCodeCompiler.create().compileNode(p.mdastNode, p);
 
@@ -224,7 +224,7 @@ describe('LinkCompiler', () => {
   it('should compile a link without a title', () => {
     let url = 'www.example.com';
     let value = 'text';
-    const p = PostAST.create(md.linkText(url, value));
+    const p = PostAST.fromMdast(md.linkText(url, value));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.LinkCompiler.create(c).compileNode(p.mdastNode, p);
@@ -238,7 +238,7 @@ describe('LinkReferenceCompiler', () => {
     const id = 'alpha';
     const text = 'bravo';
     let lr = md.linkRefText(id, md.RefType.Full, text);
-    const p = PostAST.create(lr);
+    const p = PostAST.fromMdast(lr);
     const c = MdastCompiler.createDefault();
     let childrenCompiler = (n: mdast.LinkReference) => c.compileChildren(n, p);
 
@@ -254,7 +254,7 @@ describe('LinkReferenceCompiler', () => {
       md.emphasisText('foo'),
       md.text('bar'),
     ]);
-    const p = PostAST.create(lr);
+    const p = PostAST.fromMdast(lr);
     p.addDefinition(md.definitionProps(id, url, { title: 'title' }));
     const c = MdastCompiler.createDefault();
 
@@ -307,7 +307,7 @@ describe('ListCompiler', () => {
 
   for (const [name, input, expected] of testData) {
     it(`should compile ${name}`, () => {
-      const p = PostAST.create(input);
+      const p = PostAST.fromMdast(input);
       const c = MdastCompiler.createDefault();
 
       const hast = nc.ListCompiler.create(c).compileNode(p.mdastNode, p);
@@ -352,7 +352,7 @@ describe('ListItemCompiler', () => {
 
   for (const [name, props, input, expected] of testData) {
     it(`should compile ${name} list`, () => {
-      const p = PostAST.create(md.listItemProps(props, input));
+      const p = PostAST.fromMdast(md.listItemProps(props, input));
       const c = MdastCompiler.createDefault();
 
       const hast = nc.ListItemCompiler.create(c).compileNode(p.mdastNode, p);
@@ -366,7 +366,7 @@ describe('StrongCompiler', () => {
   it('should compile a strong', () => {
     const a = 'alpha';
     const b = 'bravo';
-    const p = PostAST.create(md.strong([md.text(a), md.emphasisText(b)]));
+    const p = PostAST.fromMdast(md.strong([md.text(a), md.emphasisText(b)]));
     const c = MdastCompiler.createDefault();
 
     const hast = nc.StrongCompiler.create(c).compileNode(p.mdastNode, p);
@@ -398,7 +398,7 @@ describe('TableCompiler', () => {
   ];
   for (const [name, input, expected] of testData) {
     it(name, () => {
-      const p = PostAST.create(input);
+      const p = PostAST.fromMdast(input);
       const c = MdastCompiler.createDefault();
 
       const hast = nc.TableCompiler.create(c).compileNode(p.mdastNode, p);
@@ -408,7 +408,7 @@ describe('TableCompiler', () => {
   }
 
   it('should compile a table node', () => {
-    const p = PostAST.create(
+    const p = PostAST.fromMdast(
       md.table([
         md.tableRow([md.tableCellText(a)]),
         md.tableRow([md.tableCell([md.emphasisText(b)])]),
@@ -429,7 +429,7 @@ describe('TableCompiler', () => {
 
 describe('ThematicBreakCompiler', () => {
   it('should compile a thematicBreak node', () => {
-    const p = PostAST.create(md.thematicBreak());
+    const p = PostAST.fromMdast(md.thematicBreak());
 
     const hast = nc.ThematicBreakCompiler.create().compileNode(p.mdastNode, p);
 
@@ -439,7 +439,7 @@ describe('ThematicBreakCompiler', () => {
 
 describe('TomlCompiler', () => {
   it('should ignore toml nodes', () => {
-    const p = PostAST.create(md.toml({ foo: 'bar' }));
+    const p = PostAST.fromMdast(md.toml({ foo: 'bar' }));
 
     const hast = nc.TomlCompiler.create().compileNode(p.mdastNode, p);
 

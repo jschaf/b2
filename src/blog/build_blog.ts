@@ -26,7 +26,7 @@ const buildBlog = async (): Promise<void> => {
         const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
         const md = buf.toString('utf8');
         const postBag = PostBag.fromTomlFrontmatterMarkdown(md);
-        const postAST = PostAST.create(postBag.postNode.node);
+        const postAST = PostAST.fromMdast(postBag.postNode.node);
         const mp = postCompiler.compileToMempost(postAST);
         const slug = (postBag.postNode.metadata.schema[
           'slug'

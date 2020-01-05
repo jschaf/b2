@@ -42,7 +42,7 @@ describe('danglingLinkRef', () => {
   ];
   const c = MdastCompiler.createDefault();
   const compileChildren = (n: unist.Parent) =>
-    c.compileChildren(n, PostAST.create(n));
+    c.compileChildren(n, PostAST.fromMdast(n));
 
   for (const [lr, expected] of attrs) {
     const l = lr.label || '<none>';

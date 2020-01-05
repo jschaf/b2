@@ -18,7 +18,7 @@ export class PostAST {
   // TODO: use actual vfile.
   private constructor(readonly mdastNode: unist.Node) {}
 
-  static create(n: unist.Node): PostAST {
+  static fromMdast(n: unist.Node): PostAST {
     let p = new PostAST(n);
     addAllDefs(p);
     addAllFnDefs(p);
