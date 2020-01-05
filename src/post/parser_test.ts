@@ -1,5 +1,5 @@
 import * as md from '//post/mdast/nodes';
-import { PostMetadata } from '//post/post_metadata';
+import { PostMetadata } from '//post/metadata';
 import { PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX } from '//post/parser';
 import {
   DEFAULT_FRONTMATTER,

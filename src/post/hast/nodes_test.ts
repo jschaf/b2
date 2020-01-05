@@ -2,7 +2,7 @@ import { danglingImageRef, danglingLinkRef } from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import * as h from '//post/hast/nodes';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import * as unist from 'unist';
 import * as mdast from 'mdast';
 

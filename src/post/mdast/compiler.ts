@@ -1,5 +1,5 @@
 import { checkArg, checkDefined } from '//asserts';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import * as nc from '//post/mdast/node_compiler';
 import * as unist from 'unist';
 import * as unistNodes from '//unist/nodes';

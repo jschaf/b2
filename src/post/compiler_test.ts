@@ -1,5 +1,5 @@
 import { PostCompiler } from '//post/compiler';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import { PostBag } from '//post/post_bag';
 import { withDefaultFrontMatter } from '//post/testing/front_matters';
 import { dedent } from '//strings';

@@ -1,5 +1,5 @@
 import * as md from '//post/mdast/nodes';
-import { PostMetadata } from '//post/post_metadata';
+import { PostMetadata } from '//post/metadata';
 import * as dates from '//dates';
 import { dedent } from '//strings';
 

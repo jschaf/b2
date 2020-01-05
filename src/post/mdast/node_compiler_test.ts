@@ -2,7 +2,7 @@ import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import * as mdast from 'mdast';
 import * as hast from 'hast-format';
 import * as unist from 'unist';

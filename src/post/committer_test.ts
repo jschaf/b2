@@ -1,5 +1,5 @@
 import { PostBag } from '//post/post_bag';
-import { PostCommitter } from '//post/post_committer';
+import { PostCommitter } from '//post/committer';
 import { withDefaultFrontMatter } from '//post/testing/front_matters';
 import { dedent } from '//strings';
 import * as memfs from 'memfs';

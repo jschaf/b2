@@ -6,7 +6,7 @@ import * as unist from 'unist';
 import nodeRemove from 'unist-util-remove';
 import { checkState } from '//asserts';
 import { Unzipper } from '//zip_files';
-import { PostMetadata } from '//post/post_metadata';
+import { PostMetadata } from '//post/metadata';
 
 export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 

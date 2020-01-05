@@ -4,7 +4,7 @@ import { HastCompiler } from '//post/hast/compiler';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { Mempost } from '//post/mempost';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 
 /** Compiles a post AST into a mempost ready to be saved to a file system. */
 export class PostCompiler {

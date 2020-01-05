@@ -1,5 +1,5 @@
 import * as dates from '//dates';
-import { PostMetadata } from '//post/post_metadata';
+import { PostMetadata } from '//post/metadata';
 import { dedent } from '//strings';
 
 export const withDefaultFrontMatter = (text: string): string => {

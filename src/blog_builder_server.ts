@@ -6,7 +6,7 @@ import sourceMapSupport from 'source-map-support';
 
 import KoaRouter from 'koa-router';
 import { PostBag } from '//post/post_bag';
-import { PostCommitter } from '//post/post_committer';
+import { PostCommitter } from '//post/committer';
 
 const gitDirFlag = flags
   .defineString('git-dir')

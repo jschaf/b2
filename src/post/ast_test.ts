@@ -1,5 +1,5 @@
 import * as md from '//post/mdast/nodes';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import * as mdast from 'mdast';
 
 describe('PostAST', () => {

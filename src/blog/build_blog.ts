@@ -1,6 +1,6 @@
 import * as files from '//files';
 import { PostCompiler } from '//post/compiler';
-import { PostAST } from '//post/post_ast';
+import { PostAST } from '//post/ast';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PostBag } from '//post/post_bag';
