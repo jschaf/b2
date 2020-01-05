@@ -1,4 +1,5 @@
 import { checkDefined, checkState } from '//asserts';
+import { PostMetadata } from '//post/metadata';
 import * as unistNodes from '//unist/nodes';
 import * as md from '//post/mdast/nodes';
 import * as mdast from 'mdast';
@@ -16,10 +17,14 @@ export class PostAST {
   readonly fnDefsById: Map<string, mdast.FootnoteDefinition> = new Map();
 
   // TODO: use actual vfile.
-  private constructor(readonly mdastNode: unist.Node) {}
+  private constructor(
+    readonly metadata: PostMetadata,
+    readonly mdastNode: unist.Node
+  ) {}
 
   static fromMdast(n: unist.Node): PostAST {
-    let p = new PostAST(n);
+    const m = PostMetadata.parseFromMdast(n) || PostMetadata.empty();
+    const p = new PostAST(m, n);
     addAllDefs(p);
     addAllFnDefs(p);
     return p;

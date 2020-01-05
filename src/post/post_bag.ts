@@ -9,10 +9,6 @@ export class PostBag {
     return new PostBag(PostParser.create().parseMarkdown(mainText));
   }
 
-  static fromTomlFrontmatterMarkdown(mainText: string): PostBag {
-    return new PostBag(PostParser.create().parseFrontmatterMarkdown(mainText));
-  }
-
   static async fromTextPack(textPack: Buffer): Promise<PostBag> {
     const entries = await Unzipper.unzip(textPack);
     const mainText = findMainText(entries);

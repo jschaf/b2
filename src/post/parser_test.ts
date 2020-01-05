@@ -72,13 +72,16 @@ test('parses from frontmatter markdown', async () => {
     # Hello
   `;
 
-  const node = PostParser.create().parseFrontmatterMarkdown(markdown);
+  const node = PostParser.create().parseMarkdown(markdown);
 
   const expected = md.root([
     md.tomlFrontmatter({ slug, date: dates.fromISO(date) }),
     md.headingText('h1', 'Hello'),
   ]);
   expect(md.stripPositions(node)).toEqual(
-    new PostNode(PostMetadata.of({ slug, date: dates.fromISO(date) }), expected)
+    new PostNode(
+      PostMetadata.parse({ slug, date: dates.fromISO(date) }),
+      expected
+    )
   );
 });

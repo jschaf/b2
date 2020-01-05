@@ -1,7 +1,7 @@
 import { checkDefined } from '//asserts';
 import { isOptionalBoolean } from '//booleans';
 import { isOptionalNumber } from '//post/numbers';
-import { PostNode } from '//post/post_parser';
+import { PostNode } from '//post/parser';
 import { isOptionalString, isString } from '//strings';
 import { removePositionInfo } from '//unist/nodes';
 import * as tomlLib from '@iarna/toml';
@@ -504,7 +504,7 @@ export const tomlFrontmatter = (map: tomlLib.JsonMap): mdast.BlockContent => {
 };
 
 export const isToml = (n: unist.Node): n is Toml => {
-  return n.type === 'toml' && isString(n.value);
+  return n.type === 'toml' && isLiteral(n);
 };
 
 export const isLiteral = (n: unist.Node): n is unist.Literal => {

@@ -1,3 +1,4 @@
+import { checkDefined } from '//asserts';
 import * as md from '//post/mdast/nodes';
 import { PostMetadata } from '//post/metadata';
 import * as dates from '//dates';
@@ -15,7 +16,7 @@ test('parses valid tokens', () => {
       `),
   ]);
 
-  const metadata = PostMetadata.parseFromMarkdownAST(tree);
+  const metadata = checkDefined(PostMetadata.parseFromMdast(tree));
 
   expect(metadata.schema).toEqual({ slug, date: dates.fromISO(date) });
 });
@@ -25,7 +26,7 @@ test('parses valid tokens from toml frontmatter', () => {
   let date = dates.fromISO('2019-05-18');
   const tree = md.root([md.tomlFrontmatter({ slug, date })]);
 
-  const metadata = PostMetadata.parseFromTomlFrontmatter(tree);
+  const metadata = checkDefined(PostMetadata.parseFromMdast(tree));
 
   expect(metadata.schema).toEqual({ slug, date });
 });

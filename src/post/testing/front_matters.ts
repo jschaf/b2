@@ -17,7 +17,7 @@ export const DEFAULT_FRONTMATTER_TEXT = dedent`
     \`\`\`
 `;
 
-export const DEFAULT_FRONTMATTER = PostMetadata.of({
+export const DEFAULT_FRONTMATTER = PostMetadata.parse({
   slug: 'foo_bar',
   date: dates.fromISO('2019-10-08'),
 });

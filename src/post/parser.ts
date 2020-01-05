@@ -4,14 +4,14 @@ import remarkFrontmatter from 'remark-frontmatter';
 import unified from 'unified';
 import * as unist from 'unist';
 import nodeRemove from 'unist-util-remove';
-import { checkState } from '//asserts';
+import { checkDefined, checkState } from '//asserts';
 import { Unzipper } from '//zip_files';
 import { PostMetadata } from '//post/metadata';
 
 export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 
 export class PostParser {
-  private readonly processor: unified.Processor<unified.Settings>;
+  private readonly processor: unified.Processor;
 
   private constructor() {
     this.processor = unified()
@@ -38,17 +38,14 @@ export class PostParser {
 
   parseMarkdown(markdown: string): PostNode {
     const node = this.processor.parse(markdown);
-    const metadata = PostMetadata.parseFromMarkdownAST(node);
+    const metadata = checkDefined(
+      PostMetadata.parseFromMdast(node),
+      `Unable to find metadata`
+    );
     const nodeSansMetadata = nodeRemove(node, PostMetadata.isMetadataNode) || {
       type: 'root',
     };
     return new PostNode(metadata, nodeSansMetadata);
-  }
-
-  parseFrontmatterMarkdown(markdown: string): PostNode {
-    const node = this.processor.parse(markdown);
-    const metadata = PostMetadata.parseFromTomlFrontmatter(node);
-    return new PostNode(metadata, node);
   }
 }
 
