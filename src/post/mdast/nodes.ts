@@ -40,7 +40,9 @@ export const codeWithLang = (lang: string, code: string): mdast.Code => {
 export const isCode = (n: unist.Node): n is mdast.Code => {
   // The mdast parser uses null for meta instead of undefined.
   const hasMeta = isOptionalString(n.meta) || n.meta === null;
-  return n.type === 'code' && isOptionalString(n.lang) && hasMeta;
+  return (
+    n.type === 'code' && isLiteral(n) && isOptionalString(n.lang) && hasMeta
+  );
 };
 
 type DefinitionProps = { label?: string; title?: string };
@@ -488,10 +490,13 @@ interface Toml extends mdast.Literal {
 
 export const toml = (map: tomlLib.JsonMap): BlockContent => {
   let raw = tomlLib.stringify(map).trimEnd();
-  // The mdast typings only allow known types.
+  return tomlText(raw);
+};
+
+export const tomlText = (value: string): BlockContent => {
   return ({
     type: 'toml',
-    value: raw,
+    value,
   } as unknown) as mdast.BlockContent;
 };
 

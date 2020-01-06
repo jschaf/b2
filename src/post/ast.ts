@@ -23,11 +23,12 @@ export class PostAST {
   ) {}
 
   static fromMdast(n: unist.Node): PostAST {
-    const m = PostMetadata.parseFromMdast(n) || PostMetadata.empty();
-    const p = new PostAST(m, n);
-    addAllDefs(p);
-    addAllFnDefs(p);
-    return p;
+    const meta = PostMetadata.parseFromMdast(n) || PostMetadata.empty();
+    const tree = PostMetadata.normalizeMdast(n);
+    const ast = new PostAST(meta, tree);
+    addAllDefs(ast);
+    addAllFnDefs(ast);
+    return ast;
   }
 
   private static inlineFootnotePrefix = 'gen-';

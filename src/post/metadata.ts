@@ -1,12 +1,12 @@
-import * as unistNodes from '//unist/nodes';
-import yaml from 'js-yaml';
-import * as unist from 'unist';
-import * as md from '//post/mdast/nodes';
 import * as dates from '//dates';
+import * as md from '//post/mdast/nodes';
 import * as strings from '//strings';
-import { isString } from '//strings';
+import * as unistNodes from '//unist/nodes';
 
 import * as toml from '@iarna/toml';
+import yaml from 'js-yaml';
+import * as unist from 'unist';
+
 type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
 const METADATA_SCHEMA: Schema = {
   slug: { type: 'string', isRequired: true },
@@ -38,10 +38,10 @@ export class PostMetadata {
     return new PostMetadata(schema.slug, schema.date, schema);
   }
 
-  static isMetadataNode = (
+  static isCodeMetadataNode = (
     n: unist.Node
   ): n is { type: 'code'; value: string } =>
-    n.type === 'code' && isString(n.value) && n.value.startsWith('# Metadata');
+    md.isCode(n) && n.value.startsWith('# Metadata');
 
   /** Parses the post metadata from an mdast node. */
   static parseFromMdast(tree: unist.Node): PostMetadata | null {
@@ -50,7 +50,7 @@ export class PostMetadata {
       return PostMetadata.parse(t);
     }
 
-    const m = this.extractFromMetadataCodeBlock(tree);
+    const m = this.extractFromMetadataCodeNode(tree);
     if (m && isValidSchema(m)) {
       return PostMetadata.parse(m);
     }
@@ -67,14 +67,54 @@ export class PostMetadata {
     return toml.parse(node.value);
   }
 
-  private static extractFromMetadataCodeBlock(
+  private static extractFromMetadataCodeNode(
     tree: unist.Node
   ): Record<string, unknown> | null {
-    const node = unistNodes.findNode(tree, PostMetadata.isMetadataNode);
+    const node = unistNodes.findNode(tree, PostMetadata.isCodeMetadataNode);
     if (node === null) {
       return null;
     }
     return yaml.safeLoad(node.value);
+  }
+
+  /**
+   * Normalizes an mdast tree by ensuring the metadata node is toml and it's the
+   * first child in the tree.
+   */
+  static normalizeMdast(tree: unist.Node): unist.Node {
+    if (!md.isParent(tree)) {
+      return tree;
+    }
+
+    const tomlData = unistNodes.findNode(tree, md.isToml);
+    const codeData = unistNodes.findNode(tree, this.isCodeMetadataNode);
+
+    if (tomlData !== null) {
+      // Move toml to the first node in mdast.
+      unistNodes.removeNode(tree, md.isToml);
+      tree.children.unshift(tomlData);
+
+      if (codeData !== null) {
+        // Remove the code metadata and assume toml is canonical.
+        unistNodes.removeNode(tree, this.isCodeMetadataNode);
+        return tree;
+      } else {
+        // Nothing to do because only toml node exists.
+        return tree;
+      }
+    } else {
+      if (codeData !== null) {
+        // Convert code metadata into toml and remove code metadata.
+        unistNodes.removeNode(tree, this.isCodeMetadataNode);
+        const schema = yaml.safeLoad(codeData.value);
+        const t = md.tomlFrontmatter(schema);
+        tree.children.unshift(t);
+        return tree;
+      } else {
+        // No metadata so nothing to do.
+        return tree;
+      }
+    }
   }
 }
 

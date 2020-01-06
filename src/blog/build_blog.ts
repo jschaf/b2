@@ -1,6 +1,7 @@
 import * as files from '//files';
 import { PostCompiler } from '//post/compiler';
 import { PostAST } from '//post/ast';
+import { PostParser } from '//post/parser';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PostBag } from '//post/post_bag';
@@ -10,6 +11,7 @@ const buildBlog = async (): Promise<void> => {
   const rootDir = path.dirname(gitDir);
   const postsDir = path.join(rootDir, 'posts');
   // Find bare files
+  const postParser = PostParser.create();
   const postCompiler = PostCompiler.create();
 
   const markdowns = await fs.promises.readdir(postsDir);
@@ -25,6 +27,7 @@ const buildBlog = async (): Promise<void> => {
         }
         const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
         const md = buf.toString('utf8');
+        const ast = postParser.parseMarkdown(md);
         const postBag = PostBag.fromMarkdown(md);
         const postAST = PostAST.fromMdast(postBag.postNode.node);
         const mp = postCompiler.compileToMempost(postAST);

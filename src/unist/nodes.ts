@@ -1,6 +1,7 @@
 import { isObject } from '//objects';
 import { isString } from '//strings';
 import * as unist from 'unist';
+import nodeRemove from 'unist-util-remove';
 
 export type NodeAncestors = unist.Node[];
 export type NodeVisitor = (n: unist.Node, ancestors: NodeAncestors) => void;
@@ -59,6 +60,14 @@ export const findNode = <T extends unist.Node>(
     }
   }
   return null;
+};
+
+export const removeNode = <T extends unist.Node>(
+  tree: unist.Node,
+  test: NodeTest<T>
+): void => {
+  const wrappedTest = (n: unist.Node): n is T => test(n, []);
+  nodeRemove(tree, wrappedTest);
 };
 
 export const removePositionInfo = (tree: unist.Node): void => {

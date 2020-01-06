@@ -42,7 +42,10 @@ export class PostParser {
       PostMetadata.parseFromMdast(node),
       `Unable to find metadata`
     );
-    const nodeSansMetadata = nodeRemove(node, PostMetadata.isMetadataNode) || {
+    const nodeSansMetadata = nodeRemove(
+      node,
+      PostMetadata.isCodeMetadataNode
+    ) || {
       type: 'root',
     };
     return new PostNode(metadata, nodeSansMetadata);
