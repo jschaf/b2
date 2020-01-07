@@ -40,17 +40,29 @@ describe('MarkdownParser', () => {
       [para, '1. list item'].join('\n'),
       md.root([mdPara, md.orderedList([md.paragraphText('list item')])]),
     ],
+    [
+      'inline math',
+      'Foo $lift$',
+      md.root([md.paragraph([md.text('Foo '), md.inlineMath('lift')])]),
+    ],
+
+    [
+      'display math',
+      'Foo\n\n$$\nlift\n$$',
+      md.root([md.paragraphText('Foo'), md.math('lift')]),
+    ],
   ];
   for (const [name, input, expected] of testData) {
     it(name, () => {
       const p = MarkdownParser.create();
       const actual = p.parse(input);
-      expect(stripPos(actual.mdastNode)).toEqual(expected);
+      expect(cleanTree(actual.mdastNode)).toEqual(expected);
     });
   }
 });
 
-const stripPos = (n: unist.Node): unist.Node => {
+const cleanTree = (n: unist.Node): unist.Node => {
   unistNodes.removePositionInfo(n);
+  unistNodes.removeData(n);
   return n;
 };

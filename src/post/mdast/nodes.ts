@@ -197,6 +197,18 @@ export const isInlineCode = (n: unist.Node): n is mdast.InlineCode => {
   return n.type === 'inlineCode' && isLiteral(n);
 };
 
+export interface InlineMath extends unist.Node, mdast.Literal {
+  type: 'inlineMath';
+}
+
+export const inlineMath = (value: string): mdast.PhrasingContent => {
+  return ({ type: 'inlineMath', value } as unknown) as mdast.PhrasingContent;
+};
+
+export const isInlineMath = (n: unist.Node): n is InlineMath => {
+  return n.type === 'inlineMath' && isLiteral(n);
+};
+
 export const link = (
   url: string,
   children: mdast.StaticPhrasingContent[]
@@ -346,6 +358,18 @@ export const isListItem = (n: unist.Node): n is mdast.ListItem => {
 
 export const orderedList = (children: ShortcutListContent[]): mdast.List => {
   return listProps({ ordered: true, spread: false, start: 1 }, children);
+};
+
+export interface Math extends unist.Node, mdast.Literal {
+  type: 'math';
+}
+
+export const math = (value: string): mdast.Content => {
+  return ({ type: 'math', value } as unknown) as mdast.Content;
+};
+
+export const isMath = (n: unist.Node): n is Math => {
+  return n.type === 'math' && isLiteral(n);
 };
 
 export const paragraph = (

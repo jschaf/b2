@@ -1,6 +1,7 @@
 import { PostAST } from '//post/ast';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParse from 'remark-parse';
+import remarkMath from 'remark-math';
 import unified from 'unified';
 
 /** Parses a markdown document into mdast. */
@@ -10,7 +11,8 @@ export class MarkdownParser {
   private constructor() {
     this.processor = unified()
       .use(remarkParse, { commonmark: true })
-      .use(remarkFrontmatter, ['toml']);
+      .use(remarkFrontmatter, ['toml'])
+      .use(remarkMath);
   }
 
   static create(): MarkdownParser {

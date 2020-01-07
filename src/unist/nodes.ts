@@ -74,6 +74,16 @@ export const removePositionInfo = (tree: unist.Node): void => {
   visitInPlace(tree, n => delete n.position);
 };
 
+/**
+ * Removes the data object from all nodes in tree.
+ *
+ * node.data is set by plugins for communication across different unified
+ * instances.
+ */
+export const removeData = (tree: unist.Node): void => {
+  visitInPlace(tree, n => delete n.data);
+};
+
 /** Type guard that returns true if a node has node children. */
 export const hasChildren = (
   n: unist.Node
