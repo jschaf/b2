@@ -1,3 +1,4 @@
+import { PostAST } from '//post/ast';
 import * as fs from 'fs';
 import * as memfs from 'memfs';
 import { GitFsPlugin } from 'isomorphic-git';
@@ -7,7 +8,7 @@ import remarkStringify from 'remark-stringify';
 import unified from 'unified';
 import { checkArg, checkDefined } from '//asserts';
 import { Mempost } from '//post/mempost';
-import { PostBag } from '//post/post_bag';
+import remarkFrontmatter from 'remark-frontmatter';
 
 export class PostCommitter {
   private constructor(
@@ -29,10 +30,10 @@ export class PostCommitter {
    * Commits the source files of the post bag onto the filesystem
    * relative to dir.
    */
-  async commit(bag: PostBag): Promise<void> {
+  async commit(ast: PostAST): Promise<void> {
     await isoGit.init({ dir: this.dir, noOverwrite: true });
 
-    const mempost = await PostSrcRenderer.create().render(bag);
+    const mempost = await PostSrcRenderer.create().render(ast);
     for (const [relPath, contents] of mempost.entries()) {
       const fullPath = path.resolve(this.dir, relPath);
       await this.fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
@@ -41,7 +42,7 @@ export class PostCommitter {
     }
     await isoGit.commit({
       dir: this.dir,
-      message: `auto: Edit ${bag.postNode.metadata.slug}`,
+      message: `auto: Edit ${ast.metadata.slug}`,
       author: {
         name: 'Joe Schafer',
         email: 'joe@schafer.dev',
@@ -73,17 +74,19 @@ class PostSrcRenderer {
   private readonly processor: unified.Processor<unified.Settings>;
 
   private constructor() {
-    this.processor = unified().use(remarkStringify);
+    this.processor = unified()
+      .use(remarkStringify)
+      .use(remarkFrontmatter, ['toml']);
   }
 
   static create(): PostSrcRenderer {
     return new PostSrcRenderer();
   }
 
-  render(bag: PostBag): Promise<Mempost> {
-    const md = this.processor.stringify(bag.postNode.node);
+  render(ast: PostAST): Promise<Mempost> {
+    const md = this.processor.stringify(ast.mdastNode);
     return Promise.resolve(
-      Mempost.ofUtf8Entry(`posts/${bag.postNode.metadata.slug}.md`, md)
+      Mempost.ofUtf8Entry(`posts/${ast.metadata.slug}.md`, md)
     );
   }
 }

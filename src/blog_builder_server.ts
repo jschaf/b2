@@ -1,3 +1,4 @@
+import { PostParser } from '//post/parser';
 import flags from 'flags';
 import * as fs from 'fs';
 import Koa from 'koa';
@@ -5,7 +6,6 @@ import koaBody from 'koa-body';
 import sourceMapSupport from 'source-map-support';
 
 import KoaRouter from 'koa-router';
-import { PostBag } from '//post/post_bag';
 import { PostCommitter } from '//post/committer';
 
 const gitDirFlag = flags
@@ -17,9 +17,9 @@ const app = new Koa();
 const router = new KoaRouter();
 
 const commitPost = async (textPack: Buffer): Promise<void> => {
-  const bag = await PostBag.fromTextPack(textPack);
+  const ast = await PostParser.create().parseTextPack(textPack);
   const committer = PostCommitter.forFs(fs, gitDirFlag.currentValue);
-  await committer.commit(bag);
+  await committer.commit(ast);
 };
 
 if (require.main === module) {

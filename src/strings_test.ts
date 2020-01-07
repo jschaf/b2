@@ -27,25 +27,17 @@ test('isOptionalString should work', () => {
 });
 
 describe('dedent', () => {
-  test('should work for simple strings', () => {
-    expect(dedent`foo`).toEqual('foo');
-    expect(dedent`foo bar`).toEqual('foo bar');
-  });
-
-  test('should remove leading space from single line', () => {
-    expect(dedent`  foo`).toEqual('foo');
-  });
-
-  test('should remove leading space from many lines', () => {
-    expect(dedent`
-      foo
-      bar
-        qux
-      baz  
-    `).toEqual('foo\nbar\n  qux\nbaz');
-  });
-
-  test('should remove trailing space from single line', () => {
-    expect(dedent`  foo   `).toEqual('foo');
-  });
+  const testData: [string, string, string][] = [
+    ['simple strings', 'foo', 'foo'],
+    ['leading space 1 line', '   foo', 'foo'],
+    ['trailing space 1 line', 'foo  ', 'foo'],
+    ['leading space 3 lines', '  foo\n  bar\n  qux\n', 'foo\nbar\nqux'],
+    ['trim same space 3 lines', '  foo\n    bar\n   qux\n', 'foo\n  bar\n qux'],
+  ];
+  for (const [name, input, expected] of testData) {
+    it(name, () => {
+      const actual = dedent`${input}`;
+      expect(actual).toEqual(expected);
+    });
+  }
 });

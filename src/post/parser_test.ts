@@ -1,87 +1,69 @@
 import * as md from '//post/mdast/nodes';
-import { PostMetadata } from '//post/metadata';
-import { PostNode, PostParser, TEXT_PACK_BUNDLE_PREFIX } from '//post/parser';
-import {
-  DEFAULT_FRONTMATTER,
-  withDefaultFrontMatter,
-} from '//post/testing/front_matters';
-import { dedent } from '//strings';
+import { PostParser, TEXT_PACK_BUNDLE_PREFIX } from '//post/parser';
 import { ZipFileEntry, Zipper } from '//zip_files';
-import * as dates from '//dates';
+import * as unistNodes from '//unist/nodes';
+import * as unist from 'unist';
+import * as frontMatters from '//post/testing/front_matters';
+import * as mdast from 'mdast';
 
-test('parses from markdown', () => {
-  const markdown = withDefaultFrontMatter(dedent`
-    # hello
-    
-    Hello world.
-   `);
-  const node = PostParser.create().parseMarkdown(markdown);
+const stripPos = (n: unist.Node): unist.Node => {
+  unistNodes.removePositionInfo(n);
+  return n;
+};
 
-  const expected = md.root([
-    md.heading('h1', [md.text('hello')]),
-    md.paragraphText('Hello world.'),
-  ]);
-  expect(md.stripPositions(node)).toEqual(
-    new PostNode(DEFAULT_FRONTMATTER, expected)
-  );
-});
+describe('PostParser', () => {
+  const yaml = frontMatters.defaultYamlCodeBlock();
+  const toml = frontMatters.defaultTomlBlock();
+  const mdToml = frontMatters.defaultTomlMdast();
+  const h1 = '# hello';
+  const mdH1 = md.headingText('h1', 'hello');
+  const para = 'Hello world.';
+  const mdPara = md.paragraphText(para);
+  const testData: [string, string, mdast.Root][] = [
+    [
+      'simple with code frontmatter',
+      [h1, yaml, para].join('\n\n'),
+      md.root([mdToml, mdH1, mdPara]),
+    ],
+    [
+      'simple with toml frontmatter at front',
+      [toml, h1, para].join('\n\n'),
+      md.root([mdToml, mdH1, mdPara]),
+    ],
+    [
+      'simple with both yaml and toml frontmatter',
+      [toml, h1, yaml, para].join('\n\n'),
+      md.root([mdToml, mdH1, mdPara]),
+    ],
+    [
+      'simple with no frontmatter',
+      [h1, para].join('\n\n'),
+      md.root([mdH1, mdPara]),
+    ],
+    [
+      'paragraph followed by list',
+      [para, '1. list item'].join('\n'),
+      md.root([mdPara, md.orderedList([md.paragraphText('list item')])]),
+    ],
+  ];
+  describe('parseMarkdown', () => {
+    for (const [name, markdown, expected] of testData) {
+      it(name, () => {
+        const p = PostParser.create().parseMarkdown(markdown);
+        expect(stripPos(p.mdastNode)).toEqual(expected);
+      });
+    }
+  });
 
-test('parses paragraph followed immediately by a list', () => {
-  const markdown = withDefaultFrontMatter(dedent`
-    Hello world.
-    1. md.text
-  `);
-  const node = PostParser.create().parseMarkdown(markdown);
-
-  const expected = md.root([
-    md.paragraphText('Hello world.'),
-    md.orderedList([md.paragraphText('md.text')]),
-  ]);
-  expect(md.stripPositions(node).node).toEqual(expected);
-});
-
-test('parses from TextPack', async () => {
-  const markdown = withDefaultFrontMatter(dedent`
-    # hello
-    
-    Hello world.
-  `);
-  const buf = await Zipper.zip([
-    ZipFileEntry.ofUtf8(TEXT_PACK_BUNDLE_PREFIX + '/text.md', markdown),
-  ]);
-  const node = await PostParser.create().parseTextPack(buf);
-
-  const expected = md.root([
-    md.heading('h1', [md.text('hello')]),
-    md.paragraphText('Hello world.'),
-  ]);
-  expect(md.stripPositions(node)).toEqual(
-    new PostNode(DEFAULT_FRONTMATTER, expected)
-  );
-});
-
-test('parses from frontmatter markdown', async () => {
-  const slug = 'foo_qux';
-  const date = '2019-10-17';
-  const markdown = dedent`
-    +++
-    slug = "${slug}"
-    date = ${date}
-    +++
-    
-    # Hello
-  `;
-
-  const node = PostParser.create().parseMarkdown(markdown);
-
-  const expected = md.root([
-    md.tomlFrontmatter({ slug, date: dates.fromISO(date) }),
-    md.headingText('h1', 'Hello'),
-  ]);
-  expect(md.stripPositions(node)).toEqual(
-    new PostNode(
-      PostMetadata.parse({ slug, date: dates.fromISO(date) }),
-      expected
-    )
-  );
+  describe('parseTextPack', () => {
+    for (const [name, markdown, expected] of testData) {
+      it(name, async () => {
+        const buf = await Zipper.zip([
+          ZipFileEntry.ofUtf8(TEXT_PACK_BUNDLE_PREFIX + '/text.md', markdown),
+        ]);
+        const p = await PostParser.create().parseTextPack(buf);
+        expect(stripPos(p.mdastNode)).toEqual(expected);
+      });
+    }
+  });
 });

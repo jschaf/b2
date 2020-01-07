@@ -1,10 +1,8 @@
 import * as files from '//files';
 import { PostCompiler } from '//post/compiler';
-import { PostAST } from '//post/ast';
 import { PostParser } from '//post/parser';
-import * as path from 'path';
 import * as fs from 'fs';
-import { PostBag } from '//post/post_bag';
+import * as path from 'path';
 
 const buildBlog = async (): Promise<void> => {
   const gitDir = files.findGitDirectory(__dirname);
@@ -28,16 +26,16 @@ const buildBlog = async (): Promise<void> => {
         const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
         const md = buf.toString('utf8');
         const ast = postParser.parseMarkdown(md);
-        const postBag = PostBag.fromMarkdown(md);
-        const postAST = PostAST.fromMdast(postBag.postNode.node);
-        const mp = postCompiler.compileToMempost(postAST);
-        const slug = (postBag.postNode.metadata.schema[
-          'slug'
-        ] as unknown) as string;
-        const outDir = path.join(rootDir, 'public', slug, 'index.html');
+        const mp = postCompiler.compile(ast);
+        const outDir = path.join(
+          rootDir,
+          'public',
+          ast.metadata.slug,
+          'index.html'
+        );
         console.log('!!! outDir', outDir);
         await fs.promises.mkdir(path.dirname(outDir), { recursive: true });
-        await fs.promises.writeFile(outDir, mp.getEntry('index.html'));
+        await fs.promises.writeFile(outDir, mp.mempost.getEntry('index.html'));
       }
     )
   );

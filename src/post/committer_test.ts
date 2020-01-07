@@ -1,25 +1,35 @@
-import { PostBag } from '//post/post_bag';
+import { PostAST } from '//post/ast';
+import * as md from '//post/mdast/nodes';
 import { PostCommitter } from '//post/committer';
-import { withDefaultFrontMatter } from '//post/testing/front_matters';
+import * as frontMatters from '//post/testing/front_matters';
 import { dedent } from '//strings';
 import * as memfs from 'memfs';
 import * as path from 'path';
 
 describe('PostCommitter', () => {
   it('should commit a standalone post', async () => {
-    const bag = PostBag.fromMarkdown(
-      withDefaultFrontMatter(dedent`
-      # Hello
-    `)
+    const ast = PostAST.fromMdast(
+      md.root([
+        frontMatters.defaultTomlMdast(),
+        md.headingText('h1', 'alpha'),
+        md.paragraphText('Foo bar.'),
+      ])
     );
+
     const vol = new memfs.Volume();
     const fileSystem = memfs.createFsFromVolume(vol);
     const gitDir = '/root';
 
-    await PostCommitter.forFs(fileSystem, gitDir).commit(bag);
+    await PostCommitter.forFs(fileSystem, gitDir).commit(ast);
 
     expect(removeGit(gitDir, vol.toJSON())).toEqual({
-      '/root/posts/foo_bar.md': '# Hello\n',
+      '/root/posts/foo_bar.md': trailingNewline(dedent`
+          ${frontMatters.defaultTomlBlock()}
+
+          # alpha
+
+          Foo bar.
+      `),
     });
   });
 });
@@ -36,4 +46,8 @@ const removeGit = (
     }
   }
   return nonGitFiles;
+};
+
+const trailingNewline = (s: string): string => {
+  return s + '\n';
 };

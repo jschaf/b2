@@ -1,9 +1,7 @@
 import { checkDefined } from '//asserts';
 import { isOptionalBoolean } from '//booleans';
 import { isOptionalNumber } from '//post/numbers';
-import { PostNode } from '//post/parser';
 import { isOptionalString, isString } from '//strings';
-import { removePositionInfo } from '//unist/nodes';
 import * as tomlLib from '@iarna/toml';
 import * as mdast from 'mdast';
 import { BlockContent } from 'mdast';
@@ -260,16 +258,33 @@ export const isLinkRef = (n: unist.Node): n is mdast.LinkReference => {
   return n.type === 'linkReference' && isParent(n) && isReference(n);
 };
 
-type ListProps = { ordered?: boolean; checked?: boolean; spread?: boolean };
+type ListProps = { ordered?: boolean; start?: number; spread?: boolean };
+
+type ShortcutListContent =
+  | mdast.ListContent
+  | mdast.BlockContent
+  | mdast.BlockContent[];
 
 export const listProps = (
   props: ListProps,
-  children: mdast.ListContent[]
+  children: ShortcutListContent[]
 ): mdast.List => {
-  return { type: 'list', ...props, children };
+  const items: mdast.ListItem[] = [];
+  for (const child of children) {
+    if (Array.isArray(child)) {
+      items.push(listItem(child));
+    } else if (isListItem(child)) {
+      items.push(child);
+    } else if (isBlockContent(child)) {
+      items.push(listItem([child]));
+    } else {
+      throw new Error('unknown list item shortcut');
+    }
+  }
+  return { type: 'list', ...props, children: items };
 };
 
-export const list = (children: mdast.ListContent[]): mdast.List => {
+export const list = (children: ShortcutListContent[]): mdast.List => {
   return listProps({}, children);
 };
 
@@ -329,14 +344,8 @@ export const isListItem = (n: unist.Node): n is mdast.ListItem => {
   );
 };
 
-export const orderedList = (children: BlockContent[]): mdast.List => {
-  return {
-    type: 'list',
-    ordered: true,
-    spread: false,
-    start: 1,
-    children: children.map(c => listItem([c])),
-  };
+export const orderedList = (children: ShortcutListContent[]): mdast.List => {
+  return listProps({ ordered: true, spread: false, start: 1 }, children);
 };
 
 export const paragraph = (
@@ -551,6 +560,19 @@ export const isAssociation = (
   return isNonEmptyString(n.identifier) && isOptionalString(n.label);
 };
 
+export const isBlockContent = (n: unist.Node): n is mdast.BlockContent => {
+  return (
+    isParagraph(n) ||
+    isHeading(n) ||
+    isThematicBreak(n) ||
+    isBlockquote(n) ||
+    isList(n) ||
+    isTable(n) ||
+    isHTML(n) ||
+    isCode(n)
+  );
+};
+
 export const isPhrasingContent = (
   n: unist.Node
 ): n is mdast.PhrasingContent => {
@@ -603,11 +625,6 @@ export function checkType<T extends unist.Node>(
 
 const isNonEmptyString = (s: unknown): s is string => {
   return isString(s) && s !== '';
-};
-
-export const stripPositions = (node: PostNode): PostNode => {
-  removePositionInfo(node.node);
-  return node;
 };
 
 /**

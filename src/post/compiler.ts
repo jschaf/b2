@@ -20,13 +20,21 @@ export class PostCompiler {
     );
   }
 
-  compileToMempost(postAST: PostAST): Mempost {
+  compile(postAST: PostAST): CompiledPost {
     checkState(md.isRoot(postAST.mdastNode), 'Post AST node must be root node');
     const hastNode = this.mdastCompiler.compile(postAST);
     checkState(hastNode.length === 1, 'Expected exactly 1 hast node');
     const html = this.hastCompiler.compile(hastNode[0]);
     const dest = Mempost.create();
     dest.addUtf8Entry('index.html', html);
-    return dest;
+    return CompiledPost.create(postAST, dest);
+  }
+}
+
+export class CompiledPost {
+  private constructor(readonly ast: PostAST, readonly mempost: Mempost) {}
+
+  static create(ast: PostAST, mempost: Mempost): CompiledPost {
+    return new CompiledPost(ast, mempost);
   }
 }

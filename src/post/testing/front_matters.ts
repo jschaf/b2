@@ -17,19 +17,20 @@ const yamlText = dedent`
     date: 2019-10-08
 `;
 
-const yamlCode = dedent`
-    \`\`\`yaml
-${yamlText}
-    \`\`\`
-`;
+const yamlCode = ['```yaml', yamlText, '```'].join('\n');
 
 const tomlText = dedent`
     slug = "foo_bar"
     date = 2019-10-08
 `;
+const tomlBlock = ['+++', tomlText, '+++'].join('\n');
 
 export const defaultYamlText = () => yamlText;
+export const defaultYamlCodeBlock = () => yamlCode;
+
 export const defaultTomlText = () => tomlText;
+export const defaultTomlBlock = () => tomlBlock;
+export const defaultTomlMdast = () => md.tomlText(tomlText);
 
 export const newCodeMetadata = (value: string): mdast.Code => {
   return md.codeWithLang('yaml', value);

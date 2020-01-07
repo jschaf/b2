@@ -1,27 +1,26 @@
 import { PostCompiler } from '//post/compiler';
 import { PostAST } from '//post/ast';
-import { PostBag } from '//post/post_bag';
-import { withDefaultFrontMatter } from '//post/testing/front_matters';
-import { dedent } from '//strings';
+import * as frontMatters from '//post/testing/front_matters';
+import * as md from '//post/mdast/nodes';
 
 describe('PostCompiler', () => {
   it('should compile a simple post', async () => {
-    const md = withDefaultFrontMatter(dedent`
-      # hello
-      
-      Hello world.
-    `);
-    const bag = PostBag.fromMarkdown(md);
-    const ast = PostAST.fromMdast(bag.postNode.node);
+    const ast = PostAST.fromMdast(
+      md.root([
+        frontMatters.defaultTomlMdast(),
+        md.headingText('h1', 'alpha'),
+        md.paragraphText('Foo bar.'),
+      ])
+    );
 
-    const actual = PostCompiler.create().compileToMempost(ast);
+    const actual = PostCompiler.create().compile(ast);
 
-    expect(actual).toEqualMempost({
+    expect(actual.mempost).toEqualMempost({
       'index.html': `
         <html>
         <head></head>
-        <h1>hello</h1>
-        <p>Hello world.</p>
+        <h1>alpha</h1>
+        <p>Foo bar.</p>
         </html>
       `,
     });
