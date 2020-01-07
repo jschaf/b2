@@ -6,7 +6,7 @@ import * as mdast from 'mdast';
 import * as unist from 'unist';
 
 /**
- * A wrapper around an mdast root node to hold state needed to compileNode the mdast
+ * A wrapper around an mdast root node to hold state needed to compile the mdast
  * tree to hast.
  */
 export class PostAST {
@@ -119,7 +119,7 @@ const addAllDefs = (p: PostAST): void => {
  *         [^1]: A footnote definition.
  *
  * 2.  footnote: an inline footnote. We create a footnote definition implicitly
- *     and compileNode them as a footnote reference. Looks like:
+ *     and compile them as a footnote reference. Looks like:
  *
  *         Some text [^ an inline footnote].
  *
