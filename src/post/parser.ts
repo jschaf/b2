@@ -1,7 +1,5 @@
 import { PostAST } from '//post/ast';
-import remarkParse from 'remark-parse';
-import remarkFrontmatter from 'remark-frontmatter';
-import unified from 'unified';
+import { MarkdownParser } from '//post/markdown/parser';
 import { checkState } from '//asserts';
 import { Unzipper } from '//zip_files';
 
@@ -9,12 +7,10 @@ export const TEXT_PACK_BUNDLE_PREFIX = 'Content.textbundle';
 
 /** Parser for post content. */
 export class PostParser {
-  private readonly processor: unified.Processor;
+  private readonly mdParser: MarkdownParser;
 
   private constructor() {
-    this.processor = unified()
-      .use(remarkParse, { commonmark: true })
-      .use(remarkFrontmatter, ['toml']);
+    this.mdParser = MarkdownParser.create();
   }
 
   static create(): PostParser {
@@ -35,7 +31,6 @@ export class PostParser {
   }
 
   parseMarkdown(markdown: string): PostAST {
-    const node = this.processor.parse(markdown);
-    return PostAST.fromMdast(node);
+    return this.mdParser.parse(markdown);
   }
 }
