@@ -65,8 +65,6 @@ export class PostAST {
     const id = def.identifier;
     checkDefined(id, 'Footnote definition must have an identifier');
     checkState(id !== '', 'Footnote definition identifier must not be empty');
-    // The commonmark spec says labels are case-insensitive.
-    // https://spec.commonmark.org/0.29/#matches.
     const normalizedId = md.normalizeLabel(id);
     checkState(
       !normalizedId.startsWith(PostAST.inlineFootnotePrefix),
@@ -120,7 +118,7 @@ const addAllDefs = (p: PostAST): void => {
  *
  *         [^1]: A footnote definition.
  *
- * 2.  footnote: an inline footnote. We createDefault a footnote definition implicitly
+ * 2.  footnote: an inline footnote. We create a footnote definition implicitly
  *     and compileNode them as a footnote reference. Looks like:
  *
  *         Some text [^ an inline footnote].

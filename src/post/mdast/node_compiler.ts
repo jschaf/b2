@@ -3,7 +3,7 @@ import { isBoolean } from '//booleans';
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
-import { isNumber } from '//post/numbers';
+import { isNumber } from '//numbers';
 import { PostAST } from '//post/ast';
 import { isString } from '//strings';
 import * as mdast from 'mdast';

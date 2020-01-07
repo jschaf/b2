@@ -1,6 +1,6 @@
 import { checkDefined } from '//asserts';
 import { isOptionalBoolean } from '//booleans';
-import { isOptionalNumber } from '//post/numbers';
+import { isOptionalNumber } from '//numbers';
 import { isOptionalString, isString } from '//strings';
 import * as tomlLib from '@iarna/toml';
 import * as mdast from 'mdast';

@@ -112,6 +112,7 @@ interface NodeWithData extends unist.Node {
   data: unist.Data;
 }
 
+/** Adds data to the node if it doesn't already exist. */
 export const ensureDataAttr = (n: unist.Node): NodeWithData => {
   if (!n.data) {
     n.data = {};
