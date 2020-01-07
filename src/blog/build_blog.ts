@@ -26,16 +26,9 @@ const buildBlog = async (): Promise<void> => {
         const buf = await fs.promises.readFile(path.join(postsDir, mdPath));
         const md = buf.toString('utf8');
         const ast = postParser.parseMarkdown(md);
-        const mp = postCompiler.compile(ast);
-        const outDir = path.join(
-          rootDir,
-          'public',
-          ast.metadata.slug,
-          'index.html'
-        );
-        console.log('!!! outDir', outDir);
-        await fs.promises.mkdir(path.dirname(outDir), { recursive: true });
-        await fs.promises.writeFile(outDir, mp.mempost.getEntry('index.html'));
+        const cp = postCompiler.compile(ast);
+        const outDir = path.join( rootDir, 'public');
+        await cp.write(outDir);
       }
     )
   );
