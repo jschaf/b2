@@ -228,7 +228,7 @@ describe('InlineMathCompiler', () => {
 
     expect(hast).toHaveLength(1);
     expect(hast[0].type).toEqual('raw');
-    expect(hast[0].value).toMatch(/<span class="katex">/);
+    expect(hast[0].value).toMatch(/^<span class="katex">/);
   });
 });
 
@@ -372,6 +372,18 @@ describe('ListItemCompiler', () => {
       expect(hast).toEqual([h.elem('li', expected)]);
     });
   }
+});
+
+describe('MathCompiler', () => {
+  it('should compile a math node', () => {
+    const p = PostAST.fromMdast(md.math('lift'));
+
+    const hast = nc.MathCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toHaveLength(1);
+    expect(hast[0].type).toEqual('raw');
+    expect(hast[0].value).toMatch(/^<span class="katex-display">/);
+  });
 });
 
 describe('StrongCompiler', () => {

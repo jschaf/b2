@@ -310,8 +310,6 @@ export class InlineCodeCompiler implements MdastNodeCompiler {
  * Compiles an mdast inlineMath node to hast, like:
  *
  *     Equation $e=mc^2$
- *
- * https://github.com/syntax-tree/mdast#inlineMath
  */
 export class InlineMathCompiler implements MdastNodeCompiler {
   private constructor() {}
@@ -499,6 +497,30 @@ export class ListItemCompiler implements MdastNodeCompiler {
     } else {
       return ListItemCheckedState.Unchecked;
     }
+  }
+}
+
+/**
+ * Compiles an mdast math to hast, like:
+ *
+ *     $$
+ *     e=mc^2
+ *     $$
+ */
+export class MathCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): MathCompiler {
+    return new MathCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'math', md.isMath);
+    const tex = katex.renderToString(node.value, {
+      output: 'htmlAndMathml',
+      displayMode: true,
+    });
+    return [h.raw(tex)];
   }
 }
 
