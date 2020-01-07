@@ -220,6 +220,18 @@ describe('InlineCodeCompiler', () => {
   });
 });
 
+describe('InlineMathCompiler', () => {
+  it('should compile a inline math node', () => {
+    const p = PostAST.fromMdast(md.inlineMath('lift'));
+
+    const hast = nc.InlineMathCompiler.create().compileNode(p.mdastNode, p);
+
+    expect(hast).toHaveLength(1);
+    expect(hast[0].type).toEqual('raw');
+    expect(hast[0].value).toMatch(/<span class="katex">/);
+  });
+});
+
 describe('LinkCompiler', () => {
   it('should compile a link without a title', () => {
     let url = 'www.example.com';

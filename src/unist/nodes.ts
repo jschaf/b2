@@ -110,6 +110,19 @@ export const isNode = (n: unknown): n is unist.Node => {
   return isObject(n) && isString(n.type) && n.type !== '';
 };
 
+/** Type guard that returns true if ns is a node array. */
+export const isNodeArray = (ns: unknown): ns is unist.Node[] => {
+  if (!Array.isArray(ns)) {
+    return false;
+  }
+  for (const n of ns) {
+    if (!isNode(n)) {
+      return false;
+    }
+  }
+  return true;
+};
+
 export type Text = { type: 'text'; value: string };
 
 export const text = (value: string): Text => ({ type: 'text', value });

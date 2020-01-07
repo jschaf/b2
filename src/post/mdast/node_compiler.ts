@@ -9,6 +9,7 @@ import { isString } from '//strings';
 import * as mdast from 'mdast';
 import * as hast from 'hast-format';
 import * as unist from 'unist';
+import * as katex from 'katex';
 
 /** Compiler for a single mdast node. */
 export interface MdastNodeCompiler {
@@ -302,6 +303,30 @@ export class InlineCodeCompiler implements MdastNodeCompiler {
   compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
     md.checkType(node, 'inline code', md.isInlineCode);
     return [h.elemText('code', node.value)];
+  }
+}
+
+/**
+ * Compiles an mdast inlineMath node to hast, like:
+ *
+ *     Equation $e=mc^2$
+ *
+ * https://github.com/syntax-tree/mdast#inlineMath
+ */
+export class InlineMathCompiler implements MdastNodeCompiler {
+  private constructor() {}
+
+  static create(): InlineMathCompiler {
+    return new InlineMathCompiler();
+  }
+
+  compileNode(node: unist.Node, _postAST: PostAST): unist.Node[] {
+    md.checkType(node, 'inlineMath', md.isInlineMath);
+    const tex = katex.renderToString(node.value, {
+      output: 'htmlAndMathml',
+      displayMode: false,
+    });
+    return [h.raw(tex)];
   }
 }
 

@@ -48,7 +48,8 @@
     "vfile": "^4.0.1",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1",
-    "hast-util-to-html": "^6.1.0"
+    "hast-util-to-html": "^6.1.0",
+    "katex": "latest"
   },
   "devDependencies": {
     "@starptech/prettyhtml-hast-to-html": "^0.10.0",
@@ -57,6 +58,7 @@
     "@types/hast-format": "^2.3.0",
     "@types/jest": "^24.0.20",
     "@types/js-yaml": "^3.12.1",
+    "@types/katex": "^0.11.0",
     "@types/koa": "^2.0.50",
     "@types/koa-logger": "^3.1.1",
     "@types/koa-router": "^7.0.42",
