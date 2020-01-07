@@ -27,7 +27,7 @@ const buildBlog = async (): Promise<void> => {
         const md = buf.toString('utf8');
         const ast = postParser.parseMarkdown(md);
         const cp = postCompiler.compile(ast);
-        const outDir = path.join( rootDir, 'public');
+        const outDir = path.join(rootDir, 'public');
         await cp.write(outDir);
       }
     )

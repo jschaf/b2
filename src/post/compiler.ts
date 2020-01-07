@@ -5,8 +5,8 @@ import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { Mempost } from '//post/mempost';
 import { PostAST } from '//post/ast';
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from 'fs';
+import * as path from 'path';
 
 /** Compiles a post AST into a mempost ready to be saved to a file system. */
 export class PostCompiler {
@@ -42,7 +42,7 @@ export class CompiledPost {
 
   async write(destDir: string): Promise<void> {
     const p = path.join(destDir, this.ast.metadata.slug, 'index.html');
-    await fs.promises.mkdir(path.dirname(p), {recursive: true});
+    await fs.promises.mkdir(path.dirname(p), { recursive: true });
     await fs.promises.writeFile(p, this.mempost.getEntry('index.html'));
   }
 }
