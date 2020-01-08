@@ -1,5 +1,7 @@
 import { isOptionalObject } from '//objects';
 import { RefType } from '//post/mdast/nodes';
+import { isString } from '//strings';
+import { Comment, DocType, Element, Text } from 'hast-format';
 import * as unist from 'unist';
 import * as hast from 'hast-format';
 import * as objects from '//objects';
@@ -92,6 +94,15 @@ export const elemProps = (
   return base;
 };
 
+export const doctype = (): hast.DocType => {
+  // Hard code HTML5 doctype.
+  return { type: 'doctype', name: 'html' };
+};
+
+export const isDoctype = (n: unist.Node): n is hast.DocType => {
+  return n.type === 'doctype' && isString(n.name);
+};
+
 export interface Raw extends unist.Literal {
   type: 'raw';
 }
@@ -99,6 +110,13 @@ export interface Raw extends unist.Literal {
 /** Creates a raw literal hast node. */
 export const raw = (value: string): Raw => {
   return { type: 'raw', value };
+};
+
+export type RootContent = Element | DocType | Comment | Text;
+
+/** Creates a raw literal hast node. */
+export const root = (children: RootContent[]): hast.Root => {
+  return { type: 'root', children };
 };
 
 /** Creates a text literal hast node. */

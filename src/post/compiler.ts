@@ -26,7 +26,7 @@ export class PostCompiler {
     checkState(md.isRoot(postAST.mdastNode), 'Post AST node must be root node');
     const hastNode = this.mdastCompiler.compile(postAST.mdastNode, postAST);
     checkState(hastNode.length === 1, 'Expected exactly 1 hast node');
-    const html = this.hastCompiler.compile(hastNode[0]);
+    const html = this.hastCompiler.compile(hastNode[0], postAST);
     const dest = Mempost.create();
     dest.addUtf8Entry('index.html', html);
     return CompiledPost.create(postAST, dest);
