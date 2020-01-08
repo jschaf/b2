@@ -7,6 +7,7 @@ declare global {
       toEqualMempost(
         value: Mempost | Record<string, string>
       ): CustomMatcherResult;
+      toEqualHTML(value: string): CustomMatcherResult;
     }
   }
 }

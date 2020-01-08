@@ -1,4 +1,4 @@
-import { Mempost } from '../post/mempost';
+import { Mempost } from '//post/mempost';
 
 describe('toEqualMempost', () => {
   it('should equal itself', () => {
@@ -27,5 +27,12 @@ describe('toEqualMempost', () => {
     expect(
       Mempost.ofUtf8Entry('foo.html', '<h1>bar</h1>  <p>foo</p>')
     ).toEqualMempost({ 'foo.html': '<h1>bar</h1><p>foo</p>' });
+  });
+});
+
+describe('toEqualHTML', () => {
+  it('should work', () => {
+    expect('<div>\nfoo</div>').toEqualHTML('<div>foo</div>');
+    expect('<div>foobar</div>').not.toEqualHTML('<div>foo</div>');
   });
 });

@@ -1,15 +1,19 @@
-import { checkState } from '//asserts';
-import { Unzipper } from '//zip_files';
+import {checkState} from '//asserts';
+import {Unzipper} from '//zip_files';
+import rehypeFormat from 'rehype-format';
+import rehypeParse from 'rehype-parse';
+import rehypeStringify from 'rehype-stringify';
+import unified from 'unified';
 
 /**
  * An append-only, in-memory representation of a post.
  */
 export class Mempost {
-  static MD_CONTENT_PATH = 'content.md';
-
   private readonly entriesByPath = new Map<string, Buffer>();
+  private readonly utf8EntriesByPath = new Map<string, string>();
 
-  private constructor() {}
+  private constructor() {
+  }
 
   static create(): Mempost {
     return new Mempost();
@@ -31,28 +35,65 @@ export class Mempost {
   }
 
   addEntry(path: string, contents: Buffer): void {
-    checkState(
-      !this.entriesByPath.has(path),
-      `Expected no existing entry for path: '${path}'`
-    );
+    this.assertNotYetAdded(path);
     this.entriesByPath.set(path, contents);
   }
 
   addUtf8Entry(path: string, contents: string): void {
-    this.addEntry(path, Buffer.from(contents, 'utf8'));
+    this.assertNotYetAdded(path);
+    this.utf8EntriesByPath.set(path, contents);
   }
 
   getEntry(path: string): Buffer | undefined {
-    const buf = this.entriesByPath.get(path);
-    return buf === undefined ? undefined : buf;
+    return this.entriesByPath.get(path);
   }
 
   getUtf8Entry(path: string): string | undefined {
-    const buf = this.getEntry(path);
-    return buf === undefined ? undefined : buf.toString('utf8');
+    return this.utf8EntriesByPath.get(path);
   }
 
-  entries(): IterableIterator<[string, Buffer]> {
-    return this.entriesByPath[Symbol.iterator]();
+  *entries(): IterableIterator<[string, string | Buffer]> {
+    for (const entry of this.entriesByPath) {
+      yield entry;
+    }
+    for (const entry of this.utf8EntriesByPath) {
+      yield entry;
+    }
+  }
+
+  private assertNotYetAdded(path: string) {
+    checkState(
+        !this.entriesByPath.has(path) && !this.utf8EntriesByPath.has(path),
+        `Expected no existing entry for path: '${path}'`
+    );
   }
 }
+
+/**
+ * Converts a Buffer to a UTF-8 string if possible. Otherwise, return the buffer.
+ *
+ * Intended purposed is to produce cleaner error messages.
+ */
+export const normalizeMempostEntry = (
+    path: string,
+    buf: string | Buffer
+): string => {
+  try {
+    if (path.endsWith('.html')) {
+      return normalizeHTML(buf);
+    }
+    return buf.toString('utf8');
+  } catch (e) {
+    return buf.toString('utf8');
+  }
+};
+
+const htmlProcessor = unified()
+    .use(rehypeParse)
+    .use(rehypeFormat)
+    .use(rehypeStringify);
+
+export const normalizeHTML = (contents: string | Buffer): string => {
+  const vFile = htmlProcessor.processSync(contents);
+  return vFile.contents.toString('utf8');
+};

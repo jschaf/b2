@@ -1,12 +1,12 @@
-import { Doc } from '//post/hast/doc';
+import { DocTemplate } from '//post/hast/doc_template';
 import * as h from '//post/hast/nodes';
 import * as hast from 'hast-format';
 
 describe('Doc', () => {
-  const testData: [string, Doc, h.RootContent[], hast.Root][] = [
+  const testData: [string, DocTemplate, h.RootContent[], hast.Root][] = [
     [
       'empty',
-      Doc.create(),
+      DocTemplate.create(),
       [],
       h.root([
         h.doctype(),
@@ -18,7 +18,7 @@ describe('Doc', () => {
     ],
     [
       'with children',
-      Doc.create(),
+      DocTemplate.create(),
       [h.elemText('p', 'alpha')],
       h.root([
         h.doctype(),
@@ -30,7 +30,7 @@ describe('Doc', () => {
     ],
     [
       'with title',
-      Doc.create().addToHead(h.elemText('title', 'alpha')),
+      DocTemplate.create().addToHead(h.elemText('title', 'alpha')),
       [],
       h.root([
         h.doctype(),
@@ -44,7 +44,7 @@ describe('Doc', () => {
 
   for (const [name, doc, children, expected] of testData) {
     it(name, () => {
-      const d = doc.toHast(children);
+      const d = doc.render(children);
       expect(d).toEqual(expected);
     });
   }

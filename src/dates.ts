@@ -3,7 +3,7 @@
  *
  * See https://stackoverflow.com/questions/643782
  */
-export const isValidDate = (date: unknown): boolean => {
+export const isValidDate = (date: unknown): date is Date => {
   return (
     !!date &&
     Object.prototype.toString.call(date) === '[object Date]' &&

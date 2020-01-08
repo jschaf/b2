@@ -136,3 +136,7 @@ export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
     Array.isArray(n.children)
   );
 };
+
+export const isRoot = (n: unist.Node): n is hast.Root => {
+  return n.type === 'root' && Array.isArray(n.children);
+};

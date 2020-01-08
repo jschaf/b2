@@ -15,14 +15,6 @@ describe('PostCompiler', () => {
 
     const actual = PostCompiler.create().compile(ast);
 
-    expect(actual.mempost).toEqualMempost({
-      'index.html': `
-        <html>
-        <head></head>
-        <h1>alpha</h1>
-        <p>Foo bar.</p>
-        </html>
-      `,
-    });
+    expect(actual.mempost).toMatchSnapshot();
   });
 });

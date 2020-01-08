@@ -7,39 +7,8 @@
  * Update global_jest_matchers.d.ts for Typescript type-checking.
  */
 
-import * as util from 'util';
-import { Mempost } from '//post/mempost';
-import unified from 'unified';
-import rehypeParse from 'rehype-parse';
-import rehypeFormat from 'rehype-format';
-import rehypeStringify from 'rehype-stringify';
-
-/**
- * Converts a Buffer to a UTF-8 string if possible. Otherwise, return the buffer.
- *
- * Intended purposed is to produce cleaner error messages.
- */
-const normalizeMempostBuffer = (path: string, buf: Buffer): string | Buffer => {
-  const td = new util.TextDecoder('utf8', { fatal: true });
-  try {
-    const str = td.decode(buf);
-    return normalizeMempostString(path, str);
-  } catch (e) {
-    return buf;
-  }
-};
-
-const normalizeMempostString = (path: string, contents: string): string => {
-  if (path.endsWith('.html')) {
-    const vFile = unified()
-      .use(rehypeParse)
-      .use(rehypeFormat)
-      .use(rehypeStringify)
-      .processSync(contents);
-    return vFile.contents.toString('utf8');
-  }
-  return contents;
-};
+import { isString } from '//strings';
+import { Mempost, normalizeHTML, normalizeMempostEntry } from '//post/mempost';
 
 function toEqualMempost(
   this: jest.MatcherContext,
@@ -55,15 +24,15 @@ function toEqualMempost(
   const receivedObj: Record<string, string | Buffer> = {};
   const expectedObj: Record<string, string | Buffer> = {};
   for (const [path, buf] of received.entries()) {
-    receivedObj[path] = normalizeMempostBuffer(path, buf);
+    receivedObj[path] = normalizeMempostEntry(path, buf);
   }
   if (expected instanceof Mempost) {
     for (const [path, buf] of expected.entries()) {
-      expectedObj[path] = normalizeMempostBuffer(path, buf);
+      expectedObj[path] = normalizeMempostEntry(path, buf);
     }
   } else {
     for (const [path, contents] of Object.entries(expected)) {
-      expectedObj[path] = normalizeMempostString(path, contents);
+      expectedObj[path] = normalizeMempostEntry(path, contents);
     }
   }
 
@@ -78,4 +47,31 @@ function toEqualMempost(
   };
 }
 
-export const ALL_JEST_MATCHERS: jest.ExpectExtendMap = { toEqualMempost };
+function toEqualHTML(
+  this: jest.MatcherContext,
+  received: unknown,
+  expected: string
+): jest.CustomMatcherResult {
+  if (!isString(received)) {
+    return {
+      pass: false,
+      message: () => `Expected to receive string type but had ${received}`,
+    };
+  }
+  const normalRecv = normalizeHTML(received);
+  const normalExpected = normalizeHTML(expected);
+  if (this.isNot) {
+    expect(normalRecv).not.toEqual(normalExpected);
+  } else {
+    expect(normalRecv).toEqual(normalExpected);
+  }
+  return {
+    pass: !this.isNot,
+    message: () => 'Matched',
+  };
+}
+
+export const ALL_JEST_MATCHERS: jest.ExpectExtendMap = {
+  toEqualHTML,
+  toEqualMempost,
+};

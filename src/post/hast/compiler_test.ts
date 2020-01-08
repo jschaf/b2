@@ -10,6 +10,14 @@ describe('HastCompiler', () => {
 
     const html = HastCompiler.create().compile(a, ast);
 
-    expect(html).toEqual('<body><p>foo bar</p></body>');
+    expect(html).toEqualHTML(`
+      <!doctype html>
+      <html lang="en">
+      <head></head>
+      <body><body>
+      <p>foo bar</p>
+      </body></body>
+      </html>
+`);
   });
 });

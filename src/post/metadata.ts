@@ -1,32 +1,43 @@
+import { checkState } from '//asserts';
+import { isValidDate } from '//dates';
 import * as dates from '//dates';
 import * as md from '//post/mdast/nodes';
-import * as strings from '//strings';
+import { isString } from '//strings';
 import * as unistNodes from '//unist/nodes';
+import * as enums from '//enums';
 
 import * as toml from '@iarna/toml';
 import yaml from 'js-yaml';
 import * as unist from 'unist';
 
-type Schema = Record<string, { type: 'string' | 'Date'; isRequired: boolean }>;
-const METADATA_SCHEMA: Schema = {
-  slug: { type: 'string', isRequired: true },
-  date: { type: 'Date', isRequired: true },
-  publishState: { type: 'string', isRequired: false },
-};
+export enum PostType {
+  Post = 'post',
+  LandingPage = 'landing_page',
+}
+
+const isPostType = enums.newTypeGuardCheck(PostType);
+
+export enum PublishState {
+  Draft = 'draft',
+  Published = 'published',
+}
+
+const isPublishState = enums.newTypeGuardCheck(PublishState);
 
 type Metadata = {
   slug: string;
   date: Date;
-  publishState?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-} & Record<string, any>;
+  publishState: PublishState;
+  postType: PostType;
+};
 
 /** The metadata for a post including title, date, draft status, and others. */
 export class PostMetadata {
   private constructor(
     public readonly slug: string,
     public readonly date: Date,
-    public readonly schema: Schema
+    public readonly postType: PostType,
+    public readonly schema: Record<string, unknown>
   ) {}
 
   static empty(): PostMetadata {
@@ -34,8 +45,8 @@ export class PostMetadata {
   }
 
   static parse(schema: Record<string, unknown>): PostMetadata {
-    checkValidSchema(schema);
-    return new PostMetadata(schema.slug, schema.date, schema);
+    const m = extractValidMetadata(schema);
+    return new PostMetadata(m.slug, m.date, m.postType, schema);
   }
 
   static isCodeMetadataNode = (
@@ -118,42 +129,27 @@ export class PostMetadata {
   }
 }
 
+const extractValidMetadata = (m: Record<string, unknown>): Metadata => {
+  const date = m.date;
+  checkState(isValidDate(date), `date must be valid but had ${date}`);
+
+  const publishState = (m.publish_state || PublishState.Draft) as PublishState;
+  checkState(isPublishState(publishState));
+
+  const postType = m.post_type || PostType.Post;
+  checkState(isPostType(postType), `post_type is not valid: ${postType}`);
+
+  const slug = m.slug || '';
+  checkState(isString(slug), `slug must be a string but had ${slug}`);
+
+  return { date, publishState, postType, slug };
+};
+
 const isValidSchema = (m: Record<string, unknown>): m is Metadata => {
   try {
-    checkValidSchema(m);
+    extractValidMetadata(m);
     return true;
   } catch (e) {
     return false;
   }
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function checkValidSchema(m: Record<string, unknown>): asserts m is Metadata {
-  for (const [key, { isRequired }] of Object.entries(METADATA_SCHEMA)) {
-    if (isRequired && !m.hasOwnProperty(key)) {
-      throw new Error(`Metadata missing required key: '${key}'.`);
-    }
-  }
-
-  for (const [key, value] of Object.entries(m)) {
-    if (!METADATA_SCHEMA.hasOwnProperty(key)) {
-      throw new Error(
-        `Extra property key '${key}' in YAML. ` +
-          `Expected only keys: ${Object.keys(METADATA_SCHEMA).join(', ')}`
-      );
-    }
-    const schemaDef = METADATA_SCHEMA[key];
-    switch (schemaDef.type) {
-      case 'Date':
-        if (!dates.isValidDate(value)) {
-          throw new Error(`Invalid date: ${value} for key: ${key}.`);
-        }
-        break;
-      case 'string':
-        if (!strings.isString(value)) {
-          throw new Error(`Expected string for key ${key} but got ${value}.`);
-        }
-        break;
-    }
-  }
-}
