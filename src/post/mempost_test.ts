@@ -1,4 +1,4 @@
-import {Mempost} from '//post/mempost';
+import { Mempost } from '//post/mempost';
 
 describe('Mempost', () => {
   const alpha = 'alpha';
@@ -39,6 +39,6 @@ describe('Mempost', () => {
       ['c', charlie],
       ['d', delta],
     ];
-    expect(results).toEqual(new Map(expected))
+    expect(results).toEqual(new Map(expected));
   });
 });

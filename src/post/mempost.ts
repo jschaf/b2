@@ -1,5 +1,5 @@
-import {checkState} from '//asserts';
-import {Unzipper} from '//zip_files';
+import { checkState } from '//asserts';
+import { Unzipper } from '//zip_files';
 import rehypeFormat from 'rehype-format';
 import rehypeParse from 'rehype-parse';
 import rehypeStringify from 'rehype-stringify';
@@ -12,8 +12,7 @@ export class Mempost {
   private readonly entriesByPath = new Map<string, Buffer>();
   private readonly utf8EntriesByPath = new Map<string, string>();
 
-  private constructor() {
-  }
+  private constructor() {}
 
   static create(): Mempost {
     return new Mempost();
@@ -63,8 +62,8 @@ export class Mempost {
 
   private assertNotYetAdded(path: string) {
     checkState(
-        !this.entriesByPath.has(path) && !this.utf8EntriesByPath.has(path),
-        `Expected no existing entry for path: '${path}'`
+      !this.entriesByPath.has(path) && !this.utf8EntriesByPath.has(path),
+      `Expected no existing entry for path: '${path}'`
     );
   }
 }
@@ -75,8 +74,8 @@ export class Mempost {
  * Intended purposed is to produce cleaner error messages.
  */
 export const normalizeMempostEntry = (
-    path: string,
-    buf: string | Buffer
+  path: string,
+  buf: string | Buffer
 ): string => {
   try {
     if (path.endsWith('.html')) {
@@ -89,9 +88,9 @@ export const normalizeMempostEntry = (
 };
 
 const htmlProcessor = unified()
-    .use(rehypeParse)
-    .use(rehypeFormat)
-    .use(rehypeStringify);
+  .use(rehypeParse)
+  .use(rehypeFormat)
+  .use(rehypeStringify);
 
 export const normalizeHTML = (contents: string | Buffer): string => {
   const vFile = htmlProcessor.processSync(contents);
