@@ -34,7 +34,7 @@ export class PostCommitter {
     await isoGit.init({ dir: this.dir, noOverwrite: true });
 
     const mempost = await PostSrcRenderer.create().render(ast);
-    for (const [relPath, contents] of mempost.entries()) {
+    for (const [relPath, contents] of Object.entries(mempost.toRecord())) {
       const fullPath = path.resolve(this.dir, relPath);
       await this.fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
       await this.fs.promises.writeFile(fullPath, contents);

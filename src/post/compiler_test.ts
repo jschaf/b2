@@ -15,6 +15,6 @@ describe('PostCompiler', () => {
 
     const actual = PostCompiler.create().compile(ast);
 
-    expect(actual.mempost).toMatchSnapshot();
+    expect(actual.mempost.toRecord()).toMatchSnapshot();
   });
 });

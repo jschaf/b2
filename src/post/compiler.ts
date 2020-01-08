@@ -1,10 +1,10 @@
 /** Compiles a post into HTML on top of a mempost. */
 import { checkState } from '//asserts';
+import { PostAST } from '//post/ast';
 import { HastCompiler } from '//post/hast/compiler';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { Mempost } from '//post/mempost';
-import { PostAST } from '//post/ast';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -28,7 +28,7 @@ export class PostCompiler {
     checkState(hastNode.length === 1, 'Expected exactly 1 hast node');
     const html = this.hastCompiler.compile(hastNode[0], postAST);
     const dest = Mempost.create();
-    dest.addUtf8Entry('index.html', html);
+    dest.addEntry('index.html', html);
     return CompiledPost.create(postAST, dest);
   }
 }

@@ -14,22 +14,22 @@ describe('Mempost', () => {
 
   it('should get entries', () => {
     const mp = Mempost.create();
-    mp.addUtf8Entry('a', alpha);
+    mp.addEntry('a', alpha);
     mp.addEntry('c', charlie);
 
-    expect(mp.getUtf8Entry('a')).toEqual(alpha);
+    expect(mp.getEntry('a')).toEqual(alpha);
     expect(mp.getEntry('c')).toEqual(charlie);
   });
 
   it('should list all entries', () => {
     const mp = Mempost.create();
-    mp.addUtf8Entry('a', alpha);
-    mp.addUtf8Entry('b', bravo);
+    mp.addEntry('a', alpha);
+    mp.addEntry('b', bravo);
     mp.addEntry('c', charlie);
     mp.addEntry('d', delta);
     const results = new Map<string, string | Buffer>();
 
-    for (const [path, content] of mp.entries()) {
+    for (const [path, content] of Object.entries(mp.toRecord())) {
       results.set(path, content);
     }
 

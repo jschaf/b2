@@ -23,11 +23,11 @@ function toEqualMempost(
   }
   const receivedObj: Record<string, string | Buffer> = {};
   const expectedObj: Record<string, string | Buffer> = {};
-  for (const [path, buf] of received.entries()) {
+  for (const [path, buf] of Object.entries(received.toRecord())) {
     receivedObj[path] = normalizeMempostEntry(path, buf);
   }
   if (expected instanceof Mempost) {
-    for (const [path, buf] of expected.entries()) {
+    for (const [path, buf] of Object.entries(expected.toRecord())) {
       expectedObj[path] = normalizeMempostEntry(path, buf);
     }
   } else {

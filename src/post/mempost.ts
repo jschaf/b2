@@ -9,8 +9,7 @@ import unified from 'unified';
  * An append-only, in-memory representation of a post.
  */
 export class Mempost {
-  private readonly entriesByPath = new Map<string, Buffer>();
-  private readonly utf8EntriesByPath = new Map<string, string>();
+  private readonly entriesByPath = new Map<string, string | Buffer>();
 
   private constructor() {}
 
@@ -20,7 +19,7 @@ export class Mempost {
 
   static ofUtf8Entry(path: string, contents: string): Mempost {
     const m = Mempost.create();
-    m.addUtf8Entry(path, contents);
+    m.addEntry(path, contents);
     return m;
   }
 
@@ -33,38 +32,24 @@ export class Mempost {
     return mp;
   }
 
-  addEntry(path: string, contents: Buffer): void {
-    this.assertNotYetAdded(path);
+  addEntry(path: string, contents: string | Buffer): void {
+    checkState(
+      !this.entriesByPath.has(path),
+      `Expected no existing entry for path: '${path}'`
+    );
     this.entriesByPath.set(path, contents);
   }
 
-  addUtf8Entry(path: string, contents: string): void {
-    this.assertNotYetAdded(path);
-    this.utf8EntriesByPath.set(path, contents);
-  }
-
-  getEntry(path: string): Buffer | undefined {
+  getEntry(path: string): string | Buffer | undefined {
     return this.entriesByPath.get(path);
   }
 
-  getUtf8Entry(path: string): string | undefined {
-    return this.utf8EntriesByPath.get(path);
-  }
-
-  *entries(): IterableIterator<[string, string | Buffer]> {
-    for (const entry of this.entriesByPath) {
-      yield entry;
+  toRecord(): Record<string, string | Buffer> {
+    const results: Record<string, string | Buffer> = {};
+    for (const [path, content] of this.entriesByPath) {
+      results[path] = content;
     }
-    for (const entry of this.utf8EntriesByPath) {
-      yield entry;
-    }
-  }
-
-  private assertNotYetAdded(path: string) {
-    checkState(
-      !this.entriesByPath.has(path) && !this.utf8EntriesByPath.has(path),
-      `Expected no existing entry for path: '${path}'`
-    );
+    return results;
   }
 }
 
