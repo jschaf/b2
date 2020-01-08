@@ -63,7 +63,7 @@ export const elem = (
   tagName: string,
   children: unist.Node[] = []
 ): hast.Element => {
-  // We use the dispatcher to figure out what to compileNode so we don't know the
+  // We use the dispatcher to figure out what to compile so we don't know the
   // types ahead of time.
   return elemProps(tagName, {}, children);
 };

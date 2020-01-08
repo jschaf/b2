@@ -143,18 +143,6 @@ export const ensureDataAttr = (n: unist.Node): NodeWithData => {
   return n as NodeWithData;
 };
 
-export const IGNORED_TYPE = '<IGNORED>';
-
-interface IgnoredNode extends unist.Node {
-  type: typeof IGNORED_TYPE;
-}
-
-/** A node that should be ignored. */
-// TODO: replace with empty array
-export const ignored = (): IgnoredNode => {
-  return { type: IGNORED_TYPE };
-};
-
 export const mergeAdjacentText = (src: unist.Node[]): unist.Node[] => {
   if (src.length === 0) {
     return src;

@@ -152,7 +152,7 @@ export class FootnoteCompiler implements MdastNodeCompiler {
       `Expected data.${key} to be a string but was ${fnId}`
     );
     const fnRef = md.footnoteRef(fnId);
-    return this.compiler.compileNode(fnRef, postAST);
+    return this.compiler.compile(fnRef, postAST);
   }
 }
 
@@ -282,7 +282,7 @@ export class ImageReferenceCompiler implements MdastNodeCompiler {
     }
     const src = h.normalizeUri(def.url);
     const img = md.imageProps(src, { title: def.title, alt: node.alt });
-    return this.compiler.compileNode(img, postAST);
+    return this.compiler.compile(img, postAST);
   }
 }
 
@@ -381,7 +381,7 @@ export class LinkReferenceCompiler implements MdastNodeCompiler {
       props.title = def.title;
     }
     const link = md.linkProps(def.url, props, node.children);
-    return this.compiler.compileNode(link, postAST);
+    return this.compiler.compile(link, postAST);
   }
 }
 

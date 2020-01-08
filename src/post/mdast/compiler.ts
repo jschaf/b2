@@ -1,8 +1,7 @@
-import { checkArg, checkDefined } from '//asserts';
+import { checkDefined } from '//asserts';
 import { PostAST } from '//post/ast';
 import * as nc from '//post/mdast/node_compiler';
 import * as unist from 'unist';
-import * as unistNodes from '//unist/nodes';
 
 export type NewNodeCompiler = (parent: MdastCompiler) => nc.MdastNodeCompiler;
 export type NodeCompilerEntries = [string, NewNodeCompiler][];
@@ -34,9 +33,9 @@ export const newDefaultCompilers: () => NodeCompilerEntries = () => [
   ['root', nc.RootCompiler.create],
 
   // Noops
-  // definition is handled by postAST.
+  // Definition is handled by postAST.
   ['definition', nc.NoopCompiler.create],
-  // footnote definition is handled by postAST.
+  // Footnote definition is handled by postAST.
   ['footnoteDefinition', nc.NoopCompiler.create],
   ['toml', nc.NoopCompiler.create],
   ['yaml', nc.NoopCompiler.create],
@@ -58,16 +57,10 @@ export class MdastCompiler {
     return new MdastCompiler(new Map<string, NewNodeCompiler>(m));
   }
 
-  /** Compiles the entire post AST into an array of hast nodes. */
-  compile(postAST: PostAST): unist.Node[] {
-    checkArg(postAST.mdastNode.type !== unistNodes.IGNORED_TYPE);
-    return this.compileNode(postAST.mdastNode, postAST);
-  }
-
   /**
    * Compiles a single mdast node from a post AST into an array of hast nodes.
    */
-  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
+  compile(node: unist.Node, postAST: PostAST): unist.Node[] {
     const c = this.getNodeCompiler(node.type);
     return c.compileNode(node, postAST);
   }
@@ -76,7 +69,7 @@ export class MdastCompiler {
   compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
     const results: unist.Node[] = [];
     for (const child of parent.children) {
-      const rs = this.compileNode(child, postAST);
+      const rs = this.compile(child, postAST);
       for (const r of rs) {
         results.push(r);
       }
