@@ -2,6 +2,7 @@ import { PostAST } from '//post/ast';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
 import * as h from '//post/hast/nodes';
+import * as un from '//unist/nodes';
 
 /** Compiler for a single mdast node. */
 export interface HastNodeWriter {
@@ -25,5 +26,23 @@ export class DoctypeWriter implements HastNodeWriter {
   writeNode(node: unist.Node, _postAST: PostAST): void {
     h.checkType(node, 'doctype', h.isDoctype);
     this.sb.writeString('<!doctype html>\n');
+  }
+}
+
+/**
+ * Compiles an hast text node to an HTML string.
+ *
+ * https://github.com/syntax-tree/hast#text
+ */
+export class TextWriter implements HastNodeWriter {
+  private constructor(private readonly sb: StringBuilder) {}
+
+  static create(sb: StringBuilder): TextWriter {
+    return new TextWriter(sb);
+  }
+
+  writeNode(node: unist.Node, _postAST: PostAST): void {
+    h.checkType(node, 'text', un.isText);
+    this.sb.writeString(node.value);
   }
 }

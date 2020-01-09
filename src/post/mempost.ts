@@ -2,7 +2,7 @@ import { checkState } from '//asserts';
 import { Unzipper } from '//zip_files';
 import rehypeFormat from 'rehype-format';
 import rehypeParse from 'rehype-parse';
-//import rehypeStringify from 'rehype-stringify';
+import rehypeStringify from 'rehype-stringify';
 import unified from 'unified';
 
 /**
@@ -74,7 +74,8 @@ export const normalizeMempostEntry = (
 
 const htmlProcessor = unified()
   .use(rehypeParse)
-  .use(rehypeFormat);
+  .use(rehypeFormat)
+  .use(rehypeStringify);
 
 export const normalizeHTML = (contents: string | Buffer): string => {
   const vFile = htmlProcessor.processSync(contents);
