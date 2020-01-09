@@ -60,6 +60,23 @@ export const danglingLinkRef = (
   }
 };
 
+export const comment = (value: string): hast.Comment => {
+  return { type: 'comment', value };
+};
+
+export const isComment = (n: unist.Node): n is hast.Comment => {
+  return n.type === 'comment' && isString(n.value);
+};
+
+export const doctype = (): hast.DocType => {
+  // Hard code HTML5 doctype.
+  return { type: 'doctype', name: 'html' };
+};
+
+export const isDoctype = (n: unist.Node): n is hast.DocType => {
+  return n.type === 'doctype' && isString(n.name);
+};
+
 /** Creates a hast element using tagName and children. */
 export const elem = (
   tagName: string,
@@ -94,13 +111,13 @@ export const elemProps = (
   return base;
 };
 
-export const doctype = (): hast.DocType => {
-  // Hard code HTML5 doctype.
-  return { type: 'doctype', name: 'html' };
-};
-
-export const isDoctype = (n: unist.Node): n is hast.DocType => {
-  return n.type === 'doctype' && isString(n.name);
+export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
+  return (
+    n.type === 'element' &&
+    n.tagName === tagName &&
+    isOptionalObject(n.properties) &&
+    Array.isArray(n.children)
+  );
 };
 
 export interface Raw extends unist.Literal {
@@ -128,6 +145,10 @@ export const root = (children: RootContent[]): hast.Root => {
   return { type: 'root', children };
 };
 
+export const isRoot = (n: unist.Node): n is hast.Root => {
+  return n.type === 'root' && Array.isArray(n.children);
+};
+
 /** Creates a text literal hast node. */
 export const text = (value: string): hast.Text => {
   return { type: 'text', value };
@@ -135,19 +156,6 @@ export const text = (value: string): hast.Text => {
 
 export const normalizeUri = (uri: string): string => {
   return encodeURI(uri.trim());
-};
-
-export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
-  return (
-    n.type === 'element' &&
-    n.tagName === tagName &&
-    isOptionalObject(n.properties) &&
-    Array.isArray(n.children)
-  );
-};
-
-export const isRoot = (n: unist.Node): n is hast.Root => {
-  return n.type === 'root' && Array.isArray(n.children);
 };
 
 export function checkType<T extends unist.Node>(

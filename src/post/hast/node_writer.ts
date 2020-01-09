@@ -30,6 +30,24 @@ export class DoctypeWriter implements HastNodeWriter {
   }
 }
 
+/**
+ * Compiles an hast comment node to an HTML string.
+ *
+ * https://github.com/syntax-tree/hast#comment
+ */
+export class CommentWriter implements HastNodeWriter {
+  private constructor() {}
+
+  static create(): CommentWriter {
+    return new CommentWriter();
+  }
+
+  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+    h.checkType(node, 'comment', h.isComment);
+    sb.writeString(`<!-- ${node.value} -->`);
+  }
+}
+
 /** Compiles an hast raw node to an HTML string. */
 export class RawWriter implements HastNodeWriter {
   private constructor() {}

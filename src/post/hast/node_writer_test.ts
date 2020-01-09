@@ -8,6 +8,17 @@ import { StringBuilder } from '//strings';
 
 const emptyPostAST = PostAST.fromMdast(md.root([]));
 
+describe('CommentWriter', () => {
+  it('should write a comment node', () => {
+    const sb = StringBuilder.create();
+    const w = nw.CommentWriter.create();
+
+    w.writeNode(h.comment('foo'), emptyPostAST, sb);
+
+    expect(sb.toString()).toEqual('<!-- foo -->');
+  });
+});
+
 describe('DoctypeWriter', () => {
   it('should write a doctype', () => {
     const sb = StringBuilder.create();
