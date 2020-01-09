@@ -1,4 +1,5 @@
 import { PostAST } from '//post/ast';
+import { HastCompiler } from '//post/hast/compiler';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
 import * as h from '//post/hast/nodes';
@@ -6,7 +7,7 @@ import * as un from '//unist/nodes';
 
 /** Compiler for a single mdast node. */
 export interface HastNodeWriter {
-  writeNode(node: unist.Node, ast: PostAST): void;
+  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void;
 }
 
 /**
@@ -17,33 +18,49 @@ export interface HastNodeWriter {
  * https://github.com/syntax-tree/hast#doctype
  */
 export class DoctypeWriter implements HastNodeWriter {
-  private constructor(private readonly sb: StringBuilder) {}
+  private constructor() {}
 
-  static create(sb: StringBuilder): DoctypeWriter {
-    return new DoctypeWriter(sb);
+  static create(): DoctypeWriter {
+    return new DoctypeWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST): void {
+  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
     h.checkType(node, 'doctype', h.isDoctype);
-    this.sb.writeString('<!doctype html>\n');
+    sb.writeString('<!doctype html>\n');
+  }
+}
+
+/** Compiles an hast raw node to an HTML string. */
+export class RawWriter implements HastNodeWriter {
+  private constructor() {}
+
+  static create(): RawWriter {
+    return new RawWriter();
+  }
+
+  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+    h.checkType(node, 'raw', h.isRaw);
+    sb.writeString(node.value + '\n');
   }
 }
 
 /**
- * Compiles an hast raw node to an HTML string.
+ * Compiles an hast root node to an HTML string.
  *
- * https://github.com/syntax-tree/hast#raw
+ * https://github.com/syntax-tree/hast#root
  */
-export class RawWriter implements HastNodeWriter {
-  private constructor(private readonly sb: StringBuilder) {}
+export class RootWriter implements HastNodeWriter {
+  private constructor(private readonly compiler: HastCompiler) {}
 
-  static create(sb: StringBuilder): RawWriter {
-    return new RawWriter(sb);
+  static create(hc: HastCompiler): RootWriter {
+    return new RootWriter(hc);
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST): void {
-    h.checkType(node, 'raw', h.isRaw);
-    this.sb.writeString(node.value + '\n');
+  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
+    h.checkType(node, 'root', h.isRoot);
+    for (const child of node.children) {
+      this.compiler.writeNode(child, ast, sb);
+    }
   }
 }
 
@@ -53,14 +70,14 @@ export class RawWriter implements HastNodeWriter {
  * https://github.com/syntax-tree/hast#text
  */
 export class TextWriter implements HastNodeWriter {
-  private constructor(private readonly sb: StringBuilder) {}
+  private constructor() {}
 
-  static create(sb: StringBuilder): TextWriter {
-    return new TextWriter(sb);
+  static create(): TextWriter {
+    return new TextWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST): void {
+  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
     h.checkType(node, 'text', un.isText);
-    this.sb.writeString(node.value);
+    sb.writeString(node.value);
   }
 }

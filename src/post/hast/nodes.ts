@@ -117,8 +117,8 @@ export const isRaw = (n: unist.Node): n is Raw => {
 };
 
 /** Creates a raw literal hast node. */
-export const raw = (value: string): Raw => {
-  return { type: 'raw', value };
+export const raw = (value: string): hast.Element => {
+  return ({ type: 'raw', value } as unknown) as hast.Element;
 };
 
 export type RootContent = Element | DocType | Comment | Text;
