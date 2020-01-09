@@ -1,7 +1,7 @@
 /** Compiles a post into HTML on top of a mempost. */
 import { checkState } from '//asserts';
 import { PostAST } from '//post/ast';
-import { HastCompiler } from '//post/hast/compiler';
+import { HastWriter } from '//post/hast/writer';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { Mempost } from '//post/mempost';
@@ -12,13 +12,13 @@ import * as path from 'path';
 export class PostCompiler {
   private constructor(
     private readonly mdastCompiler: MdastCompiler,
-    private readonly hastCompiler: HastCompiler
+    private readonly hastCompiler: HastWriter
   ) {}
 
   static create(): PostCompiler {
     return new PostCompiler(
       MdastCompiler.createDefault(),
-      HastCompiler.create()
+      HastWriter.createDefault()
     );
   }
 
@@ -26,7 +26,7 @@ export class PostCompiler {
     checkState(md.isRoot(postAST.mdastNode), 'Post AST node must be root node');
     const hastNode = this.mdastCompiler.compile(postAST.mdastNode, postAST);
     checkState(hastNode.length === 1, 'Expected exactly 1 hast node');
-    const html = this.hastCompiler.compile(hastNode[0], postAST);
+    const html = this.hastCompiler.write(hastNode[0], postAST);
     const dest = Mempost.create();
     dest.addEntry('index.html', html);
     return CompiledPost.create(postAST, dest);

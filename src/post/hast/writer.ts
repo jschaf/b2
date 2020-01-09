@@ -2,14 +2,11 @@ import { checkDefined } from '//asserts';
 import { PostAST } from '//post/ast';
 import { DocTemplate } from '//post/hast/doc_template';
 import { StringBuilder } from '//strings';
-import unified from 'unified';
 import * as unist from 'unist';
-import rehype from 'rehype';
-import rehypeFormat from 'rehype-format';
 import * as h from '//post/hast/nodes';
 import * as nw from '//post/hast/node_writer';
 
-export type NewNodeWriter = (c: HastCompiler) => nw.HastNodeWriter;
+export type NewNodeWriter = (c: HastWriter) => nw.HastNodeWriter;
 export type NodeWriterEntries = [string, NewNodeWriter][];
 
 export const newDefaultWriters: () => NodeWriterEntries = () => [
@@ -23,26 +20,23 @@ export const newDefaultWriters: () => NodeWriterEntries = () => [
 /**
  * Compiles a hast node into HTML.
  */
-export class HastCompiler {
-  private readonly processor: unified.Processor;
+export class HastWriter {
   private readonly subWriters: Map<string, nw.HastNodeWriter> = new Map();
 
   private constructor(
     private readonly subWriterFactory: Map<string, NewNodeWriter>
-  ) {
-    this.processor = rehype().use(rehypeFormat);
+  ) {}
+
+  static create(writers: NodeWriterEntries): HastWriter {
+    return new HastWriter(new Map<string, NewNodeWriter>(writers));
   }
 
-  static create(writers: NodeWriterEntries): HastCompiler {
-    return new HastCompiler(new Map<string, NewNodeWriter>(writers));
-  }
-
-  static createDefault(): HastCompiler {
-    return HastCompiler.create(newDefaultWriters());
+  static createDefault(): HastWriter {
+    return HastWriter.create(newDefaultWriters());
   }
 
   /** Compiles node into a UTF-8 string. */
-  compile(node: unist.Node, ast: PostAST): string {
+  write(node: unist.Node, ast: PostAST): string {
     const pt = ast.metadata.postType;
     const template = checkDefined(
       DocTemplate.templates().get(pt),
@@ -50,7 +44,9 @@ export class HastCompiler {
     );
     const body = h.isRoot(node) ? node.children : [node];
     const doc = template.render(body);
-    return this.processor.stringify(doc);
+    const sb = StringBuilder.create();
+    this.writeNode(doc, ast, sb);
+    return sb.toString();
   }
 
   writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {

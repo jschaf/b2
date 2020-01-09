@@ -1,14 +1,14 @@
 import { PostAST } from '//post/ast';
-import { HastCompiler } from '//post/hast/compiler';
+import { HastWriter } from '//post/hast/writer';
 import * as h from '//post/hast/nodes';
 import * as md from '//post/mdast/nodes';
 
-describe('HastCompiler', () => {
+describe('HastWriter', () => {
   it('should compile body > p', () => {
     const ast = PostAST.fromMdast(md.root([]));
     const a = h.elem('body', [h.elemText('p', 'foo bar')]);
 
-    const html = HastCompiler.create().compile(a, ast);
+    const html = HastWriter.createDefault().write(a, ast);
 
     expect(html).toMatchSnapshot();
   });

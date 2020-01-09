@@ -1,5 +1,5 @@
 import { PostAST } from '//post/ast';
-import { HastCompiler } from '//post/hast/compiler';
+import { HastWriter } from '//post/hast/writer';
 import { isLiteralElem, isParentElem } from '//post/hast/nodes';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
@@ -55,9 +55,9 @@ export class CommentWriter implements HastNodeWriter {
  * https://github.com/syntax-tree/hast#element
  */
 export class ElementWriter implements HastNodeWriter {
-  private constructor(private readonly compiler: HastCompiler) {}
+  private constructor(private readonly compiler: HastWriter) {}
 
-  static create(hc: HastCompiler): ElementWriter {
+  static create(hc: HastWriter): ElementWriter {
     return new ElementWriter(hc);
   }
 
@@ -101,9 +101,9 @@ export class RawWriter implements HastNodeWriter {
  * https://github.com/syntax-tree/hast#root
  */
 export class RootWriter implements HastNodeWriter {
-  private constructor(private readonly compiler: HastCompiler) {}
+  private constructor(private readonly compiler: HastWriter) {}
 
-  static create(hc: HastCompiler): RootWriter {
+  static create(hc: HastWriter): RootWriter {
     return new RootWriter(hc);
   }
 

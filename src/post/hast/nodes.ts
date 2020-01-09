@@ -11,10 +11,6 @@ import * as unistNodes from '//unist/nodes';
 // Shortcuts for creating HTML AST nodes (hast).
 // https://github.com/syntax-tree/hastscript
 
-export interface Literal {
-  value: string;
-}
-
 export interface Tag<T extends string = string> extends unist.Node {
   tagName: T;
 }
@@ -182,14 +178,6 @@ export const root = (children: RootContent[]): hast.Root => {
 
 export const isRoot = (n: unist.Node): n is hast.Root => {
   return n.type === 'root' && Array.isArray(n.children);
-};
-
-export const scriptElem = (value: string): Tag<'script'> & Literal => {
-  return { type: 'element', tagName: 'script', value };
-};
-
-export const isScriptElem = (n: unist.Node): n is Tag<'script'> & Literal => {
-  return n.type === 'element' && n.tagName === 'script' && isLiteral(n);
 };
 
 /** Creates a text literal hast node. */

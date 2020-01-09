@@ -1,5 +1,5 @@
 import { PostAST } from '//post/ast';
-import { HastCompiler } from '//post/hast/compiler';
+import { HastWriter } from '//post/hast/writer';
 import * as md from '//post/mdast/nodes';
 import * as h from '//post/hast/nodes';
 import * as nw from '//post/hast/node_writer';
@@ -33,7 +33,7 @@ describe('DoctypeWriter', () => {
 describe('ElementWriter', () => {
   it('should write a div > p node', () => {
     const sb = StringBuilder.create();
-    const c = HastCompiler.createDefault();
+    const c = HastWriter.createDefault();
     const w = nw.ElementWriter.create(c);
 
     w.writeNode(h.elem('div', [h.elemText('p', 'foo')]), emptyPostAST, sb);
@@ -56,7 +56,7 @@ describe('RawWriter', () => {
 describe('RootWriter', () => {
   it('should write a root node', () => {
     const sb = StringBuilder.create();
-    const c = HastCompiler.createDefault();
+    const c = HastWriter.createDefault();
     const w = nw.RootWriter.create(c);
 
     w.writeNode(h.root([h.text('foo'), h.raw('<br>')]), emptyPostAST, sb);
