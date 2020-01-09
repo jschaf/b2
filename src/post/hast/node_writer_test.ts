@@ -30,6 +30,18 @@ describe('DoctypeWriter', () => {
   });
 });
 
+describe('ElementWriter', () => {
+  it('should write a div > p node', () => {
+    const sb = StringBuilder.create();
+    const c = HastCompiler.createDefault();
+    const w = nw.ElementWriter.create(c);
+
+    w.writeNode(h.elem('div', [h.elemText('p', 'foo')]), emptyPostAST, sb);
+
+    expect(sb.toString()).toEqualHTML('<div><p>foo</p></div>');
+  });
+});
+
 describe('RawWriter', () => {
   it('should write a raw node', () => {
     const sb = StringBuilder.create();

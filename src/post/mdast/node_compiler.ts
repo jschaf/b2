@@ -480,7 +480,7 @@ export class ListItemCompiler implements MdastNodeCompiler {
   private static unwrapParagraphs(children: unist.Node[]): unist.Node[] {
     const rs = [];
     for (const c of children) {
-      if (h.isElem('p', c)) {
+      if (h.isParentTag('p', c)) {
         rs.push(...c.children);
       } else {
         rs.push(c);

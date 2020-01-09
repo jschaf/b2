@@ -11,6 +11,24 @@ import * as unistNodes from '//unist/nodes';
 // Shortcuts for creating HTML AST nodes (hast).
 // https://github.com/syntax-tree/hastscript
 
+export interface Literal {
+  value: string;
+}
+
+export interface Tag<T extends string = string> extends unist.Node {
+  tagName: T;
+}
+
+export interface ParentTag<T extends string> extends Tag<T> {
+  tagName: T;
+  children: unist.Node[];
+}
+
+export interface LiteralTag<T extends string> extends Tag<T> {
+  tagName: T;
+  value: string;
+}
+
 /**
  * Returns the markdown representation of an image reference rather than its
  * definition.
@@ -111,13 +129,30 @@ export const elemProps = (
   return base;
 };
 
-export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
-  return (
-    n.type === 'element' &&
-    n.tagName === tagName &&
-    isOptionalObject(n.properties) &&
-    Array.isArray(n.children)
-  );
+export const isElem = (n: unist.Node): n is Tag => {
+  return n.type === 'element' && isOptionalObject(n.properties);
+};
+
+export const isParentElem = (n: unist.Node): n is ParentTag<string> => {
+  return isElem(n) && Array.isArray(n.children);
+};
+
+export const isLiteralElem = (n: unist.Node): n is LiteralTag<string> => {
+  return isElem(n) && isString(n.value);
+};
+
+export const isTag = <T extends string>(
+  tagName: T,
+  n: unist.Node
+): n is Tag<T> => {
+  return isElem(n) && n.tagName === tagName;
+};
+
+export const isParentTag = <T extends string>(
+  tagName: T,
+  n: unist.Node
+): n is ParentTag<T> => {
+  return isTag(tagName, n) && Array.isArray(n.children);
 };
 
 export interface Raw extends unist.Literal {
@@ -147,6 +182,14 @@ export const root = (children: RootContent[]): hast.Root => {
 
 export const isRoot = (n: unist.Node): n is hast.Root => {
   return n.type === 'root' && Array.isArray(n.children);
+};
+
+export const scriptElem = (value: string): Tag<'script'> & Literal => {
+  return { type: 'element', tagName: 'script', value };
+};
+
+export const isScriptElem = (n: unist.Node): n is Tag<'script'> & Literal => {
+  return n.type === 'element' && n.tagName === 'script' && isLiteral(n);
 };
 
 /** Creates a text literal hast node. */

@@ -14,6 +14,7 @@ export type NodeWriterEntries = [string, NewNodeWriter][];
 
 export const newDefaultWriters: () => NodeWriterEntries = () => [
   ['doctype', nw.DoctypeWriter.create],
+  ['element', nw.ElementWriter.create],
   ['raw', nw.RawWriter.create],
   ['root', nw.RootWriter.create],
   ['text', nw.TextWriter.create],

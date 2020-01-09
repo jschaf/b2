@@ -1,5 +1,6 @@
 import { PostAST } from '//post/ast';
 import { HastCompiler } from '//post/hast/compiler';
+import { isLiteralElem, isParentElem } from '//post/hast/nodes';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
 import * as h from '//post/hast/nodes';
@@ -45,6 +46,38 @@ export class CommentWriter implements HastNodeWriter {
   writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
     h.checkType(node, 'comment', h.isComment);
     sb.writeString(`<!-- ${node.value} -->`);
+  }
+}
+
+/**
+ * Compiles an hast element node to an HTML string.
+ *
+ * https://github.com/syntax-tree/hast#element
+ */
+export class ElementWriter implements HastNodeWriter {
+  private constructor(private readonly compiler: HastCompiler) {}
+
+  static create(hc: HastCompiler): ElementWriter {
+    return new ElementWriter(hc);
+  }
+
+  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
+    h.checkType(node, 'element', h.isElem);
+    sb.writeString(`<${node.tagName}>`);
+
+    // TODO: write attributes.
+    if (isParentElem(node)) {
+      for (const child of node.children) {
+        this.compiler.writeNode(child, ast, sb);
+      }
+    }
+
+    if (isLiteralElem(node)) {
+      // TODO: Escape everything except style and script tags.
+      sb.writeString(node.value);
+    }
+
+    sb.writeString(`</${node.tagName}>`);
   }
 }
 

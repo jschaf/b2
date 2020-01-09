@@ -1,10 +1,10 @@
+import { PostAST } from '//post/ast';
 import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
-import { PostAST } from '//post/ast';
-import * as mdast from 'mdast';
 import * as hast from 'hast-format';
+import * as mdast from 'mdast';
 import * as unist from 'unist';
 
 describe('BlockquoteCompiler', () => {
@@ -285,8 +285,6 @@ describe('LinkReferenceCompiler', () => {
 describe('ListCompiler', () => {
   const a = 'alpha';
   const b = 'bravo';
-  const spreadListItem = (cs: mdast.BlockContent[]) =>
-    md.listItemProps({ spread: true }, cs);
   const para = md.paragraphText;
   const pTag = (value: string) => h.elemText('p', value);
   const checkbox = nc.ListItemCompiler.checkbox;
@@ -300,8 +298,8 @@ describe('ListCompiler', () => {
     [
       'ordered, loose, 2 items',
       md.listProps({ spread: true, ordered: true }, [
-        spreadListItem([para(a)]),
-        spreadListItem([para(b)]),
+        md.listItemProps({ spread: true }, [para(a)]),
+        md.listItemProps({ spread: true }, [para(b)]),
       ]),
       h.elem('ol', [h.elem('li', [pTag(a)]), h.elem('li', [pTag(b)])]),
     ],
@@ -319,7 +317,7 @@ describe('ListCompiler', () => {
   ];
 
   for (const [name, input, expected] of testData) {
-    it(`should compile ${name}`, () => {
+    it(name, () => {
       const p = PostAST.fromMdast(input);
       const c = MdastCompiler.createDefault();
 
@@ -337,40 +335,49 @@ describe('ListItemCompiler', () => {
   const pTag = (value: string) => h.elemText('p', value);
   const t = h.text;
   const checkbox = nc.ListItemCompiler.checkbox;
-  type Data = [string, md.ListItemProps, mdast.BlockContent[], unist.Node[]];
+  type Data = [string, mdast.ListItem, hast.Element];
   const testData: Data[] = [
-    ['tight, not checkbox', {}, [para(b)], [t(b)]],
-    ['tight, checked', { checked: true }, [para(a)], [checkbox(true), t(a)]],
+    ['tight, no checkbox', md.listItem([para(b)]), h.elem('li', [t(b)])],
+    [
+      'tight, checked',
+      md.listItemProps({ checked: true }, [para(b)]),
+      h.elem('li', [checkbox(true), t(b)]),
+    ],
     [
       'tight, unchecked',
-      { checked: false },
-      [para(a)],
-      [checkbox(false), t(a)],
+      md.listItemProps({ checked: true }, [para(a)]),
+      h.elem('li', [checkbox(true), t(a)]),
     ],
-    ['loose, not checkbox', { spread: true }, [para(b)], [pTag(b)]],
+    [
+      'loose, no checkbox',
+      md.listItemProps({ spread: true }, [para(b)]),
+      h.elem('li', [pTag(b)]),
+    ],
     [
       'loose, checked',
-      { spread: true, checked: true },
-      [para(a)],
-      [checkbox(true), pTag(a)],
+      md.listItemProps({ spread: true, checked: true }, [para(a)]),
+      h.elem('li', [checkbox(true), pTag(a)]),
     ],
     [
       'loose, unchecked',
-      { spread: true, checked: false },
-      [para(a)],
-      [checkbox(false), pTag(a)],
+      md.listItemProps({ spread: true, checked: false }, [para(a)]),
+      h.elem('li', [checkbox(false), pTag(a)]),
     ],
-    ['tight, multiple para', {}, [para(a), para(b)], [t(a), t(b)]],
+    [
+      'tight, multiple para',
+      md.listItem([para(a), para(b)]),
+      h.elem('li', [t(a), t(b)]),
+    ],
   ];
 
-  for (const [name, props, input, expected] of testData) {
-    it(`should compile ${name} list`, () => {
-      const p = PostAST.fromMdast(md.listItemProps(props, input));
+  for (const [name, input, expected] of testData) {
+    it(name, () => {
+      const p = PostAST.fromMdast(input);
       const c = MdastCompiler.createDefault();
 
       const hast = nc.ListItemCompiler.create(c).compileNode(p.mdastNode, p);
 
-      expect(hast).toEqual([h.elem('li', expected)]);
+      expect(hast).toEqual([expected]);
     });
   }
 });
