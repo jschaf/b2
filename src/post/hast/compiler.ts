@@ -1,15 +1,21 @@
 import { checkDefined } from '//asserts';
 import { PostAST } from '//post/ast';
 import { DocTemplate } from '//post/hast/doc_template';
+import unified from 'unified';
 import * as unist from 'unist';
-import hastToHtml from 'hast-util-to-html';
+import rehype from 'rehype';
+import rehypeFormat from 'rehype-format';
 import * as h from '//post/hast/nodes';
 
 /**
  * Compiles a hast node into HTML.
  */
 export class HastCompiler {
-  private constructor() {}
+  private readonly processor: unified.Processor;
+
+  private constructor() {
+    this.processor = rehype().use(rehypeFormat);
+  }
 
   static create(): HastCompiler {
     return new HastCompiler();
@@ -24,6 +30,6 @@ export class HastCompiler {
     );
     const body = h.isRoot(node) ? node.children : [node];
     const doc = template.render(body);
-    return hastToHtml(doc);
+    return this.processor.stringify(doc);
   }
 }

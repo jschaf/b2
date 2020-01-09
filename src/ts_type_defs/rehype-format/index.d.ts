@@ -3,7 +3,11 @@ declare module 'rehype-format' {
 
   interface RehypeFormat extends Plugin<[Partial<RehypeFormatOptions>?]> {}
 
-  type RehypeFormatOptions = {};
+  type RehypeFormatOptions = {
+    indent: number | string;
+    indentInitial: string;
+    blanks: string[];
+  };
 
   const rehypeFormat: RehypeFormat;
   export = rehypeFormat;

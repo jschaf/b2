@@ -71,3 +71,44 @@ export const dedent = (
 
   return result.trim();
 };
+
+export class StringBuilder {
+  private buf: Buffer;
+  private usedLength: number = 0;
+
+  private constructor() {
+    this.buf = Buffer.allocUnsafe(16);
+  }
+
+  static create(): StringBuilder {
+    return new StringBuilder();
+  }
+
+  writeString(s: string): void {
+    const remaining = this.buf.length - this.usedLength;
+    if (remaining < s.length) {
+      this.reallocate(this.buf.length + s.length);
+    }
+    this.buf.write(s, this.usedLength, 'utf8');
+    this.usedLength += s.length;
+  }
+
+  toString(): string {
+    const start = 0;
+    const end = this.usedLength;
+    return this.buf.toString('utf8', start, end);
+  }
+
+  private reallocate(min: number) {
+    let newLen = this.buf.length * 2;
+    while (newLen < min) {
+      newLen *= 2;
+    }
+    const target = Buffer.allocUnsafe(newLen);
+    const targetStart = 0;
+    const sourceStart = 0;
+    const sourceEnd = this.usedLength;
+    this.buf.copy(target, targetStart, sourceStart, sourceEnd);
+    this.buf = target;
+  }
+}

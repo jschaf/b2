@@ -140,3 +140,17 @@ export const isElem = (tagName: string, n: unist.Node): n is hast.Element => {
 export const isRoot = (n: unist.Node): n is hast.Root => {
   return n.type === 'root' && Array.isArray(n.children);
 };
+
+export function checkType<T extends unist.Node>(
+  node: unist.Node,
+  name: string,
+  check: (n: unist.Node) => n is T
+): asserts node is T {
+  if (!check(node)) {
+    const noChildren = JSON.stringify({
+      ...node,
+      ...{ children: '<omitted>' },
+    });
+    throw new Error(`Expected ${name} node but had: ${noChildren}`);
+  }
+}

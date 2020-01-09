@@ -234,8 +234,8 @@ describe('InlineMathCompiler', () => {
 
 describe('LinkCompiler', () => {
   it('should compile a link without a title', () => {
-    let url = 'www.example.com';
-    let value = 'text';
+    const url = 'www.example.com';
+    const value = 'text';
     const p = PostAST.fromMdast(md.linkText(url, value));
     const c = MdastCompiler.createDefault();
 
@@ -249,10 +249,11 @@ describe('LinkReferenceCompiler', () => {
   it('should compile a dangling link reference node', () => {
     const id = 'alpha';
     const text = 'bravo';
-    let lr = md.linkRefText(id, md.RefType.Full, text);
+    const lr = md.linkRefText(id, md.RefType.Full, text);
     const p = PostAST.fromMdast(lr);
     const c = MdastCompiler.createDefault();
-    let childrenCompiler = (n: mdast.LinkReference) => c.compileChildren(n, p);
+    const childrenCompiler = (n: mdast.LinkReference) =>
+      c.compileChildren(n, p);
 
     const hast = nc.LinkReferenceCompiler.create(c).compileNode(p.mdastNode, p);
 
@@ -262,7 +263,7 @@ describe('LinkReferenceCompiler', () => {
   it('should compile a link reference', () => {
     const id = 'alpha';
     const url = 'http://example';
-    let lr = md.linkRef(id, md.RefType.Full, [
+    const lr = md.linkRef(id, md.RefType.Full, [
       md.emphasisText('foo'),
       md.text('bar'),
     ]);

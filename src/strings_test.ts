@@ -1,4 +1,4 @@
-import { dedent, isOptionalString, isString } from '//strings';
+import { StringBuilder, dedent, isOptionalString, isString } from '//strings';
 
 test('isString should work', () => {
   expect(isString(1)).toBe(false);
@@ -40,4 +40,27 @@ describe('dedent', () => {
       expect(actual).toEqual(expected);
     });
   }
+});
+
+describe('StringBuilder', () => {
+  it('should work for simple string', () => {
+    const sb = StringBuilder.create();
+    sb.writeString('foo');
+    sb.writeString('bar');
+    expect(sb.toString()).toEqual('foobar');
+  });
+  it('should work for growing string', () => {
+    const largeString =
+      'long long long long long long long long long long' +
+      'long long long long long long long long long long long long' +
+      'long long long long long long long long long long long long';
+    const sb = StringBuilder.create();
+    let expected = '';
+
+    for (let i = 0; i < 30; i++) {
+      sb.writeString(largeString);
+      expected += largeString;
+      expect(sb.toString()).toEqual(expected);
+    }
+  });
 });

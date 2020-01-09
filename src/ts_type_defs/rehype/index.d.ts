@@ -1,10 +1,10 @@
 declare module 'rehype' {
-  import { Plugin } from 'unified';
+  import * as unified from 'unified';
 
-  interface Rehype extends Plugin<[Partial<RehypeOptions>?]> {}
+  interface Rehype extends unified.Plugin<[Partial<RehypeOptions>?]> {}
 
   type RehypeOptions = {};
 
-  const rehype: Rehype;
+  function rehype<P = unified.Settings>(): unified.Processor<P>;
   export = rehype;
 }
