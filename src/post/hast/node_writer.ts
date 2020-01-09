@@ -30,6 +30,24 @@ export class DoctypeWriter implements HastNodeWriter {
 }
 
 /**
+ * Compiles an hast raw node to an HTML string.
+ *
+ * https://github.com/syntax-tree/hast#raw
+ */
+export class RawWriter implements HastNodeWriter {
+  private constructor(private readonly sb: StringBuilder) {}
+
+  static create(sb: StringBuilder): RawWriter {
+    return new RawWriter(sb);
+  }
+
+  writeNode(node: unist.Node, _postAST: PostAST): void {
+    h.checkType(node, 'raw', h.isRaw);
+    this.sb.writeString(node.value + '\n');
+  }
+}
+
+/**
  * Compiles an hast text node to an HTML string.
  *
  * https://github.com/syntax-tree/hast#text

@@ -1,5 +1,5 @@
 import { isOptionalObject } from '//objects';
-import { RefType } from '//post/mdast/nodes';
+import { isLiteral, RefType } from '//post/mdast/nodes';
 import { isString } from '//strings';
 import { Comment, DocType, Element, Text } from 'hast-format';
 import * as unist from 'unist';
@@ -106,6 +106,15 @@ export const isDoctype = (n: unist.Node): n is hast.DocType => {
 export interface Raw extends unist.Literal {
   type: 'raw';
 }
+
+export interface Raw {
+  type: 'raw';
+  value: string;
+}
+
+export const isRaw = (n: unist.Node): n is Raw => {
+  return n.type === 'raw' && isLiteral(n);
+};
 
 /** Creates a raw literal hast node. */
 export const raw = (value: string): Raw => {

@@ -18,6 +18,17 @@ describe('DoctypeWriter', () => {
   });
 });
 
+describe('RawWriter', () => {
+  it('should write a raw node', () => {
+    const sb = StringBuilder.create();
+    const w = nw.RawWriter.create(sb);
+
+    w.writeNode(h.raw('<div>foo</div>'), emptyPostAST);
+
+    expect(sb.toString()).toEqual('<div>foo</div>\n');
+  });
+});
+
 describe('TextWriter', () => {
   it('should write a text node', () => {
     const sb = StringBuilder.create();
