@@ -76,6 +76,7 @@
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
     "glob": "latest",
+    "google-closure-compiler": "^20200101.0.0",
     "jest": "^24.9.0",
     "jsonc-parser": "^2.2.0",
     "prettier": "1.19.1",

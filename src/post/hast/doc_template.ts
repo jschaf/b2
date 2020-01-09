@@ -6,6 +6,7 @@ import * as unist from 'unist';
 /** DocTemplate is an hast template for a full HTML document. */
 export class DocTemplate {
   private readonly head: unist.Node[] = [];
+
   private constructor() {}
 
   static create(): DocTemplate {
@@ -32,6 +33,39 @@ export class DocTemplate {
   }
 }
 
-const templates: [PostType, DocTemplate][] = [
-  [PostType.Post, DocTemplate.create()],
-];
+const postTemplate = () => {
+  return DocTemplate.create().addToHead(
+    // Sets the encoding when not present in the Content-Type header
+    // https://stackoverflow.com/a/16506858/30900
+    h.elemProps('meta', { charset: 'utf-8' }),
+
+    // Skipping http-equiv because we don't need to support IE8 or IE9.
+    // <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
+    // https://stackoverflow.com/a/6771584/30900
+
+    // Make the site full width on mobile.
+    // https://stackoverflow.com/a/16532471/30900
+    h.elemProps('meta', {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1.0',
+    }),
+
+    // Allow spiders to crawl and index the site.
+    // https://stackoverflow.com/a/51277688/30900
+    h.elemProps('meta', { name: 'robots', content: 'index, follow' }),
+
+    h.elemProps('link', { rel: 'icon', href: '/favicon.ico' }),
+    h.elemProps('link', {
+      rel: 'apple-touch-icon-precomposed',
+      href: '/favicon-152.png',
+    }),
+
+    h.elemProps('script', {
+      defer: true,
+      src: '/instantpage.min.js',
+      type: 'module',
+    })
+  );
+};
+
+const templates: [PostType, DocTemplate][] = [[PostType.Post, postTemplate()]];
