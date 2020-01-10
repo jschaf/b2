@@ -1,10 +1,12 @@
 import { PostAST } from '//post/ast';
+import { AttrWriter } from '//post/hast/attr_writer';
 import { HastWriter } from '//post/hast/writer';
 import { isLiteralElem, isParentElem } from '//post/hast/nodes';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
 import * as h from '//post/hast/nodes';
 import * as un from '//unist/nodes';
+import * as objects from '//objects';
 
 /** Compiler for a single mdast node. */
 export interface HastNodeWriter {
@@ -55,6 +57,7 @@ export class CommentWriter implements HastNodeWriter {
  * https://github.com/syntax-tree/hast#element
  */
 export class ElementWriter implements HastNodeWriter {
+  private attrWriter = AttrWriter.create();
   private constructor(private readonly compiler: HastWriter) {}
 
   static create(hc: HastWriter): ElementWriter {
@@ -63,7 +66,13 @@ export class ElementWriter implements HastNodeWriter {
 
   writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
     h.checkType(node, 'element', h.isElem);
-    sb.writeString(`<${node.tagName}>`);
+    sb.writeString(`<${node.tagName}`);
+    const p = node.properties;
+    if (objects.isObject(p) && !objects.isEmpty(p)) {
+      sb.writeString(' ');
+      this.attrWriter.writeElemProps(p, sb);
+    }
+    sb.writeString('>');
 
     // TODO: write attributes.
     if (isParentElem(node)) {

@@ -5,6 +5,7 @@ import * as h from '//post/hast/nodes';
 import * as nw from '//post/hast/node_writer';
 import * as un from '//unist/nodes';
 import { StringBuilder } from '//strings';
+import * as hast from 'hast-format';
 
 const emptyPostAST = PostAST.fromMdast(md.root([]));
 
@@ -31,15 +32,31 @@ describe('DoctypeWriter', () => {
 });
 
 describe('ElementWriter', () => {
-  it('should write a div > p node', () => {
-    const sb = StringBuilder.create();
-    const c = HastWriter.createDefault();
-    const w = nw.ElementWriter.create(c);
+  const testData: [string, hast.Element, string][] = [
+    [
+      'div > p',
+      h.elem('div', [h.elemText('p', 'foo')]),
+      '<div><p>foo</p></div>',
+    ],
+    [
+      'div[class="a b c" data-foo="qux"}] > p',
+      h.elemProps('div', { class: ['a', 'b', 'c'], 'data-foo': 'qux' }, [
+        h.elemText('p', 'foo'),
+      ]),
+      '<div class="a b c" data-foo="qux"><p>foo</p></div>',
+    ],
+  ];
+  for (const [name, input, expected] of testData) {
+    it(name, () => {
+      const sb = StringBuilder.create();
+      const c = HastWriter.createDefault();
+      const w = nw.ElementWriter.create(c);
 
-    w.writeNode(h.elem('div', [h.elemText('p', 'foo')]), emptyPostAST, sb);
+      w.writeNode(input, emptyPostAST, sb);
 
-    expect(sb.toString()).toEqualHTML('<div><p>foo</p></div>');
-  });
+      expect(sb.toString()).toEqualHTML(expected);
+    });
+  }
 });
 
 describe('RawWriter', () => {

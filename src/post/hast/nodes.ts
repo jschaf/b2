@@ -13,6 +13,7 @@ import * as unistNodes from '//unist/nodes';
 
 export interface Tag<T extends string = string> extends unist.Node {
   tagName: T;
+  properties?: hast.Properties;
 }
 
 export interface ParentTag<T extends string> extends Tag<T> {
