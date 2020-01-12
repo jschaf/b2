@@ -31,7 +31,7 @@ export class AttrWriter {
   private writeAttr(name: string, value: unknown, sb: StringBuilder): void {
     const n = normalizeName(name);
     const v = normalizeValue(value);
-    if (n === false || v === false) {
+    if (n === null || v === null) {
       return;
     }
 
@@ -45,17 +45,17 @@ export class AttrWriter {
 }
 
 /**
- * normalizeName returns false if name is an invalid HTML attribute name,
+ * normalizeName returns null if name is an invalid HTML attribute name,
  * otherwise returns the string.
  *
  * https://html.spec.whatwg.org/multipage/syntax.html#syntax-attribute-name
  */
-const normalizeName = (name: string): string | false => {
+const normalizeName = (name: string): string | null => {
   if (name.length === 0) {
-    return false;
+    return null;
   }
   if (!validNameChars.test(name)) {
-    return false;
+    return null;
   }
   return name;
 };
@@ -64,15 +64,15 @@ const escaper = HTMLEscaper.create();
 
 /**
  * normalizeValue transforms a string so it's a valid HTML attribute value.
- * Returns false if the entire attributed should be omitted.
+ * Returns null if the entire attributed should be omitted.
  *
  * https://html.spec.whatwg.org/multipage/syntax.html#syntax-attribute-value
  */
-const normalizeValue = (value: unknown): string | false => {
+const normalizeValue = (value: unknown): string | null => {
   switch (typeof value) {
     case 'boolean':
       if (!value) {
-        return false;
+        return null;
       }
       return '';
 
