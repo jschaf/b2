@@ -4,6 +4,7 @@ import * as h from '//post/hast/nodes';
 import { isLiteralElem, isParentElem } from '//post/hast/nodes';
 import { HastWriter, WriterContext } from '//post/hast/writer';
 import { StringBuilder } from '//strings';
+import { isParent } from '//unist/nodes';
 import * as un from '//unist/nodes';
 import * as unist from 'unist';
 
@@ -68,9 +69,13 @@ export class ElementWriter implements HastNodeWriter {
     h.checkType(node, 'element', h.isElem);
 
     if (isBlockTag(node)) {
-      ctx.incrementIndent();
       sb.writeString('\n');
-      sb.writeString(newIndentString(ctx));
+
+      // Head and body aren't indented.
+      if (node.tagName !== 'head' && node.tagName !== 'body') {
+        ctx.incrementIndent();
+        sb.writeString(newIndentString(ctx));
+      }
     }
 
     sb.writeString(`<${node.tagName}`);
@@ -81,7 +86,9 @@ export class ElementWriter implements HastNodeWriter {
     }
     sb.writeString('>');
 
-    if (isParentElem(node)) {
+    if (isVoidTag(node)) {
+      return;
+    } else if (isParentElem(node)) {
       for (const child of node.children) {
         this.compiler.writeNode(child, ctx, sb);
       }
@@ -90,6 +97,11 @@ export class ElementWriter implements HastNodeWriter {
       sb.writeString(node.value);
     } else {
       throw new Error(`unknown element: ${node.tagName}`);
+    }
+
+    if (isAnyChildBlockTag(node)) {
+      sb.writeString('\n');
+      sb.writeString(newIndentString(ctx));
     }
 
     sb.writeString(`</${node.tagName}>`);
@@ -148,10 +160,11 @@ export class TextWriter implements HastNodeWriter {
   }
 }
 
-const indentableTags = [
+const blockTags = [
   'blockquote',
   'body',
   'div',
+  'head',
   'heading',
   'h1',
   'h2',
@@ -159,15 +172,55 @@ const indentableTags = [
   'h4',
   'h5',
   'h6',
+  'li',
+  'link',
+  'meta',
   'ol',
   'p',
   'pre',
-  'li',
+  'script',
   'ul',
 ];
 
 const isBlockTag = (n: unist.Node): boolean => {
-  return h.isElem(n) && indentableTags.includes(n.tagName);
+  return h.isElem(n) && blockTags.includes(n.tagName);
+};
+
+/** Returns true if any child of the node is a block tag. */
+const isAnyChildBlockTag = (n: unist.Node): boolean => {
+  if (isParent(n)) {
+    for (const child of n.children) {
+      if (isBlockTag(child)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const voidTags: readonly string[] = <const>[
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+];
+
+/**
+ *
+ * https://html.spec.whatwg.org/multipage/syntax.html#start-tags
+ */
+const isVoidTag = (n: unist.Node): boolean => {
+  return h.isElem(n) && voidTags.includes(n.tagName);
 };
 
 const newIndentString = (c: WriterContext): string => {

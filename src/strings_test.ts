@@ -47,8 +47,10 @@ describe('StringBuilder', () => {
     const sb = StringBuilder.create();
     sb.writeString('foo');
     sb.writeString('bar');
+    expect(sb.size()).toEqual('foobar'.length);
     expect(sb.toString()).toEqual('foobar');
   });
+
   it('should work for growing string', () => {
     const largeString =
       'long long long long long long long long long long' +
@@ -61,6 +63,16 @@ describe('StringBuilder', () => {
       sb.writeString(largeString);
       expected += largeString;
       expect(sb.toString()).toEqual(expected);
+      expect(sb.size()).toEqual(expected.length);
     }
+  });
+
+  it('should handle multi-byte UTF-8', () => {
+    const sb = StringBuilder.create();
+    // Sneaky apostrophe: U+2019
+    const final = 'There’s only a single remote call to ';
+    sb.writeString(final);
+    expect(sb.size()).toEqual(Buffer.byteLength(final, 'utf8'));
+    expect(sb.toString()).toEqual(final);
   });
 });

@@ -10,16 +10,13 @@ describe('Doc', () => {
       [],
       h.root([
         h.doctype(),
-        h.elemProps('html', { lang: 'en' }, [
-          h.elem('head', []),
-          h.elem('body', []),
-        ]),
+        h.elemProps('html', { lang: 'en' }, [h.elem('head', [])]),
       ]),
     ],
     [
       'with children',
       DocTemplate.create(),
-      [h.elemText('p', 'alpha')],
+      [h.elem('body', [h.elemText('p', 'alpha')])],
       h.root([
         h.doctype(),
         h.elemProps('html', { lang: 'en' }, [
@@ -36,7 +33,6 @@ describe('Doc', () => {
         h.doctype(),
         h.elemProps('html', { lang: 'en' }, [
           h.elem('head', [h.elemText('title', 'alpha')]),
-          h.elem('body', []),
         ]),
       ]),
     ],

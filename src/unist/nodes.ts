@@ -21,7 +21,7 @@ export function* preOrderGenerator(
   function* visit(n: unist.Node): Generator<NodeIterResult, void> {
     yield { node: n, ancestors };
 
-    if (hasChildren(n)) {
+    if (isParent(n)) {
       ancestors.push(n);
       for (const c of n.children) {
         for (const child of visit(c)) {
@@ -84,25 +84,8 @@ export const removeData = (tree: unist.Node): void => {
   visitInPlace(tree, n => delete n.data);
 };
 
-/** Type guard that returns true if a node has node children. */
-export const hasChildren = (
-  n: unist.Node
-): n is unist.Node & { children: unist.Node[] } => {
-  if (!n.children) {
-    return false;
-  }
-
-  if (!Array.isArray(n.children)) {
-    return false;
-  }
-
-  for (const c of n.children) {
-    if (!isNode(c)) {
-      return false;
-    }
-  }
-
-  return true;
+export const isParent = (n: unist.Node): n is unist.Parent => {
+  return Array.isArray(n.children);
 };
 
 /** Type guard that returns true if n is a node. */

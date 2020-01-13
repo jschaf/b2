@@ -45,6 +45,19 @@ describe('PostParser', () => {
       [para, '1. list item'].join('\n'),
       md.root([mdPara, md.orderedList([md.paragraphText('list item')])]),
     ],
+    [
+      'list item with code',
+      '- foo bar baz `git fetch` qux',
+      md.root([
+        md.listProps({ ordered: false, spread: false, start: null }, [
+          md.paragraph([
+            md.text('foo bar baz '),
+            md.inlineCode('git fetch'),
+            md.text(' qux'),
+          ]),
+        ]),
+      ]),
+    ],
   ];
   describe('parseMarkdown', () => {
     for (const [name, markdown, expected] of testData) {

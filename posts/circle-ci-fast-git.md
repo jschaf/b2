@@ -81,7 +81,7 @@ The primary differences from the builtin CircleCI `checkout` step are:
   remote calls: `git clone; git fetch`. The reason we can skip the
   second `git fetch` is because we’re fetching the repository at the
   precise Git hash we need to checkout from the
-  `[CIRCLECI_SHA1](https://circleci.com/docs/2.0/env-vars/)`
+  [`CIRCLECI_SHA1`](https://circleci.com/docs/2.0/env-vars/)
   environmental variable.
 
 # Common errors and solutions

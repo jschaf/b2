@@ -16,6 +16,7 @@ describe('AttrWriter', () => {
     ['save ampersand in value', { foo: '&bar' }, 'foo="&bar"'],
     ['array', { foo: [1, 'alpha', 'bravo'] }, 'foo="1 alpha bravo"'],
     ['2 props', { foo: '&bar', baz: 'qux' }, 'foo="&bar" baz="qux"'],
+    ['className -> class', { className: ['foo', 'bar'] }, 'class="foo bar"'],
   ];
   for (const [name, props, expected] of testData) {
     it(name, () => {

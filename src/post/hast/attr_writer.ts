@@ -4,6 +4,8 @@ import { StringBuilder } from '//strings';
 
 const validNameChars = /^[-_a-zA-Z0-9]+$/;
 
+const rewriteAttrs = new Map<string, string>([['className', 'class']]);
+
 /**
  * AttrWriter normalizes HTML attributes and writes them into a string builder.
  */
@@ -54,10 +56,11 @@ const normalizeName = (name: string): string | null => {
   if (name.length === 0) {
     return null;
   }
-  if (!validNameChars.test(name)) {
+  const newName = rewriteAttrs.get(name) || name;
+  if (!validNameChars.test(newName)) {
     return null;
   }
-  return name;
+  return newName;
 };
 
 const escaper = HTMLEscaper.create();

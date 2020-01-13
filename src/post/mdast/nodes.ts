@@ -270,7 +270,7 @@ export const isLinkRef = (n: unist.Node): n is mdast.LinkReference => {
   return n.type === 'linkReference' && isParent(n) && isReference(n);
 };
 
-type ListProps = { ordered?: boolean; start?: number; spread?: boolean };
+type ListProps = { ordered?: boolean; start?: number | null; spread?: boolean };
 
 type ShortcutListContent =
   | mdast.ListContent
@@ -293,7 +293,7 @@ export const listProps = (
       throw new Error('unknown list item shortcut');
     }
   }
-  return { type: 'list', ...props, children: items };
+  return { type: 'list', ...props, children: items } as mdast.List;
 };
 
 export const list = (children: ShortcutListContent[]): mdast.List => {

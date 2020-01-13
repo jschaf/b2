@@ -34,10 +34,6 @@ export class WriterContext {
     this.indentLevel += 1;
   }
 
-  decrementIndent(): void {
-    this.indentLevel -= 1;
-  }
-
   clone(): WriterContext {
     return new WriterContext(this.postAST, this.indentLevel);
   }

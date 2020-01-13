@@ -27,7 +27,7 @@ export class DocTemplate {
       h.doctype(),
       h.elemProps('html', { lang: 'en' }, [
         h.elem('head', this.head),
-        h.elem('body', children),
+        ...children,
       ]),
     ]);
   }
