@@ -6,6 +6,7 @@ import {
   mergeAdjacentText,
   NodeVisitor,
   preOrderGenerator,
+  removeNode,
   text,
   visitInPlace,
 } from '//unist/nodes';
@@ -61,6 +62,29 @@ describe('visitInPlace', () => {
       [n2, [n0]],
       [n2a, [n0, n2]],
     ]);
+  });
+});
+
+describe('removeNode', () => {
+  const n1a = md.text('1 left');
+  const n1b = md.text('1 mid');
+  const n1 = md.paragraph([n1a, n1b]);
+  const n2a = md.text('2 left');
+  const n2 = md.paragraph([n2a]);
+  const n0 = md.root([n1, n2]);
+
+  it('should remove the first root child node', () => {
+    let foundFirst = false;
+    const isFirstPara = (n: unist.Node): n is { type: 'paragraph' } => {
+      if (n.type === 'paragraph' && !foundFirst) {
+        foundFirst = true;
+        return true;
+      }
+      return false;
+    };
+
+    removeNode(n0, isFirstPara);
+    expect(n0.children).toEqual([n2]);
   });
 });
 

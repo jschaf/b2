@@ -1,7 +1,7 @@
+import { checkDefined, checkState } from '//asserts';
 import { isObject } from '//objects';
 import { isString } from '//strings';
 import * as unist from 'unist';
-import nodeRemove from 'unist-util-remove';
 
 export type NodeAncestors = unist.Node[];
 export type NodeVisitor = (n: unist.Node, ancestors: NodeAncestors) => void;
@@ -66,8 +66,18 @@ export const removeNode = <T extends unist.Node>(
   tree: unist.Node,
   test: NodeTest<T>
 ): void => {
-  const wrappedTest = (n: unist.Node): n is T => test(n, []);
-  nodeRemove(tree, wrappedTest);
+  for (const { node, ancestors } of preOrderGenerator(tree)) {
+    if (test(node, ancestors)) {
+      const parent = checkDefined(ancestors[ancestors.length - 1]);
+      checkState(isParent(parent), 'parent is not a valid parent node');
+      const parentIdx = parent.children.indexOf(node);
+      checkState(parentIdx >= 0, 'unable to find node in parent children');
+      for (let i = parentIdx + 1; i < parent.children.length; i++) {
+        parent.children[i - 1] = parent.children[i];
+      }
+      parent.children.length -= 1;
+    }
+  }
 };
 
 export const removePositionInfo = (tree: unist.Node): void => {
@@ -91,19 +101,6 @@ export const isParent = (n: unist.Node): n is unist.Parent => {
 /** Type guard that returns true if n is a node. */
 export const isNode = (n: unknown): n is unist.Node => {
   return isObject(n) && isString(n.type) && n.type !== '';
-};
-
-/** Type guard that returns true if ns is a node array. */
-export const isNodeArray = (ns: unknown): ns is unist.Node[] => {
-  if (!Array.isArray(ns)) {
-    return false;
-  }
-  for (const n of ns) {
-    if (!isNode(n)) {
-      return false;
-    }
-  }
-  return true;
 };
 
 export type Text = { type: 'text'; value: string };
