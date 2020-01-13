@@ -10,6 +10,20 @@ import * as unist from 'unist';
 
 const emptyCtx = () => WriterContext.create(PostAST.fromMdast(md.root([])));
 
+const indent = (
+  literals: TemplateStringsArray,
+  ...placeholders: string[]
+): string => {
+  const d = dedent(literals, ...placeholders);
+  return (
+    '\n' +
+    d
+      .split('\n')
+      .map(l => '  ' + l)
+      .join('\n')
+  );
+};
+
 describe('CommentWriter', () => {
   it('should write a comment node', () => {
     const sb = StringBuilder.create();
@@ -37,14 +51,22 @@ describe('ElementWriter', () => {
     [
       'div > p',
       h.elem('div', [h.elemText('p', 'foo')]),
-      '<div><p>foo</p></div>',
+      indent`
+        <div>
+          <p>foo</p>
+        </div>
+      `,
     ],
     [
       'div[class="a b c" data-foo="qux"}] > p',
       h.elemProps('div', { class: ['a', 'b', 'c'], 'data-foo': 'qux' }, [
         h.elemText('p', 'foo'),
       ]),
-      '<div class="a b c" data-foo="qux"><p>foo</p></div>',
+      indent`
+        <div class="a b c" data-foo="qux">
+          <p>foo</p>
+        </div>
+      `,
     ],
   ];
   for (const [name, input, expected] of testData) {
@@ -55,7 +77,7 @@ describe('ElementWriter', () => {
 
       w.writeNode(input, emptyCtx(), sb);
 
-      expect(sb.toString()).toEqualHTML(expected);
+      expect(sb.toString()).toEqual(expected);
     });
   }
   describe('pretty printing', () => {

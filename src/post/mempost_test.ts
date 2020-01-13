@@ -7,8 +7,8 @@ describe('Mempost', () => {
   const delta = Buffer.from('delta');
 
   it('should equal itself', () => {
-    expect(Mempost.ofUtf8Entry('foo', 'bar')).toEqualMempost(
-      Mempost.ofUtf8Entry('foo', 'bar')
+    expect(Mempost.ofUtf8Entry('foo', 'bar').toRecord()).toEqual(
+      Mempost.ofUtf8Entry('foo', 'bar').toRecord()
     );
   });
 
