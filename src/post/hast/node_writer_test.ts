@@ -1,5 +1,5 @@
 import { PostAST } from '//post/ast';
-import { HastWriter } from '//post/hast/writer';
+import { HastWriter, WriterContext } from '//post/hast/writer';
 import * as md from '//post/mdast/nodes';
 import * as h from '//post/hast/nodes';
 import * as nw from '//post/hast/node_writer';
@@ -7,14 +7,14 @@ import * as un from '//unist/nodes';
 import { StringBuilder } from '//strings';
 import * as hast from 'hast-format';
 
-const emptyPostAST = PostAST.fromMdast(md.root([]));
+const emptyCtx = WriterContext.create(PostAST.fromMdast(md.root([])));
 
 describe('CommentWriter', () => {
   it('should write a comment node', () => {
     const sb = StringBuilder.create();
     const w = nw.CommentWriter.create();
 
-    w.writeNode(h.comment('foo'), emptyPostAST, sb);
+    w.writeNode(h.comment('foo'), emptyCtx, sb);
 
     expect(sb.toString()).toEqual('<!-- foo -->');
   });
@@ -25,7 +25,7 @@ describe('DoctypeWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.DoctypeWriter.create();
 
-    w.writeNode(h.doctype(), emptyPostAST, sb);
+    w.writeNode(h.doctype(), emptyCtx, sb);
 
     expect(sb.toString()).toEqual('<!doctype html>\n');
   });
@@ -52,7 +52,7 @@ describe('ElementWriter', () => {
       const c = HastWriter.createDefault();
       const w = nw.ElementWriter.create(c);
 
-      w.writeNode(input, emptyPostAST, sb);
+      w.writeNode(input, emptyCtx, sb);
 
       expect(sb.toString()).toEqualHTML(expected);
     });
@@ -64,7 +64,7 @@ describe('RawWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.RawWriter.create();
 
-    w.writeNode(h.raw('<div>foo</div>'), emptyPostAST, sb);
+    w.writeNode(h.raw('<div>foo</div>'), emptyCtx, sb);
 
     expect(sb.toString()).toEqual('<div>foo</div>\n');
   });
@@ -76,7 +76,7 @@ describe('RootWriter', () => {
     const c = HastWriter.createDefault();
     const w = nw.RootWriter.create(c);
 
-    w.writeNode(h.root([h.text('foo'), h.raw('<br>')]), emptyPostAST, sb);
+    w.writeNode(h.root([h.text('foo'), h.raw('<br>')]), emptyCtx, sb);
 
     expect(sb.toString()).toEqual('foo<br>\n');
   });
@@ -87,7 +87,7 @@ describe('TextWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.TextWriter.create();
 
-    w.writeNode(un.text('foo'), emptyPostAST, sb);
+    w.writeNode(un.text('foo'), emptyCtx, sb);
 
     expect(sb.toString()).toEqual('foo');
   });

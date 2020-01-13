@@ -17,8 +17,29 @@ export const newDefaultWriters: () => NodeWriterEntries = () => [
   ['text', nw.TextWriter.create],
 ];
 
+export class WriterContext {
+  readonly indentLength: number = 2;
+  private constructor(readonly postAST: PostAST, public indentLevel: number) {}
+
+  static create(postAST: PostAST): WriterContext {
+    return new WriterContext(postAST, 0);
+  }
+
+  incrementIndent(): void {
+    this.indentLevel += 1;
+  }
+
+  decrementIndent(): void {
+    this.indentLevel -= 1;
+  }
+
+  clone(): WriterContext {
+    return new WriterContext(this.postAST, this.indentLevel);
+  }
+}
+
 /**
- * Compiles a hast node into HTML.
+ * HastWriter compiles a hast node into an HTML string.
  */
 export class HastWriter {
   private readonly subWriters: Map<string, nw.HastNodeWriter> = new Map();
@@ -35,7 +56,7 @@ export class HastWriter {
     return HastWriter.create(newDefaultWriters());
   }
 
-  /** Compiles node into a UTF-8 string. */
+  /** Compiles a hast node into a UTF-8 string. */
   write(node: unist.Node, ast: PostAST): string {
     const pt = ast.metadata.postType;
     const template = checkDefined(
@@ -45,13 +66,14 @@ export class HastWriter {
     const body = h.isRoot(node) ? node.children : [node];
     const doc = template.render(body);
     const sb = StringBuilder.create();
-    this.writeNode(doc, ast, sb);
+    const ctx = WriterContext.create(ast);
+    this.writeNode(doc, ctx, sb);
     return sb.toString();
   }
 
-  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     const w = this.getNodeWriter(node.type);
-    w.writeNode(node, ast, sb);
+    w.writeNode(node, ctx.clone(), sb);
   }
 
   private getNodeWriter(type: string): nw.HastNodeWriter {
@@ -61,10 +83,11 @@ export class HastWriter {
       return w;
     }
 
-    const newWriter = checkDefined(
+    const newWriterFactory = checkDefined(
       this.subWriterFactory.get(type),
       `No hast compiler found for type: ${type}`
-    )(this);
+    );
+    const newWriter = newWriterFactory(this);
     this.subWriters.set(type, newWriter);
     return newWriter;
   }

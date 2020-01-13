@@ -1,6 +1,5 @@
-import { PostAST } from '//post/ast';
 import { AttrWriter } from '//post/hast/attr_writer';
-import { HastWriter } from '//post/hast/writer';
+import { HastWriter, WriterContext } from '//post/hast/writer';
 import { isLiteralElem, isParentElem } from '//post/hast/nodes';
 import { StringBuilder } from '//strings';
 import * as unist from 'unist';
@@ -10,7 +9,7 @@ import * as objects from '//objects';
 
 /** Compiler for a single mdast node. */
 export interface HastNodeWriter {
-  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void;
+  writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void;
 }
 
 /**
@@ -27,7 +26,7 @@ export class DoctypeWriter implements HastNodeWriter {
     return new DoctypeWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, _ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'doctype', h.isDoctype);
     sb.writeString('<!doctype html>\n');
   }
@@ -45,7 +44,7 @@ export class CommentWriter implements HastNodeWriter {
     return new CommentWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, _ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'comment', h.isComment);
     sb.writeString(`<!-- ${node.value} -->`);
   }
@@ -64,7 +63,7 @@ export class ElementWriter implements HastNodeWriter {
     return new ElementWriter(hc);
   }
 
-  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'element', h.isElem);
     sb.writeString(`<${node.tagName}`);
     const p = node.properties;
@@ -74,10 +73,9 @@ export class ElementWriter implements HastNodeWriter {
     }
     sb.writeString('>');
 
-    // TODO: write attributes.
     if (isParentElem(node)) {
       for (const child of node.children) {
-        this.compiler.writeNode(child, ast, sb);
+        this.compiler.writeNode(child, ctx, sb);
       }
     }
 
@@ -98,7 +96,7 @@ export class RawWriter implements HastNodeWriter {
     return new RawWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, _ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'raw', h.isRaw);
     sb.writeString(node.value + '\n');
   }
@@ -116,10 +114,10 @@ export class RootWriter implements HastNodeWriter {
     return new RootWriter(hc);
   }
 
-  writeNode(node: unist.Node, ast: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'root', h.isRoot);
     for (const child of node.children) {
-      this.compiler.writeNode(child, ast, sb);
+      this.compiler.writeNode(child, ctx, sb);
     }
   }
 }
@@ -136,7 +134,7 @@ export class TextWriter implements HastNodeWriter {
     return new TextWriter();
   }
 
-  writeNode(node: unist.Node, _postAST: PostAST, sb: StringBuilder): void {
+  writeNode(node: unist.Node, _ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'text', un.isText);
     sb.writeString(node.value);
   }
