@@ -1,11 +1,11 @@
-import { AttrWriter } from '//post/hast/attr_writer';
-import { HastWriter, WriterContext } from '//post/hast/writer';
-import { isLiteralElem, isParentElem } from '//post/hast/nodes';
-import { StringBuilder } from '//strings';
-import * as unist from 'unist';
-import * as h from '//post/hast/nodes';
-import * as un from '//unist/nodes';
 import * as objects from '//objects';
+import { AttrWriter } from '//post/hast/attr_writer';
+import * as h from '//post/hast/nodes';
+import { isLiteralElem, isParentElem } from '//post/hast/nodes';
+import { HastWriter, WriterContext } from '//post/hast/writer';
+import { StringBuilder } from '//strings';
+import * as un from '//unist/nodes';
+import * as unist from 'unist';
 
 /** Compiler for a single mdast node. */
 export interface HastNodeWriter {
@@ -57,6 +57,7 @@ export class CommentWriter implements HastNodeWriter {
  */
 export class ElementWriter implements HastNodeWriter {
   private attrWriter = AttrWriter.create();
+
   private constructor(private readonly compiler: HastWriter) {}
 
   static create(hc: HastWriter): ElementWriter {
@@ -65,6 +66,13 @@ export class ElementWriter implements HastNodeWriter {
 
   writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'element', h.isElem);
+
+    if (isBlockTag(node)) {
+      ctx.incrementIndent();
+      sb.writeString('\n');
+      sb.writeString(newIndentString(ctx));
+    }
+
     sb.writeString(`<${node.tagName}`);
     const p = node.properties;
     if (objects.isObject(p) && !objects.isEmpty(p)) {
@@ -77,11 +85,11 @@ export class ElementWriter implements HastNodeWriter {
       for (const child of node.children) {
         this.compiler.writeNode(child, ctx, sb);
       }
-    }
-
-    if (isLiteralElem(node)) {
+    } else if (isLiteralElem(node)) {
       // TODO: Escape everything except style and script tags.
       sb.writeString(node.value);
+    } else {
+      throw new Error(`unknown element: ${node.tagName}`);
     }
 
     sb.writeString(`</${node.tagName}>`);
@@ -139,3 +147,30 @@ export class TextWriter implements HastNodeWriter {
     sb.writeString(node.value);
   }
 }
+
+const indentableTags = [
+  'blockquote',
+  'body',
+  'div',
+  'heading',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'ol',
+  'p',
+  'pre',
+  'li',
+  'ul',
+];
+
+const isBlockTag = (n: unist.Node): boolean => {
+  return h.isElem(n) && indentableTags.includes(n.tagName);
+};
+
+const newIndentString = (c: WriterContext): string => {
+  const l = c.indentLevel * c.indentLength;
+  return ' '.repeat(l);
+};

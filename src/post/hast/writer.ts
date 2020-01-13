@@ -17,8 +17,13 @@ export const newDefaultWriters: () => NodeWriterEntries = () => [
   ['text', nw.TextWriter.create],
 ];
 
+/**
+ * WriterContext stores all state necessary to render a hast node into an HTML
+ * string.
+ */
 export class WriterContext {
   readonly indentLength: number = 2;
+
   private constructor(readonly postAST: PostAST, public indentLevel: number) {}
 
   static create(postAST: PostAST): WriterContext {
