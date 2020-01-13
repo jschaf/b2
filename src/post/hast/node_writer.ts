@@ -172,23 +172,28 @@ export class TextWriter implements HastNodeWriter {
 }
 
 const blockTags = [
+  'article',
   'blockquote',
   'body',
   'div',
   'head',
   'heading',
+  'header',
   'h1',
   'h2',
   'h3',
   'h4',
   'h5',
   'h6',
+  'footer',
   'li',
   'link',
+  'main',
   'meta',
   'ol',
   'p',
   'pre',
+  'section',
   'script',
   'ul',
 ];

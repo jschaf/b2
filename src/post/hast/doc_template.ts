@@ -1,3 +1,4 @@
+import { isParentTag } from '//post/hast/nodes';
 import * as h from '//post/hast/nodes';
 import { PostType } from '//post/metadata';
 import * as hast from 'hast-format';
@@ -23,11 +24,25 @@ export class DocTemplate {
   }
 
   render(children: unist.Node[]): hast.Root {
+    let nodes = children;
+    if (children.length === 1) {
+      const body = children[0];
+      if (isParentTag('body', body)) {
+        nodes = body.children;
+      }
+    }
+
     return h.root([
       h.doctype(),
       h.elemProps('html', { lang: 'en' }, [
         h.elem('head', this.head),
-        ...children,
+        h.elem('body', [
+          h.elem('header'),
+          h.elem('main', [
+            h.elemProps('div', { className: ['main-inner-container'] }, nodes),
+          ]),
+          h.elem('footer'),
+        ]),
       ]),
     ]);
   }

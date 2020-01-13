@@ -13,8 +13,14 @@ Object {
   <script defer src=\\"/instantpage.min.js\\" type=\\"module\\"></script>
 </head>
 <body>
-  <h1>alpha</h1>
-  <p>Foo bar.</p>
+  <header></header>
+  <main>
+    <div class=\\"main-inner-container\\">
+      <h1>alpha</h1>
+      <p>Foo bar.</p>
+    </div>
+  </main>
+  <footer></footer>
 </body>
 </html>",
 }
