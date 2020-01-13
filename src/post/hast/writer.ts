@@ -24,10 +24,15 @@ export const newDefaultWriters: () => NodeWriterEntries = () => [
 export class WriterContext {
   readonly indentLength: number = 2;
 
-  private constructor(readonly postAST: PostAST, public indentLevel: number) {}
+  private constructor(
+    readonly postAST: PostAST,
+    public indentLevel: number,
+    readonly ancestors: unist.Node[],
+    public currentNode: unist.Node
+  ) {}
 
-  static create(postAST: PostAST): WriterContext {
-    return new WriterContext(postAST, 0);
+  static create(postAST: PostAST, hastNode: unist.Node): WriterContext {
+    return new WriterContext(postAST, 0, [], hastNode);
   }
 
   incrementIndent(): void {
@@ -35,7 +40,12 @@ export class WriterContext {
   }
 
   clone(): WriterContext {
-    return new WriterContext(this.postAST, this.indentLevel);
+    return new WriterContext(
+      this.postAST,
+      this.indentLevel,
+      this.ancestors,
+      this.currentNode
+    );
   }
 }
 
@@ -67,14 +77,17 @@ export class HastWriter {
     const body = h.isRoot(node) ? node.children : [node];
     const doc = template.render(body);
     const sb = StringBuilder.create();
-    const ctx = WriterContext.create(ast);
+    const ctx = WriterContext.create(ast, node);
     this.writeNode(doc, ctx, sb);
     return sb.toString();
   }
 
   writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     const w = this.getNodeWriter(node.type);
-    w.writeNode(node, ctx.clone(), sb);
+    const c = ctx.clone();
+    c.ancestors.push(c.currentNode);
+    c.currentNode = node;
+    w.writeNode(node, c, sb);
   }
 
   private getNodeWriter(type: string): nw.HastNodeWriter {

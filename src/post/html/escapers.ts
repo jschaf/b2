@@ -11,11 +11,14 @@ export class HTMLEscaper {
     return new HTMLEscaper();
   }
 
-  escape(s: string): string {
+  static escape(s: string): string {
+    if (!this.needsEscaped(s)) {
+      return s;
+    }
     return (
+      // An ambiguous ampersand is an (&) that is followed by one or more
+      // ASCII alphanumerics, followed by a semicolon character.
       s
-        // An ambiguous ampersand is an (&) that is followed by one or more
-        // ASCII alphanumerics, followed by a semicolon character.
         .replace(/&([a-zA-Z0-9]+;)/g, '&amp;$1')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;')
@@ -24,7 +27,7 @@ export class HTMLEscaper {
     );
   }
 
-  needsEscaped(s: string): boolean {
+  static needsEscaped(s: string): boolean {
     return /((&[a-zA-Z0-9]+;)|["'<>])/.test(s);
   }
 }

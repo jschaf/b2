@@ -12,7 +12,7 @@ describe('HTMLEscaper', () => {
     ];
     for (const [name, input, expected] of testData) {
       it(name, () => {
-        const h = HTMLEscaper.create().escape(input);
+        const h = HTMLEscaper.escape(input);
         expect(h).toEqual(expected);
       });
     }
@@ -31,7 +31,7 @@ describe('HTMLEscaper', () => {
     ];
     for (const [name, input, expected] of testData) {
       it(name, () => {
-        const h = HTMLEscaper.create().needsEscaped(input);
+        const h = HTMLEscaper.needsEscaped(input);
         expect(h).toEqual(expected);
       });
     }

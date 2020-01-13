@@ -63,8 +63,6 @@ const normalizeName = (name: string): string | null => {
   return newName;
 };
 
-const escaper = HTMLEscaper.create();
-
 /**
  * normalizeValue transforms a string so it's a valid HTML attribute value.
  * Returns null if the entire attributed should be omitted.
@@ -87,11 +85,7 @@ const normalizeValue = (value: unknown): string | null => {
       return value.toString();
 
     case 'string':
-      if (escaper.needsEscaped(value)) {
-        return escaper.escape(value);
-      }
-
-      return value;
+      return HTMLEscaper.escape(value);
 
     case 'object':
       if (value === null) {

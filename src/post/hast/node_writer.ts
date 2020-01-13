@@ -1,8 +1,9 @@
 import * as objects from '//objects';
 import { AttrWriter } from '//post/hast/attr_writer';
 import * as h from '//post/hast/nodes';
-import { isLiteralElem, isParentElem } from '//post/hast/nodes';
+import { isParentElem } from '//post/hast/nodes';
 import { HastWriter, WriterContext } from '//post/hast/writer';
+import { HTMLEscaper } from '//post/html/escapers';
 import { StringBuilder } from '//strings';
 import { isParent } from '//unist/nodes';
 import * as un from '//unist/nodes';
@@ -92,9 +93,6 @@ export class ElementWriter implements HastNodeWriter {
       for (const child of node.children) {
         this.compiler.writeNode(child, ctx, sb);
       }
-    } else if (isLiteralElem(node)) {
-      // TODO: Escape everything except style and script tags.
-      sb.writeString(node.value);
     } else {
       throw new Error(`unknown element: ${node.tagName}`);
     }
@@ -154,9 +152,22 @@ export class TextWriter implements HastNodeWriter {
     return new TextWriter();
   }
 
-  writeNode(node: unist.Node, _ctx: WriterContext, sb: StringBuilder): void {
+  writeNode(node: unist.Node, ctx: WriterContext, sb: StringBuilder): void {
     h.checkType(node, 'text', un.isText);
-    sb.writeString(node.value);
+    const parent = ctx.ancestors[ctx.ancestors.length - 1];
+    const parentTag = parent === undefined ? '<unknown>' : parent.tagName;
+
+    switch (parentTag) {
+      case 'script':
+      case 'style':
+        sb.writeString(node.value);
+        break;
+
+      default:
+        const e = HTMLEscaper.escape(node.value);
+        sb.writeString(e);
+        break;
+    }
   }
 }
 

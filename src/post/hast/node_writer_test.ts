@@ -8,7 +8,12 @@ import { dedent, StringBuilder } from '//strings';
 import * as hast from 'hast-format';
 import * as unist from 'unist';
 
-const emptyCtx = () => WriterContext.create(PostAST.fromMdast(md.root([])));
+const emptyPostAST = PostAST.fromMdast(md.root([]));
+const ctx = (ancestors: unist.Node[] = []): WriterContext => {
+  const wc = WriterContext.create(emptyPostAST, h.root([]));
+  wc.ancestors.push(...ancestors);
+  return wc;
+};
 
 const indent = (
   literals: TemplateStringsArray,
@@ -29,7 +34,7 @@ describe('CommentWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.CommentWriter.create();
 
-    w.writeNode(h.comment('foo'), emptyCtx(), sb);
+    w.writeNode(h.comment('foo'), ctx(), sb);
 
     expect(sb.toString()).toEqual('<!-- foo -->');
   });
@@ -40,7 +45,7 @@ describe('DoctypeWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.DoctypeWriter.create();
 
-    w.writeNode(h.doctype(), emptyCtx(), sb);
+    w.writeNode(h.doctype(), ctx(), sb);
 
     expect(sb.toString()).toEqual('<!doctype html>\n');
   });
@@ -68,6 +73,11 @@ describe('ElementWriter', () => {
         </div>
       `,
     ],
+    [
+      'unsafe chars',
+      h.elemText('code', 'echo 5 < 2 && 3 > 4'),
+      `<code>echo 5 &lt; 2 && 3 &gt; 4</code>`,
+    ],
   ];
   for (const [name, input, expected] of testData) {
     it(name, () => {
@@ -75,7 +85,7 @@ describe('ElementWriter', () => {
       const c = HastWriter.createDefault();
       const w = nw.ElementWriter.create(c);
 
-      w.writeNode(input, emptyCtx(), sb);
+      w.writeNode(input, ctx(), sb);
 
       expect(sb.toString()).toEqual(expected);
     });
@@ -132,7 +142,7 @@ describe('ElementWriter', () => {
         const c = HastWriter.createDefault();
         const w = nw.ElementWriter.create(c);
 
-        w.writeNode(input, emptyCtx(), sb);
+        w.writeNode(input, ctx(), sb);
         const actual = sb.toString();
 
         expect(actual).toEqual('\n' + expected);
@@ -146,7 +156,7 @@ describe('RawWriter', () => {
     const sb = StringBuilder.create();
     const w = nw.RawWriter.create();
 
-    w.writeNode(h.raw('<div>foo</div>'), emptyCtx(), sb);
+    w.writeNode(h.raw('<div>foo</div>'), ctx(), sb);
 
     expect(sb.toString()).toEqual('<div>foo</div>\n');
   });
@@ -158,19 +168,43 @@ describe('RootWriter', () => {
     const c = HastWriter.createDefault();
     const w = nw.RootWriter.create(c);
 
-    w.writeNode(h.root([h.text('foo'), h.raw('<br>')]), emptyCtx(), sb);
+    w.writeNode(h.root([h.text('foo'), h.raw('<br>')]), ctx(), sb);
 
     expect(sb.toString()).toEqual('foo<br>\n');
   });
 });
 
 describe('TextWriter', () => {
-  it('should write a text node', () => {
-    const sb = StringBuilder.create();
-    const w = nw.TextWriter.create();
+  const testData: [string, unist.Node, WriterContext, string][] = [
+    ['foo', un.text('foo'), ctx(), 'foo'],
+    [
+      'escape < and >',
+      un.text('3 < 5 && 7 > 6'),
+      ctx(),
+      '3 &lt; 5 && 7 &gt; 6',
+    ],
+    ['escape unsafe ampersands', un.text('3&4;'), ctx(), '3&amp;4;'],
+    [
+      'not escape script',
+      un.text('3<4 && 5<6;'),
+      ctx([h.elem('script')]),
+      '3<4 && 5<6;',
+    ],
+    [
+      'not escape style',
+      un.text('3<4 && 5<6;'),
+      ctx([h.elem('style')]),
+      '3<4 && 5<6;',
+    ],
+  ];
+  for (const [name, node, ctx, expected] of testData) {
+    it(name, () => {
+      const sb = StringBuilder.create();
+      const w = nw.TextWriter.create();
 
-    w.writeNode(un.text('foo'), emptyCtx(), sb);
+      w.writeNode(node, ctx, sb);
 
-    expect(sb.toString()).toEqual('foo');
-  });
+      expect(sb.toString()).toEqual(expected);
+    });
+  }
 });
