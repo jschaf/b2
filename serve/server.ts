@@ -9,8 +9,8 @@ import KoaRouter from 'koa-router';
 import { PostCommitter } from '//post/committer';
 
 const gitDirFlag = flags
-  .defineString('git-dir')
-  .setDescription('The path to the git dir.');
+    .defineString('git-dir')
+    .setDescription('The path to the git dir.');
 
 const app = new Koa();
 
