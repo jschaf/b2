@@ -27,8 +27,8 @@ func newConn(ws *websocket.Conn) *conn {
 }
 
 func (c *conn) start() {
-	if err := c.ws.WriteJSON(helloResponse); err != nil {
-		c.closeCode(websocket.CloseInternalServerErr)
+	if err := c.ws.WriteJSON(newHelloResponse()); err != nil {
+		c.closeWithCode(websocket.CloseInternalServerErr)
 	}
 
 	go c.receive()
@@ -44,14 +44,14 @@ func (c *conn) receive() {
 		}
 
 		if msgType == websocket.BinaryMessage {
-			c.closeCode(websocket.CloseUnsupportedData)
+			c.closeWithCode(websocket.CloseUnsupportedData)
 			return
 		}
 
 		helloReq := new(helloRequest)
 		err = json.NewDecoder(reader).Decode(helloReq)
 		if err != nil {
-			c.closeCode(websocket.ClosePolicyViolation)
+			c.closeWithCode(websocket.ClosePolicyViolation)
 			return
 		}
 
@@ -78,7 +78,7 @@ func (c *conn) transmit() {
 	}
 }
 
-func (c *conn) closeCode(code int) {
+func (c *conn) closeWithCode(code int) {
 	err := &websocket.CloseError{Code: code}
 	c.close(err)
 }
@@ -91,10 +91,16 @@ func (c *conn) close(err error) {
 
 	closeMsg := websocket.FormatCloseMessage(closeCode, err.Error())
 	deadline := time.Now().Add(time.Second)
-	err = c.ws.WriteControl(websocket.CloseMessage, closeMsg, deadline)
-	log.Printf("failed to write websocket control: %s", err)
 
 	c.closer.Do(func() {
+		err = c.ws.WriteControl(websocket.CloseMessage, closeMsg, deadline)
+		if err != nil {
+			log.Printf("failed to write websocket control: %s", err)
+		}
+		err = c.ws.Close()
+		if err != nil {
+			log.Printf("failed to close websocket: :%w", err)
+		}
 		close(c.send)
 	})
 }

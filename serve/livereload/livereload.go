@@ -5,81 +5,68 @@
 package livereload
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/jschaf/b2/serve/paths"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"path/filepath"
-	"sync"
 )
 
-var (
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
+type LiveReload struct {
+	upgrader      websocket.Upgrader
+	connPublisher *connPub
+}
+
+func New() *LiveReload {
+	return &LiveReload{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
 		},
+		connPublisher: newConnPub(),
 	}
-	// Global register of LiveReload connections.
-	connPublisher = newConnPub()
-)
+}
 
 // Handler is a http.HandlerFunc to handle LiveReload websocket interaction.
-func Handler(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
+// The goroutine running the handler is left open.
+func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := lr.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("failed to upgrade HTTP to websocket: %s", err)
 		return
 	}
 	c := newConn(ws)
-	connPublisher.attach <- c
-	defer func() { connPublisher.detach <- c }()
+	lr.connPublisher.attach <- c
+	defer func() { lr.connPublisher.detach <- c }()
+	log.Printf("Start LiveReload connection")
 	c.start()
+	log.Printf("Finish LiveReload connection")
 }
 
-var (
-	liveReloadOnce  sync.Once
-	liveReloadJS    []byte
-	liveReloadJSErr error
-)
-
 // ServeJS is a http.HandlerFunc to serve the livereload.js script.
-func ServeJS(w http.ResponseWriter, _ *http.Request) {
-	liveReloadOnce.Do(func() {
-		liveReloadJS, liveReloadJSErr = loadJS()
-	})
-
-	if liveReloadJSErr != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(liveReloadJSErr.Error()))
-		return
-	}
-
+func (lr *LiveReload) ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 	w.Write(liveReloadJS)
 }
 
-func loadJS() ([]byte, error) {
-	root, err := paths.FindRootDir()
-	if err != nil {
-		return nil, err
+func (lr *LiveReload) Start() {
+	lr.connPublisher.start()
+}
+
+func (lr *LiveReload) Shutdown() {
+	log.Printf("Shutting down livereload")
+	for c := range lr.connPublisher.conns {
+		log.Printf("Shutting down livereload connection")
+		c.closeWithCode(websocket.CloseNormalClosure)
 	}
-	jsPath := filepath.Join(root, "third_party", "livereload", "livereload.js")
-	file, err := ioutil.ReadFile(jsPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open livereload.js: %w", err)
-	}
-	return file, nil
 }
 
 // ReloadFile instructs all registered LiveReload clients to reload path.
-func ReloadFile(path string) {
-	connPublisher.publish <- newReloadResponse(path)
+func (lr *LiveReload) ReloadFile(path string) {
+	lr.connPublisher.publish <- newReloadResponse(path)
 }
 
 // Alert instructs all registered LiveReload clients to display an alert
 // with msg.
-func Alert(msg string) {
-	connPublisher.publish <- newAlertResponse(msg)
+func (lr *LiveReload) Alert(msg string) {
+	lr.connPublisher.publish <- newAlertResponse(msg)
 }

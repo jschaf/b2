@@ -1,17 +1,21 @@
 package livereload
 
-import "github.com/gorilla/websocket"
+import (
+	"fmt"
+	"github.com/gorilla/websocket"
+)
 
 // connPub publishes messages to all attached LiveReload websocket connections.
 type connPub struct {
 	// All connections registered on this connPub.
 	conns map[*conn]struct{}
-	// Messages to publish to all livereload client connections.
+	// Messages to publish to all LiveReload client connections.
 	publish chan interface{}
 	// LiveReload client connections to attach.
 	attach chan *conn
 	// LiveReload client connections to detach.
 	detach chan *conn
+	stop   chan struct{}
 }
 
 func newConnPub() *connPub {
@@ -20,30 +24,46 @@ func newConnPub() *connPub {
 		publish: make(chan interface{}),
 		attach:  make(chan *conn),
 		detach:  make(chan *conn),
+		stop:    make(chan struct{}),
 	}
 }
 
-func (h *connPub) start() {
+func (p *connPub) start() {
+	fmt.Println("starting conn publisher")
 	for {
 		select {
-		case c := <-h.attach:
-			h.conns[c] = struct{}{}
+		case <-p.stop:
+			return
 
-		case c := <-h.detach:
-			delete(h.conns, c)
-			c.closeCode(websocket.CloseNormalClosure)
+		case c := <-p.attach:
+			fmt.Println("attaching connection")
+			p.conns[c] = struct{}{}
 
-		case m := <-h.publish:
-			for c := range h.conns {
+		case c := <-p.detach:
+			fmt.Println("detaching connection")
+			delete(p.conns, c)
+			c.closeWithCode(websocket.CloseNormalClosure)
+
+		case m := <-p.publish:
+			fmt.Println("publishing to all connections")
+			for c := range p.conns {
 				select {
 				case c.send <- m:
 				default:
 					// If the connection is not accepting data either it's closed or
 					// congested. Force the connection to reconnect if it's still alive.
-					delete(h.conns, c)
-					c.closeCode(websocket.CloseTryAgainLater)
+					delete(p.conns, c)
+					c.closeWithCode(websocket.CloseTryAgainLater)
 				}
 			}
 		}
+	}
+}
+
+func (p *connPub) shutdown() {
+	close(p.stop)
+	for c := range p.conns {
+		delete(p.conns, c)
+		c.closeWithCode(websocket.CloseNormalClosure)
 	}
 }

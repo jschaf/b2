@@ -18,10 +18,12 @@ type helloRequest struct {
 	ServerName string   `json:"serverName"`
 }
 
-var helloResponse = helloRequest{
-	Command:    "hello",
-	Protocols:  []string{"http://livereload.com/protocols/official-7"},
-	ServerName: "b2",
+func newHelloResponse() helloRequest {
+	return helloRequest{
+		Command:    "hello",
+		Protocols:  []string{"http://livereload.com/protocols/official-7"},
+		ServerName: "b2",
+	}
 }
 
 func validateHelloRequest(req *helloRequest) bool {
@@ -29,7 +31,7 @@ func validateHelloRequest(req *helloRequest) bool {
 		return false
 	}
 	for _, clientP := range req.Protocols {
-		for _, serverP := range helloResponse.Protocols {
+		for _, serverP := range newHelloResponse().Protocols {
 			if clientP == serverP {
 				return true
 			}
