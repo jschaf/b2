@@ -84,12 +84,13 @@ func (c *conn) closeWithCode(code int) {
 }
 
 func (c *conn) close(err error) {
-	closeCode := websocket.CloseNoStatusReceived
+	closeCode := websocket.CloseInternalServerErr
 	if closeErr, ok := err.(*websocket.CloseError); ok {
 		closeCode = closeErr.Code
 	}
 
-	closeMsg := websocket.FormatCloseMessage(closeCode, err.Error())
+	msg := err.Error()
+	closeMsg := websocket.FormatCloseMessage(closeCode, msg)
 	deadline := time.Now().Add(time.Second)
 
 	c.closer.Do(func() {
@@ -99,7 +100,7 @@ func (c *conn) close(err error) {
 		}
 		err = c.ws.Close()
 		if err != nil {
-			log.Printf("failed to close websocket: :%w", err)
+			log.Printf("failed to close websocket: :%s", err)
 		}
 		close(c.send)
 	})

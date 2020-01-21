@@ -89,9 +89,7 @@ func TestLiveReload_WebSocketHandler_BadHandshake(t *testing.T) {
 	randomMsg := struct {
 		Command string `json:"command"`
 	}{"foo"}
-	if err := conn.WriteJSON(randomMsg); err != nil {
-		t.Fatal(err)
-	}
+	writeClientJSON(t, conn, randomMsg)
 
 	_, _, err := conn.NextReader()
 	if _, ok := err.(*websocket.CloseError); !ok {
@@ -104,16 +102,12 @@ func TestLiveReload_WebSocketHandler_ValidClientMessage(t *testing.T) {
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloRequest(t, conn)
-	if err := conn.WriteJSON(newHelloResponse()); err != nil {
-		t.Fatal(err)
-	}
+	writeClientJSON(t, conn, newHelloResponse())
 
 	randomMsg := struct {
 		Command string `json:"command"`
 	}{"foo"}
-	if err := conn.WriteJSON(randomMsg); err != nil {
-		t.Fatal(err)
-	}
+	writeClientJSON(t, conn, randomMsg)
 }
 
 func TestLiveReload_ReloadFile(t *testing.T) {
@@ -121,22 +115,53 @@ func TestLiveReload_ReloadFile(t *testing.T) {
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloRequest(t, conn)
-	if err := conn.WriteJSON(newHelloResponse()); err != nil {
-		t.Fatal(err)
-	}
+	writeClientJSON(t, conn, newHelloResponse())
 
 	lr.ReloadFile("foo_bar")
 
 	actual := new(reloadResponse)
-	if err := conn.ReadJSON(actual); err != nil {
-		t.Fatal(err)
-	}
+	readClientJSON(t, conn, actual)
 	expected := newReloadResponse("foo_bar")
-	if diff := deep.Equal(expected, actual); diff != nil {
+	if diff := deep.Equal(expected, *actual); diff != nil {
 		t.Fatalf("expected reload response from server:\n%v\ngot:\n%v\n%s",
 			expected, actual, strings.Join(diff, "\n"))
 	}
+}
 
+func TestLiveReload_Alert(t *testing.T) {
+	server, lr := newLiveReloadServer()
+	defer server.Close()
+	conn, _ := newWebSocketClient(t, server)
+	assertReadsHelloRequest(t, conn)
+	writeClientJSON(t, conn, newHelloResponse())
+
+	for i := 0; i < 4; i++ {
+		lr.Alert("alert!")
+
+		actual := new(alertResponse)
+		readClientJSON(t, conn, actual)
+		expected := newAlertResponse("alert!")
+		if diff := deep.Equal(expected, *actual); diff != nil {
+			t.Fatalf("expected alert response from server:\n%v\ngot:\n%v\n%s",
+				expected, actual, strings.Join(diff, "\n"))
+		}
+	}
+}
+
+func writeClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
+	t.Helper()
+	if err := conn.WriteJSON(value); err != nil {
+		t.Fatal(err)
+	}
+	// Give a bit of time after writing to let the server process the result.
+	<-time.After(time.Millisecond)
+}
+
+func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
+	t.Helper()
+	if err := conn.ReadJSON(value); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func newLiveReloadServer() (*httptest.Server, *LiveReload) {
