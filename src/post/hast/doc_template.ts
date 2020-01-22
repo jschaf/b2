@@ -78,7 +78,7 @@ const postTemplate = () => {
     h.elemProps('script', {
       defer: true,
       src: '/instantpage.min.js',
-      type: 'module',
+      type: 'application/javascript',
     })
   );
 };

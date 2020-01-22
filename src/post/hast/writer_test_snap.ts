@@ -30,7 +30,7 @@ exports[`HastWriter should compile body > p 1`] = `
   <meta name=\\"robots\\" content=\\"index, follow\\">
   <link rel=\\"icon\\" href=\\"/favicon.ico\\">
   <link rel=\\"apple-touch-icon-precomposed\\" href=\\"/favicon-152.png\\">
-  <script defer src=\\"/instantpage.min.js\\" type=\\"module\\"></script>
+  <script defer src=\\"/instantpage.min.js\\" type=\\"application/javascript\\"></script>
 </head>
 <body>
   <header></header>
