@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"log"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -55,11 +56,14 @@ func (c *conn) receive() {
 			return
 		}
 
-		if validateHelloRequest(helloReq) {
-			c.handshake = true
-		} else {
-			c.close(websocket.ErrBadHandshake)
-			return
+		if !c.handshake {
+			if validateHelloRequest(helloReq) {
+				log.Println("validated hello request")
+				c.handshake = true
+			} else {
+				c.close(websocket.ErrBadHandshake)
+				return
+			}
 		}
 	}
 }
@@ -84,6 +88,8 @@ func (c *conn) closeWithCode(code int) {
 }
 
 func (c *conn) close(err error) {
+	stack := debug.Stack()
+	log.Printf("closing connection: %s\n%s", err, string(stack))
 	closeCode := websocket.CloseInternalServerErr
 	if closeErr, ok := err.(*websocket.CloseError); ok {
 		closeCode = closeErr.Code
