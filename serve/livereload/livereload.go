@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"net/http/httptest"
+	"strconv"
 )
 
 type LiveReload struct {
@@ -40,6 +42,21 @@ func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Start LiveReload connection")
 	c.start()
 	log.Printf("Finish LiveReload connection")
+}
+
+// NewHTMLInjector intercepts all output from the next handler and injects
+// a script tag to load the LiveReload script. The script is injected before
+// the </head> tag.
+func NewHTMLInjector(scriptTag string, next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		recorder := httptest.NewRecorder()
+		rewriter := newResponseRewriter(scriptTag, w)
+		next.ServeHTTP(recorder, r)
+		s := rewriter.injectScript(recorder.Body.Bytes())
+		w.Header().Set("Content-Length", strconv.Itoa(len(s)))
+		w.WriteHeader(recorder.Code)
+		w.Write(s)
+	}
 }
 
 // ServeJS is a http.HandlerFunc to serve the livereload.js script.

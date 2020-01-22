@@ -14,9 +14,7 @@ import (
 )
 
 func TestServeJSHandler(t *testing.T) {
-	attachMITM := make(chan *conn)
 	lr := New()
-	lr.connPublisher.attach = attachMITM
 	req := httptest.NewRequest("GET", "http://example.com/livereload.js", nil)
 	w := httptest.NewRecorder()
 	lr.ServeJSHandler(w, req)
@@ -26,6 +24,51 @@ func TestServeJSHandler(t *testing.T) {
 
 	if !strings.Contains(string(body), "var LiveReload") {
 		t.Error("expected LiveReload JS to contain 'var LiveReload'")
+	}
+}
+
+func TestLiveReload_NewHTMLInjector(t *testing.T) {
+	newTag := "<meta foo=qux>"
+	replaced := "  " + newTag + "\n</head>"
+	tests := []struct {
+		name    string
+		handler http.Handler
+		want    string
+	}{
+		{"only head tag", writeHTML("</head>"), "  " + newTag + "\n</head>"},
+		{"2 tags with head",
+			writeHTML("<html><head></head></html>"),
+			"<html><head>  " + newTag + "\n</head></html>"},
+		{"split head tag", writeHTML("</he", "ad>"), replaced},
+		{"split head tag", writeHTML("<html></he", "ad>"), "<html>" + replaced},
+		{"split head tag", writeHTML("<html>", "</he", "ad>"), "<html>" + replaced},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "http://example.com", nil)
+			w := httptest.NewRecorder()
+			injector := NewHTMLInjector(newTag, tt.handler)
+			injector(w, req)
+
+			resp := w.Result()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if string(body) != tt.want {
+				t.Errorf("mismatch in injected HTML, expected:\n%s\ngot:\n%s",
+					tt.want, string(body))
+			}
+		})
+	}
+}
+
+func writeHTML(hs ...string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for _, h := range hs {
+			w.Write([]byte(h))
+		}
 	}
 }
 
