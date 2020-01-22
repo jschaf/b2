@@ -5,6 +5,7 @@
 package livereload
 
 import (
+	"bytes"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -50,9 +51,11 @@ func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 func NewHTMLInjector(scriptTag string, next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		recorder := httptest.NewRecorder()
-		rewriter := newResponseRewriter(scriptTag, w)
 		next.ServeHTTP(recorder, r)
-		s := rewriter.injectScript(recorder.Body.Bytes())
+
+		headTag := []byte("</head>")
+		replacement := []byte("  " + scriptTag + "\n</head>")
+		s := bytes.Replace(recorder.Body.Bytes(), headTag, replacement, 1)
 		w.Header().Set("Content-Length", strconv.Itoa(len(s)))
 		w.WriteHeader(recorder.Code)
 		w.Write(s)
