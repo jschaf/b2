@@ -185,7 +185,11 @@ func TestLiveReload_WebSocketHandler_UnknownClientMessage(t *testing.T) {
 	writeClientJSON(t, conn, randomMsg)
 
 	writeClientJSON(t, conn, newHelloMsg())
-	assertReadsHelloMsg(t, conn)
+	hello := new(helloMsg)
+	err := conn.ReadJSON(hello)
+	if err == nil {
+		t.Fatalf("expected server to be closed")
+	}
 }
 
 func TestLiveReload_ReloadFile(t *testing.T) {
