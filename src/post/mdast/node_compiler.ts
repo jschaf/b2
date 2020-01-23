@@ -79,8 +79,11 @@ export class CodeCompiler implements MdastNodeCompiler {
     if (isString(node.lang) && node.lang !== '') {
       props.className = ['lang-' + node.lang.trim()];
     }
-    return [h.elemProps('pre', {className: ['code-block']},
-        [h.elemProps('code', props, [h.text(node.value)])])];
+    return [
+      h.elemProps('pre', { className: ['code-block'] }, [
+        h.elemProps('code', props, [h.text(node.value)]),
+      ]),
+    ];
   }
 }
 
@@ -581,12 +584,19 @@ export class RootCompiler implements MdastNodeCompiler {
         let restStart = 0;
         const c = node.children;
         if (c.length >= 3 && md.isToml(c[0]) && md.isHeading(c[1])) {
-          const heading = this.compiler.compile(c[1], postAST);
+          const header = c[1];
+          const linkedChildren = md.link(
+            `/${postAST.metadata.slug}`,
+            header.children as mdast.StaticPhrasingContent[]
+          );
+          header.children = [linkedChildren];
+          const heading = this.compiler.compile(header, postAST);
           headerChildren.push(...heading);
           restStart = 2;
 
           if (md.isBlockquote(c[2])) {
-            const asides = this.compiler.compileNodes(c[2].children, postAST);
+            const bq = c[2];
+            const asides = this.compiler.compileNodes(bq.children, postAST);
             const unwrapped = md.unwrapParagraphs(asides);
             headerChildren.push(
               h.elemProps('aside', { className: ['subtitle'] }, unwrapped)

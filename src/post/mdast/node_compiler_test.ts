@@ -47,7 +47,7 @@ describe('CodeCompiler', () => {
     const hast = nc.CodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual([
-      h.elemProps('pre', {className: ['code-block']}, [
+      h.elemProps('pre', { className: ['code-block'] }, [
         h.elemProps('code', { className: ['lang-javascript'] }, [h.text(code)]),
       ]),
     ]);
@@ -59,8 +59,11 @@ describe('CodeCompiler', () => {
 
     const hast = nc.CodeCompiler.create().compileNode(post.mdastNode, post);
 
-    expect(hast).toEqual([h.elemProps('pre', {className: ['code-block']},
-        [h.elem('code', [h.text(code)])])]);
+    expect(hast).toEqual([
+      h.elemProps('pre', { className: ['code-block'] }, [
+        h.elem('code', [h.text(code)]),
+      ]),
+    ]);
   });
 });
 
@@ -429,7 +432,9 @@ describe('RootCompiler', () => {
           h.elemProps('time', { datetime: '2020-01-02' }, [
             h.text('January 2, 2020'),
           ]),
-          h.elemText('h1', 'title'),
+          h.elem('h1', [
+            h.elemProps('a', { href: '/slug' }, [h.text('title')]),
+          ]),
           h.elemProps('aside', { className: ['subtitle'] }, [
             h.text('subtitle'),
           ]),

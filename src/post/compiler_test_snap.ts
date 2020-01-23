@@ -26,7 +26,7 @@ Object {
     <div class=\\"main-inner-container\\">
       <article>
         <header><time datetime=\\"2019-10-08\\">October 8, 2019</time>
-          <h1>alpha</h1>
+          <h1><a href=\\"/foo_bar\\">alpha</a></h1>
         </header>
         <section>
           <p>Foo bar.</p>
