@@ -47,7 +47,7 @@ describe('CodeCompiler', () => {
     const hast = nc.CodeCompiler.create().compileNode(p.mdastNode, p);
 
     expect(hast).toEqual([
-      h.elem('pre', [
+      h.elemProps('pre', {className: ['code-block']}, [
         h.elemProps('code', { className: ['lang-javascript'] }, [h.text(code)]),
       ]),
     ]);
@@ -59,7 +59,8 @@ describe('CodeCompiler', () => {
 
     const hast = nc.CodeCompiler.create().compileNode(post.mdastNode, post);
 
-    expect(hast).toEqual([h.elem('pre', [h.elem('code', [h.text(code)])])]);
+    expect(hast).toEqual([h.elemProps('pre', {className: ['code-block']},
+        [h.elem('code', [h.text(code)])])]);
   });
 });
 

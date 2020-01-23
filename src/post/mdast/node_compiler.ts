@@ -60,7 +60,9 @@ export class BreakCompiler implements MdastNodeCompiler {
 /**
  * Compiles an mdast code block to hast, like:
  *
+ *     ``` js
  *     let f = () => 42;
+ *     ```
  *
  * https://github.com/syntax-tree/mdast#code
  */
@@ -77,7 +79,8 @@ export class CodeCompiler implements MdastNodeCompiler {
     if (isString(node.lang) && node.lang !== '') {
       props.className = ['lang-' + node.lang.trim()];
     }
-    return [h.elem('pre', [h.elemProps('code', props, [h.text(node.value)])])];
+    return [h.elemProps('pre', {className: ['code-block']},
+        [h.elemProps('code', props, [h.text(node.value)])])];
   }
 }
 

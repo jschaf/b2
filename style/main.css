@@ -426,26 +426,16 @@ code {
     monospace;
 }
 
-.highlight {
+.code-block {
   margin-top: 0.75rem;
+  padding-left: 0;
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
-  padding-left: 5px;
-  overflow-x: visible;
-}
-
-.chroma {
   overflow-x: visible;
   line-height: 20px;
-  margin: 0;
-  tab-size: 4;
-  padding-left: 0;
+  tab-size: 2;
   padding-top: 3px;
   padding-bottom: 3px;
-}
-
-.chroma code {
-  font-size: 15px;
 }
 
 .lntable {
