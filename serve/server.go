@@ -37,8 +37,14 @@ func main() {
 
 	watcher := paths.NewFSWatcher(liveReload)
 	if err = watcher.AddRecursively(pubDir); err != nil {
-		log.Printf("failed to watch path %s: %s", pubDir, err)
+		log.Fatalf("failed to watch path %s: %s", pubDir, err)
 	}
+
+	styleDir := filepath.Join(root, "style")
+	if err = watcher.AddRecursively(styleDir); err != nil {
+		log.Fatalf("failed to watch path %s: %s", styleDir, err)
+	}
+
 	go watcher.Start()
 
 	log.Printf("Serving at port %s", port)

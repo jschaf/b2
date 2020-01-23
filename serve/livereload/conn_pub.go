@@ -29,7 +29,6 @@ func newConnPub() *connPub {
 }
 
 func (p *connPub) start() {
-	fmt.Println("starting conn publisher")
 	for {
 		select {
 		case <-p.stop:
@@ -46,7 +45,6 @@ func (p *connPub) start() {
 				"detaching connection")
 
 		case m := <-p.publish:
-			fmt.Println("publishing to all connections")
 			for c := range p.conns {
 				select {
 				case c.send <- m:

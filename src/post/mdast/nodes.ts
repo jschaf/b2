@@ -1,6 +1,7 @@
 import { checkDefined } from '//asserts';
 import { isOptionalBoolean } from '//booleans';
 import { isOptionalNumber } from '//numbers';
+import * as h from '//post/hast/nodes';
 import { isOptionalString, isString } from '//strings';
 import * as tomlLib from '@iarna/toml';
 import * as mdast from 'mdast';
@@ -663,4 +664,20 @@ export const normalizeLabel = (l: string): string => {
   const trimmed = lowered.trim();
   // Collapse consecutive internal whitespace to a single space.
   return trimmed.replace(/\s+/g, ' ');
+};
+
+/**
+ * Unwraps each child that is a hast paragraph node and joins all nodes into
+ * an array.
+ */
+export const unwrapParagraphs = (children: unist.Node[]): unist.Node[] => {
+  const rs = [];
+  for (const c of children) {
+    if (h.isParentTag('p', c)) {
+      rs.push(...c.children);
+    } else {
+      rs.push(c);
+    }
+  }
+  return rs;
 };

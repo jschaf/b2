@@ -5,6 +5,7 @@ import { MdastCompiler } from '//post/mdast/compiler';
 import * as md from '//post/mdast/nodes';
 import { isNumber } from '//numbers';
 import { PostAST } from '//post/ast';
+import { PostType } from '//post/metadata';
 import { isString } from '//strings';
 import * as mdast from 'mdast';
 import * as hast from 'hast-format';
@@ -456,7 +457,7 @@ export class ListItemCompiler implements MdastNodeCompiler {
         if (isLoose) {
           return [h.elem('li', children)];
         } else {
-          const unwrapped = ListItemCompiler.unwrapParagraphs(children);
+          const unwrapped = md.unwrapParagraphs(children);
           return [h.elem('li', unwrapped)];
         }
 
@@ -467,7 +468,7 @@ export class ListItemCompiler implements MdastNodeCompiler {
         if (isLoose) {
           return [h.elem('li', [checkbox, ...children])];
         } else {
-          const unwrapped = ListItemCompiler.unwrapParagraphs(children);
+          const unwrapped = md.unwrapParagraphs(children);
           return [h.elem('li', [checkbox, ...unwrapped])];
         }
     }
@@ -475,18 +476,6 @@ export class ListItemCompiler implements MdastNodeCompiler {
 
   static checkbox(checked: boolean): hast.Element {
     return h.elemProps('input', { type: 'checkbox', checked, disabled: true });
-  }
-
-  private static unwrapParagraphs(children: unist.Node[]): unist.Node[] {
-    const rs = [];
-    for (const c of children) {
-      if (h.isParentTag('p', c)) {
-        rs.push(...c.children);
-      } else {
-        rs.push(c);
-      }
-    }
-    return rs;
   }
 
   private static getCheckedState(n: mdast.ListItem): ListItemCheckedState {
@@ -581,10 +570,55 @@ export class RootCompiler implements MdastNodeCompiler {
     return new RootCompiler(compiler);
   }
 
-  compileNode(node: mdast.Root, postAST: PostAST): unist.Node[] {
+  compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'root', md.isRoot);
-    const children = this.compiler.compileChildren(node, postAST);
-    return [h.elem('body', children)];
+    switch (postAST.metadata.postType) {
+      case PostType.Post:
+        const headerChildren: unist.Node[] = [];
+        let restStart = 0;
+        const c = node.children;
+        if (c.length >= 3 && md.isToml(c[0]) && md.isHeading(c[1])) {
+          const heading = this.compiler.compile(c[1], postAST);
+          headerChildren.push(...heading);
+          restStart = 2;
+
+          if (md.isBlockquote(c[2])) {
+            const asides = this.compiler.compileNodes(c[2].children, postAST);
+            const unwrapped = md.unwrapParagraphs(asides);
+            headerChildren.push(
+              h.elemProps('aside', { className: ['subtitle'] }, unwrapped)
+            );
+            restStart = 3;
+          }
+        }
+        const restChildren = node.children.slice(restStart);
+
+        const rest = this.compiler.compileNodes(restChildren, postAST);
+        let date = postAST.metadata.date;
+        let isoDate = date.toISOString().slice(0, 'YYYY-MM-DD'.length);
+        const options = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'UTC',
+        };
+        const d = date.toLocaleDateString('en-US', options);
+        return [
+          h.elem('article', [
+            h.elem('header', [
+              h.elemProps('time', { datetime: isoDate }, [h.text(d)]),
+              ...headerChildren,
+            ]),
+            h.elem('section', rest),
+          ]),
+        ];
+
+      case PostType.LandingPage:
+        return this.compiler.compileChildren(node, postAST);
+
+      default:
+        throw new Error(`unknown post-type: ${postAST.metadata.postType}`);
+    }
   }
 }
 

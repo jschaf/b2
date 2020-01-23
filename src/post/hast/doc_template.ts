@@ -26,22 +26,63 @@ export class DocTemplate {
   render(children: unist.Node[]): hast.Root {
     let nodes = children;
     if (children.length === 1) {
-      const body = children[0];
-      if (isParentTag('body', body)) {
-        nodes = body.children;
+      const root = children[0];
+      if (isParentTag('root', root) || isParentTag('body', root)) {
+        nodes = root.children;
       }
     }
 
+    const siteNav = h.elemProps(
+      'nav',
+      { className: ['site-nav'], role: 'navigation' },
+      [
+        h.elemProps(
+          'a',
+          {
+            className: ['site-title'],
+            href: '/',
+            title: 'Home page',
+          },
+          [h.text('Joe Schafer')]
+        ),
+        h.elem('ul', [
+          h.elem('li', [
+            h.elemProps(
+              'a',
+              { href: 'https://github.com/jschaf', title: 'GitHub page' },
+              [h.text('GitHub')]
+            ),
+          ]),
+          h.elem('li', [
+            h.elemProps(
+              'a',
+              {
+                href: 'https://www.linkedin.com/in/jschaf/',
+                title: 'LinkedIn page',
+              },
+              [h.text('LinkedIn')]
+            ),
+          ]),
+        ]),
+      ]
+    );
+    const currentYear = new Date().getFullYear();
+    // https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/Contentinfo_role
+    const footer = h.elemProps('footer', { role: 'contentinfo' }, [
+      h.elemProps('a', { href: '/', title: 'Home page' }, [
+        h.text(`© ${currentYear} Joe Schafer`),
+      ]),
+    ]);
     return h.root([
       h.doctype(),
       h.elemProps('html', { lang: 'en' }, [
         h.elem('head', this.head),
         h.elem('body', [
-          h.elem('header'),
+          h.elem('header', [siteNav]),
           h.elem('main', [
             h.elemProps('div', { className: ['main-inner-container'] }, nodes),
           ]),
-          h.elem('footer'),
+          footer,
         ]),
       ]),
     ]);
@@ -75,6 +116,7 @@ const postTemplate = () => {
       href: '/favicon-152.png',
     }),
 
+    h.elemProps('link', { rel: 'stylesheet', href: '/style/main.css' }),
     h.elemProps('script', {
       defer: true,
       src: '/instantpage.min.js',

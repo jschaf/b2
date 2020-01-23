@@ -6,6 +6,7 @@ import * as md from '//post/mdast/nodes';
 import * as hast from 'hast-format';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
+import * as dates from '//dates';
 
 describe('BlockquoteCompiler', () => {
   it('should compile a blockquote', () => {
@@ -391,6 +392,50 @@ describe('MathCompiler', () => {
     expect(hast).toHaveLength(1);
     expect(hast[0].type).toEqual('raw');
     expect(hast[0].value).toMatch(/^<span class="katex-display">/);
+  });
+});
+
+describe('ParagraphCompiler', () => {
+  it('should compile a paragraph node', () => {
+    const a = 'alpha';
+    const b = 'bravo';
+    const p = PostAST.fromMdast(md.paragraph([md.text(a), md.emphasisText(b)]));
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.ParagraphCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual([h.elem('p', [h.text(a), h.elemText('em', b)])]);
+  });
+});
+
+describe('RootCompiler', () => {
+  it('should compile a root node', () => {
+    const p = PostAST.fromMdast(
+      md.root([
+        md.tomlFrontmatter({ slug: 'slug', date: dates.fromISO('2020-01-02') }),
+        md.headingText('h1', 'title'),
+        md.blockquote([md.paragraphText('subtitle')]),
+        md.paragraphText('body'),
+      ])
+    );
+    const c = MdastCompiler.createDefault();
+
+    const hast = nc.RootCompiler.create(c).compileNode(p.mdastNode, p);
+
+    expect(hast).toEqual([
+      h.elem('article', [
+        h.elem('header', [
+          h.elemProps('time', { datetime: '2020-01-02' }, [
+            h.text('January 2, 2020'),
+          ]),
+          h.elemText('h1', 'title'),
+          h.elemProps('aside', { className: ['subtitle'] }, [
+            h.text('subtitle'),
+          ]),
+        ]),
+        h.elem('section', [h.elemText('p', 'body')]),
+      ]),
+    ]);
   });
 });
 

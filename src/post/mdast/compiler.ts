@@ -66,15 +66,20 @@ export class MdastCompiler {
   }
 
   /** Compiles all children of an mdast node into an array of hast nodes. */
-  compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
+  compileNodes(nodes: unist.Node[], postAST: PostAST): unist.Node[] {
     const results: unist.Node[] = [];
-    for (const child of parent.children) {
-      const rs = this.compile(child, postAST);
+    for (const node of nodes) {
+      const rs = this.compile(node, postAST);
       for (const r of rs) {
         results.push(r);
       }
     }
     return results;
+  }
+
+  /** Compiles all children of an mdast node into an array of hast nodes. */
+  compileChildren(parent: unist.Parent, postAST: PostAST): unist.Node[] {
+    return this.compileNodes(parent.children, postAST);
   }
 
   private getNodeCompiler(type: string): nc.MdastNodeCompiler {

@@ -75,7 +75,83 @@ Object {
         Object {
           "children": Array [
             Object {
-              "children": Array [],
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "text",
+                          "value": "Joe Schafer",
+                        },
+                      ],
+                      "properties": Object {
+                        "className": Array [
+                          "site-title",
+                        ],
+                        "href": "/",
+                        "title": "Home page",
+                      },
+                      "tagName": "a",
+                      "type": "element",
+                    },
+                    Object {
+                      "children": Array [
+                        Object {
+                          "children": Array [
+                            Object {
+                              "children": Array [
+                                Object {
+                                  "type": "text",
+                                  "value": "GitHub",
+                                },
+                              ],
+                              "properties": Object {
+                                "href": "https://github.com/jschaf",
+                                "title": "GitHub page",
+                              },
+                              "tagName": "a",
+                              "type": "element",
+                            },
+                          ],
+                          "tagName": "li",
+                          "type": "element",
+                        },
+                        Object {
+                          "children": Array [
+                            Object {
+                              "children": Array [
+                                Object {
+                                  "type": "text",
+                                  "value": "LinkedIn",
+                                },
+                              ],
+                              "properties": Object {
+                                "href": "https://www.linkedin.com/in/jschaf/",
+                                "title": "LinkedIn page",
+                              },
+                              "tagName": "a",
+                              "type": "element",
+                            },
+                          ],
+                          "tagName": "li",
+                          "type": "element",
+                        },
+                      ],
+                      "tagName": "ul",
+                      "type": "element",
+                    },
+                  ],
+                  "properties": Object {
+                    "className": Array [
+                      "site-nav",
+                    ],
+                    "role": "navigation",
+                  },
+                  "tagName": "nav",
+                  "type": "element",
+                },
+              ],
               "tagName": "header",
               "type": "element",
             },
@@ -107,7 +183,25 @@ Object {
               "type": "element",
             },
             Object {
-              "children": Array [],
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "type": "text",
+                      "value": "© 2020 Joe Schafer",
+                    },
+                  ],
+                  "properties": Object {
+                    "href": "/",
+                    "title": "Home page",
+                  },
+                  "tagName": "a",
+                  "type": "element",
+                },
+              ],
+              "properties": Object {
+                "role": "contentinfo",
+              },
               "tagName": "footer",
               "type": "element",
             },

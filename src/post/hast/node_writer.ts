@@ -190,6 +190,7 @@ const blockTags = [
   'link',
   'main',
   'meta',
+  'nav',
   'ol',
   'p',
   'pre',
