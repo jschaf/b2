@@ -14,10 +14,9 @@ import (
 )
 
 func TestServeJSHandler(t *testing.T) {
-	lr := New()
 	req := httptest.NewRequest("GET", "http://example.com/livereload.js", nil)
 	w := httptest.NewRecorder()
-	lr.ServeJSHandler(w, req)
+	ServeJSHandler(w, req)
 
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -33,15 +32,22 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 	tests := []struct {
 		name    string
 		handler http.Handler
+		header  http.Header
 		want    string
 	}{
-		{"only head tag", writeHTML("</head>"), "  " + newTag + "\n</head>"},
+		{"only head tag", writeHTMLBody("</head>"), headers(), replaced},
 		{"2 tags with head",
-			writeHTML("<html><head></head></html>"),
-			"<html><head>  " + newTag + "\n</head></html>"},
-		{"split head tag", writeHTML("</he", "ad>"), replaced},
-		{"split head tag", writeHTML("<html></he", "ad>"), "<html>" + replaced},
-		{"split head tag", writeHTML("<html>", "</he", "ad>"), "<html>" + replaced},
+			writeHTMLBody("<html><head></head></html>"), headers(),
+			"<html><head>" + replaced + "</html>"},
+		{"split head tag </he ad>",
+			writeHTMLBody("</he", "ad>"), headers(), replaced},
+		{"split head tag with prefix",
+			writeHTMLBody("<html></he", "ad>"), headers(), "<html>" + replaced},
+		{"split head tag multiple writes",
+			writeHTMLBody("<html>", "</he", "ad>"), headers(), "<html>" + replaced},
+		{"headers preserved",
+			writeHTML(headers("FOO", "bar"), "<html>", "</he", "ad>"), headers("FOO", "bar"),
+			"<html>" + replaced},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -56,6 +62,11 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			for k, vs := range tt.header {
+				if resp.Header.Get(k) != vs[0] {
+					t.Errorf("expected header '%s: %s' but not found", k, vs[0])
+				}
+			}
 			if string(body) != tt.want {
 				t.Errorf("mismatch in injected HTML, expected:\n%s\ngot:\n%s",
 					tt.want, string(body))
@@ -64,8 +75,29 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 	}
 }
 
-func writeHTML(hs ...string) http.HandlerFunc {
+func headers(hs ...string) http.Header {
+	if len(hs)%2 != 0 {
+		panic("hs must be divisible by two")
+	}
+	header := make(http.Header)
+	for i := 0; i < len(hs); i += 2 {
+		j := i + 1
+		header.Set(hs[i], hs[j])
+	}
+	return header
+}
+
+func writeHTMLBody(hs ...string) http.HandlerFunc {
+	return writeHTML(nil, hs...)
+}
+
+func writeHTML(h http.Header, hs ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		for k, vs := range h {
+			for _, v := range vs {
+				w.Header().Add(k, v)
+			}
+		}
 		for _, h := range hs {
 			w.Write([]byte(h))
 		}
@@ -73,7 +105,7 @@ func writeHTML(hs ...string) http.HandlerFunc {
 }
 
 func TestLiveReload_WebSocketHandler_ImmediateClose(t *testing.T) {
-	lr := New()
+	lr := NewWebsocketServer()
 	server := httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler))
 	defer server.Close()
 
@@ -208,7 +240,7 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 }
 
 func newLiveReloadServer() (*httptest.Server, *LiveReload) {
-	lr := New()
+	lr := NewWebsocketServer()
 	go lr.Start()
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }

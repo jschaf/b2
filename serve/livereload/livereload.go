@@ -18,7 +18,7 @@ type LiveReload struct {
 	connPublisher *connPub
 }
 
-func New() *LiveReload {
+func NewWebsocketServer() *LiveReload {
 	return &LiveReload{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -56,6 +56,11 @@ func NewHTMLInjector(scriptTag string, next http.Handler) http.HandlerFunc {
 		headTag := []byte("</head>")
 		replacement := []byte("  " + scriptTag + "\n</head>")
 		s := bytes.Replace(recorder.Body.Bytes(), headTag, replacement, 1)
+		for k, vs := range recorder.Header() {
+			for _, v := range vs {
+				w.Header().Add(k, v)
+			}
+		}
 		w.Header().Set("Content-Length", strconv.Itoa(len(s)))
 		w.WriteHeader(recorder.Code)
 		w.Write(s)
@@ -63,7 +68,7 @@ func NewHTMLInjector(scriptTag string, next http.Handler) http.HandlerFunc {
 }
 
 // ServeJS is a http.HandlerFunc to serve the livereload.js script.
-func (lr *LiveReload) ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
+func ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 	w.Write(liveReloadJS)
 }

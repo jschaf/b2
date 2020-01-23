@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"log"
-	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -88,8 +87,7 @@ func (c *conn) closeWithCode(code int) {
 }
 
 func (c *conn) close(err error) {
-	stack := debug.Stack()
-	log.Printf("closing connection: %s\n%s", err, string(stack))
+	log.Printf("closing connection: %s", err)
 	closeCode := websocket.CloseInternalServerErr
 	if closeErr, ok := err.(*websocket.CloseError); ok {
 		closeCode = closeErr.Code

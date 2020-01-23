@@ -13,10 +13,10 @@ import (
 func main() {
 	port := "8080"
 
-	liveReload := livereload.New()
+	liveReload := livereload.NewWebsocketServer()
 	lrJSPath := "/dev/livereload.js"
 	lrPath := "/dev/livereload"
-	http.HandleFunc(lrJSPath, liveReload.ServeJSHandler)
+	http.HandleFunc(lrJSPath, livereload.ServeJSHandler)
 	http.HandleFunc(lrPath, liveReload.WebSocketHandler)
 	go liveReload.Start()
 
@@ -36,10 +36,8 @@ func main() {
 	http.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
 
 	watcher := paths.NewFSWatcher(liveReload)
-	path := filepath.Join(pubDir, "circle_ci_fast_git")
-	err = watcher.Add(path)
-	if err != nil {
-		log.Printf("failed to add to path: %s", err)
+	if err = watcher.AddRecursively(pubDir); err != nil {
+		log.Printf("failed to watch path %s: %s", pubDir, err)
 	}
 	go watcher.Start()
 
