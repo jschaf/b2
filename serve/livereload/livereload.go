@@ -81,13 +81,13 @@ func (lr *LiveReload) Shutdown() {
 	log.Printf("Shutting down livereload")
 	for c := range lr.connPublisher.conns {
 		log.Printf("Shutting down livereload connection")
-		c.closeWithCode(websocket.CloseNormalClosure)
+		c.closeWithCode(websocket.CloseNormalClosure, "")
 	}
 }
 
 // ReloadFile instructs all registered LiveReload clients to reload path.
 func (lr *LiveReload) ReloadFile(path string) {
-	lr.connPublisher.publish <- newReloadResponse(path)
+	lr.connPublisher.publish <- newReloadMsg(path)
 }
 
 // Alert instructs all registered LiveReload clients to display an alert

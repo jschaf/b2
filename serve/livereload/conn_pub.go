@@ -42,7 +42,8 @@ func (p *connPub) start() {
 		case c := <-p.detach:
 			fmt.Println("detaching connection")
 			delete(p.conns, c)
-			c.closeWithCode(websocket.CloseNormalClosure)
+			c.closeWithCode(websocket.CloseNormalClosure,
+				"detaching connection")
 
 		case m := <-p.publish:
 			fmt.Println("publishing to all connections")
@@ -53,7 +54,8 @@ func (p *connPub) start() {
 					// If the connection is not accepting data either it's closed or
 					// congested. Force the connection to reconnect if it's still alive.
 					delete(p.conns, c)
-					c.closeWithCode(websocket.CloseTryAgainLater)
+					c.closeWithCode(websocket.CloseTryAgainLater,
+						"connection is congested")
 				}
 			}
 		}
@@ -64,6 +66,7 @@ func (p *connPub) shutdown() {
 	close(p.stop)
 	for c := range p.conns {
 		delete(p.conns, c)
-		c.closeWithCode(websocket.CloseNormalClosure)
+		c.closeWithCode(websocket.CloseNormalClosure,
+			"shutting down server")
 	}
 }

@@ -1,9 +1,12 @@
 package livereload
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"log"
 	"sync"
 	"time"
@@ -27,8 +30,9 @@ func newConn(ws *websocket.Conn) *conn {
 }
 
 func (c *conn) start() {
-	if err := c.ws.WriteJSON(newHelloResponse()); err != nil {
-		c.closeWithCode(websocket.CloseInternalServerErr)
+	if err := c.ws.WriteJSON(newHelloMsg()); err != nil {
+		c.closeWithCode(websocket.CloseInternalServerErr,
+			"failed to write hello message")
 	}
 
 	go c.receive()
@@ -44,25 +48,49 @@ func (c *conn) receive() {
 		}
 
 		if msgType == websocket.BinaryMessage {
-			c.closeWithCode(websocket.CloseUnsupportedData)
+			c.closeWithCode(websocket.CloseUnsupportedData,
+				"expected text data, got binary")
 			return
 		}
 
-		helloReq := new(helloRequest)
-		err = json.NewDecoder(reader).Decode(helloReq)
-		if err != nil {
-			c.closeWithCode(websocket.ClosePolicyViolation)
+		bs, err := ioutil.ReadAll(reader)
+		cmd := new(baseCmd)
+		if err := json.NewDecoder(bytes.NewReader(bs)).Decode(cmd); err != nil {
+			c.close(errors.New("unable to decode JSON with {command}"))
 			return
 		}
 
-		if !c.handshake {
-			if validateHelloRequest(helloReq) {
-				log.Println("validated hello request")
-				c.handshake = true
-			} else {
+		switch cmd.Command {
+		case helloCmd:
+			hello := new(helloMsg)
+			err = json.NewDecoder(bytes.NewReader(bs)).Decode(hello)
+			if err != nil {
+				c.closeWithCode(websocket.ClosePolicyViolation,
+					"failed to decode client hello message")
+				return
+			}
+			if !validateHelloMsg(hello) {
 				c.close(websocket.ErrBadHandshake)
 				return
 			}
+			c.handshake = true
+
+		case infoCmd:
+			info := new(infoMsg)
+			err = json.NewDecoder(bytes.NewReader(bs)).Decode(info)
+			if err != nil {
+				c.closeWithCode(websocket.ClosePolicyViolation,
+					"failed to decode info message")
+				return
+			}
+			log.Printf("LiveReload client info: url=%s, plugins=%s",
+				info.URL, formatInfoMsg(info))
+
+		default:
+			log.Printf("unsupported command received from websocket client: %s",
+				cmd.Command)
+			c.close(fmt.Errorf("unexpected command: %s", cmd.Command))
+			return
 		}
 	}
 }
@@ -81,8 +109,8 @@ func (c *conn) transmit() {
 	}
 }
 
-func (c *conn) closeWithCode(code int) {
-	err := &websocket.CloseError{Code: code}
+func (c *conn) closeWithCode(code int, message string) {
+	err := &websocket.CloseError{Code: code, Text: message}
 	c.close(err)
 }
 
