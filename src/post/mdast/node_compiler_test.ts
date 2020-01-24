@@ -3,6 +3,7 @@ import * as h from '//post/hast/nodes';
 import { MdastCompiler } from '//post/mdast/compiler';
 import * as nc from '//post/mdast/node_compiler';
 import * as md from '//post/mdast/nodes';
+import { PostMetadata, PostType } from '//post/metadata';
 import * as hast from 'hast-format';
 import * as mdast from 'mdast';
 import * as unist from 'unist';
@@ -400,6 +401,48 @@ describe('MathCompiler', () => {
 });
 
 describe('ParagraphCompiler', () => {
+  const a = 'alpha';
+  const b = 'bravo';
+  const para = (...x: mdast.PhrasingContent[]) => md.paragraph(x);
+  const pTag = (...v: unist.Node[]) => h.elem('p', v);
+  const t = h.text;
+  type Data = [string, PostMetadata, mdast.Paragraph, hast.Element];
+  const testData: Data[] = [
+    ['para - text', PostMetadata.empty(), para(t(a)), pTag(t(a))],
+    [
+      'para - text + em',
+      PostMetadata.empty(),
+      para(t(a), md.emphasisText(b)),
+      pTag(t(a), h.elemText('em', b)),
+    ],
+    [
+      'para - READ_MORE - index page type',
+      PostMetadata.parse({
+        postType: PostType.Post,
+        slug: 'foo',
+        date: dates.fromISO('2020-01-02'),
+      }),
+      para(t('READ_MORE')),
+      h.elemProps('a', { className: ['read-more'], href: '/foo' }, [
+        h.elemProps('div', { className: ['read-more-text'] }, [
+          h.text('Continue reading'),
+        ]),
+      ]),
+    ],
+  ];
+  for (const [name, metadata, input, expected] of testData) {
+    it(name, () => {
+      const p = PostAST.fromMdast(
+        md.root([metadata.toTOMLFrontmatter(), input])
+      );
+      const c = MdastCompiler.createDefault();
+
+      const hast = nc.ParagraphCompiler.create(c).compileNode(input, p);
+
+      expect(hast).toEqual([expected]);
+    });
+  }
+
   it('should compile a paragraph node', () => {
     const a = 'alpha';
     const b = 'bravo';

@@ -1,10 +1,11 @@
-import { checkState } from '//asserts';
-import { isValidDate } from '//dates';
+import {checkState} from '//asserts';
 import * as dates from '//dates';
+import {isValidDate} from '//dates';
 import * as md from '//post/mdast/nodes';
-import { isString } from '//strings';
+import {isString} from '//strings';
 import * as unistNodes from '//unist/nodes';
 import * as enums from '//enums';
+import * as mdast from 'mdast';
 
 import * as toml from '@iarna/toml';
 import yaml from 'js-yaml';
@@ -66,6 +67,17 @@ export class PostMetadata {
       return PostMetadata.parse(m);
     }
     return null;
+  }
+
+  toTOMLFrontmatter(): mdast.BlockContent {
+    return md.tomlFrontmatter({
+      slug: this.slug,
+      postType: this.postType,
+      ...this.schema,
+      // Date must be last for @iarna/toml bug:
+      // https://github.com/iarna/iarna-toml/issues/23
+      date: this.date,
+    });
   }
 
   private static extractFromTomlFrontmatter(
@@ -139,7 +151,7 @@ const extractValidMetadata = (m: Record<string, unknown>): Metadata => {
   const postType = m.post_type || PostType.Post;
   checkState(isPostType(postType), `post_type is not valid: ${postType}`);
 
-  const slug = m.slug || '';
+  const slug = m.slug || 'no_slug_given';
   checkState(isString(slug), `slug must be a string but had ${slug}`);
 
   return { date, publishState, postType, slug };

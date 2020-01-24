@@ -553,14 +553,54 @@ export class NoopCompiler implements MdastNodeCompiler {
 export class ParagraphCompiler implements MdastNodeCompiler {
   private constructor(private readonly compiler: MdastCompiler) {}
 
+  private static isSpecialPara = /^[A-Z0-9_-]+/;
+
   static create(compiler: MdastCompiler): ParagraphCompiler {
     return new ParagraphCompiler(compiler);
   }
 
   compileNode(node: unist.Node, postAST: PostAST): unist.Node[] {
     md.checkType(node, 'paragraph', md.isParagraph);
+    const c0 = node.children[0];
+    if (
+      node.children.length > 0 &&
+      md.isText(c0) &&
+      ParagraphCompiler.isSpecialPara.test(c0.value)
+    ) {
+      return this.compileSpecialPara(node, postAST);
+    }
     const children = this.compiler.compileChildren(node, postAST);
     return [h.elem('p', children)];
+  }
+
+  private compileSpecialPara(node: mdast.Paragraph, postAST: PostAST) {
+    let c0 = node.children[0];
+    md.checkType(c0, 'text', md.isText);
+    const match = checkDefined(ParagraphCompiler.isSpecialPara.exec(c0.value));
+    const attr = match[0];
+    if (attr === 'READ_MORE') {
+      checkState(
+        c0.value === 'READ_MORE' && node.children.length === 1,
+        'READ_MORE had more text'
+      );
+      return [
+        h.elemProps(
+          'a',
+          {
+            className: ['read-more'],
+            href: `/${postAST.metadata.slug}`,
+          },
+          [
+            h.elemProps('div', { className: ['read-more-text'] }, [
+              h.text('Continue reading'),
+            ]),
+          ]
+        ),
+      ];
+    } else {
+      const children = this.compiler.compileChildren(node, postAST);
+      return [h.elem('p', children)];
+    }
   }
 }
 
