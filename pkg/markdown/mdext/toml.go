@@ -1,4 +1,4 @@
-// This extension parses YAML metadata blocks and stores metadata in
+// This extension parses TOML metadata blocks and stores metadata in
 // parser.Context.
 package mdext
 
