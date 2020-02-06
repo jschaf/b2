@@ -25,6 +25,7 @@ func main() {
 		if filepath.Ext(path) != ".md" {
 			return nil
 		}
+		log.Printf("rendering file %s", path)
 
 		file, err := os.Open(path)
 		if err != nil {

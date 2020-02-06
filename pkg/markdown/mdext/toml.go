@@ -14,6 +14,8 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+const tomlSep = '+'
+
 // PostMeta is the TOML metadata of a post.
 type PostMeta struct {
 	Slug string
@@ -41,42 +43,42 @@ func GetTOMLMeta(pc parser.Context) PostMeta {
 type tomlMeta struct {
 }
 
-var defaultMetaParser = &tomlMeta{}
+var defaultTOMLMetaParser = &tomlMeta{}
 
-// NewParser returns a BlockParser that can parse YAML metadata blocks.
-func NewParser() parser.BlockParser {
-	return defaultMetaParser
+// NewTOMLParser returns a BlockParser that can parse TOML metadata blocks.
+func NewTOMLParser() parser.BlockParser {
+	return defaultTOMLMetaParser
 }
 
-func isSeparator(line []byte) bool {
+func isTOMLSep(line []byte) bool {
 	line = util.TrimRightSpace(util.TrimLeftSpace(line))
 	for i := 0; i < len(line); i++ {
-		if line[i] != '+' {
+		if line[i] != tomlSep {
 			return false
 		}
 	}
 	return true
 }
 
-func (b *tomlMeta) Trigger() []byte {
-	return []byte{'+'}
+func (t *tomlMeta) Trigger() []byte {
+	return []byte{tomlSep}
 }
 
-func (b *tomlMeta) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.Node, parser.State) {
+func (t *tomlMeta) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.Node, parser.State) {
 	lineNum, _ := reader.Position()
 	if lineNum != 0 {
 		return nil, parser.NoChildren
 	}
 	line, _ := reader.PeekLine()
-	if isSeparator(line) {
+	if isTOMLSep(line) {
 		return ast.NewTextBlock(), parser.NoChildren
 	}
 	return nil, parser.NoChildren
 }
 
-func (b *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context) parser.State {
+func (t *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context) parser.State {
 	line, segment := reader.PeekLine()
-	if isSeparator(line) {
+	if isTOMLSep(line) {
 		reader.Advance(segment.Len())
 		return parser.Close
 	}
@@ -84,7 +86,7 @@ func (b *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context)
 	return parser.Continue | parser.NoChildren
 }
 
-func (b *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
+func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	lines := node.Lines()
 	var buf bytes.Buffer
 	for i := 0; i < lines.Len(); i++ {
@@ -107,11 +109,11 @@ func (b *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	}
 }
 
-func (b *tomlMeta) CanInterruptParagraph() bool {
+func (t *tomlMeta) CanInterruptParagraph() bool {
 	return false
 }
 
-func (b *tomlMeta) CanAcceptIndentedLine() bool {
+func (t *tomlMeta) CanAcceptIndentedLine() bool {
 	return false
 }
 
@@ -119,18 +121,15 @@ type tomlFront struct {
 	Table bool
 }
 
-// TOMLFrontmatter is a extension for the goldmark.
-var TOMLFrontmatter = &tomlFront{}
-
 // New returns a new TOMLFrontmatter extension.
-func New() goldmark.Extender {
+func NewTOMLFrontmatter() goldmark.Extender {
 	return &tomlFront{}
 }
 
-func (e *tomlFront) Extend(m goldmark.Markdown) {
+func (t *tomlFront) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithBlockParsers(
-			util.Prioritized(NewParser(), 0),
+			util.Prioritized(NewTOMLParser(), 0),
 		),
 	)
 }

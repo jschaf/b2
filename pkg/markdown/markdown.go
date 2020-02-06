@@ -21,7 +21,7 @@ type Markdown struct {
 }
 
 func New() *Markdown {
-	gm := goldmark.New(goldmark.WithExtensions(mdext.TOMLFrontmatter))
+	gm := goldmark.New(goldmark.WithExtensions(mdext.NewTOMLFrontmatter()))
 	return &Markdown{gm: gm}
 }
 
