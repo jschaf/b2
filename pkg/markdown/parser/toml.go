@@ -4,50 +4,44 @@ package parser
 
 import (
 	"bytes"
-	"fmt"
+	"time"
+
+	"github.com/BurntSushi/toml"
 	"github.com/yuin/goldmark"
-	gast "github.com/yuin/goldmark/ast"
-	east "github.com/yuin/goldmark/extension/ast"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
-	"gopkg.in/yaml.v2"
 )
 
+// PostMeta is the TOML metadata of a post.
+type PostMeta struct {
+	Slug string
+	Date time.Time
+}
+
 type data struct {
-	Map   map[string]interface{}
-	Items yaml.MapSlice
+	Map   PostMeta
 	Error error
-	Node  gast.Node
+	Node  ast.Node
 }
 
 var contextKey = parser.NewContextKey()
 
 // Get returns a YAML metadata.
-func Get(pc parser.Context) map[string]interface{} {
+func Get(pc parser.Context) PostMeta {
 	v := pc.Get(contextKey)
 	if v == nil {
-		return nil
+		return PostMeta{}
 	}
 	d := v.(*data)
 	return d.Map
 }
 
-// GetItems returns a YAML metadata.
-// GetItems preserves defined key order.
-func GetItems(pc parser.Context) yaml.MapSlice {
-	v := pc.Get(contextKey)
-	if v == nil {
-		return nil
-	}
-	d := v.(*data)
-	return d.Items
+type tomlMeta struct {
 }
 
-type metaParser struct {
-}
-
-var defaultMetaParser = &metaParser{}
+var defaultMetaParser = &tomlMeta{}
 
 // NewParser returns a BlockParser that can parse YAML metadata blocks.
 func NewParser() parser.BlockParser {
@@ -57,30 +51,30 @@ func NewParser() parser.BlockParser {
 func isSeparator(line []byte) bool {
 	line = util.TrimRightSpace(util.TrimLeftSpace(line))
 	for i := 0; i < len(line); i++ {
-		if line[i] != '-' {
+		if line[i] != '+' {
 			return false
 		}
 	}
 	return true
 }
 
-func (b *metaParser) Trigger() []byte {
-	return []byte{'-'}
+func (b *tomlMeta) Trigger() []byte {
+	return []byte{'+'}
 }
 
-func (b *metaParser) Open(parent gast.Node, reader text.Reader, pc parser.Context) (gast.Node, parser.State) {
-	linenum, _ := reader.Position()
-	if linenum != 0 {
+func (b *tomlMeta) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.Node, parser.State) {
+	lineNum, _ := reader.Position()
+	if lineNum != 0 {
 		return nil, parser.NoChildren
 	}
 	line, _ := reader.PeekLine()
 	if isSeparator(line) {
-		return gast.NewTextBlock(), parser.NoChildren
+		return ast.NewTextBlock(), parser.NoChildren
 	}
 	return nil, parser.NoChildren
 }
 
-func (b *metaParser) Continue(node gast.Node, reader text.Reader, pc parser.Context) parser.State {
+func (b *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context) parser.State {
 	line, segment := reader.PeekLine()
 	if isSeparator(line) {
 		reader.Advance(segment.Len())
@@ -90,7 +84,7 @@ func (b *metaParser) Continue(node gast.Node, reader text.Reader, pc parser.Cont
 	return parser.Continue | parser.NoChildren
 }
 
-func (b *metaParser) Close(node gast.Node, reader text.Reader, pc parser.Context) {
+func (b *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	lines := node.Lines()
 	var buf bytes.Buffer
 	for i := 0; i < lines.Len(); i++ {
@@ -99,18 +93,11 @@ func (b *metaParser) Close(node gast.Node, reader text.Reader, pc parser.Context
 	}
 	d := &data{}
 	d.Node = node
-	meta := map[string]interface{}{}
-	if err := yaml.Unmarshal(buf.Bytes(), &meta); err != nil {
+	meta := &PostMeta{}
+	if err := toml.Unmarshal(buf.Bytes(), &meta); err != nil {
 		d.Error = err
 	} else {
-		d.Map = meta
-	}
-
-	metaMapSlice := yaml.MapSlice{}
-	if err := yaml.Unmarshal(buf.Bytes(), &metaMapSlice); err != nil {
-		d.Error = err
-	} else {
-		d.Items = metaMapSlice
+		d.Map = *meta
 	}
 
 	pc.Set(contextKey, d)
@@ -120,96 +107,30 @@ func (b *metaParser) Close(node gast.Node, reader text.Reader, pc parser.Context
 	}
 }
 
-func (b *metaParser) CanInterruptParagraph() bool {
+func (b *tomlMeta) CanInterruptParagraph() bool {
 	return false
 }
 
-func (b *metaParser) CanAcceptIndentedLine() bool {
+func (b *tomlMeta) CanAcceptIndentedLine() bool {
 	return false
 }
 
-type astTransformer struct {
-}
-
-var defaultASTTransformer = &astTransformer{}
-
-func (a *astTransformer) Transform(node *gast.Document, reader text.Reader, pc parser.Context) {
-	dtmp := pc.Get(contextKey)
-	if dtmp == nil {
-		return
-	}
-	d := dtmp.(*data)
-	if d.Error != nil {
-		msg := gast.NewString([]byte(fmt.Sprintf("<!-- %s -->", d.Error)))
-		msg.SetCode(true)
-		d.Node.AppendChild(d.Node, msg)
-		return
-	}
-
-	meta := GetItems(pc)
-	if meta == nil {
-		return
-	}
-	table := east.NewTable()
-	alignments := []east.Alignment{}
-	for range meta {
-		alignments = append(alignments, east.AlignNone)
-	}
-	row := east.NewTableRow(alignments)
-	for _, item := range meta {
-		cell := east.NewTableCell()
-		cell.AppendChild(cell, gast.NewString([]byte(fmt.Sprintf("%v", item.Key))))
-		row.AppendChild(row, cell)
-	}
-	table.AppendChild(table, east.NewTableHeader(row))
-
-	row = east.NewTableRow(alignments)
-	for _, item := range meta {
-		cell := east.NewTableCell()
-		cell.AppendChild(cell, gast.NewString([]byte(fmt.Sprintf("%v", item.Value))))
-		row.AppendChild(row, cell)
-	}
-	table.AppendChild(table, row)
-	node.InsertBefore(node, node.FirstChild(), table)
-}
-
-// Option is a functional option type for this extension.
-type Option func(*meta)
-
-// WithTable is a functional option that renders a YAML metadata as a table.
-func WithTable() Option {
-	return func(m *meta) {
-		m.Table = true
-	}
-}
-
-type meta struct {
+type tomlFront struct {
 	Table bool
 }
 
-// Meta is a extension for the goldmark.
-var Meta = &meta{}
+// TOMLFrontmatter is a extension for the goldmark.
+var TOMLFrontmatter = &tomlFront{}
 
-// New returns a new Meta extension.
-func New(opts ...Option) goldmark.Extender {
-	e := &meta{}
-	for _, opt := range opts {
-		opt(e)
-	}
-	return e
+// New returns a new TOMLFrontmatter extension.
+func New() goldmark.Extender {
+	return &tomlFront{}
 }
 
-func (e *meta) Extend(m goldmark.Markdown) {
+func (e *tomlFront) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithBlockParsers(
 			util.Prioritized(NewParser(), 0),
 		),
 	)
-	if e.Table {
-		m.Parser().AddOptions(
-			parser.WithASTTransformers(
-				util.Prioritized(defaultASTTransformer, 0),
-			),
-		)
-	}
 }
