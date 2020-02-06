@@ -1,13 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/markdown/parser"
-	"github.com/yuin/goldmark/renderer"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/markdown"
 )
 
 func main() {
@@ -17,7 +19,7 @@ func main() {
 	}
 	postsDir := filepath.Join(rootDir, "posts")
 	publicDir := filepath.Join(rootDir, "public")
-	md := parser.New()
+	md := markdown.New()
 
 	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) != ".md" {
@@ -28,17 +30,39 @@ func main() {
 		if err != nil {
 			return err
 		}
-		node, err := md.Parse(file)
+
+		bs, err := ioutil.ReadAll(file)
+		if err != nil {
+			return fmt.Errorf("failed to read all file: %w", err)
+		}
+
+		postAST, err := md.Parse(bytes.NewReader(bs))
 		if err != nil {
 			return fmt.Errorf("failed to parse markdown: %w", err)
 		}
 
-		html, err := renderer.Render(bs)
-		if err != nil {
-			return err
+		slug := postAST.Meta.Slug
+		if slug == "" {
+			return fmt.Errorf("empty slug for path: %s", path)
 		}
 
-		os.MkdirAll(filepath.Join(publicDir))
+		slugDir := filepath.Join(publicDir, slug)
+		if err = os.MkdirAll(slugDir, 0666); err != nil {
+			return fmt.Errorf("failed to make dir for slug %s: %w", slug, err)
+		}
+
+		dest := filepath.Join(slugDir, "index.html")
+		destFile, err := os.OpenFile(dest, os.O_RDWR, 0644)
+		if err != nil {
+			return fmt.Errorf("failed to open index.html file for write: %w", err)
+		}
+
+		err = md.Render(destFile, bs, postAST)
+		if err != nil {
+			return fmt.Errorf("failed to render file: %w", err)
+		}
+
+		return nil
 	})
 
 }

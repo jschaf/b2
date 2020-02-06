@@ -1,4 +1,4 @@
-package parser
+package mdext
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ date = 2019-09-20
 	if err := md.Convert([]byte(source), &buf, parser.WithContext(context)); err != nil {
 		panic(err)
 	}
-	meta := Get(context)
+	meta := GetTOMLMeta(context)
 	if meta.Slug != "a slug" {
 		t.Errorf("Title must be %s, but got %v", "a slub", meta.Slug)
 	}

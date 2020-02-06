@@ -1,6 +1,6 @@
 // This extension parses YAML metadata blocks and stores metadata in
 // parser.Context.
-package parser
+package mdext
 
 import (
 	"bytes"
@@ -28,8 +28,8 @@ type data struct {
 
 var contextKey = parser.NewContextKey()
 
-// Get returns a YAML metadata.
-func Get(pc parser.Context) PostMeta {
+// GetTOMLMeta returns a TOML metadata.
+func GetTOMLMeta(pc parser.Context) PostMeta {
 	v := pc.Get(contextKey)
 	if v == nil {
 		return PostMeta{}
