@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/serve/livereload"
-	"github.com/jschaf/b2/serve/paths"
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/livereload"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -20,7 +20,7 @@ func main() {
 	http.HandleFunc(lrPath, liveReload.WebSocketHandler)
 	go liveReload.Start()
 
-	root, err := paths.FindRootDir()
+	root, err := git.FindRootDir()
 	if err != nil {
 		log.Fatalf("failed to find root dir: %s", err)
 	}
@@ -35,7 +35,7 @@ func main() {
 	}, "")
 	http.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
 
-	watcher := paths.NewFSWatcher(liveReload)
+	watcher := NewFSWatcher(liveReload)
 	if err = watcher.AddRecursively(pubDir); err != nil {
 		log.Fatalf("failed to watch path %s: %s", pubDir, err)
 	}

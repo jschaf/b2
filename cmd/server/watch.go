@@ -1,9 +1,11 @@
-package paths
+package main
 
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/jschaf/b2/serve/livereload"
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/livereload"
+	"github.com/jschaf/b2/pkg/paths"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,7 +32,7 @@ func NewFSWatcher(lr *livereload.LiveReload) *FSWatcher {
 
 func (f *FSWatcher) Start() error {
 	defer f.watcher.Close()
-	root, err := FindRootDir()
+	root, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("failed to get root dir: %w", err)
 	}
@@ -58,7 +60,7 @@ func (f *FSWatcher) Start() error {
 				if err != nil {
 					log.Printf("failed to create dir public/style")
 				}
-				err = Copy(event.Name, dest)
+				err = paths.Copy(event.Name, dest)
 				if err != nil {
 					log.Printf("failed to copy main.css into public: %s", err)
 				}

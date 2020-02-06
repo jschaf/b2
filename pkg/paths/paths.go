@@ -5,25 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
-var (
-	rootOnce sync.Once
-	rootDir  string
-	rootErr  error
-)
-
-// findRootDir finds the root directory which is the nearest directory
-// containing a .git folder.
-func FindRootDir() (string, error) {
-	rootOnce.Do(func() {
-		rootDir, rootErr = walkUp(".git")
-	})
-	return rootDir, rootErr
-}
-
-func walkUp(dirToFind string) (string, error) {
+func WalkUp(dirToFind string) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("failed to get current working dir: %s", err)
