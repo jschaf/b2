@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/html"
 	"github.com/jschaf/b2/pkg/markdown"
 )
 
@@ -32,12 +34,12 @@ func main() {
 			return err
 		}
 
-		bs, err := ioutil.ReadAll(file)
+		src, err := ioutil.ReadAll(file)
 		if err != nil {
 			return fmt.Errorf("failed to read all file: %w", err)
 		}
 
-		postAST, err := md.Parse(bytes.NewReader(bs))
+		postAST, err := md.Parse(bytes.NewReader(src))
 		if err != nil {
 			return fmt.Errorf("failed to parse markdown: %w", err)
 		}
@@ -58,9 +60,17 @@ func main() {
 			return fmt.Errorf("failed to open index.html file for write: %w", err)
 		}
 
-		err = md.Render(destFile, bs, postAST)
-		if err != nil {
-			return fmt.Errorf("failed to render file: %w", err)
+		r := &bytes.Buffer{}
+		if err = md.Render(r, src, postAST); err != nil {
+			return fmt.Errorf("failed to render markdown: %w", err)
+		}
+
+		data := html.TemplateData{
+			Title: postAST.Meta.Title,
+			Body:  template.HTML(r.String()),
+		}
+		if err = html.PostDoc.Execute(destFile, data); err != nil {
+			return fmt.Errorf("failed to execute template: %w", err)
 		}
 
 		return nil

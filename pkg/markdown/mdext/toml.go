@@ -18,8 +18,9 @@ const tomlSep = '+'
 
 // PostMeta is the TOML metadata of a post.
 type PostMeta struct {
-	Slug string
-	Date time.Time
+	Slug  string
+	Title string
+	Date  time.Time
 }
 
 type data struct {
@@ -28,11 +29,11 @@ type data struct {
 	Node  ast.Node
 }
 
-var contextKey = parser.NewContextKey()
+var ctxKey = parser.NewContextKey()
 
 // GetTOMLMeta returns a TOML metadata.
 func GetTOMLMeta(pc parser.Context) PostMeta {
-	v := pc.Get(contextKey)
+	v := pc.Get(ctxKey)
 	if v == nil {
 		return PostMeta{}
 	}
@@ -102,7 +103,7 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 		d.Map = *meta
 	}
 
-	pc.Set(contextKey, d)
+	pc.Set(ctxKey, d)
 
 	if d.Error == nil {
 		node.Parent().RemoveChild(node.Parent(), node)

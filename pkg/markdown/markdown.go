@@ -17,11 +17,17 @@ type PostAST struct {
 }
 
 type Markdown struct {
-	gm goldmark.Markdown
+	src []byte
+	gm  goldmark.Markdown
 }
 
 func New() *Markdown {
-	gm := goldmark.New(goldmark.WithExtensions(mdext.NewTOMLFrontmatter()))
+	gm := goldmark.New(
+		goldmark.WithExtensions(
+			mdext.NewTOMLFrontmatter(),
+			mdext.ArticleHeading,
+		),
+		goldmark.WithExtensions())
 	return &Markdown{gm: gm}
 }
 
@@ -30,15 +36,26 @@ func (m *Markdown) Parse(r io.Reader) (*PostAST, error) {
 	if err != nil {
 		return nil, err
 	}
+	m.src = bs
 	ctx := parser.NewContext()
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
+	meta := mdext.GetTOMLMeta(ctx)
+	meta.Title = m.extractTitle(node)
 	return &PostAST{
 		Node: node,
-		Meta: mdext.GetTOMLMeta(ctx),
+		Meta: meta,
 	}, nil
 }
 
 func (m *Markdown) Render(w io.Writer, source []byte, p *PostAST) error {
 	return m.gm.Renderer().Render(w, source, p.Node)
+}
+
+func (m *Markdown) extractTitle(node ast.Node) string {
+	if node.FirstChild().Kind() == ast.KindHeading {
+		return string(node.FirstChild().Text(m.src))
+	}
+	node.NextSibling()
+	return ""
 }
