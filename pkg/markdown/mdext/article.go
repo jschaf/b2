@@ -1,8 +1,7 @@
 package mdext
 
 import (
-	"fmt"
-
+	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -43,12 +42,11 @@ func NewArticleTransformer() *ArticleTransformer {
 }
 
 func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
-	heading := firstHeading(doc, reader.Source())
+	heading := firstHeading(doc)
 	if heading == nil {
 		panic("nil heading")
 	}
 	title := string(heading.Text(reader.Source()))
-	fmt.Printf("title: %s\n", title)
 	pc.Set(titleCtxKey, title)
 
 	parent := heading.Parent()
@@ -58,23 +56,30 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	meta := GetTOMLMeta(pc)
 
 	article := NewArticle()
+	header := NewHeader()
 	link := ast.NewLink()
 	link.Title = []byte(title)
 	link.Destination = []byte("/" + meta.Slug)
-	article.AppendChild(article, NewTime(meta.Date))
-	article.AppendChild(article, link)
-	for next := heading.NextSibling(); next != nil; next = next.NextSibling() {
-		fmt.Println("  appending sibling: " + next.Kind().String())
-		article.AppendChild(article, next)
+	asts.Reparent(link, heading)
+	newHeading := ast.NewHeading(1)
+	newHeading.AppendChild(newHeading, link)
+	header.AppendChild(header, NewTime(meta.Date))
+	header.AppendChild(header, newHeading)
+	article.AppendChild(article, header)
+
+	cur := heading.NextSibling()
+	for cur != nil {
+		next := cur.NextSibling()
+		article.AppendChild(article, cur)
+		cur = next
 	}
 	// These step must come last. When we move a node in Goldmark, it detaches
 	// from the parent and connects its prev sibling to the next sibling. Since we
 	// use heading for location info, move it last so we don't disconnect it.
 	parent.ReplaceChild(parent, heading, article)
-	link.AppendChild(link, heading)
 }
 
-func firstHeading(doc *ast.Document, source []byte) ast.Node {
+func firstHeading(doc *ast.Document) ast.Node {
 	var hNode ast.Node
 
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -101,7 +106,7 @@ func (a articleRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) 
 	reg.Register(KindArticle, a.render)
 }
 
-func (a articleRenderer) render(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (a articleRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	if entering {
 		_, _ = w.WriteString("<article>\n")
 	} else {

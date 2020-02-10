@@ -27,6 +27,7 @@ func New() *Markdown {
 			mdext.NewTOMLExt(),
 			mdext.NewArticleExt(),
 			mdext.NewTimeExt(),
+			mdext.NewHeaderExt(),
 		),
 		goldmark.WithExtensions())
 	return &Markdown{gm: gm}

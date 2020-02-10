@@ -11,7 +11,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 )
 
-func TestArticleTransformer_Transform(t *testing.T) {
+func TestArticleExt(t *testing.T) {
 	tests := []struct {
 		name string
 		src  string
@@ -23,15 +23,16 @@ func TestArticleTransformer_Transform(t *testing.T) {
 				# header
 				foo
 
-				bar
-      `),
+				bar`),
 			texts.Dedent(`
-          <article>
-					<time datetime="0001-01-01T00:00:00Z">January  1, 0001</time>
-					<a href="/" title="header"><h1>header</h1></a>
-          <p>foo</p>
-					</article>
-					<p>bar</p>`),
+					<article>
+            <header>
+							<time datetime="0001-01-01T00:00:00Z">January  1, 0001</time>
+							<h1><a href="/" title="header">header</a></h1>
+            </header>
+						<p>foo</p>
+						<p>bar</p>
+					</article>`),
 		},
 	}
 	for _, tt := range tests {
@@ -39,6 +40,7 @@ func TestArticleTransformer_Transform(t *testing.T) {
 			md := goldmark.New(goldmark.WithExtensions(
 				NewArticleExt(),
 				NewTimeExt(),
+				NewHeaderExt(),
 			))
 			buf := new(bytes.Buffer)
 			ctx := parser.NewContext()
