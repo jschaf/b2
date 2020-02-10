@@ -86,6 +86,7 @@ func (lr *LiveReload) Shutdown() {
 }
 
 // ReloadFile instructs all registered LiveReload clients to reload path.
+// The path should be absolute if possible.
 func (lr *LiveReload) ReloadFile(path string) {
 	lr.connPublisher.publish <- newReloadMsg(path)
 }

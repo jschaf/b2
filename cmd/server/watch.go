@@ -53,8 +53,7 @@ func (f *FSWatcher) Start() error {
 			if err != nil {
 				rel = ""
 			}
-			switch rel {
-			case "style/main.css":
+			if rel == "style/main.css" {
 				dest := filepath.Join(root, "public", "style", "main.css")
 				err := os.MkdirAll(filepath.Dir(dest), 0755)
 				if err != nil {
@@ -66,6 +65,8 @@ func (f *FSWatcher) Start() error {
 				}
 				f.lr.ReloadFile(dest)
 			}
+
+			f.lr.ReloadFile(event.Name)
 
 		case err := <-f.watcher.Errors:
 			log.Println("error:", err)
