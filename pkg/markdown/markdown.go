@@ -25,7 +25,8 @@ func New() *Markdown {
 	gm := goldmark.New(
 		goldmark.WithExtensions(
 			mdext.NewTOMLFrontmatter(),
-			mdext.ArticleHeading,
+			mdext.NewArticleExt(),
+			mdext.NewTimeExt(),
 		),
 		goldmark.WithExtensions())
 	return &Markdown{gm: gm}
@@ -41,7 +42,7 @@ func (m *Markdown) Parse(r io.Reader) (*PostAST, error) {
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	meta := mdext.GetTOMLMeta(ctx)
-	meta.Title = m.extractTitle(node)
+	meta.Title = mdext.GetTitle(ctx)
 	return &PostAST{
 		Node: node,
 		Meta: meta,

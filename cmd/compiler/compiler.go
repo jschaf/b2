@@ -50,12 +50,12 @@ func main() {
 		}
 
 		slugDir := filepath.Join(publicDir, slug)
-		if err = os.MkdirAll(slugDir, 0666); err != nil {
+		if err = os.MkdirAll(slugDir, 0755); err != nil {
 			return fmt.Errorf("failed to make dir for slug %s: %w", slug, err)
 		}
 
 		dest := filepath.Join(slugDir, "index.html")
-		destFile, err := os.OpenFile(dest, os.O_RDWR, 0644)
+		destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to open index.html file for write: %w", err)
 		}
@@ -75,5 +75,9 @@ func main() {
 
 		return nil
 	})
+
+	if err != nil {
+		log.Printf("failed to render markdown to HTML: %s", err)
+	}
 
 }
