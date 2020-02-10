@@ -16,7 +16,7 @@ date = 2019-09-20
 # Hello goldmark-meta
 `
 
-	md := goldmark.New(goldmark.WithExtensions(NewTOMLFrontmatter()))
+	md := goldmark.New(goldmark.WithExtensions(NewTOMLExt()))
 	var buf bytes.Buffer
 	context := parser.NewContext()
 	if err := md.Convert([]byte(source), &buf, parser.WithContext(context)); err != nil {

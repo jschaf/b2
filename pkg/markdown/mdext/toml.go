@@ -123,7 +123,7 @@ type tomlFront struct {
 }
 
 // New returns a new TOMLFrontmatter extension.
-func NewTOMLFrontmatter() goldmark.Extender {
+func NewTOMLExt() goldmark.Extender {
 	return &tomlFront{}
 }
 

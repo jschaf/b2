@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"fmt"
+
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -46,6 +48,7 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 		panic("nil heading")
 	}
 	title := string(heading.Text(reader.Source()))
+	fmt.Printf("title: %s\n", title)
 	pc.Set(titleCtxKey, title)
 
 	parent := heading.Parent()
@@ -61,6 +64,7 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	article.AppendChild(article, NewTime(meta.Date))
 	article.AppendChild(article, link)
 	for next := heading.NextSibling(); next != nil; next = next.NextSibling() {
+		fmt.Println("  appending sibling: " + next.Kind().String())
 		article.AppendChild(article, next)
 	}
 	// These step must come last. When we move a node in Goldmark, it detaches
