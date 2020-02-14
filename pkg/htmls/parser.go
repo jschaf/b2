@@ -94,6 +94,12 @@ func dumpNode(node *html.Node, buf *bytes.Buffer, indent int) {
 		tag := node.Data
 		buf.WriteString(prefix)
 		buf.WriteString(tag)
+		for i, a := range node.Attr {
+			buf.WriteString(" " + a.Key + "=" + a.Val)
+			if i < len(node.Attr)-1 {
+				buf.WriteString(" ")
+			}
+		}
 		fc := node.FirstChild
 		if fc == nil {
 			buf.WriteString(" {}\n")

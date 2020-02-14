@@ -28,8 +28,8 @@ func New() *Markdown {
 			mdext.NewArticleExt(),
 			mdext.NewTimeExt(),
 			mdext.NewHeaderExt(),
-		),
-		goldmark.WithExtensions())
+			mdext.NewCodeBlockExt(),
+		))
 	return &Markdown{gm: gm}
 }
 
