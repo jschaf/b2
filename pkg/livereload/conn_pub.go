@@ -1,7 +1,6 @@
 package livereload
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 )
 
@@ -35,11 +34,9 @@ func (p *connPub) start() {
 			return
 
 		case c := <-p.attach:
-			fmt.Println("attaching connection")
 			p.conns[c] = struct{}{}
 
 		case c := <-p.detach:
-			fmt.Println("detaching connection")
 			delete(p.conns, c)
 			c.closeWithCode(websocket.CloseNormalClosure,
 				"detaching connection")

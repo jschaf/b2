@@ -31,7 +31,7 @@ func main() {
 		}
 		log.Printf("rendering file %s", path)
 
-		return c.CompileIntoDir(file, md, publicDir)
+		return c.CompileIntoDir(file, publicDir)
 	})
 
 	if err != nil {

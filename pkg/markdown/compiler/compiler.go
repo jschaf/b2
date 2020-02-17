@@ -30,7 +30,7 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 
 	data := html.TemplateData{
 		Title: ast.Meta.Title,
-		Body:  template.HTML(string(c.md.Source)),
+		Body:  template.HTML(b.String()),
 	}
 
 	if err := html.PostDoc.Execute(w, data); err != nil {
@@ -41,14 +41,13 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 }
 
 // CompileIntoDir compiles markdown into a directory based on the slug.
-func (c *Compiler) CompileIntoDir(
-	r io.Reader, md *markdown.Markdown, publicDir string) error {
+func (c *Compiler) CompileIntoDir(r io.Reader, publicDir string) error {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("failed to read all file: %w", err)
 	}
 
-	postAST, err := md.Parse(bytes.NewReader(src))
+	postAST, err := c.md.Parse(bytes.NewReader(src))
 	if err != nil {
 		return fmt.Errorf("failed to parse markdown: %w", err)
 	}
