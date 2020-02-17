@@ -54,24 +54,28 @@ func (f *FSWatcher) Start() error {
 				rel = ""
 			}
 			if rel == "style/main.css" {
-				dest := filepath.Join(root, "public", "style", "main.css")
-				err := os.MkdirAll(filepath.Dir(dest), 0755)
-				if err != nil {
-					log.Printf("failed to create dir public/style")
-				}
-				err = paths.Copy(event.Name, dest)
-				if err != nil {
-					log.Printf("failed to copy main.css into public: %s", err)
-				}
-				f.lr.ReloadFile(dest)
+				f.reloadMainCSS(root, event)
+			} else {
+				f.lr.ReloadFile(event.Name)
 			}
-
-			f.lr.ReloadFile(event.Name)
 
 		case err := <-f.watcher.Errors:
 			log.Println("error:", err)
 		}
 	}
+}
+
+func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
+	dest := filepath.Join(root, "public", "style", "main.css")
+	err := os.MkdirAll(filepath.Dir(dest), 0755)
+	if err != nil {
+		log.Printf("failed to create dir public/style")
+	}
+	err = paths.Copy(event.Name, dest)
+	if err != nil {
+		log.Printf("failed to copy main.css into public: %s", err)
+	}
+	f.lr.ReloadFile(dest)
 }
 
 func (f *FSWatcher) AddRecursively(name string) error {

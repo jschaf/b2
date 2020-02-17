@@ -17,8 +17,8 @@ type PostAST struct {
 }
 
 type Markdown struct {
-	src []byte
-	gm  goldmark.Markdown
+	Source []byte
+	gm     goldmark.Markdown
 }
 
 func New() *Markdown {
@@ -38,7 +38,7 @@ func (m *Markdown) Parse(r io.Reader) (*PostAST, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.src = bs
+	m.Source = bs
 	ctx := parser.NewContext()
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
@@ -56,7 +56,7 @@ func (m *Markdown) Render(w io.Writer, source []byte, p *PostAST) error {
 
 func (m *Markdown) extractTitle(node ast.Node) string {
 	if node.FirstChild().Kind() == ast.KindHeading {
-		return string(node.FirstChild().Text(m.src))
+		return string(node.FirstChild().Text(m.Source))
 	}
 	node.NextSibling()
 	return ""

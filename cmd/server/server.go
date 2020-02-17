@@ -45,6 +45,11 @@ func main() {
 		log.Fatalf("failed to watch path %s: %s", styleDir, err)
 	}
 
+	postsDir := filepath.Join(root, "posts")
+	if err = watcher.AddRecursively(postsDir); err != nil {
+		log.Fatalf("failed to watch path %s: %s", styleDir, err)
+	}
+
 	go watcher.Start()
 
 	log.Printf("Serving at port %s", port)
