@@ -52,7 +52,6 @@ func (f *FSWatcher) Start() error {
 			if event.Op&fsnotify.Write != fsnotify.Write {
 				break
 			}
-			log.Printf("event: %s", event)
 
 			rel, err := filepath.Rel(rootDir, event.Name)
 			if err != nil {
@@ -62,10 +61,13 @@ func (f *FSWatcher) Start() error {
 				f.reloadMainCSS(rootDir, event)
 			} else if filepath.Ext(rel) == ".md" {
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
-					log.Fatal(err)
+					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
 			} else if filepath.Ext(rel) == ".go" {
-				hotSwapServer()
+				log.Printf("hot swapping server")
+				if err := hotSwapServer(); err != nil {
+					return fmt.Errorf("failed to hotswap erver: %w", err)
+				}
 			}
 
 		case err := <-f.watcher.Errors:
@@ -101,8 +103,6 @@ func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
 }
 
 func (f *FSWatcher) AddRecursively(name string) error {
-	log.Printf("Watching dir %s", name)
-
 	walk := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

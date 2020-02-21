@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/html"
 	"github.com/jschaf/b2/pkg/markdown"
 )
@@ -69,4 +70,31 @@ func (c *Compiler) CompileIntoDir(r io.Reader, publicDir string) error {
 	}
 
 	return c.CompileAST(postAST, destFile)
+}
+
+func CompileEverything(c *Compiler) error {
+	rootDir, err := git.FindRootDir()
+	if err != nil {
+		return fmt.Errorf("failed to find root git dir: %w", err)
+	}
+	postsDir := filepath.Join(rootDir, "posts")
+	publicDir := filepath.Join(rootDir, "public")
+
+	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
+		if filepath.Ext(path) != ".md" {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		return c.CompileIntoDir(file, publicDir)
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to render markdown to HTML: %w", err)
+	}
+	return nil
 }

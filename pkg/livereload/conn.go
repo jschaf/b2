@@ -115,7 +115,6 @@ func (c *conn) closeWithCode(code int, message string) {
 }
 
 func (c *conn) close(err error) {
-	log.Printf("closing connection: %s", err)
 	closeCode := websocket.CloseInternalServerErr
 	if closeErr, ok := err.(*websocket.CloseError); ok {
 		closeCode = closeErr.Code

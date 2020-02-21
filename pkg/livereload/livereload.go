@@ -40,9 +40,7 @@ func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	c := newConn(ws)
 	lr.connPublisher.attach <- c
 	defer func() { lr.connPublisher.detach <- c }()
-	log.Printf("Start LiveReload connection")
 	c.start()
-	log.Printf("Finish LiveReload connection")
 }
 
 // NewHTMLInjector intercepts all output from the next handler and injects
