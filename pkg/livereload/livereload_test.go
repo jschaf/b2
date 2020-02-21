@@ -113,7 +113,7 @@ func TestLiveReload_WebSocketHandler_ImmediateClose(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL, strings.NewReader(""))
 	req.Header.Set("Connection", "upgrade")
-	req.Header.Set("Upgrade", "websocket")
+	req.Header.Set("UpgradeOnSIGHUP", "websocket")
 	req.Header.Set("Sec-WebSocket-Version", "13")
 	req.Header.Set("Sec-WebSocket-Key", "unused")
 

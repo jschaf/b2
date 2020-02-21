@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -65,7 +66,7 @@ func (f *FSWatcher) Start() error {
 				}
 			} else if filepath.Ext(rel) == ".go" {
 				log.Printf("hot swapping server")
-				if err := hotSwapServer(); err != nil {
+				if err := rebuildServer(); err != nil {
 					return fmt.Errorf("failed to hotswap erver: %w", err)
 				}
 			}
@@ -119,4 +120,17 @@ func (f *FSWatcher) AddRecursively(name string) error {
 	}
 
 	return filepath.Walk(name, walk)
+}
+
+func rebuildServer() error {
+	out := os.Args[0]
+	pkg := "github.com/jschaf/b2/cmd/server"
+	cmd := exec.Command("go", "build", "-o", out, pkg)
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start server build: %w", err)
+	}
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("failed to rebuild server: %s", err)
+	}
+	return nil
 }

@@ -126,9 +126,6 @@ func (c *conn) close(err error) {
 
 	c.closer.Do(func() {
 		err = c.ws.WriteControl(websocket.CloseMessage, closeMsg, deadline)
-		if err != nil {
-			log.Printf("failed to write websocket control: %s", err)
-		}
 		err = c.ws.Close()
 		if err != nil {
 			log.Printf("failed to close websocket: :%s", err)

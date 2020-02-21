@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -22,30 +20,12 @@ import (
 	"github.com/cloudflare/tableflip"
 )
 
-var (
-	upgradeC chan os.Signal
-)
-
-func hotSwapServer() error {
-	out := os.Args[0]
-	pkg := "github.com/jschaf/b2/cmd/server"
-	cmd := exec.Command("go", "build", "-o", out, pkg)
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start server build: %w", err)
-	}
-	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("failed to rebuild server: %s", err)
-	}
-
-	upgradeC <- syscall.SIGHUP
-	return nil
-}
-
 type server struct {
 	*http.ServeMux
-	port  string
-	stopC chan struct{}
-	once  sync.Once
+	port     string
+	stopC    chan struct{}
+	once     sync.Once
+	upgrader *tableflip.Upgrader
 }
 
 func newServer(port string) *server {
@@ -54,18 +34,49 @@ func newServer(port string) *server {
 	s.port = port
 	s.once = sync.Once{}
 	s.stopC = make(chan struct{})
+
 	return s
 }
 
-func (s *server) Serve(ln net.Listener) error {
+func (s *server) Serve() error {
 	srv := http.Server{
 		Handler: s.ServeMux,
 	}
+
+	upg, err := tableflip.New(tableflip.Options{
+		UpgradeTimeout: time.Second * 5,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create upgrader")
+	}
+	s.upgrader = upg
+	if err := s.upgrader.Ready(); err != nil {
+		return fmt.Errorf("upgrader not ready: %w", err)
+	}
+
+	ln, err := s.upgrader.Listen("tcp", "localhost:"+s.port)
+	if err != nil {
+		return fmt.Errorf("failed to listen: %w", err)
+	}
+	defer ln.Close()
 	return srv.Serve(ln)
 }
 
-func (s *server) stop() {
+func (s *server) UpgradeOnSIGHUP() {
+	upgrade := make(chan os.Signal, 1)
+	signal.Notify(upgrade, syscall.SIGHUP)
+	// We might get multiple upgrade requests.
+	for range upgrade {
+		if err := s.upgrader.Upgrade(); err != nil {
+			fmt.Printf("failed to upgrade: %s", err)
+			continue
+		}
+	}
+}
+
+func (s *server) Stop() {
 	s.once.Do(func() {
+		s.upgrader.Stop()
 		close(s.stopC)
 	})
 }
@@ -73,7 +84,7 @@ func (s *server) stop() {
 func main() {
 	port := "8080"
 	server := newServer(port)
-	stopC := make(chan struct{})
+	defer server.Stop()
 
 	lr := livereload.NewWebsocketServer()
 	lrJSPath := "/dev/livereload.js"
@@ -103,55 +114,29 @@ func main() {
 	mustWatchDir(watcher, filepath.Join(root, "cmd"))
 	mustWatchDir(watcher, filepath.Join(root, "pkg"))
 
-	upg, err := tableflip.New(tableflip.Options{
-		UpgradeTimeout: time.Second * 5,
-	})
-	if err != nil {
-		log.Fatalf("failed to create upgrader: %s", err)
-	}
-	defer upg.Stop()
+	go server.UpgradeOnSIGHUP()
 
-	// Upgrade on SIGHUP
-	go func() {
-		upgradeC = make(chan os.Signal, 1)
-		signal.Notify(upgradeC, syscall.SIGHUP)
-		for range upgradeC {
-			_ = upg.Upgrade()
-		}
-	}()
-
-	// Stop upgrader on quit so it doesn't restart.
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 		<-c
-		upg.Stop()
+		server.Stop()
 	}()
-
-	ln, err := upg.Listen("tcp", "localhost:"+port)
-	if err != nil {
-		log.Fatalf("failed to listen: %s", err)
-	}
-	defer ln.Close()
 
 	go func() {
 		if err := watcher.Start(); err != nil {
 			log.Printf("stoping server because watcher error: %s", err)
-			server.stop()
+			server.Stop()
 		}
 	}()
 
 	go func() {
-		if err := server.Serve(ln); err != nil {
-			server.stop()
+		if err := server.Serve(); err != nil {
+			server.Stop()
 		}
 	}()
 
-	if err := upg.Ready(); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Serving http://localhost:%s", port)
+	log.Printf("Serving at http://localhost:%s", port)
 
 	// Compile stuff because it might have changed.
 	md := markdown.New()
@@ -161,11 +146,10 @@ func main() {
 	}
 
 	select {
-	case <-upg.Exit():
-	case <-stopC:
-		upg.Stop()
+	case <-server.upgrader.Exit():
+	case <-server.stopC:
+		server.upgrader.Stop()
 	}
-	<-upg.Exit()
 }
 
 func mustWatchDir(watcher *FSWatcher, dir string) {
