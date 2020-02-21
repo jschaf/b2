@@ -77,6 +77,12 @@ func (f *FSWatcher) Start() error {
 	}
 }
 
+func (f *FSWatcher) mustWatchDir(dir string) {
+	if err := f.AddRecursively(dir); err != nil {
+		log.Fatalf("failed to watch path %s: %s", dir, err)
+	}
+}
+
 func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	c := compiler.New(markdown.New())
 	file, err := os.Open(path)

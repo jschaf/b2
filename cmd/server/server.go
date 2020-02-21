@@ -108,11 +108,11 @@ func main() {
 	server.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
 
 	watcher := NewFSWatcher(lr)
-	mustWatchDir(watcher, filepath.Join(root, "public"))
-	mustWatchDir(watcher, filepath.Join(root, "style"))
-	mustWatchDir(watcher, filepath.Join(root, "posts"))
-	mustWatchDir(watcher, filepath.Join(root, "cmd"))
-	mustWatchDir(watcher, filepath.Join(root, "pkg"))
+	watcher.mustWatchDir(filepath.Join(root, "public"))
+	watcher.mustWatchDir(filepath.Join(root, "style"))
+	watcher.mustWatchDir(filepath.Join(root, "posts"))
+	watcher.mustWatchDir(filepath.Join(root, "cmd"))
+	watcher.mustWatchDir(filepath.Join(root, "pkg"))
 
 	go server.UpgradeOnSIGHUP()
 
@@ -150,11 +150,4 @@ func main() {
 	case <-server.stopC:
 		server.upgrader.Stop()
 	}
-}
-
-func mustWatchDir(watcher *FSWatcher, dir string) {
-	if err := watcher.AddRecursively(dir); err != nil {
-		log.Fatalf("failed to watch path %s: %s", dir, err)
-	}
-
 }
