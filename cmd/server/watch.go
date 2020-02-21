@@ -41,7 +41,6 @@ func (f *FSWatcher) Start() error {
 	}
 
 	publicDir := filepath.Join(rootDir, "public")
-	c := compiler.New(markdown.New())
 
 	for {
 		select {
@@ -61,21 +60,31 @@ func (f *FSWatcher) Start() error {
 			}
 			if rel == "style/main.css" {
 				f.reloadMainCSS(rootDir, event)
-			} else {
-				file, err := os.Open(event.Name)
-				if err != nil {
-					return err
+			} else if filepath.Ext(rel) == ".md" {
+				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
+					log.Fatal(err)
 				}
-				if err := c.CompileIntoDir(file, publicDir); err != nil {
-					log.Printf("failed to compile: %s", err.Error())
-				}
-				f.lr.ReloadFile(event.Name)
+			} else if filepath.Ext(rel) == ".go" {
+				hotSwapServer()
 			}
 
 		case err := <-f.watcher.Errors:
 			log.Println("error:", err)
 		}
 	}
+}
+
+func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
+	c := compiler.New(markdown.New())
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	if err := c.CompileIntoDir(file, publicDir); err != nil {
+		return fmt.Errorf("failed to compile md file: %s", err)
+	}
+	f.lr.ReloadFile(path)
+	return nil
 }
 
 func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
@@ -92,6 +101,8 @@ func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
 }
 
 func (f *FSWatcher) AddRecursively(name string) error {
+	log.Printf("Watching dir %s", name)
+
 	walk := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -104,7 +115,6 @@ func (f *FSWatcher) AddRecursively(name string) error {
 		if err != nil {
 			return fmt.Errorf("failed to watch directory: %w", err)
 		}
-		log.Printf("Watching dir %s", path)
 		return nil
 	}
 

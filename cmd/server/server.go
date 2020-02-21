@@ -2,13 +2,28 @@ package main
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/livereload"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
+
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/livereload"
+
+	"github.com/cloudflare/tableflip"
 )
+
+var (
+	upgradeC chan os.Signal
+)
+
+func hotSwapServer() {
+	upgradeC <- syscall.SIGHUP
+}
 
 func main() {
 	port := "8080"
@@ -36,22 +51,58 @@ func main() {
 	http.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
 
 	watcher := NewFSWatcher(liveReload)
-	if err = watcher.AddRecursively(pubDir); err != nil {
-		log.Fatalf("failed to watch path %s: %s", pubDir, err)
-	}
+	mustWatchDir(watcher, filepath.Join(root, "public"))
+	mustWatchDir(watcher, filepath.Join(root, "style"))
+	mustWatchDir(watcher, filepath.Join(root, "posts"))
+	mustWatchDir(watcher, filepath.Join(root, "cmd"))
+	mustWatchDir(watcher, filepath.Join(root, "pkg"))
 
-	styleDir := filepath.Join(root, "style")
-	if err = watcher.AddRecursively(styleDir); err != nil {
-		log.Fatalf("failed to watch path %s: %s", styleDir, err)
+	upg, err := tableflip.New(tableflip.Options{
+		UpgradeTimeout: time.Second * 5,
+	})
+	if err != nil {
+		log.Fatalf("failed to create upgrader: %s", err)
 	}
+	defer upg.Stop()
 
-	postsDir := filepath.Join(root, "posts")
-	if err = watcher.AddRecursively(postsDir); err != nil {
-		log.Fatalf("failed to watch path %s: %s", styleDir, err)
+	// Upgrade on SIGHUP.
+	go func() {
+		upgradeC = make(chan os.Signal, 1)
+		signal.Notify(upgradeC, syscall.SIGHUP)
+		for range upgradeC {
+			_ = upg.Upgrade()
+		}
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+		<-c
+		upg.Stop()
+	}()
+
+	ln, err := upg.Listen("tcp", "localhost:"+port)
+	if err != nil {
+		log.Fatalf("failed to listen: %s", err)
 	}
+	defer ln.Close()
 
 	go watcher.Start()
 
-	log.Printf("Serving at port %s", port)
-	log.Fatal(http.ListenAndServe("127.0.0.1:"+port, nil))
+	go http.Serve(ln, nil)
+
+	if err := upg.Ready(); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Serving at port http://localhost:%s", port)
+
+	<-upg.Exit()
+}
+
+func mustWatchDir(watcher *FSWatcher, dir string) {
+	if err := watcher.AddRecursively(dir); err != nil {
+		log.Fatalf("failed to watch path %s: %s", dir, err)
+	}
+
 }
