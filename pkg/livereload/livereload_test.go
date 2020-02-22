@@ -105,7 +105,7 @@ func writeHTML(h http.Header, hs ...string) http.HandlerFunc {
 }
 
 func TestLiveReload_WebSocketHandler_ImmediateClose(t *testing.T) {
-	lr := NewWebsocketServer()
+	lr := NewWebsocketServer(nil)
 	server := httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler))
 	defer server.Close()
 
@@ -247,7 +247,7 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 }
 
 func newLiveReloadServer() (*httptest.Server, *LiveReload) {
-	lr := NewWebsocketServer()
+	lr := NewWebsocketServer(nil)
 	go lr.Start()
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }

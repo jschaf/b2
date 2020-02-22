@@ -131,7 +131,7 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang 
 			case chroma.NameFunction:
 				switch lang {
 				case "go":
-					if i >= 2 && tokens[i-2].Value == "func" {
+					if i >= 0 && tokens[i-2].Value == "func" {
 						fmt.Fprintf(w, "<code-fn>%s</code-fn>", h)
 					} else {
 						fmt.Fprint(w, h)

@@ -6,8 +6,10 @@ package livereload
 
 import (
 	"bytes"
+
 	"github.com/gorilla/websocket"
-	"log"
+	"go.uber.org/zap"
+
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -16,9 +18,10 @@ import (
 type LiveReload struct {
 	upgrader      websocket.Upgrader
 	connPublisher *connPub
+	logger        *zap.SugaredLogger
 }
 
-func NewWebsocketServer() *LiveReload {
+func NewWebsocketServer(l *zap.SugaredLogger) *LiveReload {
 	return &LiveReload{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -26,6 +29,7 @@ func NewWebsocketServer() *LiveReload {
 			},
 		},
 		connPublisher: newConnPub(),
+		logger:        l,
 	}
 }
 
@@ -34,10 +38,10 @@ func NewWebsocketServer() *LiveReload {
 func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := lr.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("failed to upgrade HTTP to websocket: %s", err)
+		lr.logger.Infof("failed to upgrade HTTP to websocket: %s", err)
 		return
 	}
-	c := newConn(ws)
+	c := newConn(ws, lr.logger)
 	lr.connPublisher.attach <- c
 	defer func() { lr.connPublisher.detach <- c }()
 	c.start()
@@ -76,9 +80,9 @@ func (lr *LiveReload) Start() {
 }
 
 func (lr *LiveReload) Shutdown() {
-	log.Printf("Shutting down livereload")
+	lr.logger.Info("Shutting down livereload")
 	for c := range lr.connPublisher.conns {
-		log.Printf("Shutting down livereload connection")
+		lr.logger.Info("Shutting down livereload connection")
 		c.closeWithCode(websocket.CloseNormalClosure, "")
 	}
 }

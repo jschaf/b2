@@ -99,9 +99,9 @@ func main() {
 	}
 	defer server.Stop()
 
-	lr := livereload.NewWebsocketServer()
 	lrJSPath := "/dev/livereload.js"
 	lrPath := "/dev/livereload"
+	lr := livereload.NewWebsocketServer(server.logger.Named("livereload"))
 	server.HandleFunc(lrJSPath, livereload.ServeJSHandler)
 	server.HandleFunc(lrPath, lr.WebSocketHandler)
 	go lr.Start()

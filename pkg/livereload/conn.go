@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
+
 	"io/ioutil"
-	"log"
 	"sync"
 	"time"
 )
@@ -18,14 +20,16 @@ type conn struct {
 	ws        *websocket.Conn
 	send      chan interface{}
 	closer    sync.Once
+	logger    *zap.SugaredLogger
 }
 
-func newConn(ws *websocket.Conn) *conn {
+func newConn(ws *websocket.Conn, l *zap.SugaredLogger) *conn {
 	return &conn{
 		handshake: false,
 		ws:        ws,
 		send:      make(chan interface{}, 5),
 		closer:    sync.Once{},
+		logger:    l,
 	}
 }
 
@@ -83,11 +87,11 @@ func (c *conn) receive() {
 					"failed to decode info message")
 				return
 			}
-			log.Printf("LiveReload client info: url=%s, plugins=%s",
+			c.logger.Infof("LiveReload client info: url=%s, plugins=%s",
 				info.URL, formatInfoMsg(info))
 
 		default:
-			log.Printf("unsupported command received from websocket client: %s",
+			c.logger.Infof("unsupported command received from websocket client: %s",
 				cmd.Command)
 			c.close(fmt.Errorf("unexpected command: %s", cmd.Command))
 			return
@@ -128,7 +132,7 @@ func (c *conn) close(err error) {
 		err = c.ws.WriteControl(websocket.CloseMessage, closeMsg, deadline)
 		err = c.ws.Close()
 		if err != nil {
-			log.Printf("failed to close websocket: :%s", err)
+			c.logger.Errorf("failed to close websocket: :%s", err)
 		}
 		close(c.send)
 	})
