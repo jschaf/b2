@@ -459,6 +459,10 @@ code-str {
   color: #032f62;
 }
 
+code-fn {
+  color: #6f42c1;
+}
+
 .code-block {
   margin-top: 0.75rem;
   padding-left: 0;

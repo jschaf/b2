@@ -24,16 +24,16 @@ func (c *codeBlockRenderer) render(w util.BufWriter, source []byte, node ast.Nod
 	n := node.(*ast.FencedCodeBlock)
 
 	if entering {
-		language := n.Language(source)
+		lang := string(n.Language(source))
 
-		lexer := getLexer(language)
+		lexer := getLexer(lang)
 		formatter := NewCodeBlockFormatter()
 
 		tokenIter, err := lexer.Tokenise(nil, c.readAllLines(n, source))
 		if err != nil {
 			panic(err)
 		}
-		if err := formatter.Format(w, tokenIter); err != nil {
+		if err := formatter.Format(w, tokenIter, lang); err != nil {
 			panic(err)
 		}
 
@@ -51,10 +51,10 @@ func (c *codeBlockRenderer) readAllLines(n *ast.FencedCodeBlock, source []byte) 
 	return b.String()
 }
 
-func getLexer(language []byte) chroma.Lexer {
+func getLexer(language string) chroma.Lexer {
 	lexer := lexers.Fallback
-	if language != nil {
-		lexer = lexers.Get(string(language))
+	if language != "" {
+		lexer = lexers.Get(language)
 	}
 	lexer = chroma.Coalesce(lexer)
 	return lexer
@@ -87,14 +87,14 @@ func NewCodeBlockFormatter() *codeBlockFormatter {
 	return &codeBlockFormatter{}
 }
 
-func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator) error {
+func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang string) error {
 	fmt.Fprintf(w, "<code-block-container style='display:block'>")
 	fmt.Fprintf(w, "<code-block style='white-space:pre; display:block;'>")
 
 	tokens := iterator.Tokens()
 	lines := chroma.SplitTokensIntoLines(tokens)
 	for _, tokens := range lines {
-		for _, token := range tokens {
+		for i, token := range tokens {
 			h := html.EscapeString(token.String())
 			switch token.Type {
 
@@ -127,6 +127,19 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator) error
 				fallthrough
 			case chroma.KeywordType:
 				fmt.Fprintf(w, "<code-kw>%s</code-kw>", h)
+
+			case chroma.NameFunction:
+				switch lang {
+				case "go":
+					if i >= 2 && tokens[i-2].Value == "func" {
+						fmt.Fprintf(w, "<code-fn>%s</code-fn>", h)
+					} else {
+						fmt.Fprint(w, h)
+					}
+
+				default:
+					fmt.Fprintf(w, "<code-fn>%s</code-fn>", h)
+				}
 
 			case chroma.String:
 				fallthrough
