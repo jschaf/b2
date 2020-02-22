@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/jschaf/b2/pkg/git"
@@ -14,6 +14,7 @@ import (
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/paths"
+	"go.uber.org/zap"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -21,9 +22,10 @@ import (
 type FSWatcher struct {
 	lr      *livereload.LiveReload
 	watcher *fsnotify.Watcher
+	logger  *zap.SugaredLogger
 }
 
-func NewFSWatcher(lr *livereload.LiveReload) *FSWatcher {
+func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(err)
@@ -31,6 +33,7 @@ func NewFSWatcher(lr *livereload.LiveReload) *FSWatcher {
 	return &FSWatcher{
 		lr:      lr,
 		watcher: watcher,
+		logger:  logger.Named("watcher"),
 	}
 }
 
@@ -50,14 +53,17 @@ func (f *FSWatcher) Start() error {
 				// Intellij temp file
 				break
 			}
+			// Ignore everything except writes.
 			if event.Op&fsnotify.Write != fsnotify.Write {
 				break
 			}
 
 			rel, err := filepath.Rel(rootDir, event.Name)
 			if err != nil {
-				rel = ""
+				f.logger.Infof("failed to get relative path: %s", err)
+				break
 			}
+
 			if rel == "style/main.css" {
 				f.reloadMainCSS(rootDir, event)
 			} else if filepath.Ext(rel) == ".md" {
@@ -65,22 +71,30 @@ func (f *FSWatcher) Start() error {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
 			} else if filepath.Ext(rel) == ".go" {
-				log.Printf("hot swapping server")
+				f.logger.Info("hot swapping server because go file changed")
 				if err := rebuildServer(); err != nil {
 					return fmt.Errorf("failed to hotswap erver: %w", err)
+				}
+				f.logger.Debug("sending SIGHUP")
+				if err := sendSighup(); err != nil {
+
+					return err
 				}
 			}
 
 		case err := <-f.watcher.Errors:
-			log.Println("error:", err)
+			f.logger.Infof("error:", err)
 		}
 	}
 }
 
-func (f *FSWatcher) mustWatchDir(dir string) {
-	if err := f.AddRecursively(dir); err != nil {
-		log.Fatalf("failed to watch path %s: %s", dir, err)
+func (f *FSWatcher) watchDirs(dirs ...string) error {
+	for _, dir := range dirs {
+		if err := f.AddRecursively(dir); err != nil {
+			return fmt.Errorf("failed to watch dir: %w", err)
+		}
 	}
+	return nil
 }
 
 func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
@@ -100,11 +114,11 @@ func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
 	dest := filepath.Join(root, "public", "style", "main.css")
 	err := os.MkdirAll(filepath.Dir(dest), 0755)
 	if err != nil {
-		log.Printf("failed to create dir public/style")
+		f.logger.Info("failed to create dir public/style")
 	}
 	err = paths.Copy(event.Name, dest)
 	if err != nil {
-		log.Printf("failed to copy main.css into public: %s", err)
+		f.logger.Infof("failed to copy main.css into public: %s", err)
 	}
 	f.lr.ReloadFile(dest)
 }
@@ -137,6 +151,18 @@ func rebuildServer() error {
 	}
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to rebuild server: %s", err)
+	}
+	return nil
+}
+
+func sendSighup() error {
+	pid := os.Getpid()
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("failed to get process from PID: %w", err)
+	}
+	if err = process.Signal(syscall.SIGHUP); err != nil {
+		return fmt.Errorf("failed to send SIGHUP: %w", err)
 	}
 	return nil
 }

@@ -12,12 +12,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cloudflare/tableflip"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
-
-	"github.com/cloudflare/tableflip"
+	"go.uber.org/zap"
 )
 
 type server struct {
@@ -26,23 +26,30 @@ type server struct {
 	stopC    chan struct{}
 	once     sync.Once
 	upgrader *tableflip.Upgrader
+	logger   *zap.SugaredLogger
 }
 
-func newServer(port string) *server {
+func newServer(port string) (*server, error) {
 	s := new(server)
 	s.ServeMux = http.NewServeMux()
 	s.port = port
 	s.once = sync.Once{}
 	s.stopC = make(chan struct{})
 
-	return s
+	if l, err := newShortDevLogger(); err != nil {
+		return nil, fmt.Errorf("failed to create logger: %w", err)
+	} else {
+		pid := os.Getpid()
+		s.logger = l.Sugar().With("pid", pid)
+	}
+
+	return s, nil
 }
 
 func (s *server) Serve() error {
 	srv := http.Server{
 		Handler: s.ServeMux,
 	}
-
 	upg, err := tableflip.New(tableflip.Options{
 		UpgradeTimeout: time.Second * 5,
 	})
@@ -67,8 +74,9 @@ func (s *server) UpgradeOnSIGHUP() {
 	signal.Notify(upgrade, syscall.SIGHUP)
 	// We might get multiple upgrade requests.
 	for range upgrade {
+		s.logger.Info("upgrading because SIGHUP")
 		if err := s.upgrader.Upgrade(); err != nil {
-			fmt.Printf("failed to upgrade: %s", err)
+			s.logger.Errorf("failed to upgrade: %s", err)
 			continue
 		}
 	}
@@ -79,11 +87,16 @@ func (s *server) Stop() {
 		s.upgrader.Stop()
 		close(s.stopC)
 	})
+	s.logger.Info("server stopped")
+	_ = s.logger.Sync()
 }
 
 func main() {
 	port := "8080"
-	server := newServer(port)
+	server, err := newServer(port)
+	if err != nil {
+		log.Fatalf("failed to create server: %s", err)
+	}
 	defer server.Stop()
 
 	lr := livereload.NewWebsocketServer()
@@ -95,7 +108,8 @@ func main() {
 
 	root, err := git.FindRootDir()
 	if err != nil {
-		log.Fatalf("failed to find root dir: %s", err)
+		server.logger.Errorf("failed to find root dir: %s", err)
+		return
 	}
 	pubDir := filepath.Join(root, "public")
 	pubDirHandler := http.FileServer(http.Dir(pubDir))
@@ -107,12 +121,17 @@ func main() {
 	}, "")
 	server.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
 
-	watcher := NewFSWatcher(lr)
-	watcher.mustWatchDir(filepath.Join(root, "public"))
-	watcher.mustWatchDir(filepath.Join(root, "style"))
-	watcher.mustWatchDir(filepath.Join(root, "posts"))
-	watcher.mustWatchDir(filepath.Join(root, "cmd"))
-	watcher.mustWatchDir(filepath.Join(root, "pkg"))
+	watcher := NewFSWatcher(lr, server.logger)
+	if err := watcher.watchDirs(
+		filepath.Join(root, "public"),
+		filepath.Join(root, "style"),
+		filepath.Join(root, "posts"),
+		filepath.Join(root, "cmd"),
+		filepath.Join(root, "pkg"),
+	); err != nil {
+		server.logger.Error(err)
+		return
+	}
 
 	go server.UpgradeOnSIGHUP()
 
@@ -120,12 +139,13 @@ func main() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 		<-c
+		server.logger.Info("received quit signal")
 		server.Stop()
 	}()
 
 	go func() {
 		if err := watcher.Start(); err != nil {
-			log.Printf("stoping server because watcher error: %s", err)
+			server.logger.Infof("stopping server because watcher error: %s", err)
 			server.Stop()
 		}
 	}()
@@ -136,18 +156,21 @@ func main() {
 		}
 	}()
 
-	log.Printf("Serving at http://localhost:%s", port)
+	server.logger.Infof("Serving at http://localhost:%s", port)
 
-	// Compile stuff because it might have changed.
+	// Compile because it might have changed since last run.
 	md := markdown.New()
 	c := compiler.New(md)
+	server.logger.Debug("compiling all markdown files")
 	if err := compiler.CompileEverything(c); err != nil {
-		log.Fatal(err)
+		server.logger.Error(err)
+		return
 	}
 
 	select {
 	case <-server.upgrader.Exit():
+		server.logger.Debug("upgrader exiting")
 	case <-server.stopC:
-		server.upgrader.Stop()
+		server.logger.Debug("server stopping")
 	}
 }

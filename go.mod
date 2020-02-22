@@ -8,8 +8,8 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-test/deep v1.0.5
 	github.com/gorilla/websocket v1.4.1
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/yuin/goldmark v1.1.23-0.20200209095113-0b4973017794
+	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/sys v0.0.0-20200121082415-34d275377bf9 // indirect
 )
