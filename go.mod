@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/alecthomas/chroma v0.7.1
 	github.com/cloudflare/tableflip v1.0.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-test/deep v1.0.5
