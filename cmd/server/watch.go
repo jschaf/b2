@@ -78,6 +78,7 @@ func (f *FSWatcher) Start() error {
 				if err := f.compileMdWithGoRun(); err != nil {
 					return err
 				}
+				// Send empty string which should reload all LiveReload clients
 				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".go":

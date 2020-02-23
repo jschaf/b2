@@ -18,14 +18,27 @@ func TestCodeBlockExt(t *testing.T) {
 		want string
 	}{
 		{
-			"h1 + p",
+			"go func",
 			texts.Dedent("``` go\n" +
 				"func foo() {}\n" +
 				"```\n"),
 			texts.Dedent(`
-					<pre>
-						<code class="lang-go">
-							func foo() {}
+					<code-block-container style="display:block">
+						<code-block style="white-space:pre; display:block;">
+							<code-kw>func</code-kw> <code-fn>foo</code-fn>() {}
+						</code
+					</pre>
+     `),
+		},
+		{
+			"go func receiver",
+			texts.Dedent("``` go\n" +
+				"func (t *T) foo() {}\n" +
+				"```\n"),
+			texts.Dedent(`
+					<code-block-container style="display:block">
+						<code-block style="white-space:pre; display:block;">
+							<code-kw>func</code-kw> (t *T) <code-fn>foo</code-fn>() {}
 						</code
 					</pre>
       `),
