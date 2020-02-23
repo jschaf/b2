@@ -7,4 +7,4 @@ type TemplateData struct {
 	Body  template.HTML
 }
 
-var PostDoc = template.Must(template.ParseFiles("pkg/html/post_doc.gohtml"))
+var PostDoc = template.Must(template.ParseFiles("pkg/markdown/html/post_doc.gohtml"))

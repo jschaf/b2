@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 
 	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/html"
 	"github.com/jschaf/b2/pkg/markdown"
+	"github.com/jschaf/b2/pkg/markdown/html"
 )
 
 type Compiler struct {

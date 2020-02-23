@@ -20,9 +20,9 @@ import (
 // FSWatcher watches the filesystem for modifications and sends LiveReload
 // commands to the browser client.
 type FSWatcher struct {
-	lr      *livereload.LiveReload
-	watcher *fsnotify.Watcher
-	logger  *zap.SugaredLogger
+	liveReload *livereload.LiveReload
+	watcher    *fsnotify.Watcher
+	logger     *zap.SugaredLogger
 }
 
 func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
@@ -31,9 +31,9 @@ func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatch
 		panic(err)
 	}
 	return &FSWatcher{
-		lr:      lr,
-		watcher: watcher,
-		logger:  logger.Named("watcher"),
+		liveReload: lr,
+		watcher:    watcher,
+		logger:     logger.Named("watcher"),
 	}
 }
 
@@ -64,21 +64,25 @@ func (f *FSWatcher) Start() error {
 				break
 			}
 
-			if rel == "style/main.css" {
+			switch {
+			case rel == "style/main.css":
 				f.reloadMainCSS(rootDir, event)
-			} else if filepath.Ext(rel) == ".md" {
+
+			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
-			} else if filepath.Ext(rel) == ".go" {
-				f.logger.Info("hot swapping server because go file changed")
-				if err := rebuildServer(); err != nil {
-					return fmt.Errorf("failed to hotswap erver: %w", err)
-				}
-				f.logger.Debug("sending SIGHUP")
-				if err := sendSighup(); err != nil {
 
+			case strings.HasPrefix(rel, "pkg/markdown/"):
+				// If only the markdown has changed, recompile only that.
+				if err := f.compileMdWithGoRun(); err != nil {
 					return err
+				}
+				f.liveReload.ReloadFile("")
+
+			case filepath.Ext(rel) == ".go":
+				if err := f.rebuildServer(); err != nil {
+					return fmt.Errorf("failed to hotswap erver: %w", err)
 				}
 			}
 
@@ -86,6 +90,18 @@ func (f *FSWatcher) Start() error {
 			f.logger.Infof("error:", err)
 		}
 	}
+}
+
+func (f *FSWatcher) compileMdWithGoRun() error {
+	f.logger.Infof("pkg/markdown changed, compiling all markdown")
+	cmd := exec.Command("go", "run", "github.com/jschaf/b2/cmd/compiler")
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start go run compiler: %w", err)
+	}
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("go run compiler failed: %w", err)
+	}
+	return nil
 }
 
 func (f *FSWatcher) watchDirs(dirs ...string) error {
@@ -106,7 +122,7 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	if err := c.CompileIntoDir(file, publicDir); err != nil {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
-	f.lr.ReloadFile(path)
+	f.liveReload.ReloadFile(path)
 	return nil
 }
 
@@ -120,7 +136,7 @@ func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
 	if err != nil {
 		f.logger.Infof("failed to copy main.css into public: %s", err)
 	}
-	f.lr.ReloadFile(dest)
+	f.liveReload.ReloadFile(dest)
 }
 
 func (f *FSWatcher) AddRecursively(name string) error {
@@ -142,7 +158,8 @@ func (f *FSWatcher) AddRecursively(name string) error {
 	return filepath.Walk(name, walk)
 }
 
-func rebuildServer() error {
+func (f *FSWatcher) rebuildServer() error {
+	f.logger.Info("hot swapping server because go file changed")
 	out := os.Args[0]
 	pkg := "github.com/jschaf/b2/cmd/server"
 	cmd := exec.Command("go", "build", "-o", out, pkg)
@@ -151,6 +168,11 @@ func rebuildServer() error {
 	}
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to rebuild server: %s", err)
+	}
+
+	f.logger.Debug("sending SIGHUP")
+	if err := sendSighup(); err != nil {
+		return err
 	}
 	return nil
 }
