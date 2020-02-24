@@ -12,6 +12,7 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
+	"github.com/jschaf/b2/pkg/paths"
 )
 
 type Compiler struct {
@@ -69,7 +70,18 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 		return fmt.Errorf("failed to open index.html file for write: %w", err)
 	}
 
-	return c.CompileAST(postAST, destFile)
+	if err := c.CompileAST(postAST, destFile); err != nil {
+		return fmt.Errorf("failed to compile AST: %w", err)
+	}
+
+	for destPath, srcPath := range postAST.Assets {
+		d := filepath.Join(publicDir, destPath)
+		if err := paths.Copy(srcPath, d); err != nil {
+			return fmt.Errorf("failed to copy asset to dest: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func CompileEverything(c *Compiler) error {
@@ -90,7 +102,7 @@ func CompileEverything(c *Compiler) error {
 			return err
 		}
 
-		return c.CompileIntoDir("", file, publicDir)
+		return c.CompileIntoDir(file.Name(), file, publicDir)
 	})
 
 	if err != nil {

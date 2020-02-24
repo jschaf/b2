@@ -29,8 +29,9 @@ func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc par
 			return ast.WalkContinue, nil
 		}
 		path := filepath.Dir(GetPath(pc))
+		meta := GetTOMLMeta(pc)
 		localPath := filepath.Join(path, dest)
-		remotePath := dest
+		remotePath := filepath.Join(meta.Slug, dest)
 		AddAsset(pc, remotePath, localPath)
 		return ast.WalkStop, nil
 	})
