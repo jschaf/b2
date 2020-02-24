@@ -27,7 +27,7 @@ func TestArticleExt(t *testing.T) {
 			texts.Dedent(`
 					<article>
             <header>
-							<time datetime="0001-01-01T00:00:00Z">January  1, 0001</time>
+							<time datetime="0001-01-01">January  1, 0001</time>
 							<h1><a href="/" title="header">header</a></h1>
             </header>
 						<p>foo</p>

@@ -19,6 +19,10 @@ func ParseFragment(r io.Reader) ([]*html.Node, error) {
 	return normalizeNodes(nodes), nil
 }
 
+func DiffStrings(x, y string) (string, error) {
+	return Diff(strings.NewReader(x), strings.NewReader(y))
+}
+
 // Diff returns the diff between the normalized HTML fragments.
 func Diff(x, y io.Reader) (string, error) {
 	frag1, err := ParseFragment(x)

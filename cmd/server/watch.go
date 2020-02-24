@@ -88,7 +88,7 @@ func (f *FSWatcher) Start() error {
 			}
 
 		case err := <-f.watcher.Errors:
-			f.logger.Infof("error:", err)
+			f.logger.Infof("error: %s", err)
 		}
 	}
 }
@@ -120,7 +120,7 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.CompileIntoDir(file, publicDir); err != nil {
+	if err := c.CompileIntoDir(path, file, publicDir); err != nil {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
 	f.liveReload.ReloadFile(path)

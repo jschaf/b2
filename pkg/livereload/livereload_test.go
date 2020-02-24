@@ -3,8 +3,11 @@ package livereload
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/go-test/deep"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap/zaptest"
+
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -104,46 +107,8 @@ func writeHTML(h http.Header, hs ...string) http.HandlerFunc {
 	}
 }
 
-func TestLiveReload_WebSocketHandler_ImmediateClose(t *testing.T) {
-	lr := NewWebsocketServer(nil)
-	server := httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler))
-	defer server.Close()
-
-	go lr.Start()
-
-	req, _ := http.NewRequest("GET", server.URL, strings.NewReader(""))
-	req.Header.Set("Connection", "upgrade")
-	req.Header.Set("UpgradeOnSIGHUP", "websocket")
-	req.Header.Set("Sec-WebSocket-Version", "13")
-	req.Header.Set("Sec-WebSocket-Key", "unused")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("Do() returned error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	go func() {
-		<-time.After(time.Millisecond * 5)
-		lr.Shutdown()
-	}()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	expected := bytes.Join([][]byte{
-		websocketTextMsg(newHelloMsg()),
-		websocketCloseMsg(websocket.CloseNormalClosure),
-	}, []byte{})
-	if diff := deep.Equal(body, expected); diff != nil {
-		t.Errorf("body doesn't match\nexpected:\n%s\ngot:\n%s\n%s",
-			expected,
-			body,
-			strings.Join(diff, "\n"))
-	}
-}
-
 func TestLiveReload_WebSocketHandler_ClientShouldGetHello(t *testing.T) {
-	server, _ := newLiveReloadServer()
+	server, _ := newLiveReloadServer(t)
 	defer server.Close()
 
 	conn, resp := newWebSocketClient(t, server)
@@ -155,7 +120,7 @@ func TestLiveReload_WebSocketHandler_ClientShouldGetHello(t *testing.T) {
 }
 
 func TestLiveReload_WebSocketHandler_BadHandshake(t *testing.T) {
-	server, _ := newLiveReloadServer()
+	server, _ := newLiveReloadServer(t)
 	defer server.Close()
 
 	conn, _ := newWebSocketClient(t, server)
@@ -173,7 +138,7 @@ func TestLiveReload_WebSocketHandler_BadHandshake(t *testing.T) {
 }
 
 func TestLiveReload_WebSocketHandler_UnknownClientMessage(t *testing.T) {
-	server, _ := newLiveReloadServer()
+	server, _ := newLiveReloadServer(t)
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -193,7 +158,7 @@ func TestLiveReload_WebSocketHandler_UnknownClientMessage(t *testing.T) {
 }
 
 func TestLiveReload_ReloadFile(t *testing.T) {
-	server, lr := newLiveReloadServer()
+	server, lr := newLiveReloadServer(t)
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -211,7 +176,7 @@ func TestLiveReload_ReloadFile(t *testing.T) {
 }
 
 func TestLiveReload_Alert(t *testing.T) {
-	server, lr := newLiveReloadServer()
+	server, lr := newLiveReloadServer(t)
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -246,8 +211,8 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 	}
 }
 
-func newLiveReloadServer() (*httptest.Server, *LiveReload) {
-	lr := NewWebsocketServer(nil)
+func newLiveReloadServer(t *testing.T) (*httptest.Server, *LiveReload) {
+	lr := NewWebsocketServer(zaptest.NewLogger(t).Sugar())
 	go lr.Start()
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }

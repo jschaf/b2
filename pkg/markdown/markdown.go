@@ -33,7 +33,7 @@ func New() *Markdown {
 	return &Markdown{gm: gm}
 }
 
-func (m *Markdown) Parse(r io.Reader) (*PostAST, error) {
+func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	bs, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -44,6 +44,7 @@ func (m *Markdown) Parse(r io.Reader) (*PostAST, error) {
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	meta := mdext.GetTOMLMeta(ctx)
 	meta.Title = mdext.GetTitle(ctx)
+	meta.Path = path
 	return &PostAST{
 		Node: node,
 		Meta: meta,

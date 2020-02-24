@@ -43,7 +43,7 @@ func (t *TimeRenderer) renderTime(w util.BufWriter, source []byte, node ast.Node
 	if entering {
 		n := node.(*Time)
 		_, _ = w.WriteString("\n<time datetime=\"")
-		_, _ = w.WriteString(n.date.Format(time.RFC3339))
+		_, _ = w.WriteString(n.date.UTC().Format("2006-01-02"))
 		_, _ = w.WriteString("\">")
 		_, _ = w.WriteString(n.date.Format("January _2, 2006"))
 		_, _ = w.WriteString("</time>\n")

@@ -42,13 +42,13 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 }
 
 // CompileIntoDir compiles markdown into a directory based on the slug.
-func (c *Compiler) CompileIntoDir(r io.Reader, publicDir string) error {
+func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) error {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("failed to read all file: %w", err)
 	}
 
-	postAST, err := c.md.Parse(bytes.NewReader(src))
+	postAST, err := c.md.Parse(path, bytes.NewReader(src))
 	if err != nil {
 		return fmt.Errorf("failed to parse markdown: %w", err)
 	}
@@ -90,7 +90,7 @@ func CompileEverything(c *Compiler) error {
 			return err
 		}
 
-		return c.CompileIntoDir(file, publicDir)
+		return c.CompileIntoDir("", file, publicDir)
 	})
 
 	if err != nil {
