@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cloudflare/tableflip"
+	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -157,6 +158,10 @@ func main() {
 	}()
 
 	server.logger.Infof("Serving at http://localhost:%s", port)
+
+	if _, err := css.WriteMainCSS(root); err != nil {
+		server.logger.Errorf("failed to write main.css: %s", err)
+	}
 
 	// Compile because it might have changed since last run.
 	md := markdown.New()

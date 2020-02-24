@@ -88,8 +88,8 @@ func NewCodeBlockFormatter() *codeBlockFormatter {
 }
 
 func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang string) error {
-	fmt.Fprintf(w, "<code-block-container style='display:block'>")
-	fmt.Fprintf(w, "<code-block style='white-space:pre; display:block;'>")
+	fmt.Fprintf(w, "<div class='code-block-container'>")
+	fmt.Fprintf(w, "<pre class='code-block'>")
 
 	tokens := iterator.Tokens()
 	lines := chroma.SplitTokensIntoLines(tokens)
@@ -183,7 +183,7 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang 
 		}
 	}
 
-	fmt.Fprintf(w, "</code-block>")
-	fmt.Fprintf(w, "</code-block-container>")
+	fmt.Fprintf(w, "</pre>")
+	fmt.Fprintf(w, "</div>")
 	return nil
 }

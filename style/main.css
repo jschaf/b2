@@ -420,7 +420,7 @@ thead th {
   font-size: 1em !important;
 }
 
-code-block-container {
+.code-block-container {
   margin-top: .75rem;
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
@@ -428,7 +428,7 @@ code-block-container {
   overflow-x: visible
 }
 
-code-block {
+.code-block {
   overflow-x: visible;
   line-height: 20px;
   margin: 0;
@@ -461,18 +461,6 @@ code-str {
 
 code-fn {
   color: #6f42c1;
-}
-
-.code-block {
-  margin-top: 0.75rem;
-  padding-left: 0;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  overflow-x: visible;
-  line-height: 20px;
-  tab-size: 2;
-  padding-top: 3px;
-  padding-bottom: 3px;
 }
 
 .lntable {

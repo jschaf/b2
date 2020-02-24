@@ -9,11 +9,11 @@ import (
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/paths"
 	"go.uber.org/zap"
 )
 
@@ -66,7 +66,7 @@ func (f *FSWatcher) Start() error {
 
 			switch {
 			case rel == "style/main.css":
-				f.reloadMainCSS(rootDir, event)
+				f.reloadMainCSS(rootDir)
 
 			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
@@ -127,15 +127,10 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	return nil
 }
 
-func (f *FSWatcher) reloadMainCSS(root string, event fsnotify.Event) {
-	dest := filepath.Join(root, "public", "style", "main.css")
-	err := os.MkdirAll(filepath.Dir(dest), 0755)
+func (f *FSWatcher) reloadMainCSS(root string) {
+	dest, err := css.WriteMainCSS(root)
 	if err != nil {
-		f.logger.Info("failed to create dir public/style")
-	}
-	err = paths.Copy(event.Name, dest)
-	if err != nil {
-		f.logger.Infof("failed to copy main.css into public: %s", err)
+		f.logger.Info(err)
 	}
 	f.liveReload.ReloadFile(dest)
 }
