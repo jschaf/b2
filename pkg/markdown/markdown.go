@@ -14,6 +14,11 @@ import (
 type PostAST struct {
 	Node ast.Node
 	Meta mdext.PostMeta
+	// A map of the relative URL to the full file path of an asset like an image.
+	// For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
+	Assets map[string]string
+	// The full path to the markdown file that this AST represents.
+	Path string
 }
 
 type Markdown struct {
@@ -24,11 +29,13 @@ type Markdown struct {
 func New() *Markdown {
 	gm := goldmark.New(
 		goldmark.WithExtensions(
-			mdext.NewTOMLExt(),
 			mdext.NewArticleExt(),
-			mdext.NewTimeExt(),
-			mdext.NewHeaderExt(),
 			mdext.NewCodeBlockExt(),
+			mdext.NewHeaderExt(),
+			mdext.NewImageExt(),
+			mdext.NewFigureExt(),
+			mdext.NewTimeExt(),
+			mdext.NewTOMLExt(),
 		))
 	return &Markdown{gm: gm}
 }
@@ -40,14 +47,17 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	}
 	m.Source = bs
 	ctx := parser.NewContext()
+	mdext.SetPath(ctx, path)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	meta := mdext.GetTOMLMeta(ctx)
 	meta.Title = mdext.GetTitle(ctx)
-	meta.Path = path
+	assets := mdext.GetAssets(ctx)
 	return &PostAST{
-		Node: node,
-		Meta: meta,
+		Node:   node,
+		Meta:   meta,
+		Assets: assets,
+		Path:   path,
 	}, nil
 }
 

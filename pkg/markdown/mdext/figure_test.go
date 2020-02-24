@@ -11,46 +11,32 @@ import (
 	"github.com/yuin/goldmark/parser"
 )
 
-func TestCodeBlockExt(t *testing.T) {
+func TestNewFigureExt(t *testing.T) {
 	tests := []struct {
 		name string
 		src  string
 		want string
 	}{
 		{
-			"go func",
-			texts.Dedent("``` go\n" +
-				"func foo() {}\n" +
-				"```\n"),
+			"single image",
 			texts.Dedent(`
-					<div class="code-block-container">
-						<pre class="code-block">
-							<code-kw>func</code-kw> <code-fn>foo</code-fn>() {}
-						</pre>
-					</div>
+        ![alt text](./qux.png "title")`),
+			texts.Dedent(`
+			  <figure>
+         <picture>
+           <img src="./qux.png" title="title">
+         </picture>
+			  </figure>
      `),
-		},
-		{
-			"go func receiver",
-			texts.Dedent("``` go\n" +
-				"func (t *T) foo() {}\n" +
-				"```\n"),
-			texts.Dedent(`
-					<div class="code-block-container">
-						<pre class="code-block">
-							<code-kw>func</code-kw> (t *T) <code-fn>foo</code-fn>() {}
-						</pre>
-					</div>
-      `),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md := goldmark.New(goldmark.WithExtensions(
-				NewCodeBlockExt(),
-			))
+				NewFigureExt()))
 			buf := new(bytes.Buffer)
 			ctx := parser.NewContext()
+
 			if err := md.Convert([]byte(tt.src), buf, parser.WithContext(ctx)); err != nil {
 				t.Fatal(err)
 			}

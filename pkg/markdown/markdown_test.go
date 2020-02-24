@@ -17,13 +17,25 @@ func TestParse(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"h1 > p",
+		{
+			"h1 > p",
 			withFrontmatter(mdext.PostMeta{Slug: "foo"},
 				`
         # hello world
         para
       `),
 			articleHTML(mdext.PostMeta{Slug: "foo"}, "hello world", "<p>para</p>"),
+		},
+		{
+			"img - has asset",
+			withFrontmatter(mdext.PostMeta{Slug: "foo"},
+				`
+        # title
+        ![Alt text](./foo_bar)
+      `),
+			articleHTML(mdext.PostMeta{Slug: "foo"}, "title",
+				"<figure><picture><img src=\"./foo_bar\" title=\"\"></picture></figure>",
+			),
 		},
 	}
 	for _, tt := range tests {

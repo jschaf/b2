@@ -22,8 +22,6 @@ type PostMeta struct {
 	Slug string
 	// The title extracted from the first header.
 	Title string
-	// The full path to the markdown file.
-	Path string
 	// The date from the markdown frontmatter.
 	Date time.Time
 }
