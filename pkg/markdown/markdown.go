@@ -14,7 +14,8 @@ import (
 type PostAST struct {
 	Node ast.Node
 	Meta mdext.PostMeta
-	// A map of the relative URL to the full file path of an asset like an image.
+	// A map where the key is the destination path relative to the public dir.
+	// The value is the absolute file path of an asset like an image.
 	// For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
 	Assets map[string]string
 	// The full path to the markdown file that this AST represents.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
@@ -75,8 +76,14 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 	}
 
 	for destPath, srcPath := range postAST.Assets {
-		d := filepath.Join(publicDir, destPath)
-		if err := paths.Copy(srcPath, d); err != nil {
+		dest := filepath.Join(publicDir, destPath)
+		if isSame, err := files.SameBytes(srcPath, dest); err != nil {
+			return fmt.Errorf("failed to check if file contents are same: %w", err)
+		} else if isSame {
+			continue
+		}
+
+		if err := paths.Copy(srcPath, dest); err != nil {
 			return fmt.Errorf("failed to copy asset to dest: %w", err)
 		}
 	}
