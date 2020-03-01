@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -27,23 +28,23 @@ func New(md *markdown.Markdown) *Compiler {
 // CompileAST compiles an AST into a writer.
 func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 	b := &bytes.Buffer{}
-	if err := c.md.Render(b, c.md.Source, ast); err != nil {
+	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to render markdown: %w", err)
 	}
 
-	data := html.TemplateData{
+	data := html.PostTemplateData{
 		Title: ast.Meta.Title,
 		Body:  template.HTML(b.String()),
 	}
 
-	if err := html.PostDoc.Execute(w, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
+	if err := html.PostTemplate.Execute(w, data); err != nil {
+		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
 	return nil
 }
 
-// CompileIntoDir compiles markdown into a directory based on the slug.
+// CompileIntoDir compiles markdown into the public directory based on the slug.
 func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) error {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -77,7 +78,9 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 
 	for destPath, srcPath := range postAST.Assets {
 		dest := filepath.Join(publicDir, destPath)
-		if isSame, err := files.SameBytes(srcPath, dest); err != nil {
+		if isSame, err := files.SameBytes(srcPath, dest); errors.Is(err, os.ErrNotExist) {
+			// Ignore
+		} else if err != nil {
 			return fmt.Errorf("failed to check if file contents are same: %w", err)
 		} else if isSame {
 			continue
@@ -91,7 +94,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 	return nil
 }
 
-func CompileEverything(c *Compiler) error {
+func (c *Compiler) CompileAllPosts() error {
 	rootDir, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("failed to find root git dir: %w", err)
@@ -115,5 +118,6 @@ func CompileEverything(c *Compiler) error {
 	if err != nil {
 		return fmt.Errorf("failed to render markdown to HTML: %w", err)
 	}
+
 	return nil
 }

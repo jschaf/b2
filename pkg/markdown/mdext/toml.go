@@ -26,22 +26,19 @@ type PostMeta struct {
 	Date time.Time
 }
 
-type data struct {
-	Map   PostMeta
-	Error error
-	Node  ast.Node
-}
-
-var ctxKey = parser.NewContextKey()
+var tomlCtxKey = parser.NewContextKey()
 
 // GetTOMLMeta returns a TOML metadata.
 func GetTOMLMeta(pc parser.Context) PostMeta {
-	v := pc.Get(ctxKey)
+	v := pc.Get(tomlCtxKey)
 	if v == nil {
 		return PostMeta{}
 	}
-	d := v.(*data)
-	return d.Map
+	return v.(PostMeta)
+}
+
+func setTOMLMeta(pc parser.Context, m PostMeta) {
+	pc.Set(tomlCtxKey, m)
 }
 
 type tomlMeta struct {
@@ -97,20 +94,14 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 		segment := lines.At(i)
 		buf.Write(segment.Value(reader.Source()))
 	}
-	d := &data{}
-	d.Node = node
 	meta := &PostMeta{}
 	if err := toml.Unmarshal(buf.Bytes(), &meta); err != nil {
-		d.Error = err
-	} else {
-		d.Map = *meta
+		panic(err)
 	}
 
-	pc.Set(ctxKey, d)
+	setTOMLMeta(pc, *meta)
 
-	if d.Error == nil {
-		node.Parent().RemoveChild(node.Parent(), node)
-	}
+	node.Parent().RemoveChild(node.Parent(), node)
 }
 
 func (t *tomlMeta) CanInterruptParagraph() bool {

@@ -18,6 +18,7 @@ import (
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"go.uber.org/zap"
 )
 
@@ -164,10 +165,14 @@ func main() {
 	}
 
 	// Compile because it might have changed since last run.
-	md := markdown.New()
-	c := compiler.New(md)
+	c := compiler.New(markdown.New())
 	server.logger.Debug("compiling all markdown files")
-	if err := compiler.CompileEverything(c); err != nil {
+	if err := c.CompileAllPosts(); err != nil {
+		server.logger.Error(err)
+		return
+	}
+	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
+	if err := ic.Compile(); err != nil {
 		server.logger.Error(err)
 		return
 	}

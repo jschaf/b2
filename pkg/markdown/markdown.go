@@ -12,8 +12,9 @@ import (
 )
 
 type PostAST struct {
-	Node ast.Node
-	Meta mdext.PostMeta
+	Node   ast.Node
+	Meta   mdext.PostMeta
+	Source []byte
 	// A map where the key is the destination path relative to the public dir.
 	// The value is the absolute file path of an asset like an image.
 	// For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
@@ -23,21 +24,25 @@ type PostAST struct {
 }
 
 type Markdown struct {
-	Source []byte
-	gm     goldmark.Markdown
+	gm goldmark.Markdown
 }
 
-func New() *Markdown {
+func defaultExtensions() []goldmark.Extender {
+	return []goldmark.Extender{
+		mdext.NewArticleExt(),
+		mdext.NewCodeBlockExt(),
+		mdext.NewHeaderExt(),
+		mdext.NewImageExt(),
+		mdext.NewFigureExt(),
+		mdext.NewTimeExt(),
+		mdext.NewTOMLExt(),
+	}
+}
+
+func New(exts ...goldmark.Extender) *Markdown {
 	gm := goldmark.New(
-		goldmark.WithExtensions(
-			mdext.NewArticleExt(),
-			mdext.NewCodeBlockExt(),
-			mdext.NewHeaderExt(),
-			mdext.NewImageExt(),
-			mdext.NewFigureExt(),
-			mdext.NewTimeExt(),
-			mdext.NewTOMLExt(),
-		))
+		goldmark.WithExtensions(exts...),
+		goldmark.WithExtensions(defaultExtensions()...))
 	return &Markdown{gm: gm}
 }
 
@@ -46,7 +51,6 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.Source = bs
 	ctx := parser.NewContext()
 	mdext.SetPath(ctx, path)
 
@@ -59,17 +63,10 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 		Meta:   meta,
 		Assets: assets,
 		Path:   path,
+		Source: bs,
 	}, nil
 }
 
 func (m *Markdown) Render(w io.Writer, source []byte, p *PostAST) error {
 	return m.gm.Renderer().Render(w, source, p.Node)
-}
-
-func (m *Markdown) extractTitle(node ast.Node) string {
-	if node.FirstChild().Kind() == ast.KindHeading {
-		return string(node.FirstChild().Text(m.Source))
-	}
-	node.NextSibling()
-	return ""
 }

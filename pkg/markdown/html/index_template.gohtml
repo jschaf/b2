@@ -1,4 +1,4 @@
-{{- /*gotype: github.com/jschaf/b2/pkg/html.TemplateData*/ -}}
+{{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.IndexTemplateData*/ -}}
 <!doctype html>
 <html lang="en">
 <head>
@@ -23,7 +23,14 @@
 </header>
 <main>
   <div class="main-inner-container">
-    {{ .Body }}
+    <section>
+        {{range $i, $body := .Bodies}}
+            {{$body}}
+            {{if not (isLast $i $.Bodies)}}
+              <hr class="article-split">
+            {{end}}
+        {{end}}
+    </section>
   </div>
 </main>
 <footer role="contentinfo"><a href="/" title="Home page">© 2020 Joe Schafer</a></footer>

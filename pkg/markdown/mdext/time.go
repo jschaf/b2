@@ -39,7 +39,7 @@ func (t *TimeRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindTime, t.renderTime)
 }
 
-func (t *TimeRenderer) renderTime(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (t *TimeRenderer) renderTime(w util.BufWriter, _ []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	if entering {
 		n := node.(*Time)
 		_, _ = w.WriteString("\n<time datetime=\"")
