@@ -9,13 +9,14 @@ import (
 )
 
 func main() {
-	md := markdown.New()
-	c := compiler.New(md)
+	c := compiler.New(
+		markdown.New(mdext.NewNopContinueReadingExt()))
 	if err := c.CompileAllPosts(); err != nil {
 		log.Fatal(err)
 	}
 
-	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
+	ic := compiler.NewForIndex(
+		markdown.New(mdext.NewContinueReadingExt()))
 	if err := ic.Compile(); err != nil {
 		log.Fatal(err)
 	}

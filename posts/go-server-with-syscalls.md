@@ -23,6 +23,8 @@ The Go `net` package is a full-featured, production ready library. We’ll skip 
 - Deadline and cancellation
 - Non-blocking sockets
 
+CONTINUE READING
+
 ## Overview
 
 The steps follow the same structure as this in-depth [Medium article](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa):

@@ -14,6 +14,7 @@ import (
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"go.uber.org/zap"
 )
 
@@ -115,7 +116,7 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
-	c := compiler.New(markdown.New())
+	c := compiler.New(markdown.New(mdext.NewNopContinueReadingExt()))
 	file, err := os.Open(path)
 	if err != nil {
 		return err

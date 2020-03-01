@@ -19,6 +19,8 @@ curl -o- "${URL}" | bash
 
 The NVM script requires 800ms to load, a debt paid every time I startup a shell. Consulting internet canon, we calculate how much time it’s worth spending to reclaim the 800ms of shell startup.
 
+CONTINUE READING
+
 ![Don't forget the time you spend finding the chart to look up what you save. 
 And the time spent reading this reminder about the time spent. And the time 
 trying to figure out if either of those actually make sense. Remember, every 

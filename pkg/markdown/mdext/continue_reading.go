@@ -66,7 +66,7 @@ func (c *contReadingTransformer) findSecondPara(doc *ast.Document) (*ast.Paragra
 	return para, nil
 }
 
-func (c *contReadingTransformer) findContReading(doc *ast.Document, reader text.Reader) (*ast.Paragraph, error) {
+func findContReading(doc *ast.Document, reader text.Reader) (*ast.Paragraph, error) {
 	var para *ast.Paragraph
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
@@ -93,7 +93,7 @@ func (c *contReadingTransformer) findContReading(doc *ast.Document, reader text.
 }
 
 func (c *contReadingTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
-	continueReading, err := c.findContReading(doc, reader)
+	continueReading, err := findContReading(doc, reader)
 	if err != nil {
 		panic(err)
 	}
@@ -130,6 +130,23 @@ func isContinueReadingNode(n *ast.Paragraph, r text.Reader) bool {
 	txt := n.FirstChild().(*ast.Text)
 	s := string(txt.Segment.Value(r.Source()))
 	return s == ContinueReadingText
+}
+
+// nopContReadingTransformer removes the continue reading text if it exists.
+type nopContReadingTransformer struct {
+}
+
+func (n *nopContReadingTransformer) Transform(doc *ast.Document, reader text.Reader, _ parser.Context) {
+	r, err := findContReading(doc, reader)
+	if err != nil {
+		panic(err)
+	}
+	if r == nil {
+		// Doesn't exist, okay to skip.
+		return
+	}
+	p := r.Parent()
+	p.RemoveChild(p, r)
 }
 
 type ContinueReadingRenderer struct {
@@ -173,4 +190,16 @@ func (c *contReadingExt) Extend(m goldmark.Markdown) {
 
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
 		util.Prioritized(NewContinueReadingRenderer(), 500)))
+}
+
+type noContReadingExt struct{}
+
+func NewNopContinueReadingExt() *noContReadingExt {
+	return &noContReadingExt{}
+}
+
+func (n *noContReadingExt) Extend(m goldmark.Markdown) {
+	m.Parser().AddOptions(
+		parser.WithASTTransformers(
+			util.Prioritized(&nopContReadingTransformer{}, 999)))
 }

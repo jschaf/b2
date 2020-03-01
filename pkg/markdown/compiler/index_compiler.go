@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -53,7 +52,6 @@ func (ic *IndexCompiler) CompileIntoDir(paths []string, rs []io.Reader, publicDi
 		if err != nil {
 			return fmt.Errorf("failed to read article for index: %w", err)
 		}
-		log.Printf("compiling for index: path=%s", paths[i])
 		postAST, err := ic.md.Parse(paths[i], bytes.NewReader(src))
 		if err != nil {
 			return fmt.Errorf("failed to parse markdown for index: %w", err)
