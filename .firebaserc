@@ -1,5 +1,14 @@
 {
   "projects": {
-    "default": "b2-blog"
+    "default": "blog-6f2f1"
+  },
+  "targets": {
+    "blog-6f2f1": {
+      "hosting": {
+        "new-blog": [
+          "joe-blog-314159"
+        ]
+      }
+    }
   }
 }
