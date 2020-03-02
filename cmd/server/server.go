@@ -19,6 +19,7 @@ import (
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 )
 
@@ -114,6 +115,9 @@ func main() {
 		return
 	}
 	pubDir := filepath.Join(root, "public")
+	if err := os.MkdirAll(pubDir, 0755); err != nil {
+		server.logger.Errorf("failed to make public dir: %w", err)
+	}
 	pubDirHandler := http.FileServer(http.Dir(pubDir))
 
 	lrScript := strings.Join([]string{
@@ -173,6 +177,10 @@ func main() {
 	}
 	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
 	if err := ic.Compile(); err != nil {
+		server.logger.Error(err)
+		return
+	}
+	if err := static.CopyStaticFiles(); err != nil {
 		server.logger.Error(err)
 		return
 	}

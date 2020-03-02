@@ -15,6 +15,7 @@ import (
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 )
 
@@ -69,6 +70,11 @@ func (f *FSWatcher) Start() error {
 			case rel == "style/main.css":
 				f.reloadMainCSS(rootDir)
 
+			case strings.HasPrefix(rel, "static/"):
+				if err := static.CopyStaticFiles(); err != nil {
+					return fmt.Errorf("failed to copy static files: %w", err)
+				}
+
 			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
@@ -83,6 +89,7 @@ func (f *FSWatcher) Start() error {
 				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".go":
+				// Rebuild the server to pickup any new changes.
 				if err := f.rebuildServer(); err != nil {
 					return fmt.Errorf("failed to hotswap erver: %w", err)
 				}
