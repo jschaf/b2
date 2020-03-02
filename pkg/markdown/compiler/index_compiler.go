@@ -8,10 +8,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
 )
 
 type IndexCompiler struct {
@@ -23,14 +25,22 @@ func NewForIndex(md *markdown.Markdown) *IndexCompiler {
 }
 
 func (ic *IndexCompiler) CompileASTs(asts []*markdown.PostAST, w io.Writer) error {
-	bodies := make([]template.HTML, len(asts))
+	bodies := make([]template.HTML, 0, len(asts))
 
-	for i, ast := range asts {
+	sort.Slice(asts, func(i, j int) bool {
+		return asts[i].Meta.Date.After(asts[j].Meta.Date)
+	})
+
+	for _, ast := range asts {
+		if ast.Meta.Visibility != mdext.VisibilityPublished {
+			continue
+		}
+
 		b := new(bytes.Buffer)
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
 			return fmt.Errorf("failed to markdown for index: %w", err)
 		}
-		bodies[i] = template.HTML(b.String())
+		bodies = append(bodies, template.HTML(b.String()))
 	}
 
 	data := html.IndexTemplateData{

@@ -1,6 +1,7 @@
 +++
-slug = "go_server_with_syscalls"
+slug = "go-server-with-syscalls"
 date = 2019-03-12
+visibility = "published"
 +++
 
 # Create a Go web server from scratch with Linux system calls
@@ -107,14 +108,30 @@ func newNetSocket(ip net.IP, port int) (*netSocket, error) {
 
 The breakdown of steps 1, 2 and 3 from the above code snippet:
 
-1. `socket(domain, type, protocol)` creates an endpoint for communication and returns a descriptor.
-2. **domain**: selects the protocol (aka address) family. `AF_INET` represents IPv4.
-3. **type**: the semantics of the communication. `SOCK_STREAM` provides the sequenced, reliable two-way communication required by HTTP.
-4. **protocol**: the specific protocol for the socket. Usually 0 because there’s only 1 protocol for each type.
-5. `bind(socket, sockaddr, address_len)` assigns a port to the unnamed socket created by `socket`.
-6. **socket**: the descriptor returned by the `socket` syscall. **sockaddr**: For `AF_INET`, the IP address and port.
-7. `listen(socket, backlog)` allows `SOCK_STREAM` sockets to accept incoming connections.
-8. **socket**: the descriptor returned by the `socket` syscall. **backlog**: the max length for the queue of incoming connections.
+1.  `socket(domain, type, protocol)` creates an endpoint for communication and 
+    returns a descriptor.
+    
+    **domain**: selects the protocol (aka address) family. `AF_INET` represents IPv4.
+    
+    **type**: the semantics of the communication. `SOCK_STREAM` provides the 
+    sequenced, reliable two-way communication required by HTTP.
+
+    **protocol**: the specific protocol for the socket. Usually 0 because 
+    there’s only 1 protocol for each type.
+    
+2.  `bind(socket, sockaddr, address_len)` assigns a port to the unnamed socket 
+    created by `socket`.
+    
+    **socket**: the descriptor returned by the `socket` syscall. 
+    
+    **sockaddr**: For `AF_INET`, the IP address and port.
+    
+3.  `listen(socket, backlog)` allows `SOCK_STREAM` sockets to accept incoming
+    connections.
+    
+    **socket**: the descriptor returned by the `socket` syscall. 
+    
+    **backlog**: the max length for the queue of incoming connections.
 
 ## Serve loop
 

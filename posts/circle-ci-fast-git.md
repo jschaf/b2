@@ -1,6 +1,7 @@
 +++
-slug = "circle_ci_fast_git"
+slug = "circle-ci-fast-git"
 date = 2019-09-20
+visibility = "draft"
 +++
 
 # Faster Git checkout for continuous integration

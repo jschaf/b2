@@ -17,17 +17,55 @@ func TestNewFigureExt(t *testing.T) {
 		src  string
 		want string
 	}{
+		//{
+		//	"single image",
+		//	texts.Dedent(`
+		//  ![alt text](./qux.png "title")`),
+		//	texts.Dedent(`
+		//	  <figure>
+		//   <picture>
+		//     <img src="./qux.png" alt="alt text" title="title">
+		//   </picture>
+		//	  </figure>
+		//`),
+		//},
+		//{
+		//	"single image with caption",
+		//	texts.Dedent(`
+		//   ![alt text](./bar.png "title")
+		//
+		//   CAPTION: foobar
+		// `),
+		//	texts.Dedent(`
+		//	  <figure>
+		//			<picture>
+		//				<img src="./bar.png" alt="alt text" title="title">
+		//			</picture>
+		//			<figcaption>
+		//				foobar
+		//			</figcaption>
+		//	  </figure>
+		//`),
+		//},
 		{
-			"single image",
+			"complex image with caption",
 			texts.Dedent(`
-        ![alt text](./qux.png "title")`),
+        foo bar
+
+        ![Bazel test sizes that depend on](bazel_test_size_2x.png "Things your build system probably can't do.")
+
+        CAPTION: Dependency graph of tests on the test database with the size attribute.
+     `),
 			texts.Dedent(`
 			  <figure>
-         <picture>
-           <img src="./qux.png" title="title">
-         </picture>
+					<picture>
+						<img src="./bar.png" alt="alt text" title="title">
+					</picture>
+					<figcaption>
+						foobar
+					</figcaption>
 			  </figure>
-     `),
+    `),
 		},
 	}
 	for _, tt := range tests {

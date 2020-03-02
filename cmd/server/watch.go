@@ -124,7 +124,13 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	if err := c.CompileIntoDir(path, file, publicDir); err != nil {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
+
+	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
+	if err := ic.Compile(); err != nil {
+		return fmt.Errorf("failed to compile index for hot reload: %w", err)
+	}
 	f.liveReload.ReloadFile(path)
+	f.liveReload.ReloadFile("/")
 	return nil
 }
 

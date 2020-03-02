@@ -1,6 +1,7 @@
 +++
 slug = "zsh-lazy-load"
 date = 2019-03-29
+visibility = "published"
 +++
 
 # Fix sluggish ZSH shells with lazy loading for slow scripts

@@ -16,6 +16,11 @@ import (
 
 const tomlSep = '+'
 
+const (
+	VisibilityDraft     = "draft"
+	VisibilityPublished = "published"
+)
+
 // PostMeta is the TOML metadata of a post.
 type PostMeta struct {
 	// The slug from the markdown frontmatter.
@@ -24,6 +29,8 @@ type PostMeta struct {
 	Title string
 	// The date from the markdown frontmatter.
 	Date time.Time
+	// Either draft or published.
+	Visibility string
 }
 
 var tomlCtxKey = parser.NewContextKey()
