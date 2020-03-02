@@ -134,6 +134,7 @@ func main() {
 		filepath.Join(root, "posts"),
 		filepath.Join(root, "cmd"),
 		filepath.Join(root, "pkg"),
+		filepath.Join(root, "static"),
 	); err != nil {
 		server.logger.Error(err)
 		return

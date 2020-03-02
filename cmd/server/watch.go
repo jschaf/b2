@@ -71,9 +71,11 @@ func (f *FSWatcher) Start() error {
 				f.reloadMainCSS(rootDir)
 
 			case strings.HasPrefix(rel, "static/"):
+				f.logger.Infof("static reload: %s", rel)
 				if err := static.CopyStaticFiles(); err != nil {
 					return fmt.Errorf("failed to copy static files: %w", err)
 				}
+				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
