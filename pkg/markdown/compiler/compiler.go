@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
@@ -94,7 +95,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 	return nil
 }
 
-func (c *Compiler) CompileAllPosts() error {
+func (c *Compiler) CompileAllPosts(glob string) error {
 	rootDir, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("failed to find root git dir: %w", err)
@@ -104,6 +105,9 @@ func (c *Compiler) CompileAllPosts() error {
 
 	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) != ".md" {
+			return nil
+		}
+		if !strings.Contains(path, glob) {
 			return nil
 		}
 

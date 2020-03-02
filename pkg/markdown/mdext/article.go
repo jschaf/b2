@@ -59,7 +59,7 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	header := NewHeader()
 	link := ast.NewLink()
 	link.Title = []byte(title)
-	link.Destination = []byte("/" + meta.Slug)
+	link.Destination = []byte(meta.Path)
 	asts.Reparent(link, heading)
 	newHeading := ast.NewHeading(1)
 	newHeading.AppendChild(newHeading, link)

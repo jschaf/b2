@@ -167,7 +167,7 @@ func main() {
 	// Compile because it might have changed since last run.
 	c := compiler.New(markdown.New(mdext.NewNopContinueReadingExt()))
 	server.logger.Debug("compiling all markdown files")
-	if err := c.CompileAllPosts(); err != nil {
+	if err := c.CompileAllPosts(""); err != nil {
 		server.logger.Error(err)
 		return
 	}

@@ -25,6 +25,8 @@ const (
 type PostMeta struct {
 	// The slug from the markdown frontmatter.
 	Slug string
+	// The absolute URL path for this post, e.g. "/foo-bar".
+	Path string
 	// The title extracted from the first header.
 	Title string
 	// The date from the markdown frontmatter.
@@ -105,6 +107,7 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	if err := toml.Unmarshal(buf.Bytes(), &meta); err != nil {
 		panic(err)
 	}
+	meta.Path = "/" + meta.Slug
 
 	setTOMLMeta(pc, *meta)
 

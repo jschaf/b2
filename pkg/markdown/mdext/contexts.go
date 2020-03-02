@@ -2,16 +2,16 @@ package mdext
 
 import "github.com/yuin/goldmark/parser"
 
-var pathCtxKey = parser.NewContextKey()
+var filePathCtxKey = parser.NewContextKey()
 
-func GetPath(pc parser.Context) string {
-	p := pc.Get(pathCtxKey)
+func GetFilePath(pc parser.Context) string {
+	p := pc.Get(filePathCtxKey)
 	if p == nil {
 		return ""
 	}
 	return p.(string)
 }
 
-func SetPath(pc parser.Context, val string) {
-	pc.Set(pathCtxKey, val)
+func SetFilePath(pc parser.Context, val string) {
+	pc.Set(filePathCtxKey, val)
 }

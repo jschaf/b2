@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"path"
 	"strings"
 
 	"github.com/jschaf/b2/pkg/markdown/asts"
@@ -72,7 +73,7 @@ func isCaption(n ast.Node, r text.Reader) bool {
 	return prefix
 }
 
-func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, _ parser.Context) {
+func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, pc parser.Context) {
 	// Extract all single para images.
 	imgs := make([]*ast.Image, 0, 4)
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -80,8 +81,6 @@ func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, _ par
 			return ast.WalkSkipChildren, nil
 		}
 		switch n.Kind() {
-		case ast.KindDocument:
-			return ast.WalkContinue, nil
 		case ast.KindParagraph:
 			if isSingleImgParagraph(n.(*ast.Paragraph)) {
 				img := n.FirstChild().(*ast.Image)
@@ -89,7 +88,7 @@ func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, _ par
 			}
 			return ast.WalkSkipChildren, nil
 		default:
-			return ast.WalkSkipChildren, nil
+			return ast.WalkContinue, nil
 		}
 	})
 	if err != nil {
@@ -100,7 +99,9 @@ func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, _ par
 	figs := make([]*Figure, 0, 4)
 	for _, img := range imgs {
 		fig := NewFigure()
-		fig.Destination = img.Destination
+		urlPath := GetTOMLMeta(pc).Path
+		dest := path.Join(urlPath, string(img.Destination))
+		fig.Destination = []byte(dest)
 		fig.Title = img.Title
 		fig.AltText = img.Text(r.Source())
 
@@ -142,7 +143,7 @@ func (f *figureRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) 
 	reg.Register(KindFigCaption, f.renderFigCaption)
 }
 
-func (f *figureRenderer) renderFigure(w util.BufWriter, src []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (f *figureRenderer) renderFigure(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*Figure)
 	if entering {
 		_, _ = w.WriteString("<figure>")
@@ -169,7 +170,7 @@ func (f *figureRenderer) renderFigure(w util.BufWriter, src []byte, node ast.Nod
 	return ast.WalkContinue, nil
 }
 
-func (f *figureRenderer) renderFigCaption(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (f *figureRenderer) renderFigCaption(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
 		_, _ = w.WriteString("<figcaption>")
 	} else {

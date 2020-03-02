@@ -26,9 +26,13 @@ bazel query '
         //database:test_database)'
 ```
 
-![Bazel test sizes that depend on](bazel_test_size_2x.png "Things your build system probably can't do.")
+![Bazel test sizes that depend on a test database](
+bazel_test_size_2x.png 
+"Things your build system probably can't do.")
 
 CAPTION: Dependency graph of tests on the test database with the size attribute.
+
+CONTINUE READING
 
 For additional convenience, we can pipe this through [buildozer](https://github.com/bazelbuild/buildtools/blob/master/buildozer/README.md), a command line tool to update BUILD files, to update the size attribute for us.
 

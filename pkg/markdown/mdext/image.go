@@ -19,6 +19,9 @@ type ImageASTTransformer struct{}
 
 func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkSkipChildren, nil
+		}
 		if n.Kind() != ast.KindImage {
 			return ast.WalkContinue, nil
 		}
@@ -28,12 +31,12 @@ func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc par
 		if filepath.IsAbs(dest) || strings.HasPrefix(dest, "http") {
 			return ast.WalkContinue, nil
 		}
-		path := filepath.Dir(GetPath(pc))
+		path := filepath.Dir(GetFilePath(pc))
 		meta := GetTOMLMeta(pc)
 		localPath := filepath.Join(path, dest)
-		remotePath := filepath.Join(meta.Slug, dest)
+		remotePath := filepath.Join(meta.Path, dest)
 		AddAsset(pc, remotePath, localPath)
-		return ast.WalkStop, nil
+		return ast.WalkSkipChildren, nil
 	})
 
 	if err != nil {

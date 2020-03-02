@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/jschaf/b2/pkg/markdown"
@@ -8,10 +9,15 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 )
 
+var flagGlob = flag.String(
+	"glob", "",
+	"Only compile posts with an exact substring match on the filename")
+
 func main() {
+	flag.Parse()
 	c := compiler.New(
 		markdown.New(mdext.NewNopContinueReadingExt()))
-	if err := c.CompileAllPosts(); err != nil {
+	if err := c.CompileAllPosts(*flagGlob); err != nil {
 		log.Fatal(err)
 	}
 

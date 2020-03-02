@@ -52,7 +52,7 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 		return nil, err
 	}
 	ctx := parser.NewContext()
-	mdext.SetPath(ctx, path)
+	mdext.SetFilePath(ctx, path)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	meta := mdext.GetTOMLMeta(ctx)

@@ -42,7 +42,7 @@ func TestNewImageExt(t *testing.T) {
 				NewImageExt()))
 			buf := new(bytes.Buffer)
 			ctx := parser.NewContext()
-			SetPath(ctx, path)
+			SetFilePath(ctx, path)
 
 			if err := md.Convert([]byte(tt.src), buf, parser.WithContext(ctx)); err != nil {
 				t.Fatal(err)
