@@ -8,15 +8,23 @@ visibility = "published"
 
 > A web-server with Linux syscalls.
 
-One itch I’ve wanted to scratch for a while is to create a web-server from scratch without relying on libraries and without first [inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch). I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web server in Go using Linux system calls.
+One itch I’ve wanted to scratch for a while is to create a web-server from
+scratch without relying on libraries and without first
+[inventing the universe](https://www.goodreads.com/quotes/32952-if-you-wish-to-make-an-apple-pie-from-scratch).
+I’ve also wanted a chance to take Go for a spin. I’ll cover how to create a web
+server in Go using Linux system calls.
 
-**Completed Code at Github**: [scratch_server.go](https://gist.github.com/jschaf/93f37aedb5327c54cb356b2f1f0427e3)
+**Completed Code at Github**:
+[scratch_server.go](https://gist.github.com/jschaf/93f37aedb5327c54cb356b2f1f0427e3)
 
 ## Non-goals
 
-The Go `net` package is a full-featured, production ready library. We’ll skip the following features:
+The Go `net` package is a full-featured, production ready library. We’ll skip
+the following features:
 
-- HTTP [100 Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100) support
+- HTTP
+  [100 Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100)
+  support
 - TLS
 - Most error checking
 - Persistent and chunked connections
@@ -28,19 +36,27 @@ CONTINUE READING
 
 ## Overview
 
-The steps follow the same structure as this in-depth [Medium article](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa):
+The steps follow the same structure as this in-depth
+[Medium article](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa):
 
-- Create the socket - [socket](http://man7.org/linux/man-pages/man2/socket.2.html)
-- Identify the socket by binding it to a socket address - [bind](http://man7.org/linux/man-pages/man2/bind.2.html)
-- Allow connections to the socket - [listen](http://man7.org/linux/man-pages/man2/listen.2.html)
+- Create the socket -
+  [socket](http://man7.org/linux/man-pages/man2/socket.2.html)
+- Identify the socket by binding it to a socket address -
+  [bind](http://man7.org/linux/man-pages/man2/bind.2.html)
+- Allow connections to the socket -
+  [listen](http://man7.org/linux/man-pages/man2/listen.2.html)
 - `while true` serve requests:
-  - Create a new socket to read and write data - [accept](http://man7.org/linux/man-pages/man2/accept.2.html)
-  - Parse the HTTP request - [read](http://man7.org/linux/man-pages/man2/read.2.html)
-  - Write the response - [write](http://man7.org/linux/man-pages/man2/write.2.html)
+  - Create a new socket to read and write data -
+    [accept](http://man7.org/linux/man-pages/man2/accept.2.html)
+  - Parse the HTTP request -
+    [read](http://man7.org/linux/man-pages/man2/read.2.html)
+  - Write the response -
+    [write](http://man7.org/linux/man-pages/man2/write.2.html)
 
 ## **Struct for socket file descriptor**
 
-Create a struct to hold the descriptor to implement `Read`, `Write` and `Accept`.
+Create a struct to hold the descriptor to implement `Read`, `Write` and
+`Accept`.
 
 ```go
 // netSocket is a file descriptor for a system socket.
@@ -65,7 +81,8 @@ func (ns netSocket) Read(p []byte) (int, error) {
 
 ## Create, bind and listen on the socket
 
-Next, create the socket and bind it to the localhost port. The details of each step are below the code block.
+Next, create the socket and bind it to the localhost port. The details of each
+step are below the code block.
 
 ```go
 // Creates a new socket file descriptor, binds it and listens on it.
@@ -111,7 +128,8 @@ The breakdown of steps 1, 2 and 3 from the above code snippet:
 1.  `socket(domain, type, protocol)` creates an endpoint for communication and
     returns a descriptor.
 
-    **domain**: selects the protocol (aka address) family. `AF_INET` represents IPv4.
+    **domain**: selects the protocol (aka address) family. `AF_INET` represents
+    IPv4.
 
     **type**: the semantics of the communication. `SOCK_STREAM` provides the
     sequenced, reliable two-way communication required by HTTP.
@@ -137,7 +155,8 @@ The breakdown of steps 1, 2 and 3 from the above code snippet:
 
 ### Accept new connections on the socket
 
-The socket created by `newNetSocket` doesn’t receive data; we need another socket for that using the `accept` syscall.
+The socket created by `newNetSocket` doesn’t receive data; we need another
+socket for that using the `accept` syscall.
 
 ```go
 // Creates a new netSocket for the next pending connection request.
@@ -155,11 +174,14 @@ func (ns *netSocket) Accept() (*netSocket, error) {
 }
 ```
 
-`accept(socket, sockaddr, address_len)` gets the first pending connection, creates a new socket and allocates a file descriptor. By default, `accept` blocks until there is an incoming connection.
+`accept(socket, sockaddr, address_len)` gets the first pending connection,
+creates a new socket and allocates a file descriptor. By default, `accept`
+blocks until there is an incoming connection.
 
 ### Parse read request
 
-Next, parse the HTTP request by `read`ing the newly accepted socket. Use the `textproto` library to avoid tedious header parsing.
+Next, parse the HTTP request by `read`ing the newly accepted socket. Use the
+`textproto` library to avoid tedious header parsing.
 
 ```go
 func parseRequest(c *netSocket) (*request, error) {

@@ -6,17 +6,19 @@ visibility = "published"
 
 # [Advanced queries with Bazel](/advanced-queries-bazel/)
 
-I often need to query complex things with [Bazel](https://www.bazel.build/),
-an open-source build system from Google that focuses on performance and
-correctness by enforcing hermetic builds. For a more complete list of examples,
-see the official [Bazel query how-to](https://docs.bazel.build/versions/master/query-how-to.html).
+I often need to query complex things with [Bazel](https://www.bazel.build/), an
+open-source build system from Google that focuses on performance and correctness
+by enforcing hermetic builds. For a more complete list of examples, see the
+official
+[Bazel query how-to](https://docs.bazel.build/versions/master/query-how-to.html).
 
 ## Find all tests marked as `size = small` that have a database dependency
 
-Google tests have a specific [size](https://testing.googleblog.com/2010/12/test-sizes.html)
-(small, medium, large) with strict time-outs. If a small test exceeds 60
-seconds, the test fails. For tests involving a database, the tests need to
-be marked as medium to avoid flaky timeouts.
+Google tests have a specific
+[size](https://testing.googleblog.com/2010/12/test-sizes.html) (small, medium,
+large) with strict time-outs. If a small test exceeds 60 seconds, the test
+fails. For tests involving a database, the tests need to be marked as medium to
+avoid flaky timeouts.
 
 ```bash
 bazel query '
@@ -32,7 +34,9 @@ CAPTION: Dependency graph of tests on the test database with the size attribute.
 
 CONTINUE READING
 
-For additional convenience, we can pipe this through [buildozer](https://github.com/bazelbuild/buildtools/blob/master/buildozer/README.md), a command line tool to update BUILD files, to update the size attribute for us.
+For additional convenience, we can pipe this through
+[buildozer](https://github.com/bazelbuild/buildtools/blob/master/buildozer/README.md),
+a command line tool to update BUILD files, to update the size attribute for us.
 
 ```bash
 bazel query '<same as above>' |
@@ -47,14 +51,17 @@ There are two BUILD labels for our database:
 - the `api` label for library and test code
 
 Our database library incorrectly had the `full` target in the `deps` attribute
-which meant all of the tests needlessly included the full database. Removing
-the `full` target from `//server:dao` requires three steps:
+which meant all of the tests needlessly included the full database. Removing the
+`full` target from `//server:dao` requires three steps:
 
 ![Bazel removing deps from library code.](bazel_db_full.png "Things your build system probably can't do.")
 
-CAPTION: Dependency graph of the server binary, the DAO library and database libraries.
+CAPTION: Dependency graph of the server binary, the DAO library and database
+libraries.
 
-1.  Add `//database:full` to the `runtime_deps` of each binary that has a transitive dependency on the full target. This is a no-op if the runtime dependency already exists.
+1.  Add `//database:full` to the `runtime_deps` of each binary that has a
+    transitive dependency on the full target. This is a no-op if the runtime
+    dependency already exists.
 
     ```bash
     # Finds all java binaries that depend on full target

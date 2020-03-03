@@ -6,9 +6,12 @@ visibility = "published"
 
 # Fix sluggish ZSH shells with lazy loading for slow scripts
 
-I care immensely for having a snappy terminal startup and rebel against demands to blindly source scripts in my ~/.zshrc.
+I care immensely for having a snappy terminal startup and rebel against demands
+to blindly source scripts in my ~/.zshrc.
 
-The most recent challenge was Node Version Manager. NVM commits the mortal sin of automatically adding itself to the ~/.zshrc file in the following incantation:
+The most recent challenge was Node Version Manager. NVM commits the mortal sin
+of automatically adding itself to the ~/.zshrc file in the following
+incantation:
 
 ```bash
 URL='https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh'
@@ -18,7 +21,9 @@ curl -o- "${URL}" | bash
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 ```
 
-The NVM script requires 800ms to load, a debt paid every time I startup a shell. Consulting internet canon, we calculate how much time it’s worth spending to reclaim the 800ms of shell startup.
+The NVM script requires 800ms to load, a debt paid every time I startup a shell.
+Consulting internet canon, we calculate how much time it’s worth spending to
+reclaim the 800ms of shell startup.
 
 CONTINUE READING
 
@@ -31,7 +36,11 @@ second counts toward your life total, including these right now.](./xkcd_1205_is
 > work on making a routine task more efficient before you're spending more time
 > than you save? (across five years).
 
-Assuming I open 20 shells a day, and it costs 800ms each time, we can approximate from the table entry of 1 second, 50⁄day for a time of 1 day. Then, scale down by 20⁄50 = 0.4 for shells per day and by 800⁄1000 = 0.8 for the 800ms startup. xkcd allows us 0.32 days or about 8 hours to spend fixing this transgression.
+Assuming I open 20 shells a day, and it costs 800ms each time, we can
+approximate from the table entry of 1 second, 50⁄day for a time of 1 day. Then,
+scale down by 20⁄50 = 0.4 for shells per day and by 800⁄1000 = 0.8 for the 800ms
+startup. xkcd allows us 0.32 days or about 8 hours to spend fixing this
+transgression.
 
 The solution is to lazy-load an nvm function that:
 
