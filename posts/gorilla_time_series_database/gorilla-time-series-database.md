@@ -7,15 +7,14 @@ visibility = "published"
 # Gorilla Time Series Database
 
 [Gorilla] is an in-memory, time series database from Facebook optimized for
-writes, reading data in a few milliseconds, and high availability. Facebook open-sourced
-the code as [Beringei], but the repo is no longer maintained.
- At its core,
-Gorilla is a 26-hour write-through cache backed by durable storage in [HBase], a distributed key-value store.
-Gorilla optimizes for four attributes:
+writes, reading data in a few milliseconds, and high availability. Facebook
+open-sourced the code as [Beringei], but the repo is no longer maintained. At
+its core, Gorilla is a 26-hour write-through cache backed by durable storage in
+[HBase], a distributed key-value store. Gorilla optimizes for four attributes:
 
-[Gorilla]: gorilla.pdf
+[gorilla]: gorilla.pdf
 [hbase]: https://hbase.apache.org/
-[Beringei]: https://github.com/facebookarchive/beringei
+[beringei]: https://github.com/facebookarchive/beringei
 
 1.  High data insertion rate. The primary requirement is that Gorilla should
     always be available to take writes. The expected insertion rate is 10M
@@ -101,8 +100,8 @@ Block header: Timestamp at 08:00:30
 ### Late arriving time stamps
 
 Gorilla allows out of order timestamps by supporting signed integers. The paper
-wasn't clear on what happens to severely out-of-order timestamps like if a timestamp
-is 2 hours late.
+wasn't clear on what happens to severely out-of-order timestamps like if a
+timestamp is 2 hours late.
 
 ### Alternative timestamp schemes
 
@@ -123,9 +122,9 @@ width timestamps.
 
 The compression scheme for time stamp values takes advantage of the fact that
 most timestamp values don’t change significantly compared to neighboring values.
-The Gorilla team found that 59% of values are identical to the previous value and compress to a single bit.
-If values are close, `xor` compression will drop the sign, exponent, and first
-few bits of the mantissa.
+The Gorilla team found that 59% of values are identical to the previous value
+and compress to a single bit. If values are close, `xor` compression will drop
+the sign, exponent, and first few bits of the mantissa.
 
 Since the encoding is variable length, the entire two hour block must be decoded
 to access values. This isn’t a problem for time series databases because the
