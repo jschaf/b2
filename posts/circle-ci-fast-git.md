@@ -13,7 +13,6 @@ entire Git repository history in two remote fetches. My company’s
 source repository with 7 years of history is 500MB and takes 30
 seconds to `git clone` on CircleCI. Using a shallow checkout and downloading the repository at a specific hash in a single remote fetch reduces the checkout step time to 2 seconds.
 
-
 ## The default CircleCI `checkout` step
 
 We’ll start by analyzing the builtin CircleCI `checkout` step. The
