@@ -6,10 +6,16 @@ visibility = "published"
 
 # Gorilla Time Series Database
 
-Gorilla is an in-memory, time series database from Facebook optimized for
-writes, reading data in a few milliseconds, and high availability. At its core,
-Gorilla is a 26-hour write-through cache backed by durable storage in HBase.
+[Gorilla] is an in-memory, time series database from Facebook optimized for
+writes, reading data in a few milliseconds, and high availability. Facebook open-sourced
+the code as [Beringei], but the repo is no longer maintained.
+ At its core,
+Gorilla is a 26-hour write-through cache backed by durable storage in [HBase], a distributed key-value store.
 Gorilla optimizes for four attributes:
+
+[Gorilla]: gorilla.pdf
+[hbase]: https://hbase.apache.org/
+[Beringei]: https://github.com/facebookarchive/beringei
 
 1.  High data insertion rate. The primary requirement is that Gorilla should
     always be available to take writes. The expected insertion rate is 10M
@@ -55,7 +61,8 @@ of timestamps arrive at a fixed interval. Using sampled production data, the
 Gorilla team found 96% of timestamps compress to a single bit. Compressing to a
 single bit implies that 96% of metrics arrive on a fixed schedule. This is
 surprising because I’d expect most metrics to be request driven and not adhere
-to a fixed schedule.
+to a fixed schedule. I think the timestamp used is when the metrics are pulled
+off of the server.
 
 Each stream is divided into blocks aligned at two-hour intervals. The block
 header contains a 64 bit timestamp of the beginning of the block, e.g.
@@ -93,8 +100,8 @@ Block header: Timestamp at 08:00:30
 
 ### Late arriving time stamps
 
-Gorilla allows out of order timestamps by supporting signed integers. I couldn’t
-figure out what happens to severely out-of-order timestamps like if a timestamp
+Gorilla allows out of order timestamps by supporting signed integers. The paper
+wasn't clear on what happens to severely out-of-order timestamps like if a timestamp
 is 2 hours late.
 
 ### Alternative timestamp schemes
@@ -105,20 +112,18 @@ equivalent to a postings list, also known as a reverse index, which has 50 years
 of research of fast compression strategies.
 
 The delta-of-delta scheme is appropriate when the data arrives at a fixed
-interval. For instance, a service might log a single point every 60 seconds. For
-other uses cases, like user-generated timestamps, it’s not clear that the
-delta-of-delta compression is superior to a single delta approach.
+interval. For instance, a metrics server might pull metrics from a server every
+30 seconds. For other uses cases, like user-generated timestamps, it’s not clear
+that the delta-of-delta compression is superior to a single delta approach.
 
 Recent research takes advantage of SIMD and avoids the branchy code of variable
 width timestamps.
-
-TODO: add blurb on fast postings list compression.
 
 ## Time series value compression
 
 The compression scheme for time stamp values takes advantage of the fact that
 most timestamp values don’t change significantly compared to neighboring values.
-59% of values are identical to the previous value and compress to a single bit.
+The Gorilla team found that 59% of values are identical to the previous value and compress to a single bit.
 If values are close, `xor` compression will drop the sign, exponent, and first
 few bits of the mantissa.
 
@@ -135,28 +140,39 @@ page request.
 
 ## Data structures
 
-The in-memory organization of Gorilla is a two-level map: 1\. _TSMap_ is the
-first level map from a shard ID to a time series map. 2\. The _TSMap_ maps a
-string name to a `TimeSeries` data structure.
+The in-memory organization of Gorilla is a two-level map:
+
+1. _TSMap_ is the first level map from a shard ID to a time series map.
+2. The _TSMap_ maps a string name to a `TimeSeries` data structure.
 
 The `TimeSeries` data structure is a collection of closed blocks containing
 historical data and a single open block containing the previous two hours of
-data. Upon receiving a query: 1\. The Gorilla node checks the Shard ID map to
-get the _TSMap_. If the value is null, this node doesn’t own the shard. 2\.
-Next, the _TSMap_ is read-locked and the node copies the pointer to the
-`timeSeries`. 3\. The node spin-locks the `TimeSeries` to copy the data and
-returns the raw blocks to the client.
+data. Upon receiving a query:
 
-Write path: 1\. Presumably, the Gorilla write client gets the correct node from
-the Shard Manager and gets a new node if the node dies. 2\. The Gorilla node
-looks up time series name in key-list file to get the Shard ID for the time
-series name. 3\. The Gorilla node streams the new value into the open block in
-the `TimeSeries` data structure using the compression described above. 4\. The
-Gorilla node writes the compressed value to the append-only log file. The file
-buffer is flushed every 64kB so it’s not a write-ahead log. Since a shard has
-many time series, each time stamp-value pair is tagged with the 32-bit index.
-5\. After two hours, the Gorilla node closes all open blocks and flushes each
-one to disk with a corresponding checkpoint file. After all `TimeSeries` for a
-shard are flushed, the Gorilla node deletes the append-only log for that shard.
+1. The Gorilla node checks the Shard ID map to get the _TSMap_. If the value is
+   null, this node doesn’t own the shard.
+2. Next, the _TSMap_ is read-locked and the node copies the pointer to the
+   `timeSeries`.
+3. The node spin-locks the `TimeSeries` to copy the data and returns the raw
+   blocks to the client.
 
-The Shar
+## Write path
+
+1. Presumably, the Gorilla write client gets the correct node from the Shard
+   Manager and gets a new node if the node dies.
+
+2. The Gorilla node looks up time series name in key-list file to get the Shard
+   ID for the time series name.
+
+3. The Gorilla node streams the new value into the open block in the
+   `TimeSeries` data structure using the compression described above.
+
+4. The Gorilla node writes the compressed value to the append-only log file. The
+   file buffer is flushed every 64kB so it’s not a write-ahead log. Since a
+   shard has many time series, each time stamp-value pair is tagged with the
+   32-bit index.
+
+5. After two hours, the Gorilla node closes all open blocks and flushes each one
+   to disk with a corresponding checkpoint file. After all `TimeSeries` for a
+   shard are flushed, the Gorilla node deletes the append-only log for that
+   shard.

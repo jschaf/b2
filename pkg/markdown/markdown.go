@@ -33,6 +33,7 @@ func defaultExtensions() []goldmark.Extender {
 		mdext.NewCodeBlockExt(),
 		mdext.NewHeaderExt(),
 		mdext.NewImageExt(),
+		mdext.NewLinkExt(),
 		mdext.NewFigureExt(),
 		mdext.NewTimeExt(),
 		mdext.NewTOMLExt(),

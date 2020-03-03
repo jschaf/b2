@@ -2,7 +2,6 @@ package mdext
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -40,7 +39,7 @@ func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc par
 	})
 
 	if err != nil {
-		log.Printf("error in image AST transformer: %s", err)
+		panic(err)
 	}
 }
 
