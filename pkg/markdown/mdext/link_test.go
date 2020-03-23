@@ -12,7 +12,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 )
 
-func TestNewImageExt(t *testing.T) {
+func TestNewLinkExt(t *testing.T) {
 	const path = "/home/joe/file.md"
 	tests := []struct {
 		name    string
@@ -21,47 +21,65 @@ func TestNewImageExt(t *testing.T) {
 		wantCtx map[parser.ContextKey]interface{}
 	}{
 		{
-			"single image in a paragraph",
+			"single relative link",
 			texts.Dedent(`
-        In a paragraph. ![alt text](./qux.png "title")`),
-			texts.Dedent(`
-        <p>
-          In a paragraph.
-          <img src="qux.png" title="title">
-          alt text
-        </p>
+				Paper: [Gorilla Title][gorilla]
+		
+				[gorilla]: paper.pdf
      `),
+			texts.Dedent(`
+       <p>
+         Paper: <a href="paper.pdf">Gorilla Title</a>
+       </p>
+    `),
 			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"qux.png": "/home/joe/qux.png"},
+				assetsCtxKey: map[string]string{"paper.pdf": "/home/joe/paper.pdf"},
 			},
 		},
 		{
-			"single image in a paragraph with slug",
+			"single relative link with slug",
+			texts.Dedent(`
+				+++
+				slug = "some_slug"
+				+++
+		
+				Paper: [Gorilla Title][gorilla]
+		
+				[gorilla]: paper.pdf
+     `),
+			texts.Dedent(`
+       <p>
+         Paper: <a href="/some_slug/paper.pdf">Gorilla Title</a>
+       </p>
+    `),
+			map[parser.ContextKey]interface{}{
+				assetsCtxKey: map[string]string{"/some_slug/paper.pdf": "/home/joe/paper.pdf"},
+			},
+		},
+		{
+			"single absolute link with slug",
 			texts.Dedent(`
 				+++
 				slug = "some_slug"
 				+++
 
-				In a paragraph. ![alt text](./qux.png "title")
+				Paper: [Gorilla Title][gorilla]
+
+				[gorilla]: http://example.com/paper.pdf
       `),
 			texts.Dedent(`
         <p>
-          In a paragraph.
-          <img src="/some_slug/qux.png" title="title">
-          alt text
+          Paper: <a href="http://example.com/paper.pdf">Gorilla Title</a>
         </p>
      `),
-			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"/some_slug/qux.png": "/home/joe/qux.png"},
-			},
+			map[parser.ContextKey]interface{}{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md := goldmark.New(goldmark.WithExtensions(
 				NewTOMLExt(),
-				NewImageExt(),
-			))
+				NewLinkExt()))
 			buf := new(bytes.Buffer)
 			ctx := parser.NewContext()
 			SetFilePath(ctx, path)

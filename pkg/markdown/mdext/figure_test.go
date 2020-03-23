@@ -17,49 +17,96 @@ func TestNewFigureExt(t *testing.T) {
 		src  string
 		want string
 	}{
-		//{
-		//	"single image",
-		//	texts.Dedent(`
-		//  ![alt text](./qux.png "title")`),
-		//	texts.Dedent(`
-		//	  <figure>
-		//   <picture>
-		//     <img src="./qux.png" alt="alt text" title="title">
-		//   </picture>
-		//	  </figure>
-		//`),
-		//},
-		//{
-		//	"single image with caption",
-		//	texts.Dedent(`
-		//   ![alt text](./bar.png "title")
-		//
-		//   CAPTION: foobar
-		// `),
-		//	texts.Dedent(`
-		//	  <figure>
-		//			<picture>
-		//				<img src="./bar.png" alt="alt text" title="title">
-		//			</picture>
-		//			<figcaption>
-		//				foobar
-		//			</figcaption>
-		//	  </figure>
-		//`),
-		//},
+		{
+			"single image",
+			texts.Dedent(`
+		 ![alt text](./qux.png "title")`),
+			texts.Dedent(`
+			  <figure>
+		  <picture>
+		    <img src="qux.png" alt="alt text" title="title">
+		  </picture>
+			  </figure>
+		`),
+		},
+		{
+			"single image with caption",
+			texts.Dedent(`
+		  ![alt text](./bar.png "title")
+		
+		  CAPTION: foobar
+		`),
+			texts.Dedent(`
+			  <figure>
+					<picture>
+						<img src="bar.png" alt="alt text" title="title">
+					</picture>
+					<figcaption>
+						foobar
+					</figcaption>
+			  </figure>
+		`),
+		},
+		{
+			"single relative image with caption with slug",
+			texts.Dedent(`
+      +++
+      slug = "some_slug"
+      +++
+
+		  ![alt text](./bar.png "title")
+		
+		  CAPTION: foobar
+		`),
+			texts.Dedent(`
+			  <figure>
+					<picture>
+						<img src="/some_slug/bar.png" alt="alt text" title="title">
+					</picture>
+					<figcaption>
+						foobar
+					</figcaption>
+			  </figure>
+		`),
+		},
+		{
+			"single absolute image with caption with slug",
+			texts.Dedent(`
+      +++
+      slug = "some_slug"
+      +++
+
+		  ![alt text](https://example.com/bar.png "title")
+		
+		  CAPTION: foobar
+		`),
+			texts.Dedent(`
+			  <figure>
+					<picture>
+						<img src="https://example.com/bar.png" alt="alt text" title="title">
+					</picture>
+					<figcaption>
+						foobar
+					</figcaption>
+			  </figure>
+		`),
+		},
 		{
 			"complex image with caption",
 			texts.Dedent(`
         foo bar
 
-        ![Bazel test sizes that depend on](bazel_test_size_2x.png "Things your build system probably can't do.")
+        ![alt text](bar.png "title")
 
-        CAPTION: Dependency graph of tests on the test database with the size attribute.
+        CAPTION: foobar
      `),
 			texts.Dedent(`
+        <p>
+          foo bar
+        </p>
 			  <figure>
 					<picture>
-						<img src="./bar.png" alt="alt text" title="title">
+						<img src="bar.png" alt="alt text" title="title">
 					</picture>
 					<figcaption>
 						foobar
@@ -71,7 +118,9 @@ func TestNewFigureExt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md := goldmark.New(goldmark.WithExtensions(
-				NewFigureExt()))
+				NewTOMLExt(),
+				NewFigureExt(),
+			))
 			buf := new(bytes.Buffer)
 			ctx := parser.NewContext()
 

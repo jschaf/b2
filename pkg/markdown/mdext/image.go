@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -26,14 +27,17 @@ func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc par
 		}
 		img := n.(*ast.Image)
 
-		dest := string(img.Destination)
-		if filepath.IsAbs(dest) || strings.HasPrefix(dest, "http") {
+		origDest := string(img.Destination)
+		if path.IsAbs(origDest) || strings.HasPrefix(origDest, "http") {
 			return ast.WalkContinue, nil
 		}
-		path := filepath.Dir(GetFilePath(pc))
 		meta := GetTOMLMeta(pc)
-		localPath := filepath.Join(path, dest)
-		remotePath := filepath.Join(meta.Path, dest)
+		urlPath := meta.Path
+		newDest := path.Join(urlPath, string(img.Destination))
+		img.Destination = []byte(newDest)
+		sourceDir := filepath.Dir(GetFilePath(pc))
+		localPath := filepath.Join(sourceDir, origDest)
+		remotePath := filepath.Join(meta.Path, origDest)
 		AddAsset(pc, remotePath, localPath)
 		return ast.WalkSkipChildren, nil
 	})

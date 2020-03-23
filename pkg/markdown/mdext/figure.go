@@ -100,8 +100,12 @@ func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, pc pa
 	for _, img := range imgs {
 		fig := NewFigure()
 		urlPath := GetTOMLMeta(pc).Path
-		dest := path.Join(urlPath, string(img.Destination))
-		fig.Destination = []byte(dest)
+		origDest := string(img.Destination)
+		newDest := origDest
+		if !path.IsAbs(origDest) && !strings.HasPrefix(origDest, "http") {
+			newDest = path.Join(urlPath, origDest)
+		}
+		fig.Destination = []byte(newDest)
 		fig.Title = img.Title
 		fig.AltText = img.Text(r.Source())
 

@@ -34,7 +34,7 @@ func TestParse(t *testing.T) {
         ![Alt text](./foo_bar)
       `),
 			articleHTML(mdext.PostMeta{Slug: "foo"}, "title",
-				"<figure><picture><img src=\"./foo_bar\" title=\"\"></picture></figure>",
+				"<figure><picture><img src=\"/foo/foo_bar\" alt=\"Alt text\"></picture></figure>",
 			),
 		},
 	}
@@ -74,19 +74,19 @@ func withFrontmatter(meta mdext.PostMeta, md string) string {
 func articleHTML(meta mdext.PostMeta, title, text string) string {
 	b := new(bytes.Buffer)
 	b.WriteString("<article>\n")
-	b.WriteString("<header>\n")
+	b.WriteString("<header>\n\n")
 	b.WriteString(fmt.Sprintf(
 		"<time datetime=%q>%s</time>\n",
 		meta.Date.UTC().Format("2006-01-02"),
 		meta.Date.Format("January _2, 2006"),
 	))
-	b.WriteString("<h1>")
+	b.WriteString("<h1 class=\"title\">")
 	b.WriteString(fmt.Sprintf("<a href=%q title=%q>", "/"+meta.Slug, title))
 	b.WriteString(title)
 	b.WriteString("</a>")
 	b.WriteString("</h1>\n")
 	b.WriteString("</header>\n")
 	b.WriteString(text + "\n")
-	b.WriteString("</article>\n")
+	b.WriteString("\n</article>\n")
 	return b.String()
 }

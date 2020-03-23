@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -23,14 +24,16 @@ func (l *LinkTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.
 		}
 
 		link := n.(*ast.Link)
-		dest := string(link.Destination)
-		if filepath.IsAbs(dest) || strings.HasPrefix(dest, "http") {
+		origDest := string(link.Destination)
+		if filepath.IsAbs(origDest) || strings.HasPrefix(origDest, "http") {
 			return ast.WalkContinue, nil
 		}
 		filePath := filepath.Dir(GetFilePath(pc))
 		meta := GetTOMLMeta(pc)
-		localPath := filepath.Join(filePath, dest)
-		remotePath := filepath.Join(meta.Path, dest)
+		newDest := path.Join(meta.Path, origDest)
+		link.Destination = []byte(newDest)
+		localPath := filepath.Join(filePath, origDest)
+		remotePath := filepath.Join(meta.Path, origDest)
 		AddAsset(pc, remotePath, localPath)
 		return ast.WalkSkipChildren, nil
 	})
