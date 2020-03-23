@@ -11,7 +11,7 @@ writes, reading data in a few milliseconds, and high availability. Facebook
 open-sourced the code as [Beringei], but the repo is archived. At its core,
 Gorilla is a 26-hour write-through cache backed by durable storage in [HBase], a
 distributed key-value store. Gorilla’s contributions include a novel, streaming
-timestamp compression scheme. 
+timestamp compression scheme.
 
 Paper: [Gorilla: A Fast, Scalable, In-Memory Time Series Database][gorilla]
 
@@ -19,11 +19,11 @@ Paper: [Gorilla: A Fast, Scalable, In-Memory Time Series Database][gorilla]
 [hbase]: https://hbase.apache.org/
 [beringei]: https://github.com/facebookarchive/beringei
 
-
 ![Gorilla architecture](gorilla_architecture.png)
 
-CAPTION: The architecture of a Gorilla cluster. A cluster runs in 2 regions. Each region
-contains multiple instances. Each instance contains shards that store time series data.
+CAPTION: The architecture of a Gorilla cluster. A cluster runs in 2 regions.
+Each region contains multiple instances. Each instance contains shards that
+store time series data.
 
 CONTINUE READING
 
@@ -36,7 +36,7 @@ Gorilla optimizes for four attributes:
 
 2. Real-time monitoring to show new data within tens of seconds.
 
-3. Read latency in less than millisecond and fast scans over all in-memory data 
+3. Read latency in less than millisecond and fast scans over all in-memory data
    in tens of milliseconds.
 
 4. Reliability requirements. Gorilla always serves reads even if a server
@@ -111,20 +111,20 @@ Block header: Timestamp at 08:00:30
 
 Gorilla uses xor compression for the floating point values associated with a
 timestamp. Using xor on similar float values drops the sign, exponent, and first
-few bits of the mantissa from the floating point value. This compression scheme takes
-advantage of the fact that most values don’t change significantly compared to neighboring values. The Gorilla
-team found that 59% of values are identical to the previous value and compress
-to a single `0` bit. Since the encoding is variable length, the entire two hour
-block must be decoded to access values. This isn’t a problem for time series
-databases because the value of the data lies in aggregation, not in single
-points.
+few bits of the mantissa from the floating point value. This compression scheme
+takes advantage of the fact that most values don’t change significantly compared
+to neighboring values. The Gorilla team found that 59% of values are identical
+to the previous value and compress to a single `0` bit. Since the encoding is
+variable length, the entire two hour block must be decoded to access values.
+This isn’t a problem for time series databases because the value of the data
+lies in aggregation, not in single points.
 
 # Architecture
 
 ![Gorilla architecture](gorilla_architecture.png)
 
-CAPTION: The architecture of a Gorilla cluster. The compressed time series data are 
-stored in blocks associated with a shard..
+CAPTION: The architecture of a Gorilla cluster. The compressed time series data
+are stored in blocks associated with a shard..
 
 Gorilla runs instances in two redundant regions. Both regions consist of many
 instances. Each instance contains a number of shards. Each shard contains many
@@ -161,13 +161,12 @@ data. Upon receiving a query:
    the named time series. Gorilla uses the index in the shard map to get the
    pointer to time series map.
 2. Gorilla read locks the time series map to prevent race conditions.
-3. Using the map, Gorilla looks up and copies the pointer to the time series
-   and then releases the read lock.
+3. Using the map, Gorilla looks up and copies the pointer to the time series and
+   then releases the read lock.
 4. Gorilla spin locks the time series to avoid mutation while data is copied.
-   Finally, Gorilla copies the data as it exists to the outgoing RPC. Notably, 
-   Gorilla sends the compressed form of data to clients. Clients are expected to 
+   Finally, Gorilla copies the data as it exists to the outgoing RPC. Notably,
+   Gorilla sends the compressed form of data to clients. Clients are expected to
    decompress the data.
-   
 
 ## Write flow
 
