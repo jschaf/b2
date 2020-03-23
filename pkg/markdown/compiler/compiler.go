@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -42,6 +43,28 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
+	return nil
+}
+
+func CleanPubDir(rootDir string) error {
+	publicDir := filepath.Join(rootDir, "public")
+
+	if stat, err := os.Stat(publicDir); err == nil {
+		if !stat.IsDir() {
+			return errors.New("public dir is not a directory")
+		}
+		if err := os.RemoveAll(publicDir); err != nil {
+			return fmt.Errorf("failed to delete public dir: %w", err)
+		}
+	} else if os.IsNotExist(err) {
+		// Do nothing.
+	} else {
+		return fmt.Errorf("failed to stat pub dir: %w", err)
+	}
+
+	if err := os.MkdirAll(publicDir, 0755); err != nil {
+		return fmt.Errorf("failed to make public dir: %w", err)
+	}
 	return nil
 }
 
@@ -102,15 +125,20 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 	}
 	postsDir := filepath.Join(rootDir, "posts")
 	publicDir := filepath.Join(rootDir, "public")
+	if err := CleanPubDir(rootDir); err != nil {
+		return fmt.Errorf("failed to clean public dir: %w", err)
+	}
 
 	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) != ".md" {
 			return nil
 		}
 		if !strings.Contains(path, glob) {
+			fmt.Printf("Skipping %s for glob %s\n", path, glob)
 			return nil
 		}
 
+		fmt.Printf("Compiling %s\n", path)
 		file, err := os.Open(path)
 		if err != nil {
 			return err
@@ -118,6 +146,10 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 
 		return c.CompileIntoDir(file.Name(), file, publicDir)
 	})
+
+	if _, err := css.WriteMainCSS(rootDir); err != nil {
+		return fmt.Errorf("failed to compile main.css: %w", err)
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to render markdown to HTML: %w", err)

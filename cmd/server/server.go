@@ -115,8 +115,15 @@ func main() {
 		return
 	}
 	pubDir := filepath.Join(root, "public")
+
+	if err := compiler.CleanPubDir(root); err != nil {
+		server.logger.Errorf("failed to clean public dir: %w", err)
+		return
+	}
+
 	if err := os.MkdirAll(pubDir, 0755); err != nil {
 		server.logger.Errorf("failed to make public dir: %w", err)
+		return
 	}
 	pubDirHandler := http.FileServer(http.Dir(pubDir))
 
