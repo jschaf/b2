@@ -153,11 +153,15 @@ a:hover {
 }
 
 h1 {
-  font-weight: 700;
   font-size: 2rem;
-  margin-top: 0.45rem;
+  font-weight: normal;
+  margin-top: 3rem;
   margin-bottom: 0.15rem;
   line-height: 1;
+}
+h1.title {
+  font-weight: 700;
+  margin-top: 0.45rem;
 }
 
 article > header {
@@ -275,7 +279,8 @@ li > ol {
   margin-top: 0.45rem;
 }
 
-li > p {
+li, li > p {
+  line-height: 1.5rem;
   margin: 0.225rem 0;
 }
 
@@ -296,8 +301,9 @@ figure > picture > img {
 figcaption {
   margin: 0 auto;
   padding: 0 2em;
-  margin-top: 12px;
+  margin-top: 0px;
   font-size: 16.2px;
+  font-weight: bold;
 }
 
 sc {

@@ -28,7 +28,7 @@ func TestArticleExt(t *testing.T) {
 					<article>
             <header>
 							<time datetime="0001-01-01">January  1, 0001</time>
-							<h1><a href="/" title="header">header</a></h1>
+							<h1 class="title"><a href="" title="header">header</a></h1>
             </header>
 						<p>foo</p>
 						<p>bar</p>

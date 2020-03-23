@@ -62,6 +62,7 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	link.Destination = []byte(meta.Path)
 	asts.Reparent(link, heading)
 	newHeading := ast.NewHeading(1)
+	newHeading.SetAttribute([]byte("class"), []byte("title"))
 	newHeading.AppendChild(newHeading, link)
 	header.AppendChild(header, NewTime(meta.Date))
 	header.AppendChild(header, newHeading)
