@@ -77,7 +77,7 @@ with a double delta scheme as shown below:
 # Block timestamp aligned to 8:00:00.
 timestamps =    [8:00:30, 8:01:30, 8:02:30, 8:03:28]
 deltas =        [     30,      60,      60,      57]
-double_deltas = [       ,      30,       0,      -4]
+double_deltas = [       ,      30,       0,      -3]
 ```
 
 The `double_deltas` are encoded using a variable sized integer encoding similar
@@ -89,22 +89,35 @@ to the [varint encoding] in Protocol Buffers described below:
 The `delta_deltas` are encoded using a variable sized integer encoding.
 
 - If the delta is zero, store a single `0` bit.
-- If the delta is in `[-63, 64)` store `0b10` followed by the signed value in 7
+- If the delta is in `[-64, 64)` store `0b10` followed by the signed value in 7
   bits.
-- If the delta is in `[-255, 256)` store `0b110` followed by the signed value in
+- If the delta is in `[-256, 256)` store `0b110` followed by the signed value in
   9 bits.
-- If the delta is in `[-2047, 2048)` store `0b1110` followed by the signed value
+- If the delta is in `[-2048, 2048)` store `0b1110` followed by the signed value
   in 12 bits.
 - Otherwise, store `0b1111` followed by the delta in 32 bits.
 
 The 4 timestamps would be encoded as follows:
 
-```bash
-Block header: Timestamp at 08:00:30
-14 bits: 1st Timestamp delta: 30
-9 bits: 0b10 + binary(30)
-1 bit: 0
-9 bits: 0b10 + binary(-4)
+```text
+Block header: Timestamp at 08:00:00 in 64 bits.
+
+# Encode the first value as a delta from the block header (not double delta)
+# Use 14 bits to allow 1 second precision in a 2 hour block.
+binary(30) in 14 bits
+
+# Encode the second value using the double delta varint scheme above. The double
+# delta is in the range [-64, 64), so use 0b10 followed by 7 bits of the
+# signed value.
+0b10 + binary(30) in 7 bits
+
+# Encode the third value using the double delta scheme. The value is 0,
+# so use a single 0 bit.
+0
+
+# Encode the fourth value using the double delta scheme. The double delta, -3,
+# is in the range [-64, 64).
+0b10 + binary(-3)
 ```
 
 # Time series value compression
@@ -141,11 +154,11 @@ Gorilla is a two-level map:
 1. The time series map is the first level map from a shard index to a time
    series map. The key list contains the mapping between a time series name and
    its shard index.
-2. The time series map maps a string name to a TimeSeries data structure.
-   Additionally, time series map maintains a vector of the same TimeSeries data
-   structures for efficient scans over the entire dataset.
-3. The TimeSeries consists of an open block for incoming writes and two-hour
-   closed blocks for the previous 26 hours.
+2. The time series map maps a string name to a `TimeSeries` data structure.
+   Additionally, time series map maintains a vector of the same `TimeSeries`
+   data structures for efficient scans over the entire dataset.
+3. The `TimeSeries` data structures consists of an open block for incoming
+   writes and two-hour closed blocks for the previous 26 hours.
 
 ## Query flow
 
@@ -153,7 +166,7 @@ Gorilla is a two-level map:
 
 CAPTION: How a query is processed by a Gorilla instance
 
-The TimeSeries data structure is a collection of closed blocks containing
+The `TimeSeries` data structure is a collection of closed blocks containing
 historical data and a single open block containing the previous two hours of
 data. Upon receiving a query:
 
@@ -165,8 +178,8 @@ data. Upon receiving a query:
    then releases the read lock.
 4. Gorilla spin locks the time series to avoid mutation while data is copied.
    Finally, Gorilla copies the data as it exists to the outgoing RPC. Notably,
-   Gorilla sends the compressed form of data to clients. Clients are expected to
-   decompress the data.
+   Gorilla sends the compressed form of data to clients. Gorilla expects clients
+   to decompress the compressed data.
 
 ## Write flow
 
@@ -180,12 +193,12 @@ CAPTION: How a query is processed by a Gorilla instance.
    ahead log. Gorilla only writes data once it has 64kb of data for the shard
    which is 1-2 seconds of data. The log must include a 32bit integer ID to
    identify the named timestamp which increases the data size dramatically
-   compared to the compression scheme within a TimeSeries.
+   compared to the compression scheme within a `TimeSeries` data structure.
 3. Similarly to the query flow, Gorilla uses the shard map and time series map
    to find the correct time series data structure. Gorilla appends the data to
    the open block in the time series data structure using the compression
    algorithm described above.
 4. After two hours, the Gorilla node closes all open blocks and flushes each one
-   to disk with a corresponding checkpoint file. After all TimeSeries for a
-   shard are flushed, the Gorilla node deletes the append-only log for that
-   shard.
+   to disk with a corresponding checkpoint file. After all `TimeSeries` data
+   structures for a shard are flushed, the Gorilla node deletes the append-only
+   log for that shard.
