@@ -35,11 +35,10 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 	}
 
 	data := html.PostTemplateData{
-		Title: ast.Meta.Title,
-		Body:  template.HTML(b.String()),
+		Title:   ast.Meta.Title,
+		Content: template.HTML(b.String()),
 	}
-
-	if err := html.PostTemplate.Execute(w, data); err != nil {
+	if err := html.RenderPost(w, data); err != nil {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 

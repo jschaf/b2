@@ -1,0 +1,12 @@
+{{ define "title" }}{{ .Title }}{{ end }}
+{{ define "content" }}
+    {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.IndexTemplateData*/ -}}
+    <section>
+        {{range $i, $body := .Bodies}}
+            {{$body}}
+            {{if not (isLast $i $.Bodies)}}
+              <hr class="article-split">
+            {{end}}
+        {{end}}
+    </section>
+{{ end }}

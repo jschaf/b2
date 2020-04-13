@@ -8,7 +8,9 @@ require (
 	github.com/cloudflare/tableflip v1.0.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-test/deep v1.0.5
+	github.com/google/go-cmp v0.4.0
 	github.com/gorilla/websocket v1.4.1
+	github.com/jschaf/esbuild v0.0.0-20200412044914-4287e6e06ce1
 	github.com/yuin/goldmark v1.1.23-0.20200209095113-0b4973017794
 	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2

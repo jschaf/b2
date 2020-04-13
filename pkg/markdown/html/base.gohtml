@@ -1,0 +1,66 @@
+{{ define "base" }}
+    {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.MainTemplateData*/ -}}
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <title>{{ template "title" . }}</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="robots" content="index, follow">
+      <link rel="icon" href="/favicon.ico">
+      <link rel="apple-touch-icon-precomposed" href="/favicon-152.png">
+      <link rel="stylesheet" href="/style/main.css">
+      <script defer src="/instantpage.min.js" type="application/javascript"></script>
+      <script type="text/javascript">
+        window.heap = window.heap || [], heap.load = function (e, t) {
+          window.heap.appid = e, window.heap.config = t = t || {};
+          var r = document.createElement("script");
+          r.type = "text/javascript", r.async = !0, r.src = "https://cdn.heapanalytics.com/js/heap-"
+              + e + ".js";
+          var a = document.getElementsByTagName("script")[0];
+          a.parentNode.insertBefore(r, a);
+          for (var n = function (e) {
+            return function () {
+              heap.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+            }
+          }, p = ["addEventProperties", "addUserProperties", "clearEventProperties", "identify",
+            "resetIdentity", "removeEventProperty", "setEventProperties", "track",
+            "unsetEventProperty"], o = 0; o < p.length; o++) {
+            heap[p[o]] = n(p[o])
+          }
+        };
+
+        heap.load("1506018335");
+      </script>
+    </head>
+    <body>
+    <header>
+      <nav class="site-nav" role="navigation">
+        <a class="site-title" href="/" title="Home page">Joe Schafer</a>
+        <ul>
+          <li><a href="https://github.com/jschaf" title="GitHub page">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/jschaf/" title="LinkedIn page">LinkedIn</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <div class="main-inner-container">
+          {{template "content" . }}
+      </div>
+    </main>
+    <footer role="contentinfo"><a href="/" title="Home page">© 2020 Joe Schafer</a></footer>
+    <div
+        id="banner_ad"
+        class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links"
+        style="height: 10px !important; font-size: 20px; color: transparent; position: absolute; bottom: 0; left: -10000px;">
+      &nbsp;
+    </div>
+    <script>{{.SyncScript}}</script>
+    </body>
+    </html>
+{{ end }}
+
+{{/* Define empty blocks for optional content so we don't have to define a
+   * block in child templates that don't need them */}}
+{{ define "title" }}{{ end }}
+{{ define "content" }}{{ end }}

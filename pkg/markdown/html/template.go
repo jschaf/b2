@@ -3,30 +3,79 @@ package html
 import (
 	"fmt"
 	"html/template"
+	"io"
+	"path/filepath"
 	"reflect"
+
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/js"
 )
 
 var fns = template.FuncMap{
 	"isLast": isLast,
 }
 
-type PostTemplateData struct {
-	Title string
-	Body  template.HTML
+var (
+	templates = make(map[string]*template.Template)
+)
+
+func init() {
+	rootDir, err := git.FindRootDir()
+	if err != nil {
+		panic(err)
+	}
+	layoutDir := filepath.Join(rootDir, "pkg", "markdown", "html")
+	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
+	layouts := []string{"index.gohtml", "post.gohtml"}
+	for _, name := range layouts {
+		f := filepath.Join(layoutDir, name)
+		templates[name] = template.Must(
+			template.New(name).Funcs(fns).ParseFiles(f, baseTmpl))
+	}
 }
 
-var PostTemplate = template.Must(
-	template.New("post_template.gohtml").Funcs(fns).ParseFiles(
-		"pkg/markdown/html/post_template.gohtml"))
+func render(w io.Writer, name string, data map[string]interface{}) error {
+	tmpl, ok := templates[name]
+	if !ok {
+		return fmt.Errorf("template %s does not exist", name)
+	}
+	result, err := js.BundleMain()
+	if err != nil {
+		return fmt.Errorf("failed to bundle main.js: %w", err)
+	}
+	data["SyncScript"] = template.JS(result.JsContents)
+
+	return tmpl.ExecuteTemplate(w, "base", data)
+}
+
+func RenderPost(w io.Writer, d PostTemplateData) error {
+	m := make(map[string]interface{})
+	m["Title"] = d.Title
+	m["Content"] = d.Content
+	return render(w, "post.gohtml", m)
+}
+
+func RenderIndex(w io.Writer, d IndexTemplateData) error {
+	m := make(map[string]interface{})
+	m["Title"] = d.Title
+	m["Bodies"] = d.Bodies
+	return render(w, "index.gohtml", m)
+}
+
+type MainTemplateData struct {
+	Title   string
+	Content template.HTML
+}
+
+type PostTemplateData struct {
+	Title   string
+	Content template.HTML
+}
 
 type IndexTemplateData struct {
 	Title  string
 	Bodies []template.HTML
 }
-
-var IndexTemplate = template.Must(
-	template.New("index_template.gohtml").Funcs(fns).ParseFiles(
-		"pkg/markdown/html/index_template.gohtml"))
 
 // isLast returns true if index is the last index in item.
 func isLast(index int, item interface{}) (bool, error) {

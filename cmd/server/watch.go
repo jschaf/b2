@@ -77,7 +77,7 @@ func (f *FSWatcher) Start() error {
 				}
 				f.liveReload.ReloadFile("")
 
-			case filepath.Ext(rel) == ".md":
+			case filepath.Ext(rel) == ".md" || rel == "scripts/main.js":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
