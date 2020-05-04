@@ -28,6 +28,19 @@ func TestCodeBlockExt(t *testing.T) {
 							<code-kw>func</code-kw> <code-fn>foo</code-fn>() {}
 						</pre>
 					</div>
+    `),
+		},
+		{
+			"go func",
+			texts.Dedent("``` go\n" +
+				"Foo 28%\n" +
+				"```\n"),
+			texts.Dedent(`
+					<div class="code-block-container">
+						<pre class="code-block">
+							Foo 28%
+						</pre>
+					</div>
      `),
 		},
 		{
@@ -41,7 +54,7 @@ func TestCodeBlockExt(t *testing.T) {
 							<code-kw>func</code-kw> (t *T) <code-fn>foo</code-fn>() {}
 						</pre>
 					</div>
-      `),
+     `),
 		},
 	}
 	for _, tt := range tests {

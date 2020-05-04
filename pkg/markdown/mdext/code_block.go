@@ -2,7 +2,6 @@ package mdext
 
 import (
 	"bytes"
-	"fmt"
 	"html"
 	"io"
 
@@ -88,8 +87,8 @@ func NewCodeBlockFormatter() *codeBlockFormatter {
 }
 
 func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang string) error {
-	fmt.Fprintf(w, "<div class='code-block-container'>")
-	fmt.Fprintf(w, "<pre class='code-block'>")
+	writeStrings(w, "<div class='code-block-container'>")
+	writeStrings(w, "<pre class='code-block'>")
 
 	tokens := iterator.Tokens()
 	lines := chroma.SplitTokensIntoLines(tokens)
@@ -111,7 +110,7 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang 
 			case chroma.CommentSingle:
 				fallthrough
 			case chroma.CommentSpecial:
-				fmt.Fprintf(w, "<code-comment>%s</code-comment>", h)
+				writeStrings(w, "<code-comment>", h, "</code-comment>")
 
 			case chroma.Keyword:
 				fallthrough
@@ -126,25 +125,25 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang 
 			case chroma.KeywordReserved:
 				fallthrough
 			case chroma.KeywordType:
-				fmt.Fprintf(w, "<code-kw>%s</code-kw>", h)
+				writeStrings(w, "<code-kw>", h, "</code-kw>")
 
 			case chroma.NameFunction:
 				switch lang {
 				case "go":
 					if i < 2 {
-						fmt.Fprint(w, h)
+						writeStrings(w, h)
 						continue
 					}
 					isFunc := tokens[i-2].Value == "func"
 					isReceiver := tokens[i-2].Value == ")"
 					if isFunc || isReceiver {
-						fmt.Fprintf(w, "<code-fn>%s</code-fn>", h)
+						writeStrings(w, "<code-fn>", h, "</code-fn>")
 					} else {
-						fmt.Fprint(w, h)
+						writeStrings(w, h)
 					}
 
 				default:
-					fmt.Fprintf(w, "<code-fn>%s</code-fn>", h)
+					writeStrings(w, "<code-fn>", h, "</code-fn>")
 				}
 
 			case chroma.String:
@@ -174,16 +173,21 @@ func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang 
 			case chroma.StringSingle:
 				fallthrough
 			case chroma.StringSymbol:
-				fmt.Fprintf(w, "<code-str>%s</code-str>", h)
+				writeStrings(w, "<code-str>", h, "</code-str>")
 
 			default:
-				fmt.Fprintf(w, h)
-
+				writeStrings(w, h)
 			}
 		}
 	}
 
-	fmt.Fprintf(w, "</pre>")
-	fmt.Fprintf(w, "</div>")
+	writeStrings(w, "</pre>")
+	writeStrings(w, "</div>")
 	return nil
+}
+
+func writeStrings(w io.Writer, ss ...string) {
+	for _, s := range ss {
+		_, _ = w.Write([]byte(s))
+	}
 }
