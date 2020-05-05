@@ -1,7 +1,7 @@
 +++
 slug = "chatty-ubuntu-motd"
 date = 2020-05-03
-visibility = "draft"
+visibility = "published"
 +++
 
 # Cutting down the Ubuntu MOTD down to size
@@ -57,6 +57,8 @@ applicable law.
 Last login: Sun Apr 19 03:41:04 2020 from 192.168.0.1
 ```
 
+CONTINUE_READING
+
 ## Disable the verbose parts of the message
 
 The commands listed below reduce the verbosity of the MOTD from 42 lines to 11
@@ -85,7 +87,7 @@ chmod -x \
 rm -f /etc/legal
 ```
 
-An example of the trimmed output is below.
+The trimmed message looks like:
 
 ```text
 Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-1021-aws x86_64)
@@ -136,13 +138,13 @@ Ubuntu generates the MOTD by combining data from four sources.
 
 For reference, here's the output of the stock scripts in `/etc/update.motd/`.
 
-- 00-header
+- /etc/update.motd/00-header
 
   ```text
   Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-1021-aws x86_64)
   ```
 
-- 10-help-text
+- /etc/update.motd/10-help-text
 
   ```text
   * Documentation:  https://help.ubuntu.com
@@ -150,7 +152,7 @@ For reference, here's the output of the stock scripts in `/etc/update.motd/`.
   * Support:        https://ubuntu.com/advantage
   ```
 
-- 50-landscape-sysinfo
+- /etc/update.motd/50-landscape-sysinfo
 
   ```text
   System information as of Mon Apr 20 01:15:45 UTC 2020
@@ -161,7 +163,7 @@ For reference, here's the output of the stock scripts in `/etc/update.motd/`.
   Swap usage:   0%
   ```
 
-- 50-motd-news
+- /etc/update.motd/50-motd-news
 
   ```text
   * Kubernetes 1.18 GA is now available! See https://microk8s.io
@@ -176,31 +178,32 @@ For reference, here's the output of the stock scripts in `/etc/update.motd/`.
       https://multipass.run/
   ```
 
-- 51-cloudguest
+- /etc/update.motd/51-cloudguest
 
   ```text
   Get cloud support with Ubuntu Advantage Cloud Guest:
     http://www.ubuntu.com/business/services/cloud
   ```
 
-- 80-livepatch
+- /etc/update.motd/80-livepatch
 
   ```text
   Get cloud support with Ubuntu Advantage Cloud Guest:
     http://www.ubuntu.com/business/services/cloud
   ```
 
-- 90-updates-available
+- /etc/update.motd/90-updates-available
 
   ```text
   152 packages can be updated.
   1 update is a security update.
   ```
 
-### /etc/legal
+### Legal text in the MOTD
 
 The MOTD includes legal text in the login message. The simplest way to prevent
-it from appearing in the MOTD is to delete the file. The
+it from appearing in the MOTD is to delete the file: `rm /etc/legal`. The file
+contains the following text:
 
 ```text
 The programs included with the Ubuntu system are free software;

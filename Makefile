@@ -16,8 +16,8 @@ html: clean $(DIST_DIR)
 clean:
 	rm -rf $(DIST_DIR)/*
 
-.PHONY: deploy
-deploy: html
+.PHONY: publish
+publish: html
 	firebase deploy --only hosting:new-blog
 
 .PHONY: dev
