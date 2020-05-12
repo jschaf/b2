@@ -25,7 +25,7 @@ CAPTION: The architecture of a Gorilla cluster. A cluster runs in 2 regions.
 Each region contains multiple instances. Each instance contains shards that
 store time series data.
 
-CONTINUE READING
+CONTINUE_READING
 
 Gorilla optimizes for four attributes:
 

@@ -32,7 +32,7 @@ the following features:
 - Deadline and cancellation
 - Non-blocking sockets
 
-CONTINUE READING
+CONTINUE_READING
 
 ## Overview
 

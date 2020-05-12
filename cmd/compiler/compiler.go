@@ -16,8 +16,7 @@ var flagGlob = flag.String(
 
 func main() {
 	flag.Parse()
-	c := compiler.New(
-		markdown.New(mdext.NewNopContinueReadingExt()))
+	c := compiler.New(markdown.New(mdext.NewNopContinueReadingExt()))
 	if err := c.CompileAllPosts(*flagGlob); err != nil {
 		log.Fatal(err)
 	}

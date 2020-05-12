@@ -1,7 +1,7 @@
 package mdext
 
 import (
-	"fmt"
+	"bytes"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -31,7 +31,43 @@ func (c *ContinueReading) Dump(source []byte, level int) {
 	ast.DumpHelper(c, source, level, nil, nil)
 }
 
-const ContinueReadingText = "CONTINUE READING"
+const ContinueReadingText = "CONTINUE_READING"
+
+type continueReadingParser struct{}
+
+func (c continueReadingParser) Trigger() []byte {
+	return nil
+}
+
+func (c continueReadingParser) Open(_ ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
+	line, _ := reader.PeekLine()
+	if bytes.HasPrefix(line, []byte(ContinueReadingText)) {
+		meta := GetTOMLMeta(pc)
+		return NewContinueReading("/" + meta.Slug), parser.NoChildren
+	}
+	return nil, parser.NoChildren
+}
+
+func (c continueReadingParser) Continue(ast.Node, text.Reader, parser.Context) parser.State {
+	return parser.Close
+}
+
+func (c continueReadingParser) Close(ast.Node, text.Reader, parser.Context) {
+}
+
+func (c continueReadingParser) CanInterruptParagraph() bool {
+	return false
+}
+
+func (c continueReadingParser) CanAcceptIndentedLine() bool {
+	return false
+}
+
+var defaultContinueReadingParser = &continueReadingParser{}
+
+func NewContinueReadingParser() parser.BlockParser {
+	return defaultContinueReadingParser
+}
 
 type contReadingTransformer struct{}
 
@@ -39,114 +75,44 @@ func NewContinueReadingTransformer() *contReadingTransformer {
 	return &contReadingTransformer{}
 }
 
-func (c *contReadingTransformer) findSecondPara(doc *ast.Document) (*ast.Paragraph, error) {
-	paraCount := 0
-	var para *ast.Paragraph
-	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if !entering {
-			return ast.WalkSkipChildren, nil
-		}
-		switch n.Kind() {
-		case ast.KindDocument:
-			return ast.WalkContinue, nil
-		case ast.KindParagraph:
-			paraCount += 1
-			if paraCount == 2 {
-				para = n.(*ast.Paragraph)
-				return ast.WalkStop, nil
-			}
-			return ast.WalkSkipChildren, nil
-		default:
-			return ast.WalkSkipChildren, nil
-		}
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find 1st paragraph: %w", err)
-	}
-	return para, nil
-}
-
-func findContReading(doc *ast.Document, reader text.Reader) (*ast.Paragraph, error) {
-	var para *ast.Paragraph
-	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if !entering {
-			return ast.WalkSkipChildren, nil
-		}
-		switch n.Kind() {
-		case ast.KindDocument:
-			return ast.WalkContinue, nil
-		case ast.KindParagraph:
-			if isContinueReadingNode(n.(*ast.Paragraph), reader) {
-				para = n.(*ast.Paragraph)
-				return ast.WalkStop, nil
-			}
-			return ast.WalkSkipChildren, nil
-		default:
-			return ast.WalkSkipChildren, nil
-		}
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to find 1st paragraph: %w", err)
-	}
-	return para, nil
-}
-
-func (c *contReadingTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
-	continueReading, err := findContReading(doc, reader)
-	if err != nil {
-		panic(err)
-	}
-	if continueReading == nil {
-		continueReading, err = c.findSecondPara(doc)
-		if err != nil {
-			panic(err)
-		}
-	}
-	if continueReading == nil {
-		panic("failed to find continue reading node")
-	}
-
-	parent := continueReading.Parent()
-	if parent == nil {
-		panic("parent is nil")
-	}
-	if parent.Kind() != ast.KindDocument {
-		panic("parent is not a document")
-	}
-
-	for continueReading.NextSibling() != nil {
-		parent.RemoveChild(parent, continueReading.NextSibling())
-	}
-	parent.RemoveChild(parent, continueReading)
-	meta := GetTOMLMeta(pc)
-	parent.AppendChild(parent, NewContinueReading("/"+meta.Slug))
-}
-
-func isContinueReadingNode(n *ast.Paragraph, r text.Reader) bool {
-	if n.ChildCount() != 1 || n.FirstChild().Kind() != ast.KindText {
-		return false
-	}
-	txt := n.FirstChild().(*ast.Text)
-	s := string(txt.Segment.Value(r.Source()))
-	return s == ContinueReadingText
-}
-
-// nopContReadingTransformer removes the continue reading text if it exists.
-type nopContReadingTransformer struct {
-}
-
-func (n *nopContReadingTransformer) Transform(doc *ast.Document, reader text.Reader, _ parser.Context) {
-	r, err := findContReading(doc, reader)
-	if err != nil {
-		panic(err)
-	}
-	if r == nil {
-		// Doesn't exist, okay to skip.
+func (c *contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
+	n := doc.FirstChild()
+	if n == nil {
 		return
 	}
-	p := r.Parent()
-	p.RemoveChild(p, r)
+	for n != nil {
+		if n.Kind() == KindContinueReading {
+			break
+		}
+		n = n.NextSibling()
+	}
+
+	if n == nil {
+		return
+	}
+	continueReading := n
+	for continueReading.NextSibling() != nil {
+		doc.RemoveChild(doc, continueReading.NextSibling())
+	}
+}
+
+// nopContReadingRenderer removes the continue reading text if it exists.
+type nopContReadingRenderer struct {
+}
+
+func (n *nopContReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(KindContinueReading, n.renderNopContReading)
+}
+
+func NewNopContinueReadingRenderer() *nopContReadingRenderer {
+	return &nopContReadingRenderer{}
+}
+
+func (n *nopContReadingRenderer) Transform(*ast.Document, text.Reader, parser.Context) {
+}
+
+func (n *nopContReadingRenderer) renderNopContReading(util.BufWriter, []byte, ast.Node, bool) (ast.WalkStatus, error) {
+	return ast.WalkContinue, nil
 }
 
 type ContinueReadingRenderer struct {
@@ -184,6 +150,9 @@ func NewContinueReadingExt() *contReadingExt {
 }
 
 func (c *contReadingExt) Extend(m goldmark.Markdown) {
+	m.Parser().AddOptions(parser.WithBlockParsers(
+		util.Prioritized(NewContinueReadingParser(), 800)))
+
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
 			util.Prioritized(NewContinueReadingTransformer(), 999)))
@@ -199,7 +168,9 @@ func NewNopContinueReadingExt() *noContReadingExt {
 }
 
 func (n *noContReadingExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(&nopContReadingTransformer{}, 999)))
+	m.Parser().AddOptions(parser.WithBlockParsers(
+		util.Prioritized(NewContinueReadingParser(), 800)))
+
+	m.Renderer().AddOptions(renderer.WithNodeRenderers(
+		util.Prioritized(NewNopContinueReadingRenderer(), 500)))
 }

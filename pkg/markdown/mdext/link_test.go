@@ -29,7 +29,7 @@ func TestNewLinkExt(t *testing.T) {
      `),
 			texts.Dedent(`
        <p>
-         Paper: <a href="paper.pdf">Gorilla Title</a>
+         Paper: <a href="paper.pdf" data-link-type=pdf>Gorilla Title</a>
        </p>
     `),
 			map[parser.ContextKey]interface{}{
@@ -49,7 +49,7 @@ func TestNewLinkExt(t *testing.T) {
      `),
 			texts.Dedent(`
        <p>
-         Paper: <a href="/some_slug/paper.pdf">Gorilla Title</a>
+         Paper: <a href="/some_slug/paper.pdf" data-link-type=pdf>Gorilla Title</a>
        </p>
     `),
 			map[parser.ContextKey]interface{}{
@@ -69,7 +69,7 @@ func TestNewLinkExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          Paper: <a href="http://example.com/paper.pdf">Gorilla Title</a>
+          Paper: <a href="http://example.com/paper.pdf" data-link-type=pdf>Gorilla Title</a>
         </p>
      `),
 			map[parser.ContextKey]interface{}{},
@@ -91,7 +91,7 @@ func TestNewLinkExt(t *testing.T) {
 			if diff, err := htmls.Diff(buf, strings.NewReader(tt.want)); err != nil {
 				t.Fatal(err)
 			} else if diff != "" {
-				t.Errorf(diff)
+				t.Errorf("Link mismatch (-want +got):\n%s", diff)
 			}
 
 			for k, v := range tt.wantCtx {

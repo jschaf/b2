@@ -9,6 +9,10 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+const (
+	smallCapsThreshold = 3
+)
+
 var KindSmallCaps = ast.NewNodeKind("SmallCaps")
 
 type SmallCaps struct {
@@ -93,10 +97,6 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Co
 		segment.Start+consumes+run)
 	return sc
 }
-
-const (
-	smallCapsThreshold = 3
-)
 
 type smallCapsRenderer struct{}
 

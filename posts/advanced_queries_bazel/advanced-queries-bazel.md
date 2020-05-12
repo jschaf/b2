@@ -32,7 +32,7 @@ bazel query '
 
 CAPTION: Dependency graph of tests on the test database with the size attribute.
 
-CONTINUE READING
+CONTINUE_READING
 
 For additional convenience, we can pipe this through
 [buildozer](https://github.com/bazelbuild/buildtools/blob/master/buildozer/README.md),

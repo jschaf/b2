@@ -22,7 +22,7 @@ parts of the default
 step are below and the full code is available at this
 [GitHub Gist](https://gist.github.com/jschaf/31d88678cbf733e9bb749ec0afdcc418).
 
-CONTINUE READING
+CONTINUE_READING
 
 ```bash
 #!/bin/bash
