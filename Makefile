@@ -1,4 +1,4 @@
-DIST_DIR := dist
+DIST_DIR := public
 DEV_PORT := 8080
 
 $(DIST_DIR):
@@ -14,7 +14,7 @@ html: clean $(DIST_DIR)
 
 .PHONY: clean
 clean:
-	rm -rf $(DIST_DIR)/*
+	rm -rf $(DIST_DIR)
 
 .PHONY: publish
 publish: html

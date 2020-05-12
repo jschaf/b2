@@ -101,14 +101,6 @@ func main() {
 		log.Fatalf("failed to create server: %s", err)
 	}
 	defer server.Stop()
-
-	lrJSPath := "/dev/livereload.js"
-	lrPath := "/dev/livereload"
-	lr := livereload.NewWebsocketServer(server.logger.Named("livereload"))
-	server.HandleFunc(lrJSPath, livereload.ServeJSHandler)
-	server.HandleFunc(lrPath, lr.WebSocketHandler)
-	go lr.Start()
-
 	root, err := git.FindRootDir()
 	if err != nil {
 		server.logger.Errorf("failed to find root dir: %s", err)
@@ -125,6 +117,14 @@ func main() {
 		server.logger.Errorf("failed to make public dir: %w", err)
 		return
 	}
+
+	lrJSPath := "/dev/livereload.js"
+	lrPath := "/dev/livereload"
+	lr := livereload.NewWebsocketServer(server.logger.Named("livereload"))
+	server.HandleFunc(lrJSPath, livereload.ServeJSHandler)
+	server.HandleFunc(lrPath, lr.WebSocketHandler)
+	go lr.Start()
+
 	pubDirHandler := http.FileServer(http.Dir(pubDir))
 
 	lrScript := strings.Join([]string{
