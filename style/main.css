@@ -27,17 +27,21 @@ body {
 }
 
 body > header a,
-body > header a:visited,
-body > footer a,
-body > footer a:visited {
+body > footer a {
   font-weight: 500;
+  text-decoration: none;
   color: #686767;
   padding: 0.45rem 0;
   display: block;
 }
+
 body > header a:hover,
 body > footer a:hover {
-  color: #3574ff;
+  color: #999;
+}
+
+.small-caps {
+  font-variant-caps: all-small-caps;
 }
 
 body > footer {
@@ -146,11 +150,15 @@ a.site-title {
   padding-left: 0.8em;
 }
 
-a,
-a:hover {
-  text-decoration: none;
-  color: #416ed2;
+a {
+  color: #3c3c3c;
+  text-decoration: underline;
 }
+
+a:hover {
+  color: #999;
+}
+
 
 h1 {
   font-size: 2rem;
@@ -221,10 +229,7 @@ h3 code {
 
 h1 > a {
   color: #1b1b1b;
-}
-
-h1 > a:hover {
-  color: #3574ff;
+  text-decoration: none;
 }
 
 strong {
@@ -301,7 +306,6 @@ figure > picture > img {
 figcaption {
   margin: 0 auto;
   padding: 0 2em;
-  margin-top: 0px;
   font-size: 16.2px;
   font-weight: bold;
 }

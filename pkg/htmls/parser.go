@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
 )
 
@@ -24,24 +25,20 @@ func DiffStrings(x, y string) (string, error) {
 }
 
 // Diff returns the diff between the normalized HTML fragments.
-func Diff(x, y io.Reader) (string, error) {
-	frag1, err := ParseFragment(x)
+func Diff(got, want io.Reader) (string, error) {
+	frag1, err := ParseFragment(want)
 	if err != nil {
 		return "", err
 	}
 
-	frag2, err := ParseFragment(y)
+	frag2, err := ParseFragment(got)
 	if err != nil {
 		return "", err
 	}
 
 	dump1 := DumpNodes(frag1)
 	dump2 := DumpNodes(frag2)
-	if dump1 == dump2 {
-		return "", nil
-	}
-	diff := fmt.Sprintf("got:\n%s\nwant:\n%s", dump1, dump2)
-	return diff, nil
+	return cmp.Diff(dump1, dump2), nil
 }
 
 func normalizeNodes(nodes []*html.Node) []*html.Node {
@@ -116,10 +113,6 @@ func dumpNode(node *html.Node, buf *bytes.Buffer, indent int) {
 		}
 		fmt.Fprintf(buf, "%s}\n", prefix)
 	case html.TextNode:
-		hi := 30
-		if hi > len(node.Data) {
-			hi = len(node.Data)
-		}
-		fmt.Fprintf(buf, "%sText {'%s'}\n", prefix, strings.Replace(node.Data[:hi], "\n", "\\n", -1))
+		fmt.Fprintf(buf, "%sText {'%s'}\n", prefix, strings.Replace(node.Data, "\n", "\\n", -1))
 	}
 }

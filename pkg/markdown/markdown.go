@@ -35,6 +35,7 @@ func defaultExtensions() []goldmark.Extender {
 		mdext.NewImageExt(),
 		mdext.NewLinkExt(),
 		mdext.NewFigureExt(),
+		mdext.NewSmallCapsExt(),
 		mdext.NewTimeExt(),
 		mdext.NewTOMLExt(),
 	}
