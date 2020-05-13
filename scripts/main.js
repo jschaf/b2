@@ -41,3 +41,29 @@
     window.heap[s] = stubHeapFn(s)
   }
 })();
+
+// Preview hovers.
+(() => {
+  // Each preview target contains data attributes describing how to display
+  // information. The attributes include:
+  // - data-title: required, the title of the link.
+  // - data-snippet: required, a short snippet about the link.
+  // On hover, we re-use a global element, #preview-box, to display the
+  // attributes. The preview is a no-op on devices with touch.
+
+  // Detect touch based devices as a proxy for not having hover.
+  // https://stackoverflow.com/a/8758536/30900
+  let hasHover = false;
+  try {
+    document.createEvent("TouchEvent");
+  } catch (e) {
+    hasHover = true;
+  }
+  if (!hasHover) {
+    return;
+  }
+
+  const preview = document.createElement('div');
+  preview.id = 'preview-box';
+  document.body.append(preview);
+})();
