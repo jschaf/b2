@@ -11,6 +11,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/js"
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
@@ -77,10 +78,24 @@ func (f *FSWatcher) Start() error {
 				}
 				f.liveReload.ReloadFile("")
 
-			case filepath.Ext(rel) == ".md" || rel == "scripts/main.js":
+			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
+
+			case rel == "scripts/main.js":
+				result, err := js.BundleMain()
+				if err != nil {
+					return fmt.Errorf("watcher main.js bundle fail: %w", err)
+				}
+				if err := js.WriteMainBundle(result); err != nil {
+					return fmt.Errorf("watcher write main.js bundle: %w", err)
+				}
+				if err := f.compileMdWithGoRun(); err != nil {
+					return err
+				}
+				// Send empty string which should reload all LiveReload clients
+				f.liveReload.ReloadFile("")
 
 			case strings.HasPrefix(rel, "pkg/markdown/"):
 				// If only the markdown has changed, recompile only that.

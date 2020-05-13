@@ -42,6 +42,7 @@ func NewArticleTransformer() *ArticleTransformer {
 }
 
 func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
+	meta := GetTOMLMeta(pc)
 	heading := firstHeading(doc)
 	if heading == nil {
 		panic("nil heading")
@@ -53,7 +54,6 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	if parent == nil {
 		return
 	}
-	meta := GetTOMLMeta(pc)
 
 	article := NewArticle()
 	header := NewHeader()

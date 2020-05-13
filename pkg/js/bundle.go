@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -31,14 +32,14 @@ func BundleMain() (bundler.BundleResult, error) {
 	if err != nil {
 		return bundler.BundleResult{}, fmt.Errorf("failed to find root git dir: %w", err)
 	}
-	outDir := filepath.Join(rootDir, "dist")
+	outDir := filepath.Join(rootDir, "public")
 
 	logOpts := logging.StderrOptions{
 		IncludeSource:      true,
 		ErrorLimit:         3,
 		ExitWhenLimitIsHit: true,
 	}
-	log, join := logging.NewStderrLog(logOpts)
+	stderrLog, join := logging.NewStderrLog(logOpts)
 	realFS := fs.RealFS()
 	fsResolver := resolver.NewResolver(realFS, []string{".js"})
 	parseOpts := parser.ParseOptions{
@@ -79,7 +80,7 @@ func BundleMain() (bundler.BundleResult, error) {
 		}
 	}
 	bundle := bundler.ScanBundle(
-		log, realFS, fsResolver, []string{entryPoint}, parseOpts, bundleOpts)
+		stderrLog, realFS, fsResolver, []string{entryPoint}, parseOpts, bundleOpts)
 	if join().Errors != 0 {
 		return bundler.BundleResult{}, fmt.Errorf("bundleResult scanning had errors: %s", join())
 	}
@@ -103,4 +104,23 @@ func BundleMain() (bundler.BundleResult, error) {
 	mainJSCache.bundleResult = item
 	mainJSCache.mu.Unlock()
 	return item, nil
+}
+
+func WriteMainBundle(result bundler.BundleResult) error {
+	rootDir, err := git.FindRootDir()
+	if err != nil {
+		return fmt.Errorf("bundle main.js find git root: %w", err)
+	}
+	out := filepath.Join(rootDir, "public", "main.min.js")
+	if err := os.MkdirAll(filepath.Dir(out), 0755); err != nil {
+		return fmt.Errorf("mkdir -p for main js bundles: %w", err)
+	}
+
+	if err = ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
+		return fmt.Errorf("write main.js.min: %w", err)
+	}
+	if err = ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
+		return fmt.Errorf("write error for main.js source map: %w", err)
+	}
+	return nil
 }

@@ -68,9 +68,11 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
 		switch {
 		case path.Ext(origDest) == ".pdf":
 			link.SetAttribute([]byte("data-link-type"), []byte(linkPDF))
+			link.SetAttribute([]byte("class"), []byte("preview-target"))
 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
+			link.SetAttribute([]byte("class"), []byte("preview-target"))
 		}
 		return ast.WalkSkipChildren, nil
 	})

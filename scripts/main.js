@@ -1,3 +1,5 @@
+// Detect adblock.
+//
 // Find out how common adblock is. Sets window.adblockStatus to a string of:
 // 'unknown', 'active', or 'inactive'.
 (async () => {
@@ -43,14 +45,13 @@
 })();
 
 // Preview hovers.
+// Each preview target contains data attributes describing how to display
+// information about the target. The attributes include:
+// - data-title: required, the title of the link.
+// - data-snippet: required, a short snippet about the link.
+// On hover, we re-use a global element, #preview-box, to display the
+// attributes. The preview is a no-op on devices with touch.
 (() => {
-  // Each preview target contains data attributes describing how to display
-  // information. The attributes include:
-  // - data-title: required, the title of the link.
-  // - data-snippet: required, a short snippet about the link.
-  // On hover, we re-use a global element, #preview-box, to display the
-  // attributes. The preview is a no-op on devices with touch.
-
   // Detect touch based devices as a proxy for not having hover.
   // https://stackoverflow.com/a/8758536/30900
   let hasHover = false;
@@ -63,7 +64,30 @@
     return;
   }
 
-  const preview = document.createElement('div');
-  preview.id = 'preview-box';
-  document.body.append(preview);
+  const previewBox = document.createElement('div');
+  previewBox.id = 'preview-box';
+  document.body.append(previewBox);
+
+  const previewTargetClass = 'preview-target'
+  const targets = document.getElementsByClassName(previewTargetClass);
+  console.log('!!! targets', targets);
+
+  const onTargetMouseOver = (ev) => {
+    ev.preventDefault();
+    const target = ev.target.closest('a');
+    const {left: pLeft, top: pTop} = previewBox.getBoundingClientRect();
+    const {left: tLeft, top: tTop} = target.getBoundingClientRect();
+
+    console.log('mouseover', ev)
+  }
+
+  const onTargetMouseOut = (ev) => {
+    ev.preventDefault();
+    console.log('mouseout', ev)
+  }
+
+  for (const target of targets) {
+    target.addEventListener('mouseover', onTargetMouseOver);
+    target.addEventListener('mouseout', onTargetMouseOut);
+  }
 })();
