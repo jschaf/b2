@@ -491,3 +491,13 @@ code-fn {
 .lntd:nth-child(2) .chroma .hl {
   width: 110%;
 }
+
+#preview-box {
+  visibility: hidden;
+  position: absolute;
+  background: white;
+  padding: 10px;
+  z-index: 100;
+  border: 1px solid #1b1b1b;
+  border-radius: 2px;
+}

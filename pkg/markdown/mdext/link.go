@@ -72,6 +72,8 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
+			link.SetAttribute([]byte("data-title"), []byte("foo"))
+			link.SetAttribute([]byte("data-snippet"), []byte("A <em>snippet</em>"))
 			link.SetAttribute([]byte("class"), []byte("preview-target"))
 		}
 		return ast.WalkSkipChildren, nil
