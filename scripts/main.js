@@ -44,38 +44,22 @@
   }
 })();
 
-/** Utilities for promises. */
-const promises = {
-  /** Returns a promise that resolves after the given duration in milliseconds. */
-  sleep(durationMs) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(), durationMs);
-    });
-  }
-}
-
-/**
- * @param {HTMLElement} target
- * @return {!{top: number, left: number, right: number, bottom: number}}
- */
-const getBounds = (target) => {
-  const targetBox = target.getBoundingClientRect();
-  return {
-    top: targetBox.top - document.documentElement.clientTop,
-    left: targetBox.left - document.documentElement.clientLeft,
-    right: document.body.clientWidth - targetBox.width - targetBox.left,
-    bottom: document.body.clientHeight - targetBox.height - targetBox.top,
-  }
-}
-
 /**
  * PreviewLifecycle manages the state transitions for the preview box display.
+ * The complexity comes from interactions between the target link and preview
+ * div. Use-cases we want to support:
+ *
+ * - Allow grace period to continue showing the preview when moving from the
+ *   target to preview box.
+ *
+ * - Allow grace period to continue showing the preview when leaving the box
+ *   but quickly returning.
  */
 class PreviewLifecycle {
   constructor() {
     /**
-     * The current preview target pending or displayed. If no preview is
-     * displayed and no preview is pending, currentTarget is null.
+     * The current, displayed preview target pending or displayed. If no preview
+     * is displayed, currentTarget is null.
      * @type {?HTMLElement}
      */
     this.currentTarget = null;
@@ -108,8 +92,7 @@ class PreviewLifecycle {
 
   /** Add event listeners to all preview targets in the document. */
   addListeners() {
-    const previewTargetClass = 'preview-target'
-    const targets = document.getElementsByClassName(previewTargetClass);
+    const targets = document.getElementsByClassName('preview-target');
     for (const target of targets) {
       target.addEventListener('mouseover', (ev) => this.onTargetMouseOver(ev));
       target.addEventListener('mouseout', (ev) => this.onTargetMouseOut(ev));
@@ -130,15 +113,20 @@ class PreviewLifecycle {
       return
     }
 
-    // We're showing a preview box and the user moved the mouse out and then
-    // back-in before the hide timer finished. Keep showing the preview.
     if (this.currentTarget === targetEl) {
+      // We're showing a preview box and the user moved the mouse out and then
+      // back-in before the hide timer finished. Keep showing the preview.
       clearTimeout(this.hidePreviewTimer);
+    } else {
+      // Only request to show preview box if it's not currently displayed to
+      // avoid a flicker because we hide the preview box for 1 frame to get the
+      // correct height.
+      this.showPreviewTimer = setTimeout(
+          () => requestAnimationFrame(() => this.showPreviewBox(targetEl)),
+          PreviewLifecycle.showPreviewDelayMs);
+
     }
 
-    this.showPreviewTimer = setTimeout(
-        () => requestAnimationFrame(() => this.showPreviewBox(targetEl)),
-        PreviewLifecycle.showPreviewDelayMs);
   }
 
   /**
@@ -162,8 +150,8 @@ class PreviewLifecycle {
    */
   onPreviewMouseOver(ev) {
     ev.preventDefault();
-    // We moved from the target to the preview so the user wants to keep using
-    // the preview.
+    // We moved out of the preview back into to the preview so the user wants to
+    // keep using the preview.
     clearTimeout(this.hidePreviewTimer);
   }
 
@@ -180,13 +168,17 @@ class PreviewLifecycle {
         PreviewLifecycle.hidePreviewDelayMs);
   }
 
+  /** Hides the preview box. */
   hidePreviewBox() {
+    this.currentTarget = null;
     if (this.previewEl.style.visibility !== 'hidden') {
       this.previewEl.style.visibility = 'hidden';
     }
   }
 
   /**
+   * Shows the preview box with content from the data attributes of the target
+   * element.
    * @param {HTMLElement} targetEl
    * @return void
    */
@@ -201,30 +193,44 @@ class PreviewLifecycle {
     this.currentTarget = targetEl;
 
     const previewHTML = `<h3>${title}</h3><p>${snippet}</p>`;
-
-    // Update the transform CSS.
-    const {left: tLeft, top: tTop} = getBounds(targetEl);
-    const {left: pLeft, top: pTop} = getBounds(this.previewEl);
-    // Example transform string: 'translateX(653.484px) translateY(151.062px)'
-    const oldTransform = this.previewEl.style.transform;
-    const [_, xOffs, yOffs] = oldTransform.match(
-        /^translateX\(([-0-9.]+)px\) translateY\(([-0-9.]+)px\)/)
-    || ['0', '0', '0'];
-    const diffLeft = tLeft - pLeft + (+xOffs);
-    const diffTop = tTop - pTop + (+yOffs) - 100;
-    const newTransform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
-
     // Avoid changing inner HTML if no change.
     if (this.previewEl.innerHTML !== previewHTML) {
       this.previewEl.innerHTML = previewHTML;
     }
-    // CSS changes trigger a repaint. Avoid if nothing changed.
-    if (newTransform !== oldTransform) {
-      this.previewEl.style.transform = newTransform;
-    }
-    if (this.previewEl.style.visibility !== 'visible') {
+    this.previewEl.style.visibility = 'hidden';
+    this.previewEl.style.width = '620px';
+    // Reset transforms so we don't have to correct them in next frame.
+    this.previewEl.style.transform = 'translateX(0) translateY(0)';
+
+    // Use another frame because we need the height of the preview box with the
+    // HTML content to correctly position it above or below the preview target.
+    requestAnimationFrame(() => {
+      this.currentTarget = targetEl;
+      const docW = document.documentElement.clientWidth;
+      const docH = document.documentElement.clientHeight;
+
+      const t = targetEl.getBoundingClientRect();
+      const p = this.previewEl.getBoundingClientRect();
+      const spaceAbove = t.top;
+      const spaceBelow = docH - t.bottom;
+
+      const marginPadX = 10;
+      let diffLeft = t.right - p.left;
+      // Check if we extend past the viewport and shift left appropriately.
+      const hiddenRight = t.right + p.width + marginPadX - docW;
+      if (hiddenRight > 0) {
+        diffLeft -= hiddenRight;
+      }
+      // Place preview above target by default to avoid masking text below.
+      let diffTop = t.top - p.top - this.previewEl.offsetHeight;
+      if (p.height > spaceAbove && p.height < spaceBelow) {
+        // Place preview below target only if it's better.
+        diffTop = t.bottom - p.top;
+      }
+
+      this.previewEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
       this.previewEl.style.visibility = 'visible';
-    }
+    });
   }
 }
 

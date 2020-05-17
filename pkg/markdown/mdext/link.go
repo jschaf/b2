@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jschaf/b2/pkg/texts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -73,7 +74,15 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
 			link.SetAttribute([]byte("data-title"), []byte("foo"))
-			link.SetAttribute([]byte("data-snippet"), []byte("A <em>snippet</em>"))
+			link.SetAttribute([]byte("data-snippet"), []byte(texts.Dedent(`
+          A <em>snippet</em>. Lorem ipsum dolor <b>sit amet</b>, consectetur 
+          adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore 
+          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
+          ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute 
+          <span class="small-caps">IRURE</span> dolor in reprehenderit in voluptate velit esse cillum dolore eu 
+          fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
+          sunt in culpa qui officia deserunt mollit anim id est laborum.`)))
+
 			link.SetAttribute([]byte("class"), []byte("preview-target"))
 		}
 		return ast.WalkSkipChildren, nil

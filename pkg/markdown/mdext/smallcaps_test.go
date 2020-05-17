@@ -17,6 +17,9 @@ func TestSmallCapsExt(t *testing.T) {
 		{"foo", "<p>foo</p>"},
 		{"FO", "<p>FO</p>"},
 		{"FOO", `<p><span class="small-caps">FOO</span></p>`},
+		{"(FOO)", `<p><span class="small-caps">(FOO)</span></p>`},
+		{"(FOO.", `<p>(<span class="small-caps">FOO</span>.</p>`},
+		{"FOO)", `<p><span class="small-caps">FOO</span>)</p>`},
 		{"F_BAR", `<p>F_BAR</p>`},
 		{"FOO_BAR", `<p>FOO_BAR</p>`},
 		{"MOTD\n", `<p><span class="small-caps">MOTD</span></p>`},
@@ -26,7 +29,7 @@ func TestSmallCapsExt(t *testing.T) {
 		{"FOO", `<p><span class="small-caps">FOO</span></p>`},
 		{"STUBBLE", `<p><span class="small-caps">STUBBLE</span></p>`},
 		{"FOO BAR", `<p><span class="small-caps">FOO</span> <span class="small-caps">BAR</span></p>`},
-		{"The (MOTD)", `<p>The (<span class="small-caps">MOTD</span>)`},
+		{"The (MOTD)", `<p>The <span class="small-caps">(MOTD)</span>`},
 	}
 
 	for _, tt := range tests {

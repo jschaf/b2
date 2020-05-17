@@ -55,8 +55,11 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Co
 			return nil
 		}
 	}
-	// advance if current position is not the start of a newline.
+	startChar := byte('\n')
+	endChar := byte('\n')
+	// Advance if current position is not the start of a newline.
 	if c == ' ' || c == '*' || c == '_' || c == '~' || c == '(' {
+		startChar = c
 		consumes++
 		line = line[1:]
 	}
@@ -78,23 +81,27 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Co
 	}
 	if run < len(line) {
 		next := line[run]
-		// Don't use small caps if the upper case chars are followed by anything
-		// other than space or punctuation.
+		endChar = next
+		// Only use small caps if the run is ended by punctuation or space.
 		if next != ' ' && next != '\n' && next != '.' && next != '!' &&
 			next != '?' && next != ')' && next != '*' && next != ']' {
 			return nil
 		}
 	}
-	if consumes != 0 {
+	parens := 0
+	if startChar == '(' && endChar == ')' {
+		parens = 1
+	}
+	if consumes > 0 && parens == 0 {
 		s := segment.WithStop(segment.Start + consumes)
 		ast.MergeOrAppendTextSegment(parent, s)
 	}
 
-	block.Advance(consumes + run)
+	block.Advance(consumes + run + parens)
 	sc := NewSmallCaps()
 	sc.Segment = text.NewSegment(
-		segment.Start+consumes,
-		segment.Start+consumes+run)
+		segment.Start+consumes-parens,
+		segment.Start+consumes+run+parens)
 	return sc
 }
 
