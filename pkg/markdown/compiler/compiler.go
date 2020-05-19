@@ -129,7 +129,7 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 	}
 
 	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
-		if filepath.Ext(path) != ".md" {
+		if filepath.Ext(path) != ".md" || strings.HasSuffix(path, ".previews.md") {
 			return nil
 		}
 		if !strings.Contains(path, glob) {

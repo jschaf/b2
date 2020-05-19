@@ -107,7 +107,7 @@ class PreviewLifecycle {
   onTargetMouseOver(ev) {
     ev.preventDefault();
     this.init();
-    const targetEl = ev.target.closest('a');
+    const targetEl = ev.target.closest('.preview-target');
     if (!targetEl) {
       console.warn(`preview-box: no surrounding <a> element for ${ev.target}`)
       return
@@ -214,18 +214,28 @@ class PreviewLifecycle {
       const spaceAbove = t.top;
       const spaceBelow = docH - t.bottom;
 
-      const marginPadX = 10;
+      const marginRight = 10; // Breathing room to the right.
       let diffLeft = t.right - p.left;
       // Check if we extend past the viewport and shift left appropriately.
-      const hiddenRight = t.right + p.width + marginPadX - docW;
+      const hiddenRight = t.right + p.width + marginRight - docW;
       if (hiddenRight > 0) {
         diffLeft -= hiddenRight;
+      } else {
+        // If we don't extend past the right edge of the view port, we're
+        // aligned with the right edge of the target. Nudge the preview to the
+        // left to make it clear that the preview is a child of the target.
+        const nudge = 20;
+        diffLeft -= Math.min(nudge, t.width / 2);
       }
       // Place preview above target by default to avoid masking text below.
       let diffTop = t.top - p.top - this.previewEl.offsetHeight;
+      const vertNudge = 4; // Give a little nudge for breathing space.
       if (p.height > spaceAbove && p.height < spaceBelow) {
-        // Place preview below target only if it's better.
-        diffTop = t.bottom - p.top;
+        // Place preview below target only if it can contain the entire preview
+        // and the space above cannot.
+        diffTop = t.bottom - p.top + vertNudge;
+      } else {
+        diffTop -= vertNudge;
       }
 
       this.previewEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
@@ -244,7 +254,7 @@ PreviewLifecycle.hidePreviewDelayMs = 300;
 // - data-snippet: required, a short snippet about the link.
 // On hover, we re-use a global element, #preview-box, to display the
 // attributes. The preview is a no-op on devices with touch.
-(async () => {
+(() => {
   // Detect touch based devices as a proxy for not having hover.
   // https://stackoverflow.com/a/8758536/30900
   let hasHover = false;
