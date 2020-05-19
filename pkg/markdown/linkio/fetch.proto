@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// A summary of a Wikipedia article from:
+// https://en.wikipedia.org/api/rest_v1/page/summary/
+message WikiSummary {
+  // The metadata path that produced these results.
+  string path = 1;
+  // The display title attribute.
+  string title = 2;
+  // The time the Wikipedia article was last revised.
+  google.protobuf.Timestamp revision_time = 3;
+  // The HTML of the summary page.
+  bytes extract_html = 4;
+}
+
+message FetchResult {
+  // The link path that provide the result.
+  string path = 1;
+  // The time the result was fetched.
+  google.protobuf.Timestamp time = 2;
+
+  // The content of the result.
+  oneof result {
+    WikiSummary wiki_summary = 16;
+  }
+}

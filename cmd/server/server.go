@@ -16,6 +16,7 @@ import (
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
+	"github.com/jschaf/b2/pkg/logger"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
@@ -39,7 +40,7 @@ func newServer(port string) (*server, error) {
 	s.once = sync.Once{}
 	s.stopC = make(chan struct{})
 
-	if l, err := newShortDevLogger(); err != nil {
+	if l, err := logger.NewShortDevLogger(); err != nil {
 		return nil, fmt.Errorf("failed to create logger: %w", err)
 	} else {
 		pid := os.Getpid()

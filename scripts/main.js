@@ -183,8 +183,8 @@ class PreviewLifecycle {
    * @return void
    */
   showPreviewBox(targetEl) {
-    const title = targetEl.dataset.title;
-    const snippet = targetEl.dataset.snippet;
+    const title = targetEl.dataset.previewTitle;
+    const snippet = targetEl.dataset.previewSnippet;
     if (!title || !snippet) {
       console.warn('preview-box: missing data-title or data-snippet attrs',
           targetEl)

@@ -73,8 +73,8 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
-			link.SetAttribute([]byte("data-title"), []byte("foo"))
-			link.SetAttribute([]byte("data-snippet"), []byte(texts.Dedent(`
+			link.SetAttribute([]byte("data-preview-title"), []byte("foo"))
+			link.SetAttribute([]byte("data-preview-snippet"), []byte(texts.Dedent(`
           A <em>snippet</em>. Lorem ipsum dolor <b>sit amet</b>, consectetur 
           adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore 
           magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
