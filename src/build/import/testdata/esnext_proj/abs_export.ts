@@ -1,1 +1,0 @@
-export { DEPENDENCY } from '//dependency';

@@ -1,11 +1,8 @@
+/public/
+/out/
 /dist/
 /firebase-debug.log
-/build/.docker-blog
-node_modules/
-out/
 /.idea/
 /b2.iml
-/public/
 /.firebase/
-
 *.webp
