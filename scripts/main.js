@@ -192,13 +192,18 @@ class PreviewLifecycle {
     }
     this.currentTarget = targetEl;
 
+    const docWidth = document.documentElement.clientWidth;
+    const docHeight = document.documentElement.clientHeight;
+    const marginHoriz = 10; // Breathing room to left and right.
+
+    this.previewEl.style.visibility = 'hidden';
     const previewHTML = `<h3>${title}</h3><p>${snippet}</p>`;
     // Avoid changing inner HTML if no change.
     if (this.previewEl.innerHTML !== previewHTML) {
       this.previewEl.innerHTML = previewHTML;
     }
-    this.previewEl.style.visibility = 'hidden';
-    this.previewEl.style.width = '620px';
+    const previewWidth = Math.min(620, docWidth - 2 * marginHoriz)
+    this.previewEl.style.width = `${previewWidth}px`;
     // Reset transforms so we don't have to correct them in next frame.
     this.previewEl.style.transform = 'translateX(0) translateY(0)';
 
@@ -206,18 +211,14 @@ class PreviewLifecycle {
     // HTML content to correctly position it above or below the preview target.
     requestAnimationFrame(() => {
       this.currentTarget = targetEl;
-      const docW = document.documentElement.clientWidth;
-      const docH = document.documentElement.clientHeight;
-
       const t = targetEl.getBoundingClientRect();
       const p = this.previewEl.getBoundingClientRect();
       const spaceAbove = t.top;
-      const spaceBelow = docH - t.bottom;
+      const spaceBelow = docHeight - t.bottom;
 
-      const marginRight = 10; // Breathing room to the right.
       let diffLeft = t.right - p.left;
       // Check if we extend past the viewport and shift left appropriately.
-      const hiddenRight = t.right + p.width + marginRight - docW;
+      const hiddenRight = t.right + p.width + marginHoriz - docWidth;
       if (hiddenRight > 0) {
         diffLeft -= hiddenRight;
       } else {

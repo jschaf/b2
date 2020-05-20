@@ -380,6 +380,24 @@ table caption {
   text-align: right;
 }
 
+:root {
+  /* Material */
+  /* 1 for switch, card (resting elevation), search bar (resting elevation) */
+  --box-shadow-elevation-1: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
+  /* 2 for contained button (resting elevation) */
+  --box-shadow-elevation-2: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
+  /* 4 for top app bar (scrolled stated and optionally resting) */
+  --box-shadow-elevation-4: 0 2px 4px -1px rgba(0, 0, 0, .2), 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12);
+  /* 8 for card (picked up), contained button (pressed state) bottom nav bar,
+     side sheet, bottom sheet, bottom app bar, menu and sub-menus */
+  --box-shadow-elevation-8: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+  /* 16 for navigation drawer, and modal bottom sheet. */
+  --box-shadow-elevation-16: 0 8px 10px -5px rgba(0, 0, 0, .2), 0 16px 24px 2px rgba(0, 0, 0, .14), 0 6px 30px 5px rgba(0, 0, 0, .12);
+  /* 24 for dialogs. */
+  --box-shadow-elevation-24: 0 11px 15px -7px rgba(0, 0, 0, .2), 0 24px 38px 3px rgba(0, 0, 0, .14), 0 9px 46px 8px rgba(0, 0, 0, .12);
+
+}
+
 .continue-reading {
   display: inline-flex;
   justify-content: space-between;
@@ -390,8 +408,7 @@ table caption {
   border: 1px solid #818181;
   border-radius: 2px;
   color: #686767;
-  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: var(--box-shadow-elevation-2);
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
@@ -411,8 +428,7 @@ table caption {
   color: #fff;
   border-color: #3574ff;
   background-color: #3574ff;
-  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--box-shadow-elevation-8);
 }
 
 .continue-reading:hover svg {
@@ -442,7 +458,7 @@ thead th {
   overflow-x: visible;
   line-height: 20px;
   margin: 0;
-  tab-size: 4;
+  tab-size: 2;
   padding-left: 0;
   padding-top: 3px;
   padding-bottom: 3px;
@@ -473,31 +489,13 @@ code-fn {
   color: #6f42c1;
 }
 
-.lntable {
-  margin: 0;
-}
-
-.lntd:first-child .chroma {
-  padding-left: 10px;
-  padding-right: 15px;
-}
-
-.lntd:first-child .chroma .hl {
-  background-color: transparent;
-  width: auto;
-  margin-left: 0;
-}
-
-.lntd:nth-child(2) .chroma .hl {
-  width: 110%;
-}
-
 #preview-box {
   visibility: hidden;
   position: absolute;
   background: white;
   padding: 10px;
   z-index: 100;
-  border: 1px solid #1b1b1b;
+  border: 1px solid #8b8b8b;
   border-radius: 2px;
+  box-shadow: var(--box-shadow-elevation-8);
 }
