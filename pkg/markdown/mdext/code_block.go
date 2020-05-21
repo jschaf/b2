@@ -13,26 +13,26 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+// codeBlockRenderer renders code blocks, replacing the default renderer.
 type codeBlockRenderer struct{}
 
-func (c *codeBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+func (c codeBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindFencedCodeBlock, c.render)
 }
 
-func (c *codeBlockRenderer) render(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (c codeBlockRenderer) render(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	n := node.(*ast.FencedCodeBlock)
 
 	if entering {
 		lang := string(n.Language(source))
 
 		lexer := getLexer(lang)
-		formatter := NewCodeBlockFormatter()
 
-		tokenIter, err := lexer.Tokenise(nil, c.readAllLines(n, source))
+		tokenIter, err := lexer.Tokenise(nil, readAllCodeBlockLines(n, source))
 		if err != nil {
 			panic(err)
 		}
-		if err := formatter.Format(w, tokenIter, lang); err != nil {
+		if err := formatCodeBlock(w, tokenIter, lang); err != nil {
 			panic(err)
 		}
 
@@ -40,7 +40,7 @@ func (c *codeBlockRenderer) render(w util.BufWriter, source []byte, node ast.Nod
 	return ast.WalkContinue, nil
 }
 
-func (c *codeBlockRenderer) readAllLines(n *ast.FencedCodeBlock, source []byte) string {
+func readAllCodeBlockLines(n *ast.FencedCodeBlock, source []byte) string {
 	var b bytes.Buffer
 	l := n.Lines().Len()
 	for i := 0; i < l; i++ {
@@ -59,34 +59,7 @@ func getLexer(language string) chroma.Lexer {
 	return lexer
 }
 
-func NewCodeBlockRenderer() *codeBlockRenderer {
-	return &codeBlockRenderer{}
-}
-
-// codeBlockExt is a Goldmark extension to register the AST transformer and
-// renderer
-type codeBlockExt struct{}
-
-func NewCodeBlockExt() *codeBlockExt {
-	return &codeBlockExt{}
-}
-
-func (c *codeBlockExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(NewCodeBlockRenderer(), 999),
-		),
-	)
-}
-
-type codeBlockFormatter struct {
-}
-
-func NewCodeBlockFormatter() *codeBlockFormatter {
-	return &codeBlockFormatter{}
-}
-
-func (c *codeBlockFormatter) Format(w io.Writer, iterator chroma.Iterator, lang string) error {
+func formatCodeBlock(w io.Writer, iterator chroma.Iterator, lang string) error {
 	writeStrings(w, "<div class='code-block-container'>")
 	writeStrings(w, "<pre class='code-block'>")
 
@@ -190,4 +163,20 @@ func writeStrings(w io.Writer, ss ...string) {
 	for _, s := range ss {
 		_, _ = w.Write([]byte(s))
 	}
+}
+
+// CodeBlockExt extends markdown to better render code blocks with syntax
+//highlighting.
+type CodeBlockExt struct{}
+
+func NewCodeBlockExt() CodeBlockExt {
+	return CodeBlockExt{}
+}
+
+func (c CodeBlockExt) Extend(m goldmark.Markdown) {
+	m.Renderer().AddOptions(
+		renderer.WithNodeRenderers(
+			util.Prioritized(codeBlockRenderer{}, 999),
+		),
+	)
 }

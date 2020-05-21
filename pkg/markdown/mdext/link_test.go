@@ -1,14 +1,9 @@
 package mdext
 
 import (
-	"bytes"
-	"reflect"
-	"strings"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
 )
 
@@ -77,28 +72,11 @@ func TestNewLinkExt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md := goldmark.New(goldmark.WithExtensions(
-				NewTOMLExt(),
-				NewLinkExt()))
-			buf := new(bytes.Buffer)
-			ctx := parser.NewContext()
+			md, ctx := newMdTester(t, NewColonBlockExt(), NewTOMLExt(), NewLinkExt())
 			SetFilePath(ctx, path)
 
-			if err := md.Convert([]byte(tt.src), buf, parser.WithContext(ctx)); err != nil {
-				t.Fatal(err)
-			}
-
-			if diff, err := htmls.Diff(buf, strings.NewReader(tt.want)); err != nil {
-				t.Fatal(err)
-			} else if diff != "" {
-				t.Errorf("Link mismatch (-want +got):\n%s", diff)
-			}
-
-			for k, v := range tt.wantCtx {
-				if got := ctx.Get(k); !reflect.DeepEqual(got, v) {
-					t.Errorf("context key %v, got %s, want %v", k, got, tt.wantCtx[k])
-				}
-			}
+			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			assertCtxContainsAll(t, ctx, tt.wantCtx)
 		})
 	}
 }

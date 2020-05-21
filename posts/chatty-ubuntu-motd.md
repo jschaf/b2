@@ -12,6 +12,14 @@ sends information to all users on login. A recent login message greeted me with
 
 [motd-wiki]: https://en.wikipedia.org/wiki/Motd_(Unix)
 
+::: preview https://en.wikipedia.org/wiki/Motd_(Unix)
+motd (Unix)
+
+The **/etc/motd** is a file on Unix-like systems that contains a "message of the day", used
+to send a common message to all users in a more efficient manner than sending them all an e-mail
+message.
+:::
+
 The /etc/motd is a file on Unix-like systems that contains a "message of the day", used to send a
 common message to all users in a more efficient manner than sending them all an e-mail message.
 Other systems might also have a motd feature, such as the motd info segment on MULTICS.[1]

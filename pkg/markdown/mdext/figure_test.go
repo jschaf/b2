@@ -1,14 +1,9 @@
 package mdext
 
 import (
-	"bytes"
-	"strings"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/parser"
 )
 
 func TestNewFigureExt(t *testing.T) {
@@ -117,22 +112,8 @@ func TestNewFigureExt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md := goldmark.New(goldmark.WithExtensions(
-				NewTOMLExt(),
-				NewFigureExt(),
-			))
-			buf := new(bytes.Buffer)
-			ctx := parser.NewContext()
-
-			if err := md.Convert([]byte(tt.src), buf, parser.WithContext(ctx)); err != nil {
-				t.Fatal(err)
-			}
-
-			if diff, err := htmls.Diff(buf, strings.NewReader(tt.want)); err != nil {
-				t.Fatal(err)
-			} else if diff != "" {
-				t.Errorf(diff)
-			}
+			md, ctx := newMdTester(t, NewTOMLExt(), NewFigureExt())
+			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
 		})
 	}
 }

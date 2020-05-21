@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/jschaf/b2/pkg/db"
-	"github.com/jschaf/b2/pkg/logger"
+	"github.com/jschaf/b2/pkg/logs"
 	"go.uber.org/zap"
 )
 
@@ -16,7 +16,7 @@ func main() {
 }
 
 func runMain() (err error) {
-	l, err := logger.NewShortDevLogger()
+	l, err := logs.NewShortDevLogger()
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}

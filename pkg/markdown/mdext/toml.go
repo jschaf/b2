@@ -17,7 +17,6 @@ import (
 const tomlSep = '+'
 
 const (
-	VisibilityDraft     = "draft"
 	VisibilityPublished = "published"
 )
 
@@ -46,7 +45,7 @@ func GetTOMLMeta(pc parser.Context) PostMeta {
 	return v.(PostMeta)
 }
 
-func setTOMLMeta(pc parser.Context, m PostMeta) {
+func SetTOMLMeta(pc parser.Context, m PostMeta) {
 	pc.Set(tomlCtxKey, m)
 }
 
@@ -55,8 +54,8 @@ type tomlMeta struct {
 
 var defaultTOMLMetaParser = &tomlMeta{}
 
-// NewTOMLParser returns a BlockParser that can parse TOML metadata blocks.
-func NewTOMLParser() parser.BlockParser {
+// newTOMLParser returns a BlockParser that can parse TOML metadata blocks.
+func newTOMLParser() parser.BlockParser {
 	return defaultTOMLMetaParser
 }
 
@@ -109,7 +108,7 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	}
 	meta.Path = "/" + meta.Slug
 
-	setTOMLMeta(pc, *meta)
+	SetTOMLMeta(pc, *meta)
 
 	node.Parent().RemoveChild(node.Parent(), node)
 }
@@ -123,7 +122,6 @@ func (t *tomlMeta) CanAcceptIndentedLine() bool {
 }
 
 type tomlFront struct {
-	Table bool
 }
 
 // New returns a new TOMLFrontmatter extension.
@@ -134,7 +132,7 @@ func NewTOMLExt() goldmark.Extender {
 func (t *tomlFront) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithBlockParsers(
-			util.Prioritized(NewTOMLParser(), 0),
+			util.Prioritized(newTOMLParser(), 0),
 		),
 	)
 }

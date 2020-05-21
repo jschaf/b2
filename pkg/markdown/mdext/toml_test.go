@@ -1,32 +1,47 @@
 package mdext
 
 import (
-	"bytes"
 	"testing"
+	"time"
 
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/parser"
+	"github.com/google/go-cmp/cmp"
+	"github.com/jschaf/b2/pkg/texts"
 )
 
 func TestMeta(t *testing.T) {
-	source := `+++
-slug = "a slug"
-date = 2019-09-20
-+++
-# Hello goldmark-meta
-`
+	tests := []struct {
+		name         string
+		src          string
+		want         string
+		wantTOMLMeta PostMeta
+	}{
+		{
+			"slug date + h1",
+			texts.Dedent(`
+				+++
+				slug = "a_slug"
+				date = 2019-09-20
+				+++
+				# Hello goldmark-meta
+      `),
+			texts.Dedent(`
+        <h1>Hello goldmark-meta</h1>
+      `),
+			PostMeta{
+				Path: "/a_slug",
+				Slug: "a_slug",
+				Date: time.Date(2019, time.September, 20, 0, 0, 0, 0, time.Local),
+			},
+		},
+	}
 
-	md := goldmark.New(goldmark.WithExtensions(NewTOMLExt()))
-	var buf bytes.Buffer
-	context := parser.NewContext()
-	if err := md.Convert([]byte(source), &buf, parser.WithContext(context)); err != nil {
-		panic(err)
-	}
-	meta := GetTOMLMeta(context)
-	if meta.Slug != "a slug" {
-		t.Errorf("Title must be %s, but got %v", "a slub", meta.Slug)
-	}
-	if buf.String() != "<h1>Hello goldmark-meta</h1>\n" {
-		t.Errorf("should renderFigure '<h1>Hello goldmark-meta</h1>', but '%s'", buf.String())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			md, ctx := newMdTester(t, NewTOMLExt())
+			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			if diff := cmp.Diff(GetTOMLMeta(ctx), tt.wantTOMLMeta); diff != "" {
+				t.Errorf("TOML meta mismatch: (-got +want)\n%s", diff)
+			}
+		})
 	}
 }

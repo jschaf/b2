@@ -10,14 +10,16 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 )
 
-// ImageASTTransformer extracts images we should copy over to the public dir.
-type ImageASTTransformer struct{}
+// imageASTTransformer extracts images we should copy over to the public dir
+// when publishing posts.
+type imageASTTransformer struct{}
 
-func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
+func (f imageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkSkipChildren, nil
@@ -47,32 +49,41 @@ func (f *ImageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc par
 	}
 }
 
-type ImageRenderer struct{}
+// imageRenderer writes images into HTML, replacing the default image renderer.
+type imageRenderer struct{}
 
-func (i *ImageRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(ast.KindImage, i.renderImage)
+func (ir imageRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(ast.KindImage, ir.renderImage)
 }
 
-func (i *ImageRenderer) renderImage(w util.BufWriter, _ []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (ir imageRenderer) renderImage(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}
 	n := node.(*ast.Image)
-	_, _ = w.WriteString(fmt.Sprintf("<img src=%q title=%q>", n.Destination, n.Title))
-	return ast.WalkContinue, nil
+	tag := fmt.Sprintf(
+		"<img src=%q alt=%q title=%q",
+		n.Destination, n.Text(source), n.Title)
+	_, _ = w.WriteString(tag)
+	if n.Attributes() != nil {
+		html.RenderAttributes(w, n, html.ImageAttributeFilter)
+	}
+	_, _ = w.WriteString(">")
+	return ast.WalkSkipChildren, nil
 }
 
+// ImageExt extends markdown with the transformer and renderer.
 type ImageExt struct{}
+
+func NewImageExt() *ImageExt {
+	return &ImageExt{}
+}
 
 func (i *ImageExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(&ImageASTTransformer{}, 999)))
+			util.Prioritized(imageASTTransformer{}, 999)))
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(&ImageRenderer{}, 500),
+		util.Prioritized(imageRenderer{}, 500),
 	))
-}
-
-func NewImageExt() *ImageExt {
-	return &ImageExt{}
 }

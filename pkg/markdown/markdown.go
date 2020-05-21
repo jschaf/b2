@@ -9,6 +9,7 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
+	"go.uber.org/zap"
 )
 
 type PostAST struct {
@@ -24,13 +25,15 @@ type PostAST struct {
 }
 
 type Markdown struct {
-	gm goldmark.Markdown
+	gm     goldmark.Markdown
+	logger *zap.Logger
 }
 
 func defaultExtensions() []goldmark.Extender {
 	return []goldmark.Extender{
 		mdext.NewArticleExt(),
 		mdext.NewCodeBlockExt(),
+		mdext.NewColonBlockExt(),
 		mdext.NewHeaderExt(),
 		mdext.NewImageExt(),
 		mdext.NewLinkExt(),
@@ -41,11 +44,13 @@ func defaultExtensions() []goldmark.Extender {
 	}
 }
 
-func New(exts ...goldmark.Extender) *Markdown {
+// New creates a new markdown parser and renderer with additional extenders
+// beyond the default extenders.
+func New(l *zap.Logger, exts ...goldmark.Extender) *Markdown {
 	gm := goldmark.New(
 		goldmark.WithExtensions(exts...),
 		goldmark.WithExtensions(defaultExtensions()...))
-	return &Markdown{gm: gm}
+	return &Markdown{gm: gm, logger: l}
 }
 
 func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
@@ -55,6 +60,8 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	}
 	ctx := parser.NewContext()
 	mdext.SetFilePath(ctx, path)
+	mdext.SetRenderer(ctx, m.gm.Renderer())
+	mdext.SetLogger(ctx, m.logger)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	meta := mdext.GetTOMLMeta(ctx)

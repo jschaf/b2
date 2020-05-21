@@ -16,7 +16,7 @@ import (
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/logger"
+	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
@@ -40,7 +40,7 @@ func newServer(port string) (*server, error) {
 	s.once = sync.Once{}
 	s.stopC = make(chan struct{})
 
-	if l, err := logger.NewShortDevLogger(); err != nil {
+	if l, err := logs.NewShortDevLogger(); err != nil {
 		return nil, fmt.Errorf("failed to create logger: %w", err)
 	} else {
 		pid := os.Getpid()
@@ -179,13 +179,13 @@ func main() {
 	}
 
 	// Compile because it might have changed since last run.
-	c := compiler.New(markdown.New(mdext.NewNopContinueReadingExt()))
+	c := compiler.New(markdown.New(server.logger.Desugar(), mdext.NewNopContinueReadingExt()))
 	server.logger.Debug("compiling all markdown files")
 	if err := c.CompileAllPosts(""); err != nil {
 		server.logger.Error(err)
 		return
 	}
-	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
+	ic := compiler.NewForIndex(markdown.New(server.logger.Desugar(), mdext.NewContinueReadingExt()))
 	if err := ic.Compile(); err != nil {
 		server.logger.Error(err)
 		return

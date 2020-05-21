@@ -15,6 +15,7 @@ const (
 
 var KindSmallCaps = ast.NewNodeKind("SmallCaps")
 
+// SmallCaps is an inline node of text that should be in small caps, e.g. NASA.
 type SmallCaps struct {
 	ast.BaseInline
 	Segment text.Segment
@@ -32,25 +33,27 @@ func (s *SmallCaps) Dump(source []byte, level int) {
 	ast.DumpHelper(s, source, level, nil, nil)
 }
 
+// smallCapsParser parses text into small caps.
 type smallCapsParser struct {
 }
 
 func (p *smallCapsParser) Trigger() []byte {
-	// ' ' indicates any white spaces and a line head
+	// ' ' indicates whitespace and newlines.
+	// We trigger on * so we can parse the small cap inside emphasized text.
 	return []byte{' ', '*', '_', '~', '('}
 }
 
-func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
+func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Context) ast.Node {
 	line, segment := block.PeekLine()
 	c := line[0]
 	consumes := 0
 	prev := block.PrecendingCharacter()
 	offs := block.LineOffset()
-	isEmph := prev == '_' || prev == '*'
-	if isEmph && offs >= 2 {
+	isEmphasis := prev == '_' || prev == '*'
+	if isEmphasis && offs >= 2 {
 		prevPrev := block.Source()[offs-2]
 		// Don't parse intra-word underscores as starters for small caps
-		//like FOO_BAR.
+		// like FOO_BAR. We don't want FOO_<small-caps>BAR</small-caps>.
 		if util.IsAlphaNumeric(prevPrev) {
 			return nil
 		}
@@ -88,6 +91,9 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Co
 			return nil
 		}
 	}
+
+	// We want to convert acronyms inside parens to small caps, e.g.: (NASA).
+	// 1 means the small caps is surrounded by parens.
 	parens := 0
 	if startChar == '(' && endChar == ')' {
 		parens = 1
@@ -105,6 +111,7 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, pc parser.Co
 	return sc
 }
 
+// smallCapsRenderer renders small caps into HTML.
 type smallCapsRenderer struct{}
 
 func NewSmallCapsRenderer() *smallCapsRenderer {
@@ -119,7 +126,7 @@ func (s *smallCapsRenderer) renderSmallCaps(w util.BufWriter, src []byte, node a
 	if entering {
 		_, _ = w.WriteString(`<span class="small-caps">`)
 		sc := node.(*SmallCaps)
-		_, _ = w.WriteString(string(sc.Segment.Value(src)))
+		_, _ = w.Write(sc.Segment.Value(src))
 	} else {
 		_, _ = w.WriteString(`</span>`)
 	}

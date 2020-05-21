@@ -14,6 +14,8 @@ import (
 
 var KindContinueReading = ast.NewNodeKind("Continue Reading")
 
+// ContinueReading is a block node representing the point at which to truncate
+// post text for a list view of posts as on an index page.
 type ContinueReading struct {
 	ast.BaseBlock
 	Link string
@@ -33,13 +35,16 @@ func (c *ContinueReading) Dump(source []byte, level int) {
 
 const ContinueReadingText = "CONTINUE_READING"
 
-type continueReadingParser struct{}
+// contReadingParser parses a block of the continue reading node.
+// Any paragraph containing only CONTINUE_READING is converted to a continue
+// reading node.
+type contReadingParser struct{}
 
-func (c continueReadingParser) Trigger() []byte {
+func (c contReadingParser) Trigger() []byte {
 	return nil
 }
 
-func (c continueReadingParser) Open(_ ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
+func (c contReadingParser) Open(_ ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
 	line, _ := reader.PeekLine()
 	if bytes.HasPrefix(line, []byte(ContinueReadingText)) {
 		meta := GetTOMLMeta(pc)
@@ -48,34 +53,25 @@ func (c continueReadingParser) Open(_ ast.Node, reader text.Reader, pc parser.Co
 	return nil, parser.NoChildren
 }
 
-func (c continueReadingParser) Continue(ast.Node, text.Reader, parser.Context) parser.State {
+func (c contReadingParser) Continue(ast.Node, text.Reader, parser.Context) parser.State {
 	return parser.Close
 }
 
-func (c continueReadingParser) Close(ast.Node, text.Reader, parser.Context) {
+func (c contReadingParser) Close(ast.Node, text.Reader, parser.Context) {
 }
 
-func (c continueReadingParser) CanInterruptParagraph() bool {
+func (c contReadingParser) CanInterruptParagraph() bool {
 	return false
 }
 
-func (c continueReadingParser) CanAcceptIndentedLine() bool {
+func (c contReadingParser) CanAcceptIndentedLine() bool {
 	return false
 }
 
-var defaultContinueReadingParser = &continueReadingParser{}
-
-func NewContinueReadingParser() parser.BlockParser {
-	return defaultContinueReadingParser
-}
-
+// contReadingTransformer removes all nodes after the continue reading node.
 type contReadingTransformer struct{}
 
-func NewContinueReadingTransformer() *contReadingTransformer {
-	return &contReadingTransformer{}
-}
-
-func (c *contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
+func (c contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
 	n := doc.FirstChild()
 	if n == nil {
 		return
@@ -96,34 +92,27 @@ func (c *contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ p
 	}
 }
 
-// nopContReadingRenderer removes the continue reading text if it exists.
+// nopContReadingRenderer doesn't render the continue reading node.
 type nopContReadingRenderer struct {
 }
 
-func (n *nopContReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+func (n nopContReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindContinueReading, n.renderNopContReading)
 }
 
-func NewNopContinueReadingRenderer() *nopContReadingRenderer {
-	return &nopContReadingRenderer{}
+func (n nopContReadingRenderer) Transform(*ast.Document, text.Reader, parser.Context) {
 }
 
-func (n *nopContReadingRenderer) Transform(*ast.Document, text.Reader, parser.Context) {
-}
-
-func (n *nopContReadingRenderer) renderNopContReading(util.BufWriter, []byte, ast.Node, bool) (ast.WalkStatus, error) {
+func (n nopContReadingRenderer) renderNopContReading(util.BufWriter, []byte, ast.Node, bool) (ast.WalkStatus, error) {
 	return ast.WalkContinue, nil
 }
 
-type ContinueReadingRenderer struct {
+// contReadingRenderer renders the continue reading node.
+type contReadingRenderer struct {
 	html.Config
 }
 
-func NewContinueReadingRenderer() *ContinueReadingRenderer {
-	return &ContinueReadingRenderer{}
-}
-
-func (c *ContinueReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+func (c contReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindContinueReading, c.render)
 }
 
@@ -133,7 +122,7 @@ func contReadingLink(link string) string {
 		`<div class="continue-reading-text">Continue reading</div></a>`
 }
 
-func (c *ContinueReadingRenderer) render(
+func (c contReadingRenderer) render(
 	w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
 		n := node.(*ContinueReading)
@@ -143,34 +132,37 @@ func (c *ContinueReadingRenderer) render(
 	return ast.WalkContinue, nil
 }
 
-type contReadingExt struct{}
+// ContinueReadingExt extends markdown with support to show the continue reading
+// block and truncate all nodes after the continue reading block
+type ContinueReadingExt struct{}
 
-func NewContinueReadingExt() *contReadingExt {
-	return &contReadingExt{}
+func NewContinueReadingExt() ContinueReadingExt {
+	return ContinueReadingExt{}
 }
 
-func (c *contReadingExt) Extend(m goldmark.Markdown) {
+func (c ContinueReadingExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(parser.WithBlockParsers(
-		util.Prioritized(NewContinueReadingParser(), 800)))
+		util.Prioritized(contReadingParser{}, 800)))
 
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(NewContinueReadingTransformer(), 999)))
+			util.Prioritized(contReadingTransformer{}, 999)))
 
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(NewContinueReadingRenderer(), 500)))
+		util.Prioritized(contReadingRenderer{}, 500)))
 }
 
-type noContReadingExt struct{}
+// NopContinueReadingExt extends markdown to ignore the continue reading block
+type NopContinueReadingExt struct{}
 
-func NewNopContinueReadingExt() *noContReadingExt {
-	return &noContReadingExt{}
+func NewNopContinueReadingExt() NopContinueReadingExt {
+	return NopContinueReadingExt{}
 }
 
-func (n *noContReadingExt) Extend(m goldmark.Markdown) {
+func (n NopContinueReadingExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(parser.WithBlockParsers(
-		util.Prioritized(NewContinueReadingParser(), 800)))
+		util.Prioritized(contReadingParser{}, 800)))
 
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(NewNopContinueReadingRenderer(), 500)))
+		util.Prioritized(nopContReadingRenderer{}, 500)))
 }

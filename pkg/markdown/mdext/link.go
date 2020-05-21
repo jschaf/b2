@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"bytes"
+	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
+	"go.uber.org/zap"
 )
 
 type LinkTransformer struct{}
@@ -54,7 +57,7 @@ func (l *LinkTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.
 
 type linkDecorationTransform struct{}
 
-func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
+func (l linkDecorationTransform) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkSkipChildren, nil
@@ -69,12 +72,33 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
 		switch {
 		case path.Ext(origDest) == ".pdf":
 			link.SetAttribute([]byte("data-link-type"), []byte(linkPDF))
-			link.SetAttribute([]byte("class"), []byte("preview-target"))
 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
-			link.SetAttribute([]byte("data-preview-title"), []byte("foo"))
-			link.SetAttribute([]byte("data-preview-snippet"), []byte(texts.Dedent(`
+		}
+
+		// If we have a preview, render it into the attributes.
+		preview, ok := GetPreview(pc, origDest)
+		logger := GetLogger(pc)
+		if !ok {
+			logger.Debug("no preview for link", zap.String("link", origDest))
+			return ast.WalkSkipChildren, nil
+		}
+		renderer, ok := GetRenderer(pc)
+		if !ok {
+			panic("link preview: no renderer")
+		}
+
+		colonBlock := preview.Parent
+		// Assume title is first child.
+		title := colonBlock.FirstChild()
+		titleHTML := &bytes.Buffer{}
+		if err := renderer.Render(titleHTML, title.Text(reader.Source()), title); err != nil {
+			panic(fmt.Sprintf("render preview title to HTML for %s: %s", GetFilePath(pc), err.Error()))
+		}
+		link.SetAttribute([]byte("class"), []byte("preview-target"))
+		link.SetAttribute([]byte("data-preview-title"), titleHTML.Bytes())
+		link.SetAttribute([]byte("data-preview-snippet"), []byte(texts.Dedent(`
           A <em>snippet</em>. Lorem ipsum dolor <b>sit amet</b>, consectetur 
           adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore 
           magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
@@ -83,9 +107,8 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, _ text.Reader, pc 
           fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
           sunt in culpa qui officia deserunt mollit anim id est laborum.`)))
 
-			link.SetAttribute([]byte("class"), []byte("preview-target"))
-		}
 		return ast.WalkSkipChildren, nil
+
 	})
 	if err != nil {
 		panic(err)

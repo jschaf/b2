@@ -140,7 +140,7 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
-	c := compiler.New(markdown.New(mdext.NewNopContinueReadingExt()))
+	c := compiler.New(markdown.New(f.logger.Desugar(), mdext.NewNopContinueReadingExt()))
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
 
-	ic := compiler.NewForIndex(markdown.New(mdext.NewContinueReadingExt()))
+	ic := compiler.NewForIndex(markdown.New(f.logger.Desugar(), mdext.NewContinueReadingExt()))
 	if err := ic.Compile(); err != nil {
 		return fmt.Errorf("failed to compile index for hot reload: %w", err)
 	}

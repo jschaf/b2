@@ -19,6 +19,7 @@ var (
 	KindFigCaption = ast.NewNodeKind("FigCaption")
 )
 
+// Figure is a block node representing a figure in HTML5.
 type Figure struct {
 	ast.BaseBlock
 	Destination []byte

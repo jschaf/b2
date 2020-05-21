@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -95,7 +96,7 @@ func (ic *IndexCompiler) Compile() error {
 	paths := make([]string, 0, 16)
 	readers := make([]io.Reader, 0, 16)
 	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
-		if filepath.Ext(path) != ".md" {
+		if filepath.Ext(path) != ".md" || strings.HasSuffix(path, ".previews.md") {
 			return nil
 		}
 		file, err := os.Open(path)

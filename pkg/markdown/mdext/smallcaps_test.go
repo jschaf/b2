@@ -1,12 +1,7 @@
 package mdext
 
 import (
-	"bytes"
 	"testing"
-
-	"github.com/jschaf/b2/pkg/htmls"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/parser"
 )
 
 func TestSmallCapsExt(t *testing.T) {
@@ -34,21 +29,8 @@ func TestSmallCapsExt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
-			md := goldmark.New(goldmark.WithExtensions(
-				NewSmallCapsExt(),
-			))
-			buf := new(bytes.Buffer)
-			ctx := parser.NewContext()
-
-			if err := md.Convert([]byte(tt.src), buf, parser.WithContext(ctx)); err != nil {
-				t.Fatal(err)
-			}
-
-			if diff, err := htmls.DiffStrings(buf.String(), tt.want); err != nil {
-				t.Fatal(err)
-			} else if diff != "" {
-				t.Errorf("Smallcaps mismatch (-want +got):\n%s", diff)
-			}
+			md, ctx := newMdTester(t, NewSmallCapsExt())
+			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
 		})
 	}
 }

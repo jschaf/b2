@@ -10,5 +10,4 @@ func Reparent(dest, src ast.Node) {
 		dest.AppendChild(dest, cur)
 		cur = next
 	}
-
 }

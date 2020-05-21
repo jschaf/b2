@@ -9,6 +9,7 @@ import (
 
 var KindHeader = ast.NewNodeKind("Header")
 
+// Header is a block node representing an HTML header inside an article.
 type Header struct {
 	ast.BaseBlock
 }
@@ -28,15 +29,11 @@ func (h *Header) Kind() ast.NodeKind {
 // headerRenderer is the HTML renderer for a header node.
 type headerRenderer struct{}
 
-func NewHeaderRenderer() *headerRenderer {
-	return &headerRenderer{}
-}
-
-func (hr *headerRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+func (hr headerRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindHeader, hr.render)
 }
 
-func (hr *headerRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (hr headerRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	if entering {
 		_, _ = w.WriteString("<header>\n")
 	} else {
@@ -45,15 +42,15 @@ func (hr *headerRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, enterin
 	return ast.WalkContinue, nil
 }
 
-// headerExt is the Goldmark extension to render a header node.
-type headerExt struct{}
+// HeaderExt is the Goldmark extension to render a header node.
+type HeaderExt struct{}
 
-func (h *headerExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(NewHeaderRenderer(), 999)))
+func NewHeaderExt() *HeaderExt {
+	return &HeaderExt{}
 }
 
-func NewHeaderExt() *headerExt {
-	return &headerExt{}
+func (h *HeaderExt) Extend(m goldmark.Markdown) {
+	m.Renderer().AddOptions(
+		renderer.WithNodeRenderers(
+			util.Prioritized(headerRenderer{}, 999)))
 }

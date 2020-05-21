@@ -12,6 +12,7 @@ import (
 
 var KindArticle = ast.NewNodeKind("Article")
 
+// Article is a block node representing an article tag in HTML.
 type Article struct {
 	ast.BaseBlock
 }
@@ -28,12 +29,6 @@ func (a *Article) Kind() ast.NodeKind {
 	return KindArticle
 }
 
-var titleCtxKey = parser.NewContextKey()
-
-func GetTitle(pc parser.Context) string {
-	return pc.Get(titleCtxKey).(string)
-}
-
 // ArticleTransformer wraps the markdown document in an HTML article tag.
 type ArticleTransformer struct{}
 
@@ -45,10 +40,10 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	meta := GetTOMLMeta(pc)
 	heading := firstHeading(doc)
 	if heading == nil {
-		panic("nil heading")
+		panic("nil heading, file path: " + GetFilePath(pc))
 	}
 	title := string(heading.Text(reader.Source()))
-	pc.Set(titleCtxKey, title)
+	SetTitle(pc, title)
 
 	parent := heading.Parent()
 	if parent == nil {
@@ -96,12 +91,8 @@ func firstHeading(doc *ast.Document) ast.Node {
 	return hNode
 }
 
-// articleRenderer is the HTML renderer for an Article node.
+// articleRenderer is the HTML renderer for an article node.
 type articleRenderer struct{}
-
-func NewArticleRenderer() *articleRenderer {
-	return &articleRenderer{}
-}
 
 func (a articleRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindArticle, a.render)
@@ -132,7 +123,7 @@ func (a *articleExt) Extend(m goldmark.Markdown) {
 	)
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(NewArticleRenderer(), 999),
+			util.Prioritized(articleRenderer{}, 999),
 		),
 	)
 }
