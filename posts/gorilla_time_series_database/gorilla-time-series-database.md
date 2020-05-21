@@ -220,15 +220,15 @@ aggregate analysis, and recent data points are of much higher value than older
 points to quickly detect and diagnose the root cause of an ongoing problem.
 Gorilla optimizes for remaining highly available for writes and reads, even in
 the face of failures, at the expense of possibly dropping small amounts of data
-on the write path. To improve query efficiency, we aggressively leverage
-compression techniques such as delta-of-delta timestamps and XOR’d floating
-point values to reduce Gorilla’s storage footprint by 10x. This allows us to
-store Gorilla’s data in memory, reducing query latency by 73x and improving
-query throughput by 14x when compared to a traditional database (HBase)- backed
-time series data. This performance improvement has unlocked new monitoring and
-debugging tools, such as time series correlation search and more dense
-visualization tools. Gorilla also gracefully handles failures from a single-node
-to entire regions with little to no operational overhead.
+on the write path.
+
+To improve query efficiency, we aggressively leverage compression techniques
+such as delta-of-delta timestamps and XOR’d floating point values to reduce
+Gorilla’s storage footprint by 10x. This allows us to store Gorilla’s data in
+memory, reducing query latency by 73x and improving query throughput by 14x when
+compared to a traditional database (HBase)- backed time series data. This
+performance improvement has unlocked new monitoring and debugging tools, such as
+time series correlation search and more dense visualization tools.
 :::
 
 ::: preview https://github.com/facebookarchive/beringei
@@ -247,7 +247,7 @@ monitoring performance and health of a system.
 :::
 
 ::: preview https://hbase.apache.org/
-Welcome to Apache HBase
+Apache HBase
 
 Apache HBase is the [Hadoop] database, a distributed, scalable, big data store.
 

@@ -63,10 +63,10 @@ class PreviewLifecycle {
      * @type {?HTMLElement}
      */
     this.currentTarget = null;
-    /** @type {?TimeoutId} */
-    this.showPreviewTimer = null;
-    /** @type {?TimeoutId} */
-    this.hidePreviewTimer = null;
+    /** @type {number} */
+    this.showPreviewTimer = 0;
+    /** @type {number} */
+    this.hidePreviewTimer = 0;
     /**
      * A singleton div element to hold previews of preview target links.
      * Lazily initialized on the first hover of a preview target.
@@ -88,14 +88,16 @@ class PreviewLifecycle {
 
     this.boxEl = document.createElement('div');
     this.boxEl.id = 'preview-box';
-    // Use visibility instead of display: none so that the position is accurate.
     this.boxEl.addEventListener('mouseover', (ev) => this.onPreviewMouseOver(ev));
     this.boxEl.addEventListener('mouseout', (ev) => this.onPreviewMouseOut(ev));
-    // Create another element for better box-shadow performance.
-    // https://tobiasahlin.com/blog/how-to-animate-box-shadow/
+    this.boxEl.classList.add('preview-disabled');
+
+    // Div for better box-shadow performance by leveraging GPU accelerated
+    // opacity: https://tobiasahlin.com/blog/how-to-animate-box-shadow/.
     const shadow = document.createElement('div');
     shadow.id = 'preview-shadow'
 
+    // Div to hold the preview content.
     this.contentEl = document.createElement('div')
     this.contentEl.id = 'preview-content'
 
@@ -284,7 +286,7 @@ class PreviewLifecycle {
 
     // Place preview above target by default to avoid masking text below.
     let vertDelta = tb.top - pb.top - pb.height;
-    const vertNudge = 8; // Give a little nudge for breathing space.
+    const vertNudge = 4; // Give a little nudge for breathing space.
     let maxHeight = spaceAbove - vertNudge - marginVert;
 
     if (spaceAbove < pb.height && pb.height < spaceBelow) {
@@ -294,6 +296,9 @@ class PreviewLifecycle {
       vertDelta = tb.bottom - pb.top + vertNudge;
       return {vertDelta: vertDelta, maxHeight, hasScroll: false};
     }
+
+    // Otherwise, we're placing below.
+    vertDelta -= vertNudge;
 
     const vertHidden = pb.height - maxHeight;
     if (vertHidden <= 0) {
@@ -315,8 +320,9 @@ class PreviewLifecycle {
       };
     }
 
+    console.debug('preview: using vertical scroll bar')
     this.contentEl.style.overflowY = 'scroll';
-    return {vertDelta, maxHeight, hasScroll: true}
+    return {vertDelta: vertDelta + vertHidden, maxHeight, hasScroll: true}
   }
 }
 
