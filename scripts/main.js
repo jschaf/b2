@@ -204,21 +204,14 @@ class PreviewLifecycle {
     }
     this.currentTarget = targetEl;
 
-    const docWidth = document.documentElement.clientWidth;
-    const docHeight = document.documentElement.clientHeight;
-    const marginHoriz = 10; // Breathing room to left and right.
-    const marginVert = 20; // Breathing room to the top and bottom.
-
     this.boxEl.classList.add('preview-disabled');
-    // Remove all children because we'll replace them.
+    // Remove all children to replace them with new title and snippet.
     while (this.contentEl.firstChild) {
       this.contentEl.firstChild.remove()
     }
     this.contentEl.insertAdjacentHTML('afterbegin', title + snippet)
-    const previewWidth = Math.min(580, docWidth - 2 * marginHoriz)
-    this.contentEl.style.width = `${previewWidth}px`;
-    this.contentEl.style.overflowY = null; // Remove scrollbars.
-    this.contentEl.style.maxHeight = null; // Remove max height.
+    this.contentEl.style.overflowY = null;
+    this.contentEl.style.maxHeight = null;
     // Reset transforms so we don't have to correct them in next frame.
     this.boxEl.style.transform = 'translateX(0) translateY(0)';
 
@@ -226,58 +219,104 @@ class PreviewLifecycle {
     // HTML content to correctly position it above or below the preview target.
     requestAnimationFrame(() => {
       this.currentTarget = targetEl;
-      const t = targetEl.getBoundingClientRect();
-      const p = this.boxEl.getBoundingClientRect();
-      const spaceAbove = t.top;
-      const spaceBelow = docHeight - t.bottom;
+      const targetBox = targetEl.getBoundingClientRect();
+      const previewBox = this.boxEl.getBoundingClientRect();
 
-      let diffLeft = t.right - p.left;
-      // Check if we extend past the viewport and shift left appropriately.
-      const hiddenRight = t.right + p.width + marginHoriz - docWidth;
-      if (hiddenRight > 0) {
-        diffLeft -= hiddenRight;
-      } else {
-        // If we don't extend past the right edge of the view port, we're
-        // aligned with the right edge of the target. Nudge the preview to the
-        // left to make it clear that the preview is a child of the target.
-        const horizNudge = 20;
-        // Don't nudge more than halfway past the element.
-        diffLeft -= Math.min(horizNudge, t.width / 2);
-      }
+      const horizDelta = this.calcHorizDelta(targetBox, previewBox)
 
-      // Place preview above target by default to avoid masking text below.
-      let diffTop = t.top - p.top - p.height;
-      const vertNudge = 8; // Give a little nudge for breathing space.
-      if (p.height > spaceAbove && p.height < spaceBelow) {
-        // Place preview below target only if it can contain the entire preview
-        // and the space above cannot.
-        console.debug("preview: placing below target");
-        diffTop = t.bottom - p.top + vertNudge;
-      } else {
-        // The preview extends past the top of the view port.
-        let maxHeight = spaceAbove - vertNudge - marginVert;
-        const vertHidden = Math.max(p.height - maxHeight, 0);
+      const {vertDelta, maxHeight, hasScroll} = this.calcVertDelta(
+          targetBox, previewBox)
 
-        if (vertHidden > 0) {
-          console.debug(`preview: extends past top of viewport by ${vertHidden}px.`)
-          const maxSteal = marginVert * 0.6 + vertNudge * 0.6;
-          // Remove the scrollbar by stealing padding.
-          if (vertHidden < maxSteal) {
-            console.debug('preview: avoiding scrollbar by stealing padding');
-            diffTop -= vertHidden;
-            maxHeight += vertHidden;
-          } else {
-            this.contentEl.style.overflowY = 'scroll';
-          }
-        }
-        diffTop -= vertNudge;
-        diffTop += vertHidden;
+      if (hasScroll) {
+        this.contentEl.style.overflowY = 'scroll';
         this.contentEl.style.maxHeight = `${maxHeight}px`;
       }
 
-      this.boxEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
+      this.boxEl.style.transform = `translateX(${horizDelta}px) `
+          + `translateY(${vertDelta}px)`;
       this.boxEl.classList.remove('preview-disabled');
     });
+  }
+
+  /**
+   * Calculates the horizontal delta needed to align the preview box with the
+   * target.
+   * @param targetBox {DOMRect}
+   * @param previewBox {DOMRect}
+   * @returns {number}
+   */
+  calcHorizDelta(targetBox, previewBox) {
+    const tb = targetBox;
+    const pb = previewBox;
+    const docWidth = document.documentElement.clientWidth;
+    const marginHoriz = 10; // Breathing room to left and right.
+
+    let horizDelta = tb.right - pb.left;
+    // Check if we extend past the viewport and shift left appropriately.
+    const hiddenRight = tb.right + pb.width + marginHoriz - docWidth;
+    if (hiddenRight > 0) {
+      return horizDelta - hiddenRight;
+    }
+
+    // If we don't extend past the right edge of the view port, we're
+    // aligned with the right edge of the target. Nudge the preview to the
+    // left to make it clear that the preview is a child of the target.
+    const horizNudge = 20;
+    // Don't nudge more than halfway past the element.
+    return horizDelta - Math.min(horizNudge, tb.width / 2);
+  }
+
+  /**
+   * Calculate the vertical delta needed to align the preview box with the
+   * target. Also returns the max height and if preview elements needs a scroll
+   * bar
+   * @param targetBox {DOMRect}
+   * @param previewBox {DOMRect}
+   * @returns {{hasScroll: boolean, maxHeight: number, vertDelta: number}}
+   */
+  calcVertDelta(targetBox, previewBox) {
+    const tb = targetBox;
+    const pb = previewBox;
+    const spaceAbove = tb.top;
+    const docHeight = document.documentElement.clientHeight;
+    const spaceBelow = docHeight - tb.bottom;
+    const marginVert = 20; // Breathing room to the top and bottom.
+
+    // Place preview above target by default to avoid masking text below.
+    let vertDelta = tb.top - pb.top - pb.height;
+    const vertNudge = 8; // Give a little nudge for breathing space.
+    let maxHeight = spaceAbove - vertNudge - marginVert;
+
+    if (spaceAbove < pb.height && pb.height < spaceBelow) {
+      // Place preview below target only if it can contain the entire preview
+      // and the space above cannot.
+      console.debug("preview: placing below target - no overflow");
+      vertDelta = tb.bottom - pb.top + vertNudge;
+      return {vertDelta: vertDelta, maxHeight, hasScroll: false};
+    }
+
+    const vertHidden = pb.height - maxHeight;
+    if (vertHidden <= 0) {
+      console.debug("preview: placing above target - no overflow");
+      return {vertDelta, maxHeight, hasScroll: false};
+    }
+
+    // The preview extends past the top of the view port.
+    console.debug(
+        `preview: extends past top of viewport by ${vertHidden}px.`);
+    const maxSteal = marginVert * 0.6 + vertNudge * 0.6;
+    // Remove the scrollbar by stealing padding.
+    if (vertHidden < maxSteal) {
+      console.debug('preview: avoiding scrollbar by stealing padding');
+      return {
+        vertDelta: vertDelta - vertHidden,
+        maxHeight: maxHeight + vertHidden,
+        hasScroll: false
+      };
+    }
+
+    this.contentEl.style.overflowY = 'scroll';
+    return {vertDelta, maxHeight, hasScroll: true}
   }
 }
 
