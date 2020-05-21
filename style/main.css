@@ -56,7 +56,7 @@ body > footer a {
 
 body > header a:hover,
 body > footer a:hover {
-  color: #bbb;
+  color: #444;
 }
 
 .small-caps {
@@ -175,7 +175,7 @@ a {
 }
 
 a:hover {
-  color: #999;
+  color: #666;
 }
 
 
