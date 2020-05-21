@@ -490,13 +490,9 @@ code-fn {
 }
 
 #preview-box {
-  position: relative;
-  display: inline-block;
-  background: white;
-  padding: 10px;
-  z-index: 100;
-  border: 1px solid #8b8b8b;
-  border-radius: 2px;
+  position: absolute;
+  border: 1px solid #ccc;
+  opacity: 1;
 }
 
 #preview-box.preview-disabled {
@@ -504,26 +500,28 @@ code-fn {
 }
 
 #preview-shadow {
-  content: "";
   position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 0;
+  opacity: 1;
   width: 100%;
   height: 100%;
-  border-radius: 2px;
-  opacity: 1;
+  z-index: -1;
   box-shadow: var(--box-shadow-elevation-8);
-  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: translateY(-100%); /* Why do we need this? */
+  transition: opacity 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
-.preview-disabled > #preview-shadow {
+#preview-content {
+  background: white;
+  padding: 8px 10px;
+  scroll-padding-bottom: 20px;
+}
+.preview-disabled #preview-shadow {
   opacity: 0;
-  transition: all 0s; /* Instant transition when disabling. */
+  transition: opacity 0s; /* Instant transition when disabling. */
 }
 
 #preview-box p {
-  font-size: 15px;
-  line-height: 18px;
+  font-size: 16px;
+  line-height: 22px;
 }
 
 .preview-title {

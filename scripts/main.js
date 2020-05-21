@@ -72,26 +72,36 @@ class PreviewLifecycle {
      * Lazily initialized on the first hover of a preview target.
      * @type {?HTMLElement}
      */
-    this.previewEl = null;
+    this.boxEl = null;
+    /**
+     * A singleton div element to hold the content of a preview.
+     * @type {?HTMLElement}
+     */
+    this.contentEl = null;
   }
 
   /** Creates the preview div element if it doesn't yet exist. */
   init() {
-    if (this.previewEl) {
+    if (this.boxEl) {
       return;
     }
 
-    const el = this.previewEl = document.createElement('div');
-    el.id = 'preview-box';
+    this.boxEl = document.createElement('div');
+    this.boxEl.id = 'preview-box';
     // Use visibility instead of display: none so that the position is accurate.
-    el.addEventListener('mouseover', (ev) => this.onPreviewMouseOver(ev));
-    el.addEventListener('mouseout', (ev) => this.onPreviewMouseOut(ev));
+    this.boxEl.addEventListener('mouseover', (ev) => this.onPreviewMouseOver(ev));
+    this.boxEl.addEventListener('mouseout', (ev) => this.onPreviewMouseOut(ev));
     // Create another element for better box-shadow performance.
     // https://tobiasahlin.com/blog/how-to-animate-box-shadow/
     const shadow = document.createElement('div');
     shadow.id = 'preview-shadow'
-    el.appendChild(shadow);
-    document.body.append(el);
+
+    this.contentEl = document.createElement('div')
+    this.contentEl.id = 'preview-content'
+
+    this.boxEl.appendChild(this.contentEl);
+    this.boxEl.appendChild(shadow)
+    document.body.append(this.boxEl);
   }
 
   /** Add event listeners to all preview targets in the document. */
@@ -175,7 +185,7 @@ class PreviewLifecycle {
   /** Hides the preview box. */
   hidePreviewBox() {
     this.currentTarget = null;
-    this.previewEl.classList.add('preview-disabled');
+    this.boxEl.classList.add('preview-disabled');
   }
 
   /**
@@ -197,24 +207,27 @@ class PreviewLifecycle {
     const docWidth = document.documentElement.clientWidth;
     const docHeight = document.documentElement.clientHeight;
     const marginHoriz = 10; // Breathing room to left and right.
+    const marginVert = 20; // Breathing room to the top and bottom.
 
-    this.previewEl.classList.add('preview-disabled');
-    // Remove all children except the last, the preview shadow.
-    while (this.previewEl.childNodes.length > 1) {
-      this.previewEl.removeChild(this.previewEl.firstChild);
+    this.boxEl.classList.add('preview-disabled');
+    // Remove all children because we'll replace them.
+    while (this.contentEl.firstChild) {
+      this.contentEl.firstChild.remove()
     }
-    this.previewEl.insertAdjacentHTML('afterbegin', title + snippet)
+    this.contentEl.insertAdjacentHTML('afterbegin', title + snippet)
     const previewWidth = Math.min(580, docWidth - 2 * marginHoriz)
-    this.previewEl.style.width = `${previewWidth}px`;
+    this.contentEl.style.width = `${previewWidth}px`;
+    this.contentEl.style.overflowY = null; // Remove scrollbars.
+    this.contentEl.style.maxHeight = null; // Remove max height.
     // Reset transforms so we don't have to correct them in next frame.
-    this.previewEl.style.transform = 'translateX(0) translateY(0)';
+    this.boxEl.style.transform = 'translateX(0) translateY(0)';
 
     // Use another frame because we need the height of the preview box with the
     // HTML content to correctly position it above or below the preview target.
     requestAnimationFrame(() => {
       this.currentTarget = targetEl;
       const t = targetEl.getBoundingClientRect();
-      const p = this.previewEl.getBoundingClientRect();
+      const p = this.boxEl.getBoundingClientRect();
       const spaceAbove = t.top;
       const spaceBelow = docHeight - t.bottom;
 
@@ -227,22 +240,43 @@ class PreviewLifecycle {
         // If we don't extend past the right edge of the view port, we're
         // aligned with the right edge of the target. Nudge the preview to the
         // left to make it clear that the preview is a child of the target.
-        const nudge = 20;
-        diffLeft -= Math.min(nudge, t.width / 2);
+        const horizNudge = 20;
+        // Don't nudge more than halfway past the element.
+        diffLeft -= Math.min(horizNudge, t.width / 2);
       }
+
       // Place preview above target by default to avoid masking text below.
-      let diffTop = t.top - p.top - this.previewEl.offsetHeight;
-      const vertNudge = 4; // Give a little nudge for breathing space.
+      let diffTop = t.top - p.top - p.height;
+      const vertNudge = 8; // Give a little nudge for breathing space.
       if (p.height > spaceAbove && p.height < spaceBelow) {
         // Place preview below target only if it can contain the entire preview
         // and the space above cannot.
+        console.debug("preview: placing below target");
         diffTop = t.bottom - p.top + vertNudge;
       } else {
+        // The preview extends past the top of the view port.
+        let maxHeight = spaceAbove - vertNudge - marginVert;
+        const vertHidden = Math.max(p.height - maxHeight, 0);
+
+        if (vertHidden > 0) {
+          console.debug(`preview: extends past top of viewport by ${vertHidden}px.`)
+          const maxSteal = marginVert * 0.6 + vertNudge * 0.6;
+          // Remove the scrollbar by stealing padding.
+          if (vertHidden < maxSteal) {
+            console.debug('preview: avoiding scrollbar by stealing padding');
+            diffTop -= vertHidden;
+            maxHeight += vertHidden;
+          } else {
+            this.contentEl.style.overflowY = 'scroll';
+          }
+        }
         diffTop -= vertNudge;
+        diffTop += vertHidden;
+        this.contentEl.style.maxHeight = `${maxHeight}px`;
       }
 
-      this.previewEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
-      this.previewEl.classList.remove('preview-disabled');
+      this.boxEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
+      this.boxEl.classList.remove('preview-disabled');
     });
   }
 }
