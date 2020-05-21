@@ -3,14 +3,16 @@ package mdext
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/texts"
 )
 
-func TestNewColonBlockExt(t *testing.T) {
+func TestNewColonBlockExt_preview(t *testing.T) {
 	tests := []struct {
-		name string
-		src  string
-		want string
+		name       string
+		src        string
+		want       string
+		wantCtxURL string
 	}{
 		{
 			"h1 + p + colon",
@@ -18,20 +20,26 @@ func TestNewColonBlockExt(t *testing.T) {
         # header
         foo
 
-        ::: preview
+        ::: preview   http://example.com  
         qux
         :::
-      `),
+      `,
+			),
 			texts.Dedent(`
         <h1>header</h1>
 			  <p>foo</p>
       `),
+			"http://example.com",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewColonBlockExt())
 			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			gotPreview, _ := GetPreview(ctx, tt.wantCtxURL)
+			if diff := cmp.Diff(tt.wantCtxURL, gotPreview.URL); diff != "" {
+				t.Errorf("Preview URL mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

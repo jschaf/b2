@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
-	"go.uber.org/zap"
 )
 
 type LinkTransformer struct{}
@@ -77,42 +77,54 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, reader text.Reader
 			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
 		}
 
-		// If we have a preview, render it into the attributes.
-		preview, ok := GetPreview(pc, origDest)
-		logger := GetLogger(pc)
-		if !ok {
-			logger.Debug("no preview for link", zap.String("link", origDest))
-			return ast.WalkSkipChildren, nil
-		}
-		renderer, ok := GetRenderer(pc)
-		if !ok {
-			panic("link preview: no renderer")
-		}
-
-		colonBlock := preview.Parent
-		// Assume title is first child.
-		title := colonBlock.FirstChild()
-		titleHTML := &bytes.Buffer{}
-		if err := renderer.Render(titleHTML, title.Text(reader.Source()), title); err != nil {
-			panic(fmt.Sprintf("render preview title to HTML for %s: %s", GetFilePath(pc), err.Error()))
-		}
-		link.SetAttribute([]byte("class"), []byte("preview-target"))
-		link.SetAttribute([]byte("data-preview-title"), titleHTML.Bytes())
-		link.SetAttribute([]byte("data-preview-snippet"), []byte(texts.Dedent(`
-          A <em>snippet</em>. Lorem ipsum dolor <b>sit amet</b>, consectetur 
-          adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore 
-          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
-          ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute 
-          <span class="small-caps">IRURE</span> dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-          fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
-          sunt in culpa qui officia deserunt mollit anim id est laborum.`)))
+		renderPreview(pc, origDest, reader, link)
 
 		return ast.WalkSkipChildren, nil
-
 	})
 	if err != nil {
 		panic(err)
 	}
+}
+
+func renderPreview(pc parser.Context, origDest string, reader text.Reader, link *ast.Link) {
+	// If we have a preview, render it into the attributes.
+	preview, ok := GetPreview(pc, origDest)
+	if !ok {
+		return
+	}
+	renderer, ok := GetRenderer(pc)
+	if !ok {
+		panic("link preview: no renderer")
+	}
+
+	colonBlock := preview.Parent
+	if colonBlock == nil {
+		return
+	}
+	// Assume title is first child.
+	title := colonBlock.FirstChild()
+	attrs.AddClass(title, "preview-title")
+	titleLink := ast.NewLink()
+	titleLink.Destination = []byte(origDest)
+	asts.Reparent(titleLink, title)
+	title.AppendChild(title, titleLink)
+	titleHTML := &bytes.Buffer{}
+	if err := renderer.Render(titleHTML, reader.Source(), title); err != nil {
+		panic(fmt.Sprintf("render preview title to HTML for %s: %s", GetFilePath(pc), err.Error()))
+	}
+	link.SetAttribute([]byte("class"), []byte("preview-target"))
+	link.SetAttribute([]byte("data-preview-title"), bytes.Trim(titleHTML.Bytes(), " \n"))
+
+	// Assume the rest of the children are the body.
+	snippetHTML := &bytes.Buffer{}
+	snippetNode := title.NextSibling()
+	for snippetNode != nil {
+		if err := renderer.Render(snippetHTML, reader.Source(), snippetNode); err != nil {
+			panic(fmt.Sprintf("render preview snippet to HTML for %s: %s", GetFilePath(pc), err.Error()))
+		}
+		snippetNode = snippetNode.NextSibling()
+	}
+	link.SetAttribute([]byte("data-preview-snippet"), bytes.Trim(snippetHTML.Bytes(), " \n"))
 }
 
 type LinkExt struct{}

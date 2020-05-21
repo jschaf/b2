@@ -21,11 +21,11 @@ func TestNewLinkExt(t *testing.T) {
 				Paper: [Gorilla Title][gorilla]
 		
 				[gorilla]: paper.pdf
-     `),
+    `),
 			texts.Dedent(`
-       <p>
-         Paper: <a href="paper.pdf" data-link-type=pdf>Gorilla Title</a>
-       </p>
+      <p>
+        Paper: <a href="paper.pdf" data-link-type=pdf>Gorilla Title</a>
+      </p>
     `),
 			map[parser.ContextKey]interface{}{
 				assetsCtxKey: map[string]string{"paper.pdf": "/home/joe/paper.pdf"},
@@ -41,11 +41,11 @@ func TestNewLinkExt(t *testing.T) {
 				Paper: [Gorilla Title][gorilla]
 		
 				[gorilla]: paper.pdf
-     `),
+    `),
 			texts.Dedent(`
-       <p>
-         Paper: <a href="/some_slug/paper.pdf" data-link-type=pdf>Gorilla Title</a>
-       </p>
+      <p>
+        Paper: <a href="/some_slug/paper.pdf" data-link-type=pdf>Gorilla Title</a>
+      </p>
     `),
 			map[parser.ContextKey]interface{}{
 				assetsCtxKey: map[string]string{"/some_slug/paper.pdf": "/home/joe/paper.pdf"},
@@ -57,14 +57,38 @@ func TestNewLinkExt(t *testing.T) {
 				+++
 				slug = "some_slug"
 				+++
-
+		
 				Paper: [Gorilla Title][gorilla]
-
+		
 				[gorilla]: http://example.com/paper.pdf
+     `),
+			texts.Dedent(`
+       <p>
+         Paper: <a href="http://example.com/paper.pdf" data-link-type=pdf>Gorilla Title</a>
+       </p>
+    `),
+			map[parser.ContextKey]interface{}{},
+		},
+		{
+			"link with preview",
+			texts.Dedent(`
+				[wiki link](https://en.wikipedia.org/wiki/Wiki)
+
+				::: preview https://en.wikipedia.org/wiki/Wiki
+				preview title
+
+				foo bar
+				:::
       `),
 			texts.Dedent(`
         <p>
-          Paper: <a href="http://example.com/paper.pdf" data-link-type=pdf>Gorilla Title</a>
+          <a href="https://en.wikipedia.org/wiki/Wiki" 
+             data-link-type=wikipedia
+             class="preview-target"
+             data-preview-title="<p class=&quot;preview-title&quot;><a href=&quot;https://en.wikipedia.org/wiki/Wiki&quot;>preview title</a></p>" 
+             data-preview-snippet="<p>foo bar</p>">
+          wiki link
+          </a>
         </p>
      `),
 			map[parser.ContextKey]interface{}{},

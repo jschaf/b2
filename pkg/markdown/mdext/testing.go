@@ -2,10 +2,10 @@ package mdext
 
 import (
 	"bytes"
-	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
@@ -43,12 +43,13 @@ func assertNoRenderDiff(t *testing.T, md goldmark.Markdown, ctx parser.Context, 
 
 // assertCtxContainsAll asserts that the content contains every wanted
 // key-value pair.
-func assertCtxContainsAll(t *testing.T, got parser.Context, want map[parser.ContextKey]interface{}) {
+func assertCtxContainsAll(t *testing.T, got parser.Context, wants map[parser.ContextKey]interface{}) {
 	t.Helper()
 
-	for k, v := range want {
-		if got := got.Get(k); !reflect.DeepEqual(got, v) {
-			t.Errorf("context key %v, got %s, want %v", k, got, want[k])
+	for key, want := range wants {
+		got := got.Get(key)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("Context key mismatch for key=%d (-want +got):\n%s", key, diff)
 		}
 	}
 }

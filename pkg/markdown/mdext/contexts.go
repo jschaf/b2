@@ -81,7 +81,8 @@ func GetPreview(pc parser.Context, url string) (Preview, bool) {
 	if !ok {
 		return Preview{}, false
 	}
-	return previews[url], true
+	p, ok := previews[url]
+	return p, ok
 }
 
 var rendererCtxKey = parser.NewContextKey()

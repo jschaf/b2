@@ -499,3 +499,13 @@ code-fn {
   border-radius: 2px;
   box-shadow: var(--box-shadow-elevation-8);
 }
+
+#preview-box p {
+  font-size: 90%;
+  line-height: 120%;
+}
+
+.preview-title {
+  font-weight: bolder;
+  margin-top: 0;
+}

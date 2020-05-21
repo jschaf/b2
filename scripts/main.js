@@ -171,6 +171,7 @@ class PreviewLifecycle {
   /** Hides the preview box. */
   hidePreviewBox() {
     this.currentTarget = null;
+    return; // DO NOT SUBMIT
     if (this.previewEl.style.visibility !== 'hidden') {
       this.previewEl.style.visibility = 'hidden';
     }
@@ -197,7 +198,7 @@ class PreviewLifecycle {
     const marginHoriz = 10; // Breathing room to left and right.
 
     this.previewEl.style.visibility = 'hidden';
-    const previewHTML = `<h3>${title}</h3><p>${snippet}</p>`;
+    const previewHTML = `${title}${snippet}`;
     // Avoid changing inner HTML if no change.
     if (this.previewEl.innerHTML !== previewHTML) {
       this.previewEl.innerHTML = previewHTML;

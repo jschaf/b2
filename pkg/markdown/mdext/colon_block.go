@@ -74,16 +74,15 @@ func (cbp colonBlockParser) Open(_ ast.Node, reader text.Reader, _ parser.Contex
 	if !bytes.HasPrefix(line, []byte(colonBlockDelim)) {
 		return nil, parser.NoChildren
 	}
-	i := len(colonBlockDelim)
-	reader.Advance(i)
-	rest := bytes.Trim(line[i:], " ")
+	reader.AdvanceLine()
+	rest := bytes.Trim(line[len(colonBlockDelim):], " ")
 	nameArgs := bytes.SplitN(rest, []byte{' '}, 2)
 	cb := NewColonBlock()
-	if len(nameArgs) == 1 {
+	if len(nameArgs) >= 1 {
 		cb.Name = strings.Trim(string(nameArgs[0]), " ")
 	}
 	if len(nameArgs) == 2 {
-		cb.Args = string(nameArgs[1])
+		cb.Args = strings.Trim(string(nameArgs[1]), " \n")
 	}
 	return cb, parser.HasChildren
 }
@@ -91,6 +90,7 @@ func (cbp colonBlockParser) Open(_ ast.Node, reader text.Reader, _ parser.Contex
 func (cbp colonBlockParser) Continue(_ ast.Node, reader text.Reader, _ parser.Context) parser.State {
 	line, _ := reader.PeekLine()
 	if bytes.HasPrefix(line, []byte(colonBlockDelim)) {
+		reader.AdvanceLine()
 		return parser.Close
 	}
 	return parser.Continue | parser.HasChildren
