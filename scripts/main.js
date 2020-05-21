@@ -171,7 +171,6 @@ class PreviewLifecycle {
   /** Hides the preview box. */
   hidePreviewBox() {
     this.currentTarget = null;
-    return; // DO NOT SUBMIT
     if (this.previewEl.style.visibility !== 'hidden') {
       this.previewEl.style.visibility = 'hidden';
     }
@@ -202,9 +201,9 @@ class PreviewLifecycle {
     // Avoid changing inner HTML if no change.
     if (this.previewEl.innerHTML !== previewHTML) {
       this.previewEl.innerHTML = previewHTML;
+      const previewWidth = Math.min(580, docWidth - 2 * marginHoriz)
+      this.previewEl.style.width = `${previewWidth}px`;
     }
-    const previewWidth = Math.min(620, docWidth - 2 * marginHoriz)
-    this.previewEl.style.width = `${previewWidth}px`;
     // Reset transforms so we don't have to correct them in next frame.
     this.previewEl.style.transform = 'translateX(0) translateY(0)';
 

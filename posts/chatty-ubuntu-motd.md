@@ -12,14 +12,6 @@ sends information to all users on login. A recent login message greeted me with
 
 [motd-wiki]: https://en.wikipedia.org/wiki/Motd_(Unix)
 
-::: preview https://en.wikipedia.org/wiki/Motd_(Unix)
-motd (Unix)
-
-The **/etc/motd** is a file on Unix-like systems that contains a "message of the day", used
-to send a common message to all users in a more efficient manner than sending them all an e-mail
-message.
-:::
-
 The /etc/motd is a file on Unix-like systems that contains a "message of the day", used to send a
 common message to all users in a more efficient manner than sending them all an e-mail message.
 Other systems might also have a motd feature, such as the motd info segment on MULTICS.[1]
@@ -225,3 +217,98 @@ individual files in /usr/share/doc/*/copyright.
 Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
 applicable law.
 ```
+
+::: preview https://en.wikipedia.org/wiki/Motd_(Unix)
+motd (Unix)
+
+The **/etc/motd** is a file on Unix-like systems that contains a "message of the
+day", used to send a common message to all users in a more efficient manner than
+sending them all an e-mail message.
+:::
+
+::: preview https://raymii.org/s/tutorials/Disable_dynamic_motd_and_motd_news_spam_on_Ubuntu_18.04.html
+Disable motd news or (parts of) the dynamic motd on Ubuntu
+
+On Ubuntu 18.04 and up, when you login via SSH you are greeted with some news
+via motd (message of the day) that includes advertisements and messages from
+Canonical (via motd.ubuntu.com). This small guide shows you how to disable news,
+(parts of) the dynamic motd or just revert back to a plain old /etc/motd file.
+:::
+
+::: preview https://www.ostechnix.com/how-to-disable-ads-in-terminal-welcome-message-in-ubuntu-server/
+How To Disable Ads In Terminal Welcome Message In Ubuntu Server
+
+If you’re using any latest Ubuntu server edition, you might have noticed some
+promotional links in welcome message which are not relevant to Ubuntu server
+platform. [...] However, there some additional links started to appear in the
+terminal welcome message lately.
+:::
+
+::: preview https://news.ycombinator.com/item?id=14662088
+Ubuntu displays advertising in /etc/motd 
+
+Comment by stinos:
+
+> Instead, https://motd.ubuntu.com should show relevant items to those that use
+> Ubuntu Server (relevant security issues, etc), instead of items for desktop
+> users.
+
+Shouldn't that be more like "Instead, Ubuntu should not fetch the motd from the
+internet by default, but have this feature as opt-in"?
+
+---
+
+Comment by matt4077:
+
+Good for them. Ubuntu does lots of good work that benefit the whole community,
+and if this allows them to stay in business, and pay people well to write
+open-source software, I'm not complaining. Considering the example shown (which
+I also get logging in) is about HBO's use of Tensorflow, this also happens to be
+the best-targeted ad I've seen in a while. At that level, advertising actually
+does become something that's valuable/interesting for the recipient.
+
+And if not, it takes about 10 seconds to disable.
+:::
+
+::: preview https://news.ycombinator.com/item?id=21893481
+BSD vs. Ubuntu motd(5) 
+
+Comment by jlgaddis:
+
+One implication of this that some people don't realize is that a brand new
+Ubuntu instance -- whether a physical host, a virtual machine, an EC2 instance,
+whatever -- immediately calls home to Canonical as soon as it spins up for the
+first time. The functionality is included in the "base-files" package, which has
+a priority of "required" and is marked as an "essential" package. Thus, if you
+have an Ubuntu instance, it's nearly 100% guaranteed this is installed and
+enabled by default.
+
+---
+
+Comment by Jonnax:
+
+TBH I find the Ubuntu message of the day quite useful. The "adverts" are benign.
+Right now it says to check out microk8s and also to look at livepatch.
+:::
+
+::: preview https://askubuntu.com/a/513900/544100
+How is /etc/motd updated?
+
+
+It's updated by pam_motd on login. The [update-motd][update-motd-man] manual 
+page describes this:
+
+[update-motd-man]: http://manpages.ubuntu.com/manpages/lucid/en/man5/update-motd.5.html
+
+> Ubuntu introduced the update-motd framework, by which  the  motd(5)  is
+> dynamically assembled from a collection of scripts at login.
+>
+> Executable  scripts in /etc/update-motd.d/* are executed by pam_motd(8)
+> as the root user at each login, and this information is concatenated in
+> /var/run/motd.  The order of script execution is determined by the run-
+> parts(8) --lsbsysinit option (basically alphabetical order, with a  few
+> caveats).
+>
+> On   Ubuntu   systems,  /etc/motd  is  typically  a  symbolic  link  to
+> /var/run/motd.
+:::

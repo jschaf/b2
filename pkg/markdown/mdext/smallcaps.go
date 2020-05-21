@@ -87,7 +87,7 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 		endChar = next
 		// Only use small caps if the run is ended by punctuation or space.
 		if next != ' ' && next != '\n' && next != '.' && next != '!' &&
-			next != '?' && next != ')' && next != '*' && next != ']' {
+			next != '?' && next != ')' && next != '*' && next != ']' && next != ',' {
 			return nil
 		}
 	}

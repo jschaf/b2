@@ -103,6 +103,9 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	}
 	// Assume title is first child.
 	title := colonBlock.FirstChild()
+	if title == nil {
+		return
+	}
 	attrs.AddClass(title, "preview-title")
 	titleLink := ast.NewLink()
 	titleLink.Destination = []byte(origDest)
