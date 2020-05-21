@@ -1,8 +1,27 @@
+:root {
+  /* Material design elevation box shadows. The number corresponds to the
+     display points of elevation. */
+  /* 1 for switch, card (resting elevation), search bar (resting elevation) */
+  --box-shadow-elevation-1: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
+  /* 2 for contained button (resting elevation) */
+  --box-shadow-elevation-2: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
+  /* 4 for top app bar (scrolled stated and optionally resting) */
+  --box-shadow-elevation-4: 0 2px 4px -1px rgba(0, 0, 0, .2), 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12);
+  /* 8 for card (picked up), contained button (pressed state) bottom nav bar,
+     side sheet, bottom sheet, bottom app bar, menu and sub-menus */
+  --box-shadow-elevation-8: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+  /* 16 for navigation drawer, and modal bottom sheet. */
+  --box-shadow-elevation-16: 0 8px 10px -5px rgba(0, 0, 0, .2), 0 16px 24px 2px rgba(0, 0, 0, .14), 0 6px 30px 5px rgba(0, 0, 0, .12);
+  /* 24 for dialogs. */
+  --box-shadow-elevation-24: 0 11px 15px -7px rgba(0, 0, 0, .2), 0 24px 38px 3px rgba(0, 0, 0, .14), 0 9px 46px 8px rgba(0, 0, 0, .12);
+}
+
 html {
   box-sizing: border-box;
   font-size: 112.5%;
   line-height: 24px;
   text-rendering: optimizeLegibility;
+  font-variant-numeric: oldstyle-nums;
 }
 
 *,
@@ -37,7 +56,7 @@ body > footer a {
 
 body > header a:hover,
 body > footer a:hover {
-  color: #999;
+  color: #bbb;
 }
 
 .small-caps {
@@ -244,8 +263,7 @@ blockquote {
 }
 
 blockquote {
-  border-left: solid 3px rgba(0, 0, 0, 0.0980392);
-  color: rgba(0, 0, 0, 0.65098);
+  border-left: solid 3px rgba(0, 0, 0, 0.1980392);
   padding-left: 16px;
   margin: 0;
 }
@@ -380,24 +398,6 @@ table caption {
   text-align: right;
 }
 
-:root {
-  /* Material */
-  /* 1 for switch, card (resting elevation), search bar (resting elevation) */
-  --box-shadow-elevation-1: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
-  /* 2 for contained button (resting elevation) */
-  --box-shadow-elevation-2: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
-  /* 4 for top app bar (scrolled stated and optionally resting) */
-  --box-shadow-elevation-4: 0 2px 4px -1px rgba(0, 0, 0, .2), 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12);
-  /* 8 for card (picked up), contained button (pressed state) bottom nav bar,
-     side sheet, bottom sheet, bottom app bar, menu and sub-menus */
-  --box-shadow-elevation-8: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
-  /* 16 for navigation drawer, and modal bottom sheet. */
-  --box-shadow-elevation-16: 0 8px 10px -5px rgba(0, 0, 0, .2), 0 16px 24px 2px rgba(0, 0, 0, .14), 0 6px 30px 5px rgba(0, 0, 0, .12);
-  /* 24 for dialogs. */
-  --box-shadow-elevation-24: 0 11px 15px -7px rgba(0, 0, 0, .2), 0 24px 38px 3px rgba(0, 0, 0, .14), 0 9px 46px 8px rgba(0, 0, 0, .12);
-
-}
-
 .continue-reading {
   display: inline-flex;
   justify-content: space-between;
@@ -490,14 +490,35 @@ code-fn {
 }
 
 #preview-box {
-  visibility: hidden;
-  position: absolute;
+  position: relative;
+  display: inline-block;
   background: white;
   padding: 10px;
   z-index: 100;
   border: 1px solid #8b8b8b;
   border-radius: 2px;
+}
+
+#preview-box.preview-disabled {
+  visibility: hidden;
+}
+
+#preview-shadow {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  opacity: 1;
   box-shadow: var(--box-shadow-elevation-8);
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.preview-disabled > #preview-shadow {
+  opacity: 0;
+  transition: all 0s; /* Instant transition when disabling. */
 }
 
 #preview-box p {
@@ -506,6 +527,6 @@ code-fn {
 }
 
 .preview-title {
-  font-weight: bolder;
+  font-weight: bold;
   margin-top: 0;
 }

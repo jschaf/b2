@@ -85,9 +85,20 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 	if run < len(line) {
 		next := line[run]
 		endChar = next
-		// Only use small caps if the run is ended by punctuation or space.
-		if next != ' ' && next != '\n' && next != '.' && next != '!' &&
-			next != '?' && next != ')' && next != '*' && next != ']' && next != ',' {
+		switch next {
+		case ' ', '\n', '.', '!', '?', ')', '*', ']', ',':
+			// Only use small caps if the run is ended by punctuation or space.
+		case 's':
+			// s is okay only if followed by a punctuation, e.g. TLAs.
+			if run+1 < len(line) {
+				nextNext := line[run+1]
+				switch nextNext {
+				case ' ', '\n', '.', '!', '?', ')', '*', ']', ',':
+				default:
+					return nil
+				}
+			}
+		default:
 			return nil
 		}
 	}

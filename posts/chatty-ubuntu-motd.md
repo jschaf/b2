@@ -12,10 +12,6 @@ sends information to all users on login. A recent login message greeted me with
 
 [motd-wiki]: https://en.wikipedia.org/wiki/Motd_(Unix)
 
-The /etc/motd is a file on Unix-like systems that contains a "message of the day", used to send a
-common message to all users in a more efficient manner than sending them all an e-mail message.
-Other systems might also have a motd feature, such as the motd info segment on MULTICS.[1]
-
 ```text
 Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-1021-aws x86_64)
 
@@ -224,6 +220,11 @@ motd (Unix)
 The **/etc/motd** is a file on Unix-like systems that contains a "message of the
 day", used to send a common message to all users in a more efficient manner than
 sending them all an e-mail message.
+
+The contents of the file /etc/motd are displayed by the Unix login command after
+a successful login, and just before it executes the login shell. Newer unix-like
+systems may generate the message dynamically when the host boots or a user logs
+in.
 :::
 
 ::: preview https://raymii.org/s/tutorials/Disable_dynamic_motd_and_motd_news_spam_on_Ubuntu_18.04.html

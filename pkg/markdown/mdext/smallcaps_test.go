@@ -16,6 +16,8 @@ func TestSmallCapsExt(t *testing.T) {
 		{"(FOO.", `<p>(<span class="small-caps">FOO</span>.</p>`},
 		{"FOO)", `<p><span class="small-caps">FOO</span>)</p>`},
 		{"FOO,", `<p><span class="small-caps">FOO</span>,</p>`},
+		{"FOOs", `<p><span class="small-caps">FOO</span>s</p>`},
+		{"FOOss", `<p>FOOss</p>`},
 		{"F_BAR", `<p>F_BAR</p>`},
 		{"FOO_BAR", `<p>FOO_BAR</p>`},
 		{"MOTD\n", `<p><span class="small-caps">MOTD</span></p>`},

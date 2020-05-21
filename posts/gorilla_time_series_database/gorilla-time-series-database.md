@@ -202,3 +202,65 @@ CAPTION: How a query is processed by a Gorilla instance.
    to disk with a corresponding checkpoint file. After all `TimeSeries` data
    structures for a shard are flushed, the Gorilla node deletes the append-only
    log for that shard.
+   
+::: preview gorilla.pdf   
+Gorilla: A Fast, Scalable, In-Memory Time Series Database
+
+Large-scale internet services aim to remain highly available and responsive in
+the presence of unexpected failures. Providing this service often requires
+monitoring and analyzing tens of millions of measurements per second across a
+large number of systems, and one particularly effective solution is to store and
+query such measurements in a time series database (TSDB).
+
+A key challenge in the design of TSDBs is how to strike the right balance
+between efficiency, scalability, and reliability. In this paper we introduce
+Gorilla, Facebook’s inmemory TSDB. Our insight is that users of monitoring
+systems do not place much emphasis on individual data points but rather on
+aggregate analysis, and recent data points are of much higher value than older
+points to quickly detect and diagnose the root cause of an ongoing problem.
+Gorilla optimizes for remaining highly available for writes and reads, even in
+the face of failures, at the expense of possibly dropping small amounts of data
+on the write path. To improve query efficiency, we aggressively leverage
+compression techniques such as delta-of-delta timestamps and XOR’d floating
+point values to reduce Gorilla’s storage footprint by 10x. This allows us to
+store Gorilla’s data in memory, reducing query latency by 73x and improving
+query throughput by 14x when compared to a traditional database (HBase)- backed
+time series data. This performance improvement has unlocked new monitoring and
+debugging tools, such as time series correlation search and more dense
+visualization tools. Gorilla also gracefully handles failures from a single-node
+to entire regions with little to no operational overhead.
+:::
+
+::: preview https://github.com/facebookarchive/beringei
+Beringei is a high performance, in-memory storage engine for time series data.
+
+This repo has been archived and is no longer being actively maintained. 
+
+A high performance, in memory time series storage engine. In the fall of 2015,
+we published the paper “Gorilla: A Fast, Scalable, In-Memory Time Series
+Database” at VLDB 2015. Beringei is the open source representation of the ideas
+presented in this paper.
+                                                          
+Beringei is a high performance time series storage engine. Time series are
+commonly used as a representation of statistics, gauges, and counters for
+monitoring performance and health of a system.
+:::
+
+::: preview https://hbase.apache.org/
+Welcome to Apache HBase
+
+Apache HBase is the [Hadoop] database, a distributed, scalable, big data store.
+
+[Hadoop]: https://hadoop.apache.org/
+
+Use Apache HBase™when you need random, realtime read/write access to your Big
+Data. This project's goal is the hosting of very large tables -- billions of
+rows X millions of columns -- atop clusters of commodity hardware. Apache HBase
+is an open-source, distributed, versioned, non-relational database modeled after
+Google's [Bigtable: A Distributed Storage System for Structured Data][bigtable] by Chang et
+al. Just as Bigtable leverages the distributed data storage provided by the
+Google File System, Apache HBase provides Bigtable-like capabilities on top of
+Hadoop and HDFS.
+
+[bigtable]: https://research.google.com/archive/bigtable.html
+:::

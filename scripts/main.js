@@ -84,9 +84,13 @@ class PreviewLifecycle {
     const el = this.previewEl = document.createElement('div');
     el.id = 'preview-box';
     // Use visibility instead of display: none so that the position is accurate.
-    el.style.visibility = 'hidden';
     el.addEventListener('mouseover', (ev) => this.onPreviewMouseOver(ev));
     el.addEventListener('mouseout', (ev) => this.onPreviewMouseOut(ev));
+    // Create another element for better box-shadow performance.
+    // https://tobiasahlin.com/blog/how-to-animate-box-shadow/
+    const shadow = document.createElement('div');
+    shadow.id = 'preview-shadow'
+    el.appendChild(shadow);
     document.body.append(el);
   }
 
@@ -171,9 +175,7 @@ class PreviewLifecycle {
   /** Hides the preview box. */
   hidePreviewBox() {
     this.currentTarget = null;
-    if (this.previewEl.style.visibility !== 'hidden') {
-      this.previewEl.style.visibility = 'hidden';
-    }
+    this.previewEl.classList.add('preview-disabled');
   }
 
   /**
@@ -196,14 +198,14 @@ class PreviewLifecycle {
     const docHeight = document.documentElement.clientHeight;
     const marginHoriz = 10; // Breathing room to left and right.
 
-    this.previewEl.style.visibility = 'hidden';
-    const previewHTML = `${title}${snippet}`;
-    // Avoid changing inner HTML if no change.
-    if (this.previewEl.innerHTML !== previewHTML) {
-      this.previewEl.innerHTML = previewHTML;
-      const previewWidth = Math.min(580, docWidth - 2 * marginHoriz)
-      this.previewEl.style.width = `${previewWidth}px`;
+    this.previewEl.classList.add('preview-disabled');
+    // Remove all children except the last, the preview shadow.
+    while (this.previewEl.childNodes.length > 1) {
+      this.previewEl.removeChild(this.previewEl.firstChild);
     }
+    this.previewEl.insertAdjacentHTML('afterbegin', title + snippet)
+    const previewWidth = Math.min(580, docWidth - 2 * marginHoriz)
+    this.previewEl.style.width = `${previewWidth}px`;
     // Reset transforms so we don't have to correct them in next frame.
     this.previewEl.style.transform = 'translateX(0) translateY(0)';
 
@@ -240,13 +242,15 @@ class PreviewLifecycle {
       }
 
       this.previewEl.style.transform = `translateX(${diffLeft}px) translateY(${diffTop}px)`;
-      this.previewEl.style.visibility = 'visible';
+      this.previewEl.classList.remove('preview-disabled');
     });
   }
 }
 
 PreviewLifecycle.showPreviewDelayMs = 300;
-PreviewLifecycle.hidePreviewDelayMs = 300;
+// Hiding feels better if a bit faster. Usually you want to hide things
+// "instantly."
+PreviewLifecycle.hidePreviewDelayMs = 200;
 
 // Preview hovers.
 // Each preview target contains data attributes describing how to display
