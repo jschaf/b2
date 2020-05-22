@@ -33,3 +33,16 @@ func CopyStaticFiles() error {
 	}
 	return nil
 }
+
+func LinkPapers() error {
+	dir, err := git.FindRootDir()
+	if err != nil {
+		return fmt.Errorf("LinkPapers find root dir: %w", err)
+	}
+	papersDir := filepath.Join(dir, "papers")
+	pubPapersDir := filepath.Join(dir, "public", "papers")
+	if err := os.Symlink(papersDir, pubPapersDir); err != nil {
+		return fmt.Errorf("LinkPapers symlink: %w", err)
+	}
+	return nil
+}

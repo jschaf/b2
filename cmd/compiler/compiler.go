@@ -35,4 +35,8 @@ func main() {
 	if err := static.CopyStaticFiles(); err != nil {
 		log.Fatal(err)
 	}
+
+	if err := static.LinkPapers(); err != nil {
+		log.Fatal(err)
+	}
 }

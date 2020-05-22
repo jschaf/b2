@@ -195,6 +195,11 @@ func main() {
 		return
 	}
 
+	if err := static.LinkPapers(); err != nil {
+		server.logger.Error(err)
+		return
+	}
+
 	select {
 	case <-server.upgrader.Exit():
 		server.logger.Debug("upgrader exiting")

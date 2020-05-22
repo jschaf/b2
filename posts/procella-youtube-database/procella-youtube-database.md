@@ -112,7 +112,7 @@ The advantage of a column store for large analytical queries is a combination of
 four attributes as described by Abadi (think the Knuth of column stores) in
 [The Design and Implementation of Modern Column-Oriented Database Systems][abadi_col].
 
-[abadi_col]: ./abadi_design_impl_column_store.pdf
+[abadi_col]: /papers/abadi2013design.pdf
 
 - Vectorized execution: apply functions on an array of values from a single
   column. In contrast, a row store processes 1 row at time and extracts the
@@ -286,11 +286,6 @@ computing. We present a novel columnar storage representation for nested records
 and discuss experiments on few-thousand node instances of the system.
 :::
 
-::: preview http://db.csail.mit.edu/pubs/abadi-column-stores.pdf
-
-:::
-
-
 ::: preview https://en.wikipedia.org/wiki/Inverted_index
 Inverted index
 
@@ -316,16 +311,16 @@ needs more processing power and space to be created.
 The Tail at Scale
 
 Systems that respond to user actions very quickly (within 100 milliseconds) feel
-more fluid and natural to users than those that take longer [Card et al 1991].
-Improvements in Internet connectivity and the rise of warehouse-scale computing
-systems [Barroso & Hoelzle 2009] have enabled Web services that provide fluid
-responsiveness while consulting multi-terabyte datasets that span thousands of
-servers. For example, the Google search system now updates query results
-interactively as the user types, predicting the most likely query based on the
-prefix typed so far, performing the search, and showing the results within a few
-tens of milliseconds. Emerging augmented reality devices such as the Google
-Glass prototype will need associated Web services with even greater
-computational needs while guaranteeing seamless interactivity.
+more fluid and natural to users than those that take longer. Improvements in
+Internet connectivity and the rise of warehouse-scale computing systems have
+enabled Web services that provide fluid responsiveness while consulting
+multi-terabyte datasets that span thousands of servers. For example, the Google
+search system now updates query results interactively as the user types,
+predicting the most likely query based on the prefix typed so far, performing
+the search, and showing the results within a few tens of milliseconds. Emerging
+augmented reality devices such as the Google Glass prototype will need
+associated Web services with even greater computational needs while guaranteeing
+seamless interactivity.
 
 It is challenging to keep the tail of the latency distribution low for
 interactive services as the size and complexity of the system scales up or as
@@ -344,7 +339,7 @@ techniques allow system utilization to be driven higher without lengthening the
 latency tail, avoiding wasteful over-provisioning.
 :::
 
-::: preview ./abadi_design_impl_column_store.pdf
+::: preview /papers/abadi2013design.pdf
 The Design and Implementation of Modern Column-Oriented Database Systems
 
 In this article, we survey recent research on column-oriented database systems,
