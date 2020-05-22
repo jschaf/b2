@@ -202,8 +202,8 @@ CAPTION: How a query is processed by a Gorilla instance.
    to disk with a corresponding checkpoint file. After all `TimeSeries` data
    structures for a shard are flushed, the Gorilla node deletes the append-only
    log for that shard.
-   
-::: preview gorilla.pdf   
+
+::: preview gorilla.pdf  
 Gorilla: A Fast, Scalable, In-Memory Time Series Database
 
 Large-scale internet services aim to remain highly available and responsive in
@@ -234,12 +234,12 @@ time series correlation search and more dense visualization tools.
 ::: preview https://github.com/facebookarchive/beringei
 Beringei is a high performance, in-memory storage engine for time series data.
 
-This repo has been archived and is no longer being actively maintained. 
+This repo has been archived and is no longer being actively maintained.
 
 A high performance, in memory time series storage engine. In the fall of 2015,
 we published the paper “Gorilla: A Fast, Scalable, In-Memory Time Series
 Database” at VLDB 2015. Beringei is the open source representation of the ideas
-presented in this paper.
+presented in this paper.  
                                                           
 Beringei is a high performance time series storage engine. Time series are
 commonly used as a representation of statistics, gauges, and counters for

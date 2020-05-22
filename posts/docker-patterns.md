@@ -11,9 +11,9 @@ noticed a few patterns and developed some guidelines to make my life easier.
 
 ## Shell hygiene
 
-We'll start with shell hygiene. Firstly, prefix complex chains of `RUN`
-commands with `set -eux` to stop script execution on errors
-(`errexit`), stop on unset variables (`nounset`), and trace commands (`x`).
+We'll start with shell hygiene. Firstly, prefix complex chains of `RUN` commands
+with `set -eux` to stop script execution on errors (`errexit`), stop on unset
+variables (`nounset`), and trace commands (`x`).
 
 ```dockerfile
 RUN set -eux \
@@ -23,20 +23,23 @@ RUN set -eux \
   && curl https://getcaddy.com | bash -s personal
 ```
 
-NOTE: The efficacy of errexit is a nuanced topic with sharp edges. The counter-argument against errexit revolves around its [inability][errexit] to correctly detect all
-conditions with non-zero exit codes, including relatively common conditions.
- I've found errexit more than valuable enough to adorn the top of my scripts.
- 
+NOTE: The efficacy of errexit is a nuanced topic with sharp edges. The
+counter-argument against errexit revolves around its [inability][errexit] to
+correctly detect all conditions with non-zero exit codes, including relatively
+common conditions. I've found errexit more than valuable enough to adorn the top
+of my scripts.
+
 [errexit]: http://mywiki.wooledge.org/BashFAQ/105
 
 ## Move logic out of a Dockerfile into a script
 
-Dockerfile syntax is horrendous for building scripts past about 5 lines.
-Instead of wrestling with `&&` and backslashes, move logic into
-a script. Then, `COPY` the script into the Docker image. Docker invalidates based on the hash
-of the copied script, so any changes in the copied script force Docker to
-rebuild that layer plus all following layers. The benefit of using an external
-scripts are that you can use Bash instead of the container shell and all the programming tools with external files, especially shellcheck.
+Dockerfile syntax is horrendous for building scripts past about 5 lines. Instead
+of wrestling with `&&` and backslashes, move logic into a script. Then, `COPY`
+the script into the Docker image. Docker invalidates based on the hash of the
+copied script, so any changes in the copied script force Docker to rebuild that
+layer plus all following layers. The benefit of using an external scripts are
+that you can use Bash instead of the container shell and all the programming
+tools with external files, especially shellcheck.
 
 ```dockerfile
 FROM debian:latest
@@ -46,11 +49,12 @@ RUN /usr/local/bin/download_vector.sh
 
 ## Always update apt cache
 
-Minor versions in Debian package repositories advance quickly into oblivion. Always
-prefix `apt-get install` with `apt-get update`. If the base image has a previously issued `apt-get update` command, its apt cache contains with available package versions that existed at the creation time of the image. Debian remove old versions
-from the package repositories, so `apt-get install` can fail if the cached version is
-too old.
-
+Minor versions in Debian package repositories advance quickly into oblivion.
+Always prefix `apt-get install` with `apt-get update`. If the base image has a
+previously issued `apt-get update` command, its apt cache contains with
+available package versions that existed at the creation time of the image.
+Debian remove old versions from the package repositories, so `apt-get install`
+can fail if the cached version is too old.
 
 ```shell script
 apt-get update

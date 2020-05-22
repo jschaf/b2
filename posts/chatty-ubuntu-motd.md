@@ -296,18 +296,18 @@ Right now it says to check out microk8s and also to look at livepatch.
 How is /etc/motd updated?
 
 
-It's updated by pam_motd on login. The [update-motd][update-motd-man] manual 
+It's updated by pam_motd on login. The [update-motd][update-motd-man] manual
 page describes this:
 
 [update-motd-man]: http://manpages.ubuntu.com/manpages/lucid/en/man5/update-motd.5.html
 
-> Ubuntu introduced the update-motd framework, by which  the  motd(5)  is
+> Ubuntu introduced the update-motd framework, by which the motd(5) is
 > dynamically assembled from a collection of scripts at login.
 >
-> Executable  scripts in /etc/update-motd.d/* are executed by pam_motd(8)
-> as the root user at each login, and this information is concatenated in
-> /var/run/motd.  The order of script execution is determined by the run-
-> parts(8) --lsbsysinit option (basically alphabetical order, with a  few
+> Executable scripts in /etc/update-motd.d/\* are executed by pam_motd(8) as the
+> root user at each login, and this information is concatenated in
+> /var/run/motd. The order of script execution is determined by the run-
+> parts(8) --lsbsysinit option (basically alphabetical order, with a few
 > caveats).
 >
 > On   Ubuntu   systems,  /etc/motd  is  typically  a  symbolic  link  to
