@@ -9,6 +9,7 @@ import (
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -29,12 +30,18 @@ func newMdTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, pa
 // string.
 func assertNoRenderDiff(t *testing.T, md goldmark.Markdown, ctx parser.Context, src, want string) {
 	t.Helper()
-	buf := &bytes.Buffer{}
-	if err := md.Convert([]byte(src), buf, parser.WithContext(ctx)); err != nil {
+	bufW := &bytes.Buffer{}
+	reader := text.NewReader([]byte(src))
+	doc := md.Parser().Parse(reader, parser.WithContext(ctx))
+	if testing.Verbose() {
+		doc.Dump([]byte(src), 0)
+	}
+
+	if err := md.Renderer().Render(bufW, []byte(src), doc); err != nil {
 		t.Fatal(err)
 	}
 
-	if diff, err := htmls.Diff(buf, strings.NewReader(want)); err != nil {
+	if diff, err := htmls.Diff(bufW, strings.NewReader(want)); err != nil {
 		t.Fatal(err)
 	} else if diff != "" {
 		t.Errorf("Render mismatch (-want +got):\n%s", diff)
