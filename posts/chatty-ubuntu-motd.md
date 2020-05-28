@@ -7,7 +7,7 @@ visibility = "published"
 # Cutting down the Ubuntu MOTD down to size
 
 The Ubuntu message of the day (MOTD) is a chatty affair. A [MOTD][motd-wiki]
-sends information to all users on login. A recent login message greeted me with
+sends information to all users on login---A recent login message greeted me with
 42 lines of questionable value.
 
 [motd-wiki]: https://en.wikipedia.org/wiki/Motd_(Unix)

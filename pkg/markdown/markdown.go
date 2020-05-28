@@ -41,6 +41,7 @@ func defaultExtensions() []goldmark.Extender {
 		mdext.NewSmallCapsExt(),
 		mdext.NewTimeExt(),
 		mdext.NewTOMLExt(),
+		mdext.NewTypographyExt(),
 	}
 }
 

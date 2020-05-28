@@ -22,6 +22,7 @@ html {
   line-height: 24px;
   text-rendering: optimizeLegibility;
   font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "onum";
 }
 
 *,
