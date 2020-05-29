@@ -1,4 +1,3 @@
-//
 // Package bibtex is a quick and dirty BibTeX parser for working with
 // a Bibtex citation
 //
@@ -31,44 +30,6 @@ import (
 	"github.com/jschaf/b2/pkg/cite/bibtex/tok"
 )
 
-const (
-	// Version of BibTeX package
-	Version = `v0.0.8`
-
-	// LicenseText holds the text for displaying license info
-	LicenseText = `
-%s %s
-
-Copyright (c) 2016, Caltech
-All rights not granted herein are expressly reserved by Caltech.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-`
-
-	// DefaultInclude list
-	DefaultInclude = "comment,string,article,book,booklet,inbook,incollection,inproceedings,conference,manual,masterthesis,misc,phdthesis,proceedings,techreport,unpublished"
-
-	// A template for printing an element
-	ElementTmplSrc = `
-@{{- .Type -}}{
-    {{-range .Keys}}
-	{{ . -}},
-	{{end}}
-	{{-range $key, $val := .Tags}}
-		{{- $key -}} = {{- $val -}},
-	{{end}}
-}
-`
-)
-
 // Generic Element
 type Element struct {
 	XMLName xml.Name          `json:"-"`
@@ -87,59 +48,59 @@ type TagTypes struct {
 // Entry types
 var (
 	elementTypes = &map[string]*TagTypes{
-		"article": &TagTypes{
+		"article": {
 			Required: []string{"author", "title", "journal", "year", "volume"},
 			Optional: []string{"number", "pages", "month", "note"},
 		},
-		"book": &TagTypes{
+		"book": {
 			Required: []string{"author", "editor", "title", "publisher", "year"},
 			Optional: []string{"volume", "number", "series", "address", "edition", "month", "note"},
 		},
-		"booklet": &TagTypes{
+		"booklet": {
 			Required: []string{"Title"},
 			Optional: []string{"author", "howpublished", "address", "month", "year", "note"},
 		},
-		"inbook": &TagTypes{
+		"inbook": {
 			Required: []string{"author", "editor", "title", "chapter", "pages", "publisher", "year"},
 			Optional: []string{"volume", "number", "series", "type", "address", "edition", "month", "note"},
 		},
-		"incollection": &TagTypes{
+		"incollection": {
 			Required: []string{"author", "title", "booktitle", "publisher", "year"},
 			Optional: []string{"editor", "volume", "number", "series", "type", "chapter", "pages", "address", "edition", "month", "note"},
 		},
-		"inproceedings": &TagTypes{
+		"inproceedings": {
 			Required: []string{"author", "title", "booktitle", "year"},
 			Optional: []string{"editor", "volume", "number", "series", "pages", "address", "month", "organization", "publisher", "note"},
 		},
-		"conference": &TagTypes{
+		"conference": {
 			Required: []string{"author", "title", "booktitle", "year"},
 			Optional: []string{"editor", "volume", "number", "series", "pages", "address", "month", "organization", "publisher", "note"},
 		},
-		"manual": &TagTypes{
+		"manual": {
 			Required: []string{"title"},
 			Optional: []string{"author", "organization", "address", "edition", "month", "year", "note"},
 		},
-		"masterthesis": &TagTypes{
+		"masterthesis": {
 			Required: []string{"author", "title", "school", "year"},
 			Optional: []string{"type", "address", "month", "note"},
 		},
-		"misc": &TagTypes{
+		"misc": {
 			Required: []string{},
 			Optional: []string{"author", "title", "howpublished", "month", "year", "note"},
 		},
-		"phdthesis": &TagTypes{
+		"phdthesis": {
 			Required: []string{"author", "title", "school", "year"},
 			Optional: []string{"type", "address", "month", "note"},
 		},
-		"proceedings": &TagTypes{
+		"proceedings": {
 			Required: []string{"title", "year"},
 			Optional: []string{"editor", "volume", "series", "address", "month", "publisher", "organization", "note"},
 		},
-		"techreport": &TagTypes{
+		"techreport": {
 			Required: []string{"author", "title", "institution", "year"},
 			Optional: []string{"type", "number", "address", "month", "note"},
 		},
-		"unpublished": &TagTypes{
+		"unpublished": {
 			Required: []string{"author", "title", "note"},
 			Optional: []string{"month", "year"},
 		},

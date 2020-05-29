@@ -26,10 +26,8 @@ import (
 )
 
 const (
-	// Version of  tok package
-	Version = `v0.0.2`
 
-	//Base token types, these are single letter tokens, no look ahead needed
+	// Base token types, these are single letter tokens, no look ahead needed
 
 	// Letter is an alphabetical letter (e.g. A-Z, a-z in English)
 	Letter = "Letter"
