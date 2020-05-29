@@ -21,6 +21,7 @@ func TestMeta(t *testing.T) {
 				+++
 				slug = "a_slug"
 				date = 2019-09-20
+        bib_paths = ["./ref.bib"]
 				+++
 				# Hello goldmark-meta
       `),
@@ -28,9 +29,10 @@ func TestMeta(t *testing.T) {
         <h1>Hello goldmark-meta</h1>
       `),
 			PostMeta{
-				Path: "/a_slug",
-				Slug: "a_slug",
-				Date: time.Date(2019, time.September, 20, 0, 0, 0, 0, time.Local),
+				Path:     "/a_slug",
+				Slug:     "a_slug",
+				Date:     time.Date(2019, time.September, 20, 0, 0, 0, 0, time.Local),
+				BibPaths: []string{"/md/test/ref.bib"},
 			},
 		},
 	}

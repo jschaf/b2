@@ -6,6 +6,26 @@ import (
 	"go.uber.org/zap"
 )
 
+var errorsCtxKey = parser.NewContextKey()
+
+func PushError(pc parser.Context, err error) {
+	var errs []error
+	if e := pc.Get(errorsCtxKey); e != nil {
+		errs = e.([]error)
+	}
+	errs = append(errs, err)
+	pc.Set(errorsCtxKey, errs)
+}
+
+func PopErrors(pc parser.Context) []error {
+	var errs []error
+	if e := pc.Get(errorsCtxKey); e != nil {
+		errs = e.([]error)
+	}
+	pc.Set(errorsCtxKey, nil)
+	return errs
+}
+
 var assetsCtxKey = parser.NewContextKey()
 
 // GetAssets returns a map of all assets associated with a post.

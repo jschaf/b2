@@ -4,6 +4,7 @@ package mdext
 
 import (
 	"bytes"
+	"path/filepath"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -32,6 +33,8 @@ type PostMeta struct {
 	Date time.Time
 	// Either draft or published.
 	Visibility string
+	// Paths (relative or absolute) to bibtex files to resolve references.
+	BibPaths []string `toml:"bib_paths"`
 }
 
 var tomlCtxKey = parser.NewContextKey()
@@ -107,6 +110,14 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 		panic(err)
 	}
 	meta.Path = "/" + meta.Slug
+
+	postPath := GetFilePath(pc)
+	for i, bib := range meta.BibPaths {
+		if filepath.IsAbs(bib) {
+			continue
+		}
+		meta.BibPaths[i] = filepath.Join(filepath.Dir(postPath), bib)
+	}
 
 	SetTOMLMeta(pc, *meta)
 

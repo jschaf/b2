@@ -45,6 +45,8 @@ type TagTypes struct {
 	Optional []string
 }
 
+type Key = string
+
 // Entry types
 var (
 	elementTypes = &map[string]*TagTypes{
@@ -106,6 +108,13 @@ var (
 		},
 	}
 )
+
+func IsValidKeyChar(c byte) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		(c >= '0' && c <= '9') ||
+		c == '.' || c == '-' || c == '_'
+}
 
 // Set adds/updates an attribute (e.g. author, title, year) to an element
 func (element *Element) Set(key, value string) bool {

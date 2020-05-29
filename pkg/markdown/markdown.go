@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -24,14 +25,36 @@ type PostAST struct {
 	Path string
 }
 
+// Global configuration options for parsing and rendering markdown.
+type Options struct {
+	CiteStyle cite.Style
+	Extenders []goldmark.Extender
+}
+
 type Markdown struct {
 	gm     goldmark.Markdown
 	logger *zap.Logger
+	opts   Options
 }
 
-func defaultExtensions() []goldmark.Extender {
+type Optioner func(*Markdown)
+
+func WithCiteStyle(c cite.Style) Optioner {
+	return func(m *Markdown) {
+		m.opts.CiteStyle = c
+	}
+}
+
+func WithExtender(e goldmark.Extender) Optioner {
+	return func(m *Markdown) {
+		m.opts.Extenders = append(m.opts.Extenders, e)
+	}
+}
+
+func defaultExtensions(opts Options) []goldmark.Extender {
 	return []goldmark.Extender{
 		mdext.NewArticleExt(),
+		mdext.NewCitationExt(opts.CiteStyle),
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
 		mdext.NewHeaderExt(),
@@ -47,11 +70,21 @@ func defaultExtensions() []goldmark.Extender {
 
 // New creates a new markdown parser and renderer with additional extenders
 // beyond the default extenders.
-func New(l *zap.Logger, exts ...goldmark.Extender) *Markdown {
-	gm := goldmark.New(
-		goldmark.WithExtensions(exts...),
-		goldmark.WithExtensions(defaultExtensions()...))
-	return &Markdown{gm: gm, logger: l}
+func New(l *zap.Logger, opts ...Optioner) *Markdown {
+	m := &Markdown{
+		logger: l,
+		opts: Options{
+			CiteStyle: cite.IEEE,
+		},
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+
+	m.gm = goldmark.New(
+		goldmark.WithExtensions(m.opts.Extenders...),
+		goldmark.WithExtensions(defaultExtensions(m.opts)...))
+	return m
 }
 
 func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {

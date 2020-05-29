@@ -21,13 +21,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
 	}
-	c := compiler.New(markdown.New(logger, mdext.NewNopContinueReadingExt()))
+	c := compiler.New(markdown.New(
+		logger,
+		markdown.WithExtender(mdext.NewNopContinueReadingExt())))
 	if err := c.CompileAllPosts(*flagGlob); err != nil {
 		log.Fatal(err)
 	}
 
 	ic := compiler.NewForIndex(
-		markdown.New(logger, mdext.NewContinueReadingExt()))
+		markdown.New(logger, markdown.WithExtender(mdext.NewContinueReadingExt())))
 	if err := ic.Compile(); err != nil {
 		log.Fatal(err)
 	}

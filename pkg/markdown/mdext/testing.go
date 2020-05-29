@@ -13,13 +13,15 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
+const testPostPath = "/md/test/path.md"
+
 // newMdTester creates a new markdown with the given extensions. We can't use
 // our top level markdown because it would create a circular dependency.
 func newMdTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, parser.Context) {
 	md := goldmark.New(goldmark.WithExtensions(exts...))
 	pc := parser.NewContext()
 	logger := zaptest.NewLogger(t)
-	SetFilePath(pc, "<md_test_file>")
+	SetFilePath(pc, testPostPath)
 	SetLogger(pc, logger)
 	SetRenderer(pc, md.Renderer())
 
@@ -35,6 +37,9 @@ func assertNoRenderDiff(t *testing.T, md goldmark.Markdown, ctx parser.Context, 
 	doc := md.Parser().Parse(reader, parser.WithContext(ctx))
 	if testing.Verbose() {
 		doc.Dump([]byte(src), 0)
+	}
+	if errs := PopErrors(ctx); len(errs) > 0 {
+		t.Fatalf("errors while parsing: %v", errs)
 	}
 
 	if err := md.Renderer().Render(bufW, []byte(src), doc); err != nil {

@@ -179,13 +179,17 @@ func main() {
 	}
 
 	// Compile because it might have changed since last run.
-	c := compiler.New(markdown.New(server.logger.Desugar(), mdext.NewNopContinueReadingExt()))
+	c := compiler.New(
+		markdown.New(server.logger.Desugar(),
+			markdown.WithExtender(mdext.NewNopContinueReadingExt())))
 	server.logger.Debug("compiling all markdown files")
 	if err := c.CompileAllPosts(""); err != nil {
 		server.logger.Error(err)
 		return
 	}
-	ic := compiler.NewForIndex(markdown.New(server.logger.Desugar(), mdext.NewContinueReadingExt()))
+	ic := compiler.NewForIndex(
+		markdown.New(server.logger.Desugar(),
+			markdown.WithExtender(mdext.NewContinueReadingExt())))
 	if err := ic.Compile(); err != nil {
 		server.logger.Error(err)
 		return
