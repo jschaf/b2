@@ -41,13 +41,14 @@ type citeParseState = int
 const (
 	citeSearch   citeParseState = iota // looking for [
 	citeStart                          // after parsing [
-	citeFoundKey                       // after parsing @
+	citeFoundKey                       // after parsing @foobar
 )
 
 // citeSpan is the start and end span that contain a citation.
 // We don't track offsets because we rely on the fact that the brackets are
 // always in text inline with length 1.
 type citeSpan struct {
+	id         string
 	start, end *ast.Text
 }
 
@@ -72,6 +73,7 @@ func (ca citationASTTransformer) reparentCitationsSpan(span citeSpan) {
 	}
 	p := span.start.Parent()
 	c := NewCitation()
+	c.ID = span.id
 	p.InsertBefore(p, span.start, c)
 	var node = span.start.NextSibling()
 	for node != span.end {
@@ -84,10 +86,17 @@ func (ca citationASTTransformer) reparentCitationsSpan(span citeSpan) {
 	p.RemoveChild(p, span.end)
 }
 
+// findSpans finds all bracketed citation spans.
 func (ca citationASTTransformer) findSpans(node *ast.Document, reader text.Reader) ([]citeSpan, error) {
 	state := citeSearch
-	spans := make([]citeSpan, 0)
 	var start *ast.Text
+	id := ""
+	resetSearch := func() {
+		state = citeSearch
+		start = nil
+		id = ""
+	}
+	spans := make([]citeSpan, 0)
 
 	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		// Skip everything except entering ast.Text. The brackets don't mean
@@ -99,7 +108,7 @@ func (ca citationASTTransformer) findSpans(node *ast.Document, reader text.Reade
 		nodeType := n.Type()
 		switch nodeType {
 		case ast.TypeDocument, ast.TypeBlock:
-			start = nil
+			resetSearch()
 			return ast.WalkContinue, nil
 
 		case ast.TypeInline:
@@ -111,26 +120,47 @@ func (ca citationASTTransformer) findSpans(node *ast.Document, reader text.Reade
 		txt := n.(*ast.Text)
 
 		bytes := txt.Text(reader.Source())
-		for _, b := range bytes {
-			switch b {
-			case '[':
-				state = citeStart
-				start = txt
-
-			case '@':
-				if state == citeStart {
-					state = citeFoundKey
+		for i := 0; i < len(bytes); i++ {
+			b := bytes[i]
+			switch state {
+			case citeSearch:
+				if b == '[' {
+					state = citeStart
+					start = txt
 				}
 
-			case ']':
-				if state == citeFoundKey {
+			case citeStart:
+				switch b {
+				case '@':
+					i++
+					lo := i
+					for ; i < len(bytes) && util.IsAlphaNumeric(bytes[i]); i++ {
+					}
+					hi := i
+					if hi > lo {
+						id = string(bytes[lo:hi])
+						state = citeFoundKey
+					}
+				case '[':
+					resetSearch()
+					state = citeStart
+				case ']':
+					resetSearch()
+				}
+
+			case citeFoundKey:
+				switch b {
+				case ']':
 					span := citeSpan{
+						id:    id,
 						start: start,
 						end:   txt,
 					}
 					spans = append(spans, span)
+					resetSearch()
 				}
 			}
+			i++
 		}
 		return ast.WalkContinue, nil
 	})
@@ -140,13 +170,16 @@ func (ca citationASTTransformer) findSpans(node *ast.Document, reader text.Reade
 
 type citationRenderer struct{}
 
-func (c citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(KindCitation, c.render)
+func (cr citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(KindCitation, cr.render)
 }
 
-func (c citationRenderer) render(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (cr citationRenderer) render(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+	c := n.(*Citation)
 	if entering {
-		_, _ = writer.WriteString("<cite>")
+		_, _ = writer.WriteString(`<cite data-cite-key="`)
+		_, _ = writer.WriteString(c.ID)
+		_, _ = writer.WriteString(`">`)
 	} else {
 		_, _ = writer.WriteString("</cite>")
 	}

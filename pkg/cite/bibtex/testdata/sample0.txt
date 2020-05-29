@@ -1,0 +1,15 @@
+@comment {
+    This is a bibtex example of a comment,
+    it can span lines and ends with the matching closing curly bracket.
+}
+@article{
+    myarticlekey,
+    author = "R. S. Doiel",
+    jounral = {Robert's Vanity Journal of Software Works},
+    year = 2016,
+    blahblah = {
+        this is  just a bunch of text
+        on different lines
+        and would normally be ignored by BibTeX tools
+    }
+}

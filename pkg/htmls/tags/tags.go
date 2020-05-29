@@ -2,17 +2,26 @@ package tags
 
 import "strings"
 
-func Wrap(tag string, contents ...string) string {
+func WrapAttrs(tag string, attrs string, contents ...string) string {
 	startTagSize := len(tag) + 2
 	endTagSize := startTagSize + 1
-	size := startTagSize + endTagSize
+	attrsSize := 0
+	if len(attrs) > 0 {
+		attrsSize = len(attrs) + 1
+	}
+	size := startTagSize + endTagSize + attrsSize
 	for _, content := range contents {
 		size += len(content)
 	}
 	b := strings.Builder{}
 	b.Grow(size)
 
-	b.WriteString("<" + tag + ">")
+	b.WriteString("<" + tag)
+	if len(attrs) > 0 {
+		b.WriteString(" ")
+		b.WriteString(attrs)
+	}
+	b.WriteString(">")
 	for _, t := range contents {
 		b.WriteString(t)
 	}
@@ -20,8 +29,12 @@ func Wrap(tag string, contents ...string) string {
 	return b.String()
 }
 
-func Cite(ts ...string) string {
-	return Wrap("cite", ts...)
+func Wrap(tag string, contents ...string) string {
+	return WrapAttrs(tag, "", contents...)
+}
+
+func CiteAttrs(attrs string, ts ...string) string {
+	return WrapAttrs("cite", attrs, ts...)
 }
 
 func Em(ts ...string) string {

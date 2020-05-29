@@ -11,7 +11,7 @@ func TestNewCitationExt(t *testing.T) {
 		src  string
 		want string
 	}{
-		{"[@joe *bar*]", tags.P(tags.Cite("@joe ", tags.Em("bar")))},
+		{"[@joe *bar*]", tags.P(tags.CiteAttrs(`data-cite-key="joe"`, "@joe ", tags.Em("bar")))},
 	}
 
 	for _, tt := range tests {
