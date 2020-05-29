@@ -1,8 +1,6 @@
 package mdext
 
 import (
-	"fmt"
-
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -14,6 +12,7 @@ import (
 var KindCitation = ast.NewNodeKind("citation")
 
 // Citation is an inline node representing a citation.
+// See https://pandoc.org/MANUAL.html#citations.
 type Citation struct {
 	ast.BaseInline
 	ID     string
@@ -21,239 +20,122 @@ type Citation struct {
 	Suffix string
 }
 
-var citeBottom = parser.NewContextKey()
-
-type citationParser struct {
+func NewCitation() *Citation {
+	return &Citation{}
 }
 
-func (c citationParser) Trigger() []byte {
-	return []byte{'[', ']'}
+func (c Citation) Kind() ast.NodeKind {
+	return KindCitation
 }
 
-func (c citationParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
-	line, _ := block.PeekLine()
-	switch line[0] {
-	case '[':
-		pc.Set(citeBottom, pc.LastDelimiter())
+func (c Citation) Dump(source []byte, level int) {
+	ast.DumpHelper(&c, source, level, nil, nil)
+}
 
-	case ']':
+type citationASTTransformer struct {
+}
 
+// Possible states for parsing citations.
+type citeParseState = int
+
+const (
+	citeSearch   citeParseState = iota // looking for [
+	citeStart                          // after parsing [
+	citeFoundKey                       // after parsing @
+)
+
+// citeSpan is the start and end span that contain a citation.
+// We don't track offsets because we rely on the fact that the brackets are
+// always in text inline with length 1.
+type citeSpan struct {
+	start, end *ast.Text
+}
+
+// Transform extracts all citations into Citation nodes.
+func (ca citationASTTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	spans, err := ca.findSpans(node, reader)
+	if err != nil {
+		panic(err)
 	}
-	return nil
+
+	for _, span := range spans {
+		ca.reparentCitationsSpan(span)
+	}
 }
 
-// citationParagraphTransformer promotes
-type citationParagraphTransformer struct{}
+func (ca citationASTTransformer) reparentCitationsSpan(span citeSpan) {
+	if span.start.Segment.Len() != 1 || span.end.Segment.Len() != 1 {
+		// This assumption holds because the link parser doesn't merge the text
+		// segments back together after parsing [ and ].
+		panic("expected start and stop to be single element segments " +
+			"containing '[' and ']'")
+	}
+	p := span.start.Parent()
+	c := NewCitation()
+	p.InsertBefore(p, span.start, c)
+	var node = span.start.NextSibling()
+	for node != span.end {
+		cur := node
+		node = node.NextSibling()
+		c.AppendChild(c, cur)
+	}
+	// We don't care about the brackets.
+	p.RemoveChild(p, span.start)
+	p.RemoveChild(p, span.end)
+}
 
-func (c citationParagraphTransformer) Transform(node *ast.Paragraph, reader text.Reader, pc parser.Context) {
-	fmt.Println("\ncitationParagraphTransformer(before):")
-	node.Dump(reader.Source(), 0)
-	defer func() {
-		var root ast.Node
-		root = node
-		for root.Parent() != nil {
-			root = root.Parent()
+func (ca citationASTTransformer) findSpans(node *ast.Document, reader text.Reader) ([]citeSpan, error) {
+	state := citeSearch
+	spans := make([]citeSpan, 0)
+	var start *ast.Text
+
+	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		// Skip everything except entering ast.Text. The brackets don't mean
+		// anything in any other inline node, so don't go into the children of
+		// inline nodes.
+		if !entering {
+			return ast.WalkContinue, nil
 		}
-		fmt.Println("\ncitationParagraphTransformer(after):")
-		root.Dump(reader.Source(), 0)
-	}()
-	lines := node.Lines()
-	block := text.NewBlockReader(reader.Source(), lines)
-	removes := [][2]int{}
-	for {
-		start, end := parseCitation(block, pc)
-		if start > -1 {
-			if start == end {
-				end++
+		nodeType := n.Type()
+		switch nodeType {
+		case ast.TypeDocument, ast.TypeBlock:
+			start = nil
+			return ast.WalkContinue, nil
+
+		case ast.TypeInline:
+			if n.Kind() != ast.KindText {
+				return ast.WalkSkipChildren, nil
 			}
-			removes = append(removes, [2]int{start, end})
-			continue
 		}
-		break
-	}
 
-	offset := 0
-	for _, remove := range removes {
-		if lines.Len() == 0 {
-			break
-		}
-		s := lines.Sliced(remove[1]-offset, lines.Len())
-		lines.SetSliced(0, remove[0]-offset)
-		lines.AppendAll(s)
-		offset = remove[1]
-	}
+		txt := n.(*ast.Text)
 
-	if lines.Len() == 0 {
-		t := ast.NewTextBlock()
-		t.SetBlankPreviousLines(node.HasBlankPreviousLines())
-		node.Parent().ReplaceChild(node.Parent(), node, t)
-		return
-	}
+		bytes := txt.Text(reader.Source())
+		for _, b := range bytes {
+			switch b {
+			case '[':
+				state = citeStart
+				start = txt
 
-}
+			case '@':
+				if state == citeStart {
+					state = citeFoundKey
+				}
 
-func parseCitation(block text.Reader, pc parser.Context) (int, int) {
-	block.SkipSpaces()
-	line, segment := block.PeekLine()
-	if line == nil {
-		return -1, -1
-	}
-	startLine, _ := block.Position()
-	width, pos := util.IndentWidth(line, 0)
-	if width > 3 {
-		return -1, -1
-	}
-	if width != 0 {
-		pos++
-	}
-	if line[pos] != '[' {
-		return -1, -1
-	}
-	open := segment.Start + pos + 1
-	closes := -1
-	block.Advance(pos + 1)
-	for {
-		line, segment = block.PeekLine()
-		if line == nil {
-			return -1, -1
-		}
-		closure := util.FindClosure(line, '[', ']', false, false)
-		if closure > -1 {
-			closes = segment.Start + closure
-			next := closure + 1
-			if next >= len(line) || line[next] != ':' {
-				return -1, -1
+			case ']':
+				if state == citeFoundKey {
+					span := citeSpan{
+						start: start,
+						end:   txt,
+					}
+					spans = append(spans, span)
+				}
 			}
-			block.Advance(next + 1)
-			break
 		}
-		block.AdvanceLine()
-	}
-	if closes < 0 {
-		return -1, -1
-	}
-	label := block.Value(text.NewSegment(open, closes))
-	if util.IsBlank(label) {
-		return -1, -1
-	}
-	block.SkipSpaces()
-	destination, ok := parseLinkDestination(block)
-	if !ok {
-		return -1, -1
-	}
-	line, segment = block.PeekLine()
-	isNewLine := line == nil || util.IsBlank(line)
+		return ast.WalkContinue, nil
+	})
 
-	endLine, _ := block.Position()
-	_, spaces, _ := block.SkipSpaces()
-	opener := block.Peek()
-	if opener != '"' && opener != '\'' && opener != '(' {
-		if !isNewLine {
-			return -1, -1
-		}
-		ref := parser.NewReference(label, destination, nil)
-		pc.AddReference(ref)
-		return startLine, endLine + 1
-	}
-	if spaces == 0 {
-		return -1, -1
-	}
-	block.Advance(1)
-	open = -1
-	closes = -1
-	closer := opener
-	if opener == '(' {
-		closer = ')'
-	}
-	for {
-		line, segment = block.PeekLine()
-		if line == nil {
-			return -1, -1
-		}
-		if open < 0 {
-			open = segment.Start
-		}
-		closure := util.FindClosure(line, opener, closer, false, true)
-		if closure > -1 {
-			closes = segment.Start + closure
-			block.Advance(closure + 1)
-			break
-		}
-		block.AdvanceLine()
-	}
-	if closes < 0 {
-		return -1, -1
-	}
-
-	line, segment = block.PeekLine()
-	if line != nil && !util.IsBlank(line) {
-		if !isNewLine {
-			return -1, -1
-		}
-		title := block.Value(text.NewSegment(open, closes))
-		ref := parser.NewReference(label, destination, title)
-		pc.AddReference(ref)
-		return startLine, endLine
-	}
-
-	title := block.Value(text.NewSegment(open, closes))
-
-	endLine, _ = block.Position()
-	ref := parser.NewReference(label, destination, title)
-	pc.AddReference(ref)
-	return startLine, endLine + 1
-}
-
-func parseLinkDestination(block text.Reader) ([]byte, bool) {
-	block.SkipSpaces()
-	line, _ := block.PeekLine()
-	buf := []byte{}
-	if block.Peek() == '<' {
-		i := 1
-		for i < len(line) {
-			c := line[i]
-			if c == '\\' && i < len(line)-1 && util.IsPunct(line[i+1]) {
-				buf = append(buf, '\\', line[i+1])
-				i += 2
-				continue
-			} else if c == '>' {
-				block.Advance(i + 1)
-				return line[1:i], true
-			}
-			buf = append(buf, c)
-			i++
-		}
-		return nil, false
-	}
-	opened := 0
-	i := 0
-	for i < len(line) {
-		c := line[i]
-		if c == '\\' && i < len(line)-1 && util.IsPunct(line[i+1]) {
-			buf = append(buf, '\\', line[i+1])
-			i += 2
-			continue
-		} else if c == '(' {
-			opened++
-		} else if c == ')' {
-			opened--
-			if opened < 0 {
-				break
-			}
-		} else if util.IsSpace(c) {
-			break
-		}
-		buf = append(buf, c)
-		i++
-	}
-	block.Advance(i)
-	return line[:i], len(line[:i]) != 0
-}
-
-type CitationExt struct{}
-
-func NewCitationExt() *CitationExt {
-	return &CitationExt{}
+	return spans, err
 }
 
 type citationRenderer struct{}
@@ -263,14 +145,24 @@ func (c citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer)
 }
 
 func (c citationRenderer) render(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+	if entering {
+		_, _ = writer.WriteString("<cite>")
+	} else {
+		_, _ = writer.WriteString("</cite>")
+	}
 	return ast.WalkContinue, nil
+}
+
+type CitationExt struct{}
+
+func NewCitationExt() *CitationExt {
+	return &CitationExt{}
 }
 
 func (sc *CitationExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
-		parser.WithParagraphTransformers(
-			// Must be less than link ref, which is 100.
-			util.Prioritized(citationParagraphTransformer{}, 99)))
+		parser.WithASTTransformers(
+			util.Prioritized(citationASTTransformer{}, 99)))
 
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(

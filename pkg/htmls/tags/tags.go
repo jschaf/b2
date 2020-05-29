@@ -2,14 +2,6 @@ package tags
 
 import "strings"
 
-func P(ts ...string) string {
-	return Wrap("p", ts...)
-}
-
-func Code(ts ...string) string {
-	return Wrap("code", ts...)
-}
-
 func Wrap(tag string, contents ...string) string {
 	startTagSize := len(tag) + 2
 	endTagSize := startTagSize + 1
@@ -26,4 +18,20 @@ func Wrap(tag string, contents ...string) string {
 	}
 	b.WriteString("</" + tag + ">")
 	return b.String()
+}
+
+func Cite(ts ...string) string {
+	return Wrap("cite", ts...)
+}
+
+func Em(ts ...string) string {
+	return Wrap("em", ts...)
+}
+
+func Code(ts ...string) string {
+	return Wrap("code", ts...)
+}
+
+func P(ts ...string) string {
+	return Wrap("p", ts...)
 }
