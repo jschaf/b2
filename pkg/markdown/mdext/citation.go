@@ -53,17 +53,30 @@ type citationRenderer struct {
 	citeStyle cite.Style
 }
 
-func (cr *citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	switch cr.citeStyle {
-	case cite.IEEE:
-		crIEEE := &citationRendererIEEE{
+// citationStyleRenderer renders citations and references for a specific style.
+// It's useful to have both renderers in a single struct in order to share
+// information between the citation and reference list.
+type citationStyleRenderer interface {
+	renderCitation(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error)
+	renderReferenceList(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error)
+}
+
+func citationRenderers() map[cite.Style]citationStyleRenderer {
+	return map[cite.Style]citationStyleRenderer{
+		cite.IEEE: &citationRendererIEEE{
 			nextNum:  1,
 			citeNums: make(map[bibtex.Key]int),
-		}
-		reg.Register(KindCitation, crIEEE.render)
-	default:
+		},
+	}
+}
+
+func (cr *citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	r, ok := citationRenderers()[cr.citeStyle]
+	if !ok {
 		panic("unsupported cite style: '" + cr.citeStyle + "'")
 	}
+	reg.Register(KindCitation, r.renderCitation)
+	reg.Register(KindReferenceList, r.renderReferenceList)
 }
 
 type CitationExt struct {

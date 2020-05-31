@@ -8,12 +8,13 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+// citationRendererIEEE renders an IEEE citation.
 type citationRendererIEEE struct {
 	nextNum  int
 	citeNums map[bibtex.Key]int
 }
 
-func (cr *citationRendererIEEE) render(writer util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (cr *citationRendererIEEE) renderCitation(writer util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
@@ -24,6 +25,7 @@ func (cr *citationRendererIEEE) render(writer util.BufWriter, _ []byte, n ast.No
 	num, ok := cr.citeNums[c.Key]
 	if !ok {
 		num = cr.nextNum
+		cr.citeNums[c.Key] = num
 		cr.nextNum += 1
 	}
 
@@ -31,4 +33,8 @@ func (cr *citationRendererIEEE) render(writer util.BufWriter, _ []byte, n ast.No
 		fmt.Sprintf(`<cite id=%s data-cite-key="%s">[%d]</cite>`, c.ID(), c.Key, num))
 	// Citations should generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
+}
+
+func (cr *citationRendererIEEE) renderReferenceList(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+	panic("implement me")
 }
