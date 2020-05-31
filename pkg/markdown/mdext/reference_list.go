@@ -14,6 +14,8 @@ var KindReference = ast.NewNodeKind("reference")
 // ReferenceList is a list of references cited in a document.
 type ReferenceList struct {
 	ast.BaseBlock
+	// All citations from the source document. Ordered by appearance.
+	Citations []*Citation
 }
 
 func NewReferenceList() *ReferenceList {
