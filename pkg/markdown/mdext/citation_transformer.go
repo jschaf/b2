@@ -20,6 +20,9 @@ type citationASTTransformer struct {
 	citeOrders map[bibtex.Key]citeOrder
 	// The next number to use for the raw citation order. Starts at 0.
 	nextCiteOrder int
+	// Attaches citation references based on the logic in the attacher. If nil,
+	// the citation references is not built or attached.
+	attacher CitationReferencesAttacher
 }
 
 type citeOrder struct {
@@ -62,7 +65,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 		return
 	}
 
-	rl := NewReferenceList()
+	refs := NewCitationReferences()
 	for _, span := range spans {
 		c, err := ca.newCitationParent(span, reader.Source())
 		if err != nil {
@@ -75,7 +78,14 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 			return
 		}
 		c.Bibtex = bib
-		rl.Citations = append(rl.Citations, c)
+		refs.Citations = append(refs.Citations, c)
+	}
+
+	if ca.attacher != nil {
+		if err := ca.attacher.Attach(doc, refs); err != nil {
+			PushError(pc, err)
+			return
+		}
 	}
 }
 

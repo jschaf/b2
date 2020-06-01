@@ -41,8 +41,16 @@ func Em(ts ...string) string {
 	return Wrap("em", ts...)
 }
 
+func EmAttrs(attrs string, ts ...string) string {
+	return WrapAttrs("em", attrs, ts...)
+}
+
 func Code(ts ...string) string {
 	return Wrap("code", ts...)
+}
+
+func DivAttrs(attrs string, ts ...string) string {
+	return WrapAttrs("div", attrs, ts...)
 }
 
 func P(ts ...string) string {

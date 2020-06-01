@@ -27,8 +27,9 @@ type PostAST struct {
 
 // Global configuration options for parsing and rendering markdown.
 type Options struct {
-	CiteStyle cite.Style
-	Extenders []goldmark.Extender
+	CiteStyle    cite.Style
+	CiteAttacher mdext.CitationReferencesAttacher
+	Extenders    []goldmark.Extender
 }
 
 type Markdown struct {
@@ -37,15 +38,25 @@ type Markdown struct {
 	opts   Options
 }
 
-type Optioner func(*Markdown)
+// Option is a functional option that manipulates the Markdown struct.
+type Option func(*Markdown)
 
-func WithCiteStyle(c cite.Style) Optioner {
+// WithCiteStyle overrides the default citation style.
+func WithCiteStyle(c cite.Style) Option {
 	return func(m *Markdown) {
 		m.opts.CiteStyle = c
 	}
 }
 
-func WithExtender(e goldmark.Extender) Optioner {
+// WithCiteAttacher overrides the default attacher for references. The default
+// is to attach the references to the end of the first article tag.
+func WithCiteAttacher(c mdext.CitationReferencesAttacher) Option {
+	return func(m *Markdown) {
+		m.opts.CiteAttacher = c
+	}
+}
+
+func WithExtender(e goldmark.Extender) Option {
 	return func(m *Markdown) {
 		m.opts.Extenders = append(m.opts.Extenders, e)
 	}
@@ -54,7 +65,7 @@ func WithExtender(e goldmark.Extender) Optioner {
 func defaultExtensions(opts Options) []goldmark.Extender {
 	return []goldmark.Extender{
 		mdext.NewArticleExt(),
-		mdext.NewCitationExt(opts.CiteStyle),
+		mdext.NewCitationExt(opts.CiteStyle, opts.CiteAttacher),
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
 		mdext.NewHeaderExt(),
@@ -70,11 +81,12 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 
 // New creates a new markdown parser and renderer with additional extenders
 // beyond the default extenders.
-func New(l *zap.Logger, opts ...Optioner) *Markdown {
+func New(l *zap.Logger, opts ...Option) *Markdown {
 	m := &Markdown{
 		logger: l,
 		opts: Options{
-			CiteStyle: cite.IEEE,
+			CiteStyle:    cite.IEEE,
+			CiteAttacher: mdext.NewCitationArticleAttacher(),
 		},
 	}
 	for _, opt := range opts {
