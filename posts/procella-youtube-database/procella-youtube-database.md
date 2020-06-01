@@ -93,7 +93,7 @@ time, and the min/max user ID. For example, if a file’s last event time is
 
 The output of the root server is a physical plan tree. Using trees to distribute
 large queries to many servers is similar to the approach described in the
-[Dremel (BigQuery) paper][dremel]. A tree is necessary because the intermediate
+[Dremel (BigQuery) paper][dremel] [@melnik2010dremel]. A tree is necessary because the intermediate
 data for large queries might exceed the resources for a single server. The root
 server partitions the physical query plan into sub-plans and distributes the
 sub-plans. Each data server fetches and transforms the data according to the

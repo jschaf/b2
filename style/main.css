@@ -168,6 +168,7 @@ a.site-title {
   display: block;
   padding: 0;
   padding-left: 0.8em;
+  margin: 0;
 }
 
 a {
@@ -521,7 +522,7 @@ code-fn {
   transition: opacity 0s; /* Instant transition when disabling. */
 }
 
-#preview-box p {
+#preview-box, #preview-box p {
   font-size: 16px;
   line-height: 22px;
 }
@@ -535,7 +536,7 @@ cite {
   display: inline-block;
   font-style: normal;
   font-variant-caps: all-small-caps;
-  vertical-align: 0.2ex;
+  vertical-align: 0.1ex;
 }
 
 .cite-reference {
