@@ -112,7 +112,7 @@ to a parent server for aggregation.
 
 The advantage of a column store for large analytical queries is a combination of
 four attributes as described by Abadi (think the Knuth of column stores) in
-[The Design and Implementation of Modern Column-Oriented Database Systems][abadi_col].
+[The Design and Implementation of Modern Column-Oriented Database Systems][abadi_col] [@abadi2013design].
 
 [abadi_col]: /papers/abadi2013design.pdf
 

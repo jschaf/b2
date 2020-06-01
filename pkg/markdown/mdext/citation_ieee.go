@@ -33,7 +33,11 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	}
 
 	_, _ = w.WriteString(
-		fmt.Sprintf(`<cite id=%s data-cite-key="%s">[%d]</cite>`, c.ID(), c.Key, num))
+		fmt.Sprintf(`<a href="#%s" class=preview-target data-link-type=%s>`,
+			c.ReferenceID(), LinkCitation))
+	_, _ = w.WriteString(
+		fmt.Sprintf(`<cite id=%s>[%d]</cite>`, c.ID(), num))
+	_, _ = w.WriteString("</a>")
 	// Citations should generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
 }
@@ -43,6 +47,9 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, source []b
 		return ast.WalkSkipChildren, nil
 	}
 	refs := n.(*CitationReferences)
+	if len(refs.Citations) == 0 {
+		return ast.WalkSkipChildren, nil
+	}
 
 	hasRef := make(map[bibtex.Key]struct{})
 
@@ -65,9 +72,9 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, source []b
 }
 
 func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
-	_, _ = w.WriteString(`<div class=cite-reference>`)
-	_, _ = w.WriteString(
-		fmt.Sprintf(`<cite id=%s data-cite-key="%s">[%d]</cite> `, c.ReferenceID(), c.Key, num))
+	_, _ = w.WriteString(fmt.Sprintf(
+		`<div id="%s" class=cite-reference>`, c.ReferenceID()))
+	_, _ = w.WriteString(fmt.Sprintf(`<cite>[%d]</cite> `, num))
 
 	authors := cite.ParseAuthors(c.Bibtex)
 	for i, author := range authors {

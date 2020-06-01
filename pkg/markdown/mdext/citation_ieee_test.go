@@ -12,14 +12,16 @@ import (
 )
 
 func newCiteIEEE(key bibtex.Key, order string) string {
-	attrs := fmt.Sprintf(`id=%s data-cite-key="%s"`, "cite_"+key, key)
-	return tags.CiteAttrs(attrs, order)
+	attrs := fmt.Sprintf(`id=%s`, "cite_"+key)
+	aAttrs := fmt.Sprintf(
+		`href="%s" class=preview-target data-link-type=citation`,
+		"#cite_ref_"+key)
+	return tags.AAttrs(aAttrs, tags.CiteAttrs(attrs, order))
 }
 
 func newCiteRefIEEE(key bibtex.Key, order string, content ...string) string {
-	attrs := fmt.Sprintf(`id=%s data-cite-key="%s"`, "cite_ref_"+key, key)
-
-	return tags.DivAttrs("class=cite-reference", tags.CiteAttrs(attrs, order), strings.Join(content, ""))
+	attrs := fmt.Sprintf(`id=%s class=cite-reference`, "cite_ref_"+key)
+	return tags.DivAttrs(attrs, tags.Cite(order), strings.Join(content, ""))
 }
 
 func TestNewCitationExt_IEEE(t *testing.T) {
@@ -74,6 +76,16 @@ func (c citeDocAttacher) Attach(doc *ast.Document, refs *CitationReferences) err
 	return nil
 }
 
+func newCiteRefsIEEE(ts ...string) string {
+	return tags.DivAttrs("class=cite-references",
+		tags.H2("References"),
+		strings.Join(ts, ""))
+}
+
+func newJournal(ts ...string) string {
+	return tags.EmAttrs("class=cite-journal", ts...)
+}
+
 func TestNewCitationExt_IEEE_References(t *testing.T) {
 	style := cite.IEEE
 	tests := []struct {
@@ -83,7 +95,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 		wantRefs string
 	}{
 		{
-			"re-use citation numbers",
+			"2 references",
 			"alpha [@bib_foo] bravo [@bib_bar] charlie [@bib_foo] delta [@bib_bar]",
 			tags.P(
 				"alpha ", newCiteIEEE("bib_foo", "[1]"),
@@ -91,17 +103,17 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 				" charlie ", newCiteIEEE("bib_foo", "[1]"),
 				" delta ", newCiteIEEE("bib_bar", "[2]"),
 			),
-			tags.DivAttrs("class=cite-references",
+			newCiteRefsIEEE(
 				newCiteRefIEEE("bib_foo", "[1]",
 					"Fred Q. Bloggs, John P. Doe, Another Idiot, ",
 					`"Turtles in the time continum," in`,
-					tags.EmAttrs("class=cite-journal", "Turtles in the Applied Sciences"),
+					newJournal("Turtles in the Applied Sciences"),
 					", Vol. 3, 2016.",
 				),
 				newCiteRefIEEE("bib_bar", "[2]",
 					"Orti, E., Bredas, J.L., Clarisse, C., ",
 					`"Turtles in the time continum," in`,
-					tags.EmAttrs("class=cite-journal", "Nature"),
+					newJournal("Nature"),
 					", Vol. 3, 2019.",
 				),
 			),

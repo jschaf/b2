@@ -49,11 +49,14 @@
  * The complexity comes from interactions between the target link and preview
  * div. Use-cases we want to support:
  *
- * - Allow grace period to continue showing the preview when moving from the
- *   target to preview box.
+ * - Continue showing the preview when moving from the target to preview box
+ *   for a grace period.
  *
- * - Allow grace period to continue showing the preview when leaving the box
- *   but quickly returning.
+ * - Continue showing the preview when leaving the box but quickly returning for
+ *   a grace period.
+ *
+ * - Choosing whether to display the preview box above or below the target. We
+ *   generally prefer above to avoid blocking lines the user will read.
  */
 class PreviewLifecycle {
   constructor() {
@@ -69,12 +72,14 @@ class PreviewLifecycle {
     this.hidePreviewTimer = 0;
     /**
      * A singleton div element to hold previews of preview target links.
-     * Lazily initialized on the first hover of a preview target.
+     * Lazily initialized on the first hover of a preview target. Contains
+     * contentEl.
      * @type {?HTMLElement}
      */
     this.boxEl = null;
     /**
-     * A singleton div element to hold the content of a preview.
+     * A singleton div element to hold the content of a preview. Contained by
+     * boxEl.
      * @type {?HTMLElement}
      */
     this.contentEl = null;
@@ -140,9 +145,7 @@ class PreviewLifecycle {
       this.showPreviewTimer = setTimeout(
           () => requestAnimationFrame(() => this.showPreviewBox(targetEl)),
           PreviewLifecycle.showPreviewDelayMs);
-
     }
-
   }
 
   /**
@@ -191,31 +194,65 @@ class PreviewLifecycle {
   }
 
   /**
+   * Builds content to show in the preview box with info about the target
+   * element.
+   * @param {HTMLElement} targetEl
+   * @return {string} HTML contents of the preview box, or empty if failed to
+   * build.
+   */
+  buildPreviewContent(targetEl) {
+    const title = targetEl.dataset.previewTitle;
+    const snippet = targetEl.dataset.previewSnippet;
+    if (title && snippet) {
+      return title + snippet;
+    }
+
+    const type = targetEl.dataset.linkType;
+    switch (type) {
+      case "citation":
+        const refId = targetEl.getAttribute('href').slice(1);
+        const ref = document.getElementById(refId);
+        if (!ref) {
+          console.warn(`preview-box: no reference found for id='${refId}'`);
+          return ""
+        }
+        // Clone node for easier manipulation.
+        const clone = ref.cloneNode(/* deep */ true);
+        // Drop the citation number, e.g. [1].
+        clone.removeChild(clone.childNodes[0]);
+        return clone.innerHTML;
+
+      default:
+        console.warn("preview-box: unknown link type: " + type);
+    }
+
+    console.warn('preview-box: failed to build content', targetEl);
+    return "";
+  }
+
+  /**
    * Shows the preview box with content from the data attributes of the target
    * element.
    * @param {HTMLElement} targetEl
    * @return void
    */
   showPreviewBox(targetEl) {
-    const title = targetEl.dataset.previewTitle;
-    const snippet = targetEl.dataset.previewSnippet;
-    if (!title || !snippet) {
-      console.warn('preview-box: missing data-title or data-snippet attrs',
-          targetEl)
+    const content = this.buildPreviewContent(targetEl);
+    if (content === "") {
       return;
     }
-    this.currentTarget = targetEl;
 
     this.boxEl.classList.add('preview-disabled');
     // Remove all children to replace them with new title and snippet.
     while (this.contentEl.firstChild) {
       this.contentEl.firstChild.remove()
     }
-    this.contentEl.insertAdjacentHTML('afterbegin', title + snippet)
+    this.contentEl.insertAdjacentHTML('afterbegin', content)
     this.contentEl.style.overflowY = null;
     this.contentEl.style.maxHeight = null;
     // Reset transforms so we don't have to correct them in next frame.
     this.boxEl.style.transform = 'translateX(0) translateY(0)';
+    this.currentTarget = targetEl;
 
     // Use another frame because we need the height of the preview box with the
     // HTML content to correctly position it above or below the preview target.

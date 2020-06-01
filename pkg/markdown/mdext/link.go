@@ -21,8 +21,9 @@ type LinkTransformer struct{}
 type linkType = string
 
 const (
-	linkPDF  linkType = "pdf"
-	linkWiki linkType = "wikipedia"
+	LinkCitation linkType = "citation"
+	LinkPDF      linkType = "pdf"
+	LinkWiki     linkType = "wikipedia"
 )
 
 func (l *LinkTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
@@ -71,10 +72,10 @@ func (l linkDecorationTransform) Transform(doc *ast.Document, reader text.Reader
 
 		switch {
 		case path.Ext(origDest) == ".pdf":
-			link.SetAttribute([]byte("data-link-type"), []byte(linkPDF))
+			link.SetAttribute([]byte("data-link-type"), []byte(LinkPDF))
 
 		case strings.HasPrefix(origDest, "https://en.wikipedia.org"):
-			link.SetAttribute([]byte("data-link-type"), []byte(linkWiki))
+			link.SetAttribute([]byte("data-link-type"), []byte(LinkWiki))
 		}
 
 		renderPreview(pc, origDest, reader, link)

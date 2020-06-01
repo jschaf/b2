@@ -532,7 +532,10 @@ code-fn {
 }
 
 cite {
+  display: inline-block;
   font-style: normal;
+  font-variant-caps: all-small-caps;
+  vertical-align: 0.2ex;
 }
 
 .cite-reference {
