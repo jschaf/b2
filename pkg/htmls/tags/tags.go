@@ -56,3 +56,11 @@ func DivAttrs(attrs string, ts ...string) string {
 func P(ts ...string) string {
 	return Wrap("p", ts...)
 }
+
+func SC(ts ...string) string {
+	return WrapAttrs("span", "class=small-caps", ts...)
+}
+
+func Strong(ts ...string) string {
+	return Wrap("strong", ts...)
+}

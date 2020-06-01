@@ -83,6 +83,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 
 	if ca.attacher != nil {
 		if err := ca.attacher.Attach(doc, refs); err != nil {
+			doc.Dump(reader.Source(), 0)
 			PushError(pc, err)
 			return
 		}

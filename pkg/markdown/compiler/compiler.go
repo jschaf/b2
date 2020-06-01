@@ -133,7 +133,6 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 			return nil
 		}
 		if !strings.Contains(path, glob) {
-			fmt.Printf("Skipping %s for glob %s\n", path, glob)
 			return nil
 		}
 

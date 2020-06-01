@@ -257,7 +257,7 @@ strong {
 }
 
 p,
-blockquote {
+blockquote, .cite-reference {
   line-height: 1.5rem;
   margin-top: 0.9rem;
   margin-bottom: 0;
@@ -529,4 +529,18 @@ code-fn {
 .preview-title {
   font-weight: bold;
   margin-top: 0;
+}
+
+cite {
+  font-style: normal;
+}
+
+.cite-reference {
+  padding-left: 2em;
+}
+
+.cite-reference > cite {
+  display: inline-block;
+  position: absolute;
+  margin-left: -2em;
 }

@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -110,6 +111,11 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	mdext.SetLogger(ctx, m.logger)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
+	if parseErrs := mdext.PopErrors(ctx); len(parseErrs) == 1 {
+		return nil, fmt.Errorf("parse errors in context: %w", parseErrs[0])
+	} else if len(parseErrs) > 1 {
+		return nil, fmt.Errorf("parse errors in context: %v", parseErrs)
+	}
 	meta := mdext.GetTOMLMeta(ctx)
 	meta.Title = mdext.GetTitle(ctx)
 	assets := mdext.GetAssets(ctx)

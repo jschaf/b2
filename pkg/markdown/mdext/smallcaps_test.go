@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"testing"
+
+	"github.com/jschaf/b2/pkg/htmls/tags"
 )
 
 func TestSmallCapsExt(t *testing.T) {
@@ -9,31 +11,31 @@ func TestSmallCapsExt(t *testing.T) {
 		src  string
 		want string
 	}{
-		{"foo", "<p>foo</p>"},
-		{"FO", "<p>FO</p>"},
-		{"FOO", `<p><span class="small-caps">FOO</span></p>`},
-		{"(FOO)", `<p><span class="small-caps">(FOO)</span></p>`},
-		{"(FOO.", `<p>(<span class="small-caps">FOO</span>.</p>`},
-		{"FOO)", `<p><span class="small-caps">FOO</span>)</p>`},
-		{"FOO,", `<p><span class="small-caps">FOO</span>,</p>`},
-		{"FOOs", `<p><span class="small-caps">FOO</span>s</p>`},
-		{"FOOss", `<p>FOOss</p>`},
-		{"F_BAR", `<p>F_BAR</p>`},
-		{"FOO_BAR", `<p>FOO_BAR</p>`},
-		{"MOTD\n", `<p><span class="small-caps">MOTD</span></p>`},
-		{"alpha MOTD\nfoo", "<p>alpha <span class=\"small-caps\">MOTD</span> foo</p>"},
-		{"*FOO*", `<p><em><span class="small-caps">FOO</span></em></p>`},
-		{"**FOO**", `<p><strong><span class="small-caps">FOO</span></strong></p>`},
-		{"FOO", `<p><span class="small-caps">FOO</span></p>`},
-		{"STUBBLE", `<p><span class="small-caps">STUBBLE</span></p>`},
-		{"FOO BAR", `<p><span class="small-caps">FOO</span> <span class="small-caps">BAR</span></p>`},
-		{"The (MOTD)", `<p>The <span class="small-caps">(MOTD)</span>`},
+		{"foo", "foo"},
+		{"FO", "FO"},
+		{"FOO", tags.SC("FOO")},
+		{"(FOO)", tags.SC("(FOO)")},
+		{"(FOO.", "(" + tags.SC("FOO") + "."},
+		{"FOO)", tags.SC("FOO") + ")"},
+		{"FOO,", tags.SC("FOO") + ","},
+		{"FOOs", tags.SC("FOO") + "s"},
+		{"FOOss", `FOOss`},
+		{"F_BAR", `F_BAR`},
+		{"FOO_BAR", `FOO_BAR`},
+		{"MOTD\n", tags.SC("MOTD")},
+		{"alpha MOTD\nfoo", "alpha " + tags.SC("MOTD") + " foo"},
+		{"*FOO*", tags.Em(tags.SC("FOO"))},
+		{"**FOO**", tags.Strong(tags.SC("FOO"))},
+		{"FOO", tags.SC("FOO")},
+		{"STUBBLE", tags.SC("STUBBLE")},
+		{"FOO BAR", tags.SC("FOO") + " " + tags.SC("BAR")},
+		{"The (MOTD)", "The " + tags.SC("(MOTD)")},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewSmallCapsExt())
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			assertNoRenderDiff(t, md, ctx, tt.src, tags.P(tt.want))
 		})
 	}
 }

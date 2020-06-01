@@ -1,13 +1,15 @@
 +++
 slug = "procella-youtube-analytical-database"
 date = 2020-05-20
-visibility = "draft"
+visibility = "published"
+bib_paths = ["./ref.bib"]
 +++
 
 # Procella - YouTube’s analytical column store
 
 Procella is a horizontally scalable, eventually consistent, distributed column
-store leveraging lambda architecture to support both realtime and batch queries.
+store leveraging lambda architecture to support both realtime and batch queries
+[@chattopadhyay2019procella].
 Let’s take those terms one at a time:
 
 - Horizontally scalable means YouTube can spin up more machines and Procella
@@ -48,7 +50,7 @@ rewrite the entire file.
 
 Procella runs on Google infrastructure which has two important consequences.
 First, storage is completely separate from compute. There are no local disks
-inside Google. There are only remote procedure calls (RPCs). Instead of reading
+inside Google. There are only remote procedure calls (RPC). Instead of reading
 or writing to disk, every read or write is an RPC. Second, binaries run on
 multi-tenant servers, so a noisy-neighbor can really wreck your day regarding
 performance. We’ll revisit these points in the optimizations section.
@@ -163,7 +165,7 @@ is to track the results of experiments. Each experiment is represented with an
 integer ID. A row might have several experiments associated with it, like
 `{row_id: 43, experiments: [543, 778, 901]}`. For a query like:
 
-```
+```sql
 SELECT count(*) FROM events WHERE 543 IN experiments
 ```
 

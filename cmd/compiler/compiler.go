@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
+	"runtime/pprof"
 
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -15,11 +17,22 @@ var flagGlob = flag.String(
 	"glob", "",
 	"Only compile posts with an exact substring match on the filename")
 
+var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
+
 func main() {
 	flag.Parse()
 	logger, err := logs.NewShortDevLogger()
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
+	}
+	if *profileFlag != "" {
+		f, err := os.Create(*profileFlag)
+		if err != nil {
+			log.Fatalf("create profile file: %s", err)
+		}
+		log.Println("created profile file: " + f.Name())
+		_ = pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 	c := compiler.New(markdown.New(
 		logger,

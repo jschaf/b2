@@ -47,6 +47,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, source []b
 	hasRef := make(map[bibtex.Key]struct{})
 
 	_, _ = w.WriteString(`<div class=cite-references>`)
+	_, _ = w.WriteString(`<h2>References</h2>`)
 	for _, c := range refs.Citations {
 		if _, ok := hasRef[c.Key]; ok {
 			continue

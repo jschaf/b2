@@ -79,6 +79,9 @@ func firstHeading(doc *ast.Document) ast.Node {
 	var hNode ast.Node
 
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkSkipChildren, nil
+		}
 		if n.Kind() == ast.KindHeading {
 			hNode = n
 			return ast.WalkStop, nil
@@ -118,7 +121,7 @@ func NewArticleExt() *articleExt {
 func (a *articleExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(NewArticleTransformer(), 999),
+			util.Prioritized(NewArticleTransformer(), 900),
 		),
 	)
 	m.Renderer().AddOptions(

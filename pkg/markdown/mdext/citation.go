@@ -147,7 +147,7 @@ func (sc *CitationExt) Extend(m goldmark.Markdown) {
 				citeOrders:    make(map[bibtex.Key]citeOrder),
 				nextCiteOrder: 0,
 				attacher:      sc.attacher,
-			}, 99)))
+			}, 950))) // Must come after article transformer.
 
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
