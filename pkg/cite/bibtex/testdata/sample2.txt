@@ -1,8 +1,0 @@
-@article{
-    a3,
-    author = "R. S. Doiel, Mark Doiel",
-    title = "Turtles in the time continum",
-    journal = "Turtles in the Applied Sciences",
-    year = 2016,
-    volume = "3",
-}

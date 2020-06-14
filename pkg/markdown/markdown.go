@@ -2,10 +2,10 @@ package markdown
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/cite"
 	"io"
 	"io/ioutil"
 
-	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
