@@ -80,15 +80,22 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 	for i, author := range authors {
 		sp := strings.Split(author.First, " ")
 		for _, s := range sp {
-			r, _ := utf8.DecodeRuneInString(s)
-			_, _ = w.WriteRune(r)
-			_, _ = w.WriteString(". ")
+			if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
+				_, _ = w.WriteRune(r)
+				_, _ = w.WriteString(". ")
+			}
 		}
 		_, _ = w.WriteString(author.Last)
 		if i < len(authors)-2 {
 			_, _ = w.WriteString(", ")
 		} else if i == len(authors)-2 {
-			_, _ = w.WriteString(" and ")
+			if authors[len(authors)-1].IsOthers() {
+				_, _ = w.WriteString(" <em>et al</em>")
+				break
+
+			} else {
+				_, _ = w.WriteString(" and ")
+			}
 
 		}
 	}
