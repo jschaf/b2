@@ -3,10 +3,10 @@ package mdext
 import "C"
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/bibtex"
 	"strings"
+	"unicode/utf8"
 
-	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/cite/bibtex"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/util"
 )
@@ -14,7 +14,7 @@ import (
 // citationRendererIEEE renders an IEEE citation.
 type citationRendererIEEE struct {
 	nextNum  int
-	citeNums map[bibtex.Key]int
+	citeNums map[bibtex.CiteKey]int
 }
 
 func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -42,7 +42,7 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	return ast.WalkSkipChildren, nil
 }
 
-func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
@@ -51,7 +51,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, source []b
 		return ast.WalkSkipChildren, nil
 	}
 
-	hasRef := make(map[bibtex.Key]struct{})
+	hasRef := make(map[bibtex.CiteKey]struct{})
 
 	_, _ = w.WriteString(`<div class=cite-references>`)
 	_, _ = w.WriteString(`<h2>References</h2>`)
@@ -76,11 +76,20 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 		`<div id="%s" class=cite-reference>`, c.ReferenceID()))
 	_, _ = w.WriteString(fmt.Sprintf(`<cite>[%d]</cite> `, num))
 
-	authors := cite.ParseAuthors(c.Bibtex)
+	authors := c.Bibtex.Author
 	for i, author := range authors {
+		sp := strings.Split(author.First, " ")
+		for _, s := range sp {
+			r, _ := utf8.DecodeRuneInString(s)
+			_, _ = w.WriteRune(r)
+			_, _ = w.WriteString(". ")
+		}
 		_, _ = w.WriteString(author.Last)
-		if i < len(authors)-1 {
+		if i < len(authors)-2 {
 			_, _ = w.WriteString(", ")
+		} else if i == len(authors)-2 {
+			_, _ = w.WriteString(" and ")
+
 		}
 	}
 

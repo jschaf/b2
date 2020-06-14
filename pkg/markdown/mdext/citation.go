@@ -3,9 +3,8 @@ package mdext
 import (
 	"errors"
 	"fmt"
-
+	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/cite/bibtex"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -20,12 +19,12 @@ var KindCitation = ast.NewNodeKind("citation")
 // See https://pandoc.org/MANUAL.html#citations.
 type Citation struct {
 	ast.BaseInline
-	Key bibtex.Key
+	Key bibtex.CiteKey
 	// The order that this citation appeared in the document, relative to other
 	// citations. Starts at 0. The order always increments for each citation even
 	// if the preceding citations had the same key.
 	Order  int
-	Bibtex *bibtex.Element
+	Bibtex bibtex.Entry
 	Prefix string
 	Suffix string
 }
@@ -70,7 +69,7 @@ func citationRenderers() map[cite.Style]citationStyleRenderer {
 	return map[cite.Style]citationStyleRenderer{
 		cite.IEEE: &citationRendererIEEE{
 			nextNum:  1,
-			citeNums: make(map[bibtex.Key]int),
+			citeNums: make(map[bibtex.CiteKey]int),
 		},
 	}
 }
@@ -144,7 +143,7 @@ func (sc *CitationExt) Extend(m goldmark.Markdown) {
 		parser.WithASTTransformers(
 			util.Prioritized(&citationASTTransformer{
 				citeStyle:     sc.citeStyle,
-				citeOrders:    make(map[bibtex.Key]citeOrder),
+				citeOrders:    make(map[bibtex.CiteKey]citeOrder),
 				nextCiteOrder: 0,
 				attacher:      sc.attacher,
 			}, 950))) // Must come after article transformer.

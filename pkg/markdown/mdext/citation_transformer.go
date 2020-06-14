@@ -2,10 +2,10 @@ package mdext
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
+	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/cite/bibtex"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
@@ -17,7 +17,7 @@ import (
 type citationASTTransformer struct {
 	citeStyle cite.Style
 	// The cite order for bibtex keys.
-	citeOrders map[bibtex.Key]citeOrder
+	citeOrders map[bibtex.CiteKey]citeOrder
 	// The next number to use for the raw citation order. Starts at 0.
 	nextCiteOrder int
 	// Attaches citation references based on the logic in the attacher. If nil,
@@ -26,9 +26,9 @@ type citationASTTransformer struct {
 }
 
 type citeOrder struct {
-	key   bibtex.Key
+	key   bibtex.CiteKey
 	order int
-	bib   bibtex.Element
+	bib   bibtex.Entry
 }
 
 // Possible states for parsing citations.
@@ -43,7 +43,7 @@ const (
 
 // citeSpan is the start and end span that contain a citation.
 type citeSpan struct {
-	key        bibtex.Key
+	key        bibtex.CiteKey
 	order      int
 	start, end *ast.Text
 	// Absolute offsets that delimit the start and end of a citation.
@@ -59,7 +59,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 	}
 
 	bibs := GetTOMLMeta(pc).BibPaths
-	bibElems, err := ca.readBibs(bibs)
+	bibEntries, err := ca.readBibs(bibs)
 	if err != nil {
 		PushError(pc, err)
 		return
@@ -72,7 +72,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 			PushError(pc, err)
 			return
 		}
-		bib, ok := bibElems[c.Key]
+		bib, ok := bibEntries[c.Key]
 		if !ok {
 			PushError(pc, fmt.Errorf("citation: no bibtex found for key: %s", c.Key))
 			return
@@ -92,21 +92,19 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 
 // readBibs returns all bibtex elements from the file paths in bibs merged into
 // a map by the key.
-func (ca *citationASTTransformer) readBibs(bibs []string) (map[bibtex.Key]*bibtex.Element, error) {
-	bibEntries := make(map[string]*bibtex.Element)
+func (ca *citationASTTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
+	bibEntries := make(map[bibtex.CiteKey]bibtex.Entry)
 	for _, bib := range bibs {
-		bibBytes, err := ioutil.ReadFile(bib)
+		f, err := os.Open(bib)
 		if err != nil {
 			return nil, fmt.Errorf("citation: read bib file: %w", err)
 		}
-		bibElems, err := bibtex.Parse(bibBytes)
+		entries, err := bibtex.Read(f)
 		if err != nil {
 			return nil, fmt.Errorf("citation: parse bib file: %w", err)
 		}
-		for _, elem := range bibElems {
-			for _, key := range elem.Keys {
-				bibEntries[key] = elem
-			}
+		for _, elem := range entries {
+			bibEntries[elem.Key] = elem
 		}
 	}
 	return bibEntries, nil
@@ -217,7 +215,7 @@ func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Read
 				case '@':
 					i++
 					lo := i
-					for ; i < len(bytes) && bibtex.IsValidKeyChar(bytes[i]); i++ {
+					for ; i < len(bytes) && bytes[i] != ']' && bibtex.IsValidCiteChar(bytes[i]); i++ {
 					}
 					hi := i
 					if hi > lo {
@@ -239,7 +237,7 @@ func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Read
 
 			case citeParseKey:
 				lo := i
-				for ; i < len(bytes) && bibtex.IsValidKeyChar(bytes[i]); i++ {
+				for ; i < len(bytes) && bytes[i] != ']' && bibtex.IsValidCiteChar(bytes[i]); i++ {
 				}
 				hi := i
 				idSuffix := string(bytes[lo:hi])

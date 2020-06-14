@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/cite/bibtex"
 	"github.com/jschaf/b2/pkg/htmls/tags"
 	"github.com/yuin/goldmark/ast"
 )
 
-func newCiteIEEE(key bibtex.Key, order string) string {
+func newCiteIEEE(key bibtex.CiteKey, order string) string {
 	attrs := fmt.Sprintf(`id=%s`, "cite_"+key)
 	aAttrs := fmt.Sprintf(
 		`href="%s" class=preview-target data-link-type=citation`,
@@ -19,7 +19,7 @@ func newCiteIEEE(key bibtex.Key, order string) string {
 	return tags.AAttrs(aAttrs, tags.CiteAttrs(attrs, order))
 }
 
-func newCiteRefIEEE(key bibtex.Key, order string, content ...string) string {
+func newCiteRefIEEE(key bibtex.CiteKey, order string, content ...string) string {
 	attrs := fmt.Sprintf(`id=%s class=cite-reference`, "cite_ref_"+key)
 	return tags.DivAttrs(attrs, tags.Cite(order), strings.Join(content, ""))
 }
@@ -105,13 +105,13 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			),
 			newCiteRefsIEEE(
 				newCiteRefIEEE("bib_foo", "[1]",
-					"Fred Q. Bloggs, John P. Doe, Another Idiot, ",
+					"F. Q. Bloggs, J. P. Doe and A. Idiot, ",
 					`"Turtles in the time continum," in`,
 					newJournal("Turtles in the Applied Sciences"),
 					", Vol. 3, 2016.",
 				),
 				newCiteRefIEEE("bib_bar", "[2]",
-					"Orti, E., Bredas, J.L., Clarisse, C., ",
+					"E. Orti, J. Bredas and C. Clarisse, ",
 					`"Turtles in the time continum," in`,
 					newJournal("Nature"),
 					", Vol. 3, 2019.",
