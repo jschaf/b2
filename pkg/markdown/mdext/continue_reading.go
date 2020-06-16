@@ -2,7 +2,6 @@ package mdext
 
 import (
 	"bytes"
-
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -71,24 +70,27 @@ func (c contReadingParser) CanAcceptIndentedLine() bool {
 // contReadingTransformer removes all nodes after the continue reading node.
 type contReadingTransformer struct{}
 
-func (c contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
-	n := doc.FirstChild()
-	if n == nil {
-		return
-	}
-	for n != nil {
-		if n.Kind() == KindContinueReading {
-			break
-		}
-		n = n.NextSibling()
-	}
+func (c contReadingTransformer) Transform(doc *ast.Document, r text.Reader, _ parser.Context) {
 
-	if n == nil {
+	var contReading ast.Node
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering || n.Kind() != KindContinueReading {
+			return ast.WalkContinue, nil
+		}
+		contReading = n
+		return ast.WalkStop, nil
+	})
+
+	if contReading == nil {
 		return
 	}
-	continueReading := n
-	for continueReading.NextSibling() != nil {
-		doc.RemoveChild(doc, continueReading.NextSibling())
+	parent := contReading.Parent()
+	if parent == nil {
+		return
+	}
+	for contReading.NextSibling() != nil {
+		parent.RemoveChild(parent, contReading.NextSibling())
 	}
 }
 
@@ -146,7 +148,7 @@ func (c ContinueReadingExt) Extend(m goldmark.Markdown) {
 
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(contReadingTransformer{}, 999)))
+			util.Prioritized(contReadingTransformer{}, 1001)))
 
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
 		util.Prioritized(contReadingRenderer{}, 500)))

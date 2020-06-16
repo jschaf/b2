@@ -1,7 +1,7 @@
 +++
 slug = "procella-youtube-analytical-database"
 date = 2020-05-20
-visibility = "published"
+visibility = "draft"
 bib_paths = ["./ref.bib"]
 +++
 

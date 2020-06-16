@@ -34,12 +34,12 @@ func main() {
 		_ = pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
-	c := compiler.New(markdown.New(
-		logger,
-		markdown.WithExtender(mdext.NewNopContinueReadingExt())))
-	if err := c.CompileAllPosts(*flagGlob); err != nil {
-		log.Fatal(err)
-	}
+	// c := compiler.New(markdown.New(
+	// 	logger,
+	// 	markdown.WithExtender(mdext.NewNopContinueReadingExt())))
+	// if err := c.CompileAllPosts(*flagGlob); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	ic := compiler.NewForIndex(
 		markdown.New(logger, markdown.WithExtender(mdext.NewContinueReadingExt())))

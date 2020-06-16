@@ -310,8 +310,7 @@ li, li > p {
 }
 
 figure {
-  margin: 0 auto;
-  margin-top: 24px;
+  margin: 24px auto 24px;
 }
 
 figure > img,
@@ -324,10 +323,10 @@ figure > picture > img {
 }
 
 figcaption {
-  margin: 0 auto;
+  margin: 0.5em auto 0;
   padding: 0 2em;
   font-size: 16.2px;
-  font-weight: bold;
+  font-weight: 500;
 }
 
 sc {
