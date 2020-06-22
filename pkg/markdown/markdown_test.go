@@ -35,7 +35,7 @@ func TestParse(t *testing.T) {
         ![Alt text](./foo_bar)
       `),
 			articleHTML(mdext.PostMeta{Slug: "foo"}, "title",
-				"<figure><picture><img src=\"/foo/foo_bar\" alt=\"Alt text\"></picture></figure>",
+				`<figure><picture><img src="/foo/foo_bar" loading=lazy alt="Alt text"></picture></figure>`,
 			),
 		},
 	}
@@ -54,7 +54,7 @@ func TestParse(t *testing.T) {
 			if diff, err := htmls.DiffStrings(tt.want, got.String()); err != nil {
 				t.Error(err)
 			} else if diff != "" {
-				t.Errorf("Render() got:\n%s\nwant:\n%s", got.String(), tt.want)
+				t.Errorf("Render mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
