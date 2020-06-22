@@ -156,9 +156,9 @@ func (f *figureRenderer) renderFigure(w util.BufWriter, _ []byte, node ast.Node,
 		_, _ = w.WriteString("<img src=\"")
 		escapedSrc := util.EscapeHTML(util.URLEscape(n.Destination, true))
 		_, _ = w.Write(escapedSrc)
-		_, _ = w.WriteString("\" alt=\"")
-		_, _ = w.Write(n.AltText)
-		_ = w.WriteByte('"')
+		_, _ = w.WriteString(`"`)
+		_, _ = w.WriteString(` loading="lazy"`)
+		_, _ = w.WriteString(` alt="` + string(n.AltText) + `"`)
 		if n.Title != nil {
 			_, _ = w.WriteString(` title="`)
 			f.Writer.Write(w, n.Title)

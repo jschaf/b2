@@ -19,7 +19,7 @@ func TestNewFigureExt(t *testing.T) {
 			texts.Dedent(`
 			  <figure>
 		  <picture>
-		    <img src="qux.png" alt="alt text" title="title">
+		    <img src="qux.png" loading="lazy" alt="alt text" title="title">
 		  </picture>
 			  </figure>
 		`),
@@ -34,7 +34,7 @@ func TestNewFigureExt(t *testing.T) {
 			texts.Dedent(`
 			  <figure>
 					<picture>
-						<img src="bar.png" alt="alt text" title="title">
+						<img src="bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
 						foobar
@@ -56,7 +56,7 @@ func TestNewFigureExt(t *testing.T) {
 			texts.Dedent(`
 			  <figure>
 					<picture>
-						<img src="/some_slug/bar.png" alt="alt text" title="title">
+						<img src="/some_slug/bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
 						foobar
@@ -78,7 +78,7 @@ func TestNewFigureExt(t *testing.T) {
 			texts.Dedent(`
 			  <figure>
 					<picture>
-						<img src="https://example.com/bar.png" alt="alt text" title="title">
+						<img src="https://example.com/bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
 						foobar
@@ -101,7 +101,7 @@ func TestNewFigureExt(t *testing.T) {
         </p>
 			  <figure>
 					<picture>
-						<img src="bar.png" alt="alt text" title="title">
+						<img src="bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
 						foobar
