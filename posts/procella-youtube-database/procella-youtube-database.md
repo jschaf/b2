@@ -9,16 +9,15 @@ bib_paths = ["./ref.bib"]
 
 Procella is a horizontally scalable, eventually consistent, distributed column
 store leveraging lambda architecture to support both realtime and batch queries
-[@chattopadhyay2019procella].
-Let’s take those terms one at a time:
+[@chattopadhyay2019procella]. Let’s defined those terms one at a time:
 
 - Horizontally scalable means YouTube can spin up more machines and Procella
   will distribute queries to the new machines automagically.
-- Procella doesn’t support strong [isolation] levels (the I in ACID). Queries
+- Procella doesn’t support strong database [isolation] levels (the I in ACID). Queries
   support [read uncommitted] isolation which can cause _dirty reads_. A dirty
   read occurs when a transaction sees uncommitted changes from another
   transaction.
-- The lambda architecture means there are two write paths. The first, called the
+- The lambda architecture means there are two write paths. The first path, called the
   real-time write path, aims for low latency and writes into an unoptimized
   row-store that’s immediately available for queries. The second, called the
   batch write path, ingests large quantities of data into an optimized columnar
@@ -26,7 +25,12 @@ Let’s take those terms one at a time:
   unify results.
 - Distributed means the data is sharded across multiple servers.
 - A column store refers to how the database physically stores data. See the
-  schema below.
+  figure below for how we might store a table with three columns: `event_id`, 
+  `time`, and `path`.
+  
+![Row store versus column store](row_column_store.png)
+
+CAPTION: The difference in data layout between a row store and a column store.
 
 [isolation]: https://en.wikipedia.org/wiki/Isolation_(database_systems)
 [read uncommitted]:
@@ -35,13 +39,14 @@ Let’s take those terms one at a time:
 CONTINUE_READING
 
 We need a bit more room to explain row stores and column stores. A row store
-writes data for a single record contiguously. If we’re storing events with an
-event ID, a timestamp, and a path, a row store would write 1 event ID, then 1
-timestamp, then 1 path. Then it would repeat for each row.
+writes data for a single record contiguously. If we’re storing events with three
+columns
+`event_id`, `time`, and `path`, a row store writes 1 `event_id`, then 1
+`time`, then 1 `path`. Then the row store repeats the process for each row.
 
 A column store writes a single column for many rows contiguously. If we had 5
-events, we’d first write five event IDs, then 5 timestamps, then 5 paths. The
-benefits of a column store are better compression (usually about 10x better),
+events, we’d first write five `event_ids`, then 5 `times`, then 5 `paths`. The
+benefits of a column store are better compression (usually about 10x better) and
 better locality since all the values for a single column are adjacent. The
 primary disadvantage is you can’t easily update column stores; you have to
 rewrite the entire file.
@@ -57,6 +62,10 @@ performance. We’ll revisit these points in the optimizations section.
 
 The architecture for Procella is a lambda architecture with two write data flows
 (realtime and batch), and a single query flow.
+
+![Procella system architecture](procella-system-arch.png)
+
+CAPTION: The Procella system architecture showing the 3 main flows.
 
 The first write path is the batch data flow (in purple). A user creates a file
 in a supported format (typically through a batch job like an hourly map reduce
@@ -102,7 +111,9 @@ sub-plan.
 [dremel]:
   https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf
 
-<p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/procella-for0.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+![Distributed query plan](tree-query-plan.png)
+
+CAPTION: A distributed query plan in Procella.
 
 The data servers can communicate among each-other with either RPC or with remote
 direct memory access (RDMA). After a data server finishes, it sends the results
