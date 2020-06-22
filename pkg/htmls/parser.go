@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-// ParseFragment parses a normalize version of an HTML node.
+// ParseFragment parses a normalized version of an HTML node.
 func ParseFragment(r io.Reader) ([]*html.Node, error) {
 	testCtx := &html.Node{Type: html.ElementNode, Data: "normalizedFragment"}
 	nodes, err := html.ParseFragment(r, testCtx)

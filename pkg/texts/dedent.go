@@ -7,10 +7,6 @@ import (
 	"unicode"
 )
 
-type lineBound struct {
-	lo, hi int
-}
-
 // Dedent removes leading whitespace indentation from each line in the text.
 //
 // Whitespace is removed according to smallest whitespace prefix of a

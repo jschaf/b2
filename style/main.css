@@ -23,6 +23,13 @@ html {
   text-rendering: optimizeLegibility;
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: "onum";
+  scroll-behavior: smooth;
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 *,
@@ -35,14 +42,13 @@ body {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, segoe ui, Roboto,
+  font-family:-apple-system, system-ui, BlinkMacSystemFont, segoe ui, Roboto,
     helvetica neue, Arial, sans-serif;
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #1b1b1b;
   max-width: 800px;
   margin: 0 auto;
-  overflow-anchor: none;
   position: relative;
 }
 
@@ -148,7 +154,7 @@ body > footer a {
 
 a.site-title {
   display: block;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .site-nav {
@@ -166,8 +172,7 @@ a.site-title {
 
 .site-nav li {
   display: block;
-  padding: 0;
-  padding-left: 0.8em;
+  padding: 0 0 0 0.8em;
   margin: 0;
 }
 
@@ -189,7 +194,7 @@ h1 {
   line-height: 1;
 }
 h1.title {
-  font-weight: 700;
+  font-weight: 500;
   margin-top: 0.45rem;
 }
 
@@ -213,7 +218,7 @@ header:hover > time {
 
 h2 {
   font-size: 1.414rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.5rem;
   margin-top: 1.8rem;
   margin-bottom: -0.3rem;
@@ -325,17 +330,13 @@ figure > picture > img {
 figcaption {
   margin: 0.5em auto 0;
   padding: 0 2em;
-  font-size: 16.2px;
+  font-size: 16px;
   font-weight: 500;
 }
 
 sc {
   text-transform: lowercase;
   font-variant: small-caps;
-}
-
-osnum {
-  font-variant-numeric: oldstyle-nums;
 }
 
 table {
@@ -354,10 +355,7 @@ table.full-width {
 
 table th {
   border-bottom: 1px solid #333;
-  padding-top: 0.3em;
-  padding-right: 0.5em;
-  padding-left: 0.5em;
-  padding-bottom: 0;
+  padding: 0.3em 0.5em 0;
 }
 
 table th:nth-child(1) {
@@ -403,7 +401,7 @@ table caption {
   display: inline-flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14.4px;
+  font-size: 14px;
   margin-top: 12px;
   padding: 4px 8px 4px 10px;
   border: 1px solid #818181;
