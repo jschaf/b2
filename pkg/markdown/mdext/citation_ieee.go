@@ -80,22 +80,23 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 	return ast.WalkContinue, nil
 }
 
+// allCiteIDs returns a slice of strings where each string is an HTML ID of a
+// citation.
 func allCiteIDs(c *Citation, count int) []string {
-	citeIDs := make([]string, count)
-	for i := range citeIDs {
-		id := c.CiteID(i)
-		citeIDs[i] = id
+	ids := make([]string, count)
+	for i := range ids {
+		ids[i] = c.CiteID(i)
 	}
-	return citeIDs
+	return ids
 }
 
 func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
 	cnt := cr.citeCounts[c.Key]
 	citeIDs := allCiteIDs(c, cnt)
+	_, _ = w.WriteString(fmt.Sprintf(`<div id="%s" class=cite-reference>`, c.ReferenceID()))
 	_, _ = w.WriteString(fmt.Sprintf(
-		`<div id="%s" class=cite-reference data-cite-ids="%s">`,
-		c.ReferenceID(), strings.Join(citeIDs, " ")))
-	_, _ = w.WriteString(fmt.Sprintf(`<cite>[%d]</cite> `, num))
+		`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="%s">[%d]</cite> `,
+		strings.Join(citeIDs, " "), num))
 
 	authors := c.Bibtex.Author
 	for i, author := range authors {

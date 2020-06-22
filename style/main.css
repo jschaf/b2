@@ -555,7 +555,7 @@ cite {
 }
 
 /** Highlight the reference when scrolling to it after clicking a citation. */
-.cite-reference:target {
+.cite-reference:target, cite:target {
   animation: reference-highlight 4s;
 }
 
@@ -564,4 +564,25 @@ cite {
   display: inline-block;
   position: absolute;
   margin-left: -2em;
+}
+
+.cite-backlinks {
+  list-style: none;
+}
+
+/** The <a> link that scrolls to the citation anchor. */
+.cite-backlink-back {
+  display: inline-block;
+  position: absolute;
+  margin-left: -2em;
+}
+
+/** The parent paragraph that contains the citations. */
+.cite-backlink-preview {
+  display: inline-block;
+}
+
+/** The citation, e.g. [1], inside a preview box. */
+.cite-backlink-target {
+  background: var(--reference-highlight-color);
 }

@@ -89,9 +89,12 @@ func newCiteRefsIEEE(ts ...string) string {
 
 func newCiteRefIEEE(key bibtex.CiteKey, count int, order string, content ...string) string {
 	c := &Citation{Key: key}
-	ids := strings.Join(allCiteIDs(c, count), " ")
-	attrs := fmt.Sprintf(`id=%s class=cite-reference data-cite-ids="%s"`, "cite_ref_"+key, ids)
-	return tags.DivAttrs(attrs, tags.Cite(order), strings.Join(content, ""))
+	divAttrs := fmt.Sprintf(`id=%s class=cite-reference`, c.ReferenceID())
+	citeAttrs := `class=preview-target data-link-type=cite-reference-num data-cite-ids="` +
+		strings.Join(allCiteIDs(c, count), " ") + `"`
+	return tags.DivAttrs(divAttrs,
+		tags.CiteAttrs(citeAttrs, order),
+		strings.Join(content, ""))
 }
 
 func newJournal(ts ...string) string {

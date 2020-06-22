@@ -46,8 +46,8 @@
 
 /**
  * PreviewLifecycle manages the state transitions for the preview box display.
- * The complexity comes from interactions between the target link and preview
- * div. Use-cases we want to support:
+ * The transitions are complex, resulting from interactions between the target
+ * link and preview div. Use-cases we want to support:
  *
  * - Continue showing the preview when moving from the target to preview box
  *   for a grace period.
@@ -57,6 +57,10 @@
  *
  * - Choosing whether to display the preview box above or below the target. We
  *   generally prefer above to avoid blocking lines the user will read.
+ *
+ * - Dynamically generating preview box content for things like citation hovers.
+ *   We dynamically generate previews when the content exists on the current
+ *   page.
  */
 class PreviewLifecycle {
   constructor() {
@@ -194,6 +198,18 @@ class PreviewLifecycle {
   }
 
   /**
+   * Calls fn on root and each descendant of root using depth-first search.
+   * @param {!Element} root
+   * @param {!function(Element)} fn
+   */
+  recurseChildren(root, fn) {
+    fn(root)
+    for (const child of root.children) {
+      this.recurseChildren(child, fn)
+    }
+  }
+
+  /**
    * Builds content to show in the preview box with info about the target
    * element.
    * @param {HTMLElement} targetEl
@@ -213,14 +229,63 @@ class PreviewLifecycle {
         const refId = targetEl.getAttribute('href').slice(1);
         const ref = document.getElementById(refId);
         if (!ref) {
-          console.warn(`preview-box: no reference found for id='${refId}'`);
+          console.warn(`preview-box: no cite reference found for id='${refId}'`);
           return ""
         }
         // Clone node for easier manipulation.
         const clone = ref.cloneNode(/* deep */ true);
-        // Drop the citation number, e.g. [1].
+        // Drop the citation number, e.g. "[1]".
         clone.removeChild(clone.childNodes[0]);
         return clone.innerHTML;
+
+      case "cite-reference-num":
+        const strIds = targetEl.dataset.citeIds;
+        const ids = strIds.split(' ');
+        if (ids.length === 0) {
+          console.warn(`preview-box: no citation IDs exist for reference='${targetEl.textContent}'`);
+          return ""
+        }
+        const /** Array<HTMLElement> */ refs =  [];
+        for (const id of ids) {
+          const ref = document.getElementById(id);
+          if (!ref) {
+            console.warn(`preview-box: no citation found for id='${id}'`);
+            continue;
+          }
+          refs.push(ref)
+        }
+
+        const backLinks = [`<ul class="cite-backlinks">`];
+        for (const ref of refs) {
+          const p1 = ref.parentElement; // Get to <a> containing the <cite>.
+          if (!p1) {
+            console.warn(`preview-box: no parent for citation id='${ref.id}'`);
+            continue;
+          }
+          const p2 = p1.parentElement; // Get to enclosing elem for <a>.
+          if (!p2) {
+            console.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
+            continue;
+          }
+          const clone = p2.cloneNode(/* deep */ true);
+          // Remove ID attributes and highlight the node.
+          this.recurseChildren(clone, (e) => {
+            if (e.id === ref.id) {
+              e.classList.add('cite-backlink-target')
+            }
+            e.classList.remove('preview-target'); // avoid nested previews
+            e.removeAttribute('id'); // avoid duplicate IDs
+          });
+
+          backLinks.push(`
+            <li>
+              <a href="#${ref.id}" class=cite-backlink-back>up</a>
+              <div class="cite-backlink-preview">${clone.innerHTML}</div>
+            </li>`)
+        }
+        backLinks.push(`<ul>`);
+        const title = `<p class=preview-title>Citations for this reference</p>`;
+        return title + backLinks.join('')
 
       default:
         console.warn("preview-box: unknown link type: " + type);
