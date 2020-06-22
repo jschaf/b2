@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -12,16 +13,19 @@ import (
 )
 
 func newCiteIEEE(key bibtex.CiteKey, order string) string {
-	attrs := fmt.Sprintf(`id=%s`, "cite_"+key)
+	return newCiteIEEECount(key, order, 0)
+}
+
+func newCiteIEEECount(key bibtex.CiteKey, order string, count int) string {
+	id := "cite_" + key
+	if count > 0 {
+		id += "_" + strconv.Itoa(count)
+	}
+	attrs := fmt.Sprintf(`id=%s`, id)
 	aAttrs := fmt.Sprintf(
 		`href="%s" class=preview-target data-link-type=citation`,
 		"#cite_ref_"+key)
 	return tags.AAttrs(aAttrs, tags.CiteAttrs(attrs, order))
-}
-
-func newCiteRefIEEE(key bibtex.CiteKey, order string, content ...string) string {
-	attrs := fmt.Sprintf(`id=%s class=cite-reference`, "cite_ref_"+key)
-	return tags.DivAttrs(attrs, tags.Cite(order), strings.Join(content, ""))
 }
 
 func TestNewCitationExt_IEEE(t *testing.T) {
@@ -52,8 +56,8 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 			tags.P(
 				"alpha ", newCiteIEEE("bib_foo", "[1]"),
 				" bravo ", newCiteIEEE("bib_bar", "[2]"),
-				" charlie ", newCiteIEEE("bib_foo", "[1]"),
-				" delta ", newCiteIEEE("bib_bar", "[2]"),
+				" charlie ", newCiteIEEECount("bib_foo", "[1]", 1),
+				" delta ", newCiteIEEECount("bib_bar", "[2]", 1),
 			),
 		},
 	}
@@ -76,10 +80,18 @@ func (c citeDocAttacher) Attach(doc *ast.Document, refs *CitationReferences) err
 	return nil
 }
 
+// newCiteRefsIEEE creates the div containing references.
 func newCiteRefsIEEE(ts ...string) string {
 	return tags.DivAttrs("class=cite-references",
 		tags.H2("References"),
 		strings.Join(ts, ""))
+}
+
+func newCiteRefIEEE(key bibtex.CiteKey, count int, order string, content ...string) string {
+	c := &Citation{Key: key}
+	ids := strings.Join(allCiteIDs(c, count), " ")
+	attrs := fmt.Sprintf(`id=%s class=cite-reference data-cite-ids="%s"`, "cite_ref_"+key, ids)
+	return tags.DivAttrs(attrs, tags.Cite(order), strings.Join(content, ""))
 }
 
 func newJournal(ts ...string) string {
@@ -100,17 +112,17 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			tags.P(
 				"alpha ", newCiteIEEE("bib_foo", "[1]"),
 				" bravo ", newCiteIEEE("bib_bar", "[2]"),
-				" charlie ", newCiteIEEE("bib_foo", "[1]"),
-				" delta ", newCiteIEEE("bib_bar", "[2]"),
+				" charlie ", newCiteIEEECount("bib_foo", "[1]", 1),
+				" delta ", newCiteIEEECount("bib_bar", "[2]", 1),
 			),
 			newCiteRefsIEEE(
-				newCiteRefIEEE("bib_foo", "[1]",
+				newCiteRefIEEE("bib_foo", 2, "[1]",
 					"F. Q. Bloggs, J. P. Doe and A. Idiot, ",
 					`"Turtles in the time continum," in`,
 					newJournal("Turtles in the Applied Sciences"),
 					", Vol. 3, 2016.",
 				),
-				newCiteRefIEEE("bib_bar", "[2]",
+				newCiteRefIEEE("bib_bar", 2, "[2]",
 					"E. Orti, J. Bredas and C. Clarisse, ",
 					`"Turtles in the time continum," in`,
 					newJournal("Nature"),

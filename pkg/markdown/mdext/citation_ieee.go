@@ -13,8 +13,13 @@ import (
 
 // citationRendererIEEE renders an IEEE citation.
 type citationRendererIEEE struct {
-	nextNum  int
+	nextNum int
+	// Mapping from a bibtex cite key to the order the first instance of a cite
+	// key appeared in the markdown document.
 	citeNums map[bibtex.CiteKey]int
+	// The number of times a bibtex cite key has been used thus far. Useful for
+	// generating unique IDs for the citation.
+	citeCounts map[bibtex.CiteKey]int
 }
 
 func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -32,11 +37,15 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 		cr.nextNum += 1
 	}
 
+	cnt, ok := cr.citeCounts[c.Key]
+	cr.citeCounts[c.Key] = cnt + 1
+
 	_, _ = w.WriteString(
 		fmt.Sprintf(`<a href="#%s" class=preview-target data-link-type=%s>`,
 			c.ReferenceID(), LinkCitation))
-	_, _ = w.WriteString(
-		fmt.Sprintf(`<cite id=%s>[%d]</cite>`, c.ID(), num))
+
+	id := c.CiteID(cnt)
+	_, _ = w.WriteString(fmt.Sprintf(`<cite id=%s>[%d]</cite>`, id, num))
 	_, _ = w.WriteString("</a>")
 	// Citations should generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
@@ -71,9 +80,21 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 	return ast.WalkContinue, nil
 }
 
+func allCiteIDs(c *Citation, count int) []string {
+	citeIDs := make([]string, count)
+	for i := range citeIDs {
+		id := c.CiteID(i)
+		citeIDs[i] = id
+	}
+	return citeIDs
+}
+
 func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
+	cnt := cr.citeCounts[c.Key]
+	citeIDs := allCiteIDs(c, cnt)
 	_, _ = w.WriteString(fmt.Sprintf(
-		`<div id="%s" class=cite-reference>`, c.ReferenceID()))
+		`<div id="%s" class=cite-reference data-cite-ids="%s">`,
+		c.ReferenceID(), strings.Join(citeIDs, " ")))
 	_, _ = w.WriteString(fmt.Sprintf(`<cite>[%d]</cite> `, num))
 
 	authors := c.Bibtex.Author

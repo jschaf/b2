@@ -67,7 +67,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 
 	refs := NewCitationReferences()
 	for _, span := range spans {
-		c, err := ca.newCitationParent(span, reader.Source())
+		c, err := ca.newCitationParent(span)
 		if err != nil {
 			PushError(pc, err)
 			return
@@ -113,7 +113,7 @@ func (ca *citationASTTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bi
 // newCitationParent creates a citation node and reparents all spans between the
 // start span to the end span inclusive as children of the newly created
 // citation node.
-func (ca *citationASTTransformer) newCitationParent(span citeSpan, source []byte) (*Citation, error) {
+func (ca *citationASTTransformer) newCitationParent(span citeSpan) (*Citation, error) {
 	p := span.start.Parent()
 	// Split start and end nodes if there is other text besides the citation.
 	if span.startOffset > span.start.Segment.Start {
@@ -133,7 +133,7 @@ func (ca *citationASTTransformer) newCitationParent(span citeSpan, source []byte
 		span.end = newEnd
 	}
 
-	// Remove the brackets.
+	// Remove the brackets, e.g. [@foobar] => @foobar.
 	ss := span.start
 	se := span.end
 	ss.Segment = ss.Segment.WithStart(ss.Segment.Start + 1)

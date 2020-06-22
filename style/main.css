@@ -1,4 +1,6 @@
 :root {
+  /** The highlight color for a reference. */
+  --reference-highlight-color: rgba(255, 220, 0, 0.3);
   /* Material design elevation box shadows. The number corresponds to the
      display points of elevation. */
   /* 1 for switch, card (resting elevation), search bar (resting elevation) */
@@ -540,6 +542,24 @@ cite {
   padding-left: 2em;
 }
 
+@keyframes reference-highlight {
+  0% {
+    background: var(--reference-highlight-color);
+  }
+  70% {
+    background: var(--reference-highlight-color);
+  }
+  100% {
+    background: none;
+  }
+}
+
+/** Highlight the reference when scrolling to it after clicking a citation. */
+.cite-reference:target {
+  animation: reference-highlight 4s;
+}
+
+/** Dedent the cite numbers. */
 .cite-reference > cite {
   display: inline-block;
   position: absolute;

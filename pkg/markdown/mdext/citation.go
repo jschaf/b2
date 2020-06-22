@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/util"
+	"strconv"
 )
 
 var KindCitation = ast.NewNodeKind("citation")
@@ -22,8 +23,9 @@ type Citation struct {
 	Key bibtex.CiteKey
 	// The order that this citation appeared in the document, relative to other
 	// citations. Starts at 0. The order always increments for each citation even
-	// if the preceding citations had the same key.
-	Order  int
+	// if preceding citations had the same key.
+	Order int
+	// The bibtex entry this citation points to.
 	Bibtex bibtex.Entry
 	Prefix string
 	Suffix string
@@ -41,9 +43,12 @@ func (c *Citation) Dump(source []byte, level int) {
 	ast.DumpHelper(c, source, level, nil, nil)
 }
 
-// ID returns the HTML ID that links to a citation.
-func (c *Citation) ID() string {
-	return "cite_" + c.Key
+// CiteID returns the HTML CiteID that links to a citation.
+func (c *Citation) CiteID(count int) string {
+	if count == 0 {
+		return "cite_" + c.Key
+	}
+	return "cite_" + c.Key + "_" + strconv.Itoa(count)
 }
 
 // ReferenceID returns the HTML ID that links to the full reference for a
@@ -68,8 +73,9 @@ type citationStyleRenderer interface {
 func citationRenderers() map[cite.Style]citationStyleRenderer {
 	return map[cite.Style]citationStyleRenderer{
 		cite.IEEE: &citationRendererIEEE{
-			nextNum:  1,
-			citeNums: make(map[bibtex.CiteKey]int),
+			nextNum:    1,
+			citeNums:   make(map[bibtex.CiteKey]int),
+			citeCounts: make(map[bibtex.CiteKey]int),
 		},
 	}
 }
