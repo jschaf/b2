@@ -9,7 +9,7 @@ bib_paths = ["./ref.bib"]
 
 Procella is a horizontally scalable, eventually consistent, distributed column
 store leveraging lambda architecture to support both realtime and batch queries
-[@chattopadhyay2019procella]. Let’s defined those terms one at a time:
+[@chattopadhyay2019procella]. Let’s define those terms one at a time:
 
 - Horizontally scalable means YouTube can spin up more machines and Procella
   will distribute queries to the new machines automagically.
@@ -239,7 +239,7 @@ Procella sends out 1000 RPCs, one of those RPCs is likely to be as slow as the
 slower than the 50<sup>th</sup> percentile latency. For more detail on tail
 latency, I highly recommend
 [The Tail at Scale](https://research.google/pubs/pub40801/). Procella uses four
-mitigations for tail latency:
+techniques to reduce tail latency:
 
 1. Query hedging. To implement query hedging, track the latency of servers in
    groups of 10 (0-9%, 10-19%, …, 90-100%) ordered by the latency to that server
@@ -249,11 +249,11 @@ mitigations for tail latency:
 2. The root server rate limits incoming queries to avoid overwhelming data
    servers.
 3. The root server attaches a priority to each request. Servers maintain
-   separate thread pools for high and low priorities. This ensures high priority
-   queries are serviced quickly without getting stuck behind a large queue of
-   slow queries.
+   separate thread pools for high and low priorities. This ensures intermediate 
+   servers serve high priority queries quickly without waiting to process a 
+   queue of low priority queries like batch queries.
 4. The root server adds intermediate servers to the physical plan tree to help
-   aggregate results if a large number of records are returned.
+   aggregate results if the leaf nodes return many records.
 
 ::: preview https://en.wikipedia.org/wiki/Isolation_(database_systems)
 Isolation (database systems)
