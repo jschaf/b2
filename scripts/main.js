@@ -279,7 +279,7 @@ class PreviewLifecycle {
 
           backLinks.push(`
             <li>
-              <a href="#${ref.id}" class=cite-backlink-back>up</a>
+              <a href="#${ref.id}" class=cite-backlink-back><em>back</em></a>
               <div class="cite-backlink-preview">${clone.innerHTML}</div>
             </li>`)
         }

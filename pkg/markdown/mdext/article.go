@@ -111,7 +111,7 @@ func (a articleRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, entering
 }
 
 // articleExt is a Goldmark extension to render the AST transformer and
-//renderer.
+// renderer.
 type articleExt struct{}
 
 func NewArticleExt() *articleExt {
