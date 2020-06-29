@@ -8,6 +8,9 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+// typographerParser is an inline parser that replaces common ASCII typography
+// abbreviations with the real thing, like -- to an en-dash, or ... to an
+// ellipsis.
 type typographerParser struct {
 }
 

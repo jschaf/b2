@@ -126,6 +126,20 @@ func SetRenderer(pc parser.Context, r renderer.Renderer) {
 	pc.Set(rendererCtxKey, r)
 }
 
+var tocCtxKey = parser.NewContextKey()
+
+func GetTOC(pc parser.Context) (*TOC, bool) {
+	r := pc.Get(tocCtxKey)
+	if r == nil {
+		return nil, false
+	}
+	return r.(*TOC), true
+}
+
+func SetTOC(pc parser.Context, toc *TOC) {
+	pc.Set(tocCtxKey, toc)
+}
+
 var loggerCtxKey = parser.NewContextKey()
 
 func GetLogger(pc parser.Context) *zap.Logger {

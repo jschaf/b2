@@ -40,7 +40,8 @@ func TestContinueReadingTransformer(t *testing.T) {
 			SetTOMLMeta(ctx, PostMeta{
 				Slug: tt.slug,
 			})
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }
@@ -75,7 +76,8 @@ func TestNopContinueReadingTransformer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewNopContinueReadingExt())
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

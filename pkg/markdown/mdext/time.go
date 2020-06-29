@@ -15,12 +15,12 @@ var KindTime = ast.NewNodeKind("Time")
 // Time is the date time from the TOML metadata of the publish date of a post.
 type Time struct {
 	ast.BaseInline
-	date time.Time
+	Date time.Time
 }
 
 func NewTime(date time.Time) *Time {
 	return &Time{
-		date: date,
+		Date: date,
 	}
 }
 
@@ -50,9 +50,9 @@ func (t *timeRenderer) renderTime(w util.BufWriter, _ []byte, node ast.Node, ent
 	if entering {
 		n := node.(*Time)
 		_, _ = w.WriteString("\n<time datetime=\"")
-		_, _ = w.WriteString(n.date.UTC().Format("2006-01-02"))
+		_, _ = w.WriteString(n.Date.UTC().Format("2006-01-02"))
 		_, _ = w.WriteString("\">")
-		_, _ = w.WriteString(n.date.Format("January _2, 2006"))
+		_, _ = w.WriteString(n.Date.Format("January _2, 2006"))
 		_, _ = w.WriteString("</time>\n")
 	}
 	return ast.WalkContinue, nil

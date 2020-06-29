@@ -52,10 +52,11 @@ func SetTOMLMeta(pc parser.Context, m PostMeta) {
 	pc.Set(tomlCtxKey, m)
 }
 
-type tomlMeta struct {
+// tomlParser is a block parser for toml frontmatter.
+type tomlParser struct {
 }
 
-var defaultTOMLMetaParser = &tomlMeta{}
+var defaultTOMLMetaParser = &tomlParser{}
 
 // newTOMLParser returns a BlockParser that can parse TOML metadata blocks.
 func newTOMLParser() parser.BlockParser {
@@ -72,11 +73,11 @@ func isTOMLSep(line []byte) bool {
 	return true
 }
 
-func (t *tomlMeta) Trigger() []byte {
+func (t *tomlParser) Trigger() []byte {
 	return []byte{tomlSep}
 }
 
-func (t *tomlMeta) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.Node, parser.State) {
+func (t *tomlParser) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.Node, parser.State) {
 	lineNum, _ := reader.Position()
 	if lineNum != 0 {
 		return nil, parser.NoChildren
@@ -88,7 +89,7 @@ func (t *tomlMeta) Open(_ ast.Node, reader text.Reader, _ parser.Context) (ast.N
 	return nil, parser.NoChildren
 }
 
-func (t *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context) parser.State {
+func (t *tomlParser) Continue(node ast.Node, reader text.Reader, _ parser.Context) parser.State {
 	line, segment := reader.PeekLine()
 	if isTOMLSep(line) {
 		reader.Advance(segment.Len())
@@ -98,7 +99,7 @@ func (t *tomlMeta) Continue(node ast.Node, reader text.Reader, _ parser.Context)
 	return parser.Continue | parser.NoChildren
 }
 
-func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
+func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	lines := node.Lines()
 	var buf bytes.Buffer
 	for i := 0; i < lines.Len(); i++ {
@@ -124,11 +125,11 @@ func (t *tomlMeta) Close(node ast.Node, reader text.Reader, pc parser.Context) {
 	node.Parent().RemoveChild(node.Parent(), node)
 }
 
-func (t *tomlMeta) CanInterruptParagraph() bool {
+func (t *tomlParser) CanInterruptParagraph() bool {
 	return false
 }
 
-func (t *tomlMeta) CanAcceptIndentedLine() bool {
+func (t *tomlParser) CanAcceptIndentedLine() bool {
 	return false
 }
 

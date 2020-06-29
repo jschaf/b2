@@ -113,7 +113,8 @@ func TestNewFigureExt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewTOMLExt(), NewFigureExt())
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

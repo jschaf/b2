@@ -14,10 +14,10 @@ import (
 
 var KindColonBlock = ast.NewNodeKind("ColonBlock")
 
-type ColonBlockName = string
+type ColonBlockName string
 
 const (
-	ColonBlockPreview = "preview"
+	ColonBlockPreview ColonBlockName = "preview"
 )
 
 // Preview is a link preview.
@@ -79,7 +79,7 @@ func (cbp colonBlockParser) Open(_ ast.Node, reader text.Reader, _ parser.Contex
 	nameArgs := bytes.SplitN(rest, []byte{' '}, 2)
 	cb := NewColonBlock()
 	if len(nameArgs) >= 1 {
-		cb.Name = strings.Trim(string(nameArgs[0]), " ")
+		cb.Name = ColonBlockName(strings.Trim(string(nameArgs[0]), " "))
 	}
 	if len(nameArgs) == 2 {
 		cb.Args = strings.Trim(string(nameArgs[1]), " \n")

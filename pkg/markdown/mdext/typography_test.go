@@ -20,7 +20,8 @@ func TestNewTypographyExt(t *testing.T) {
 		t.Run(tt.src, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewTypographyExt())
 
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

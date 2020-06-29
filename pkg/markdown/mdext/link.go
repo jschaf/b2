@@ -16,17 +16,13 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-type LinkTransformer struct{}
+// linkAssetTransformer is an AST transformer to extract assets that need to be
+// copied to the serving directory like local links to images or PDFs.
+type linkAssetTransformer struct{}
 
 type linkType = string
 
-const (
-	LinkCitation linkType = "citation"
-	LinkPDF      linkType = "pdf"
-	LinkWiki     linkType = "wikipedia"
-)
-
-func (l *LinkTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
+func (l *linkAssetTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkSkipChildren, nil
@@ -56,7 +52,15 @@ func (l *LinkTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.
 	}
 }
 
+// linkDecorationTransform is an AST transformer that adds preview information
+// to links.
 type linkDecorationTransform struct{}
+
+const (
+	LinkCitation linkType = "citation"
+	LinkPDF      linkType = "pdf"
+	LinkWiki     linkType = "wikipedia"
+)
 
 func (l linkDecorationTransform) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -141,5 +145,5 @@ func (l *LinkExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
 			util.Prioritized(&linkDecorationTransform{}, 900),
-			util.Prioritized(&LinkTransformer{}, 901)))
+			util.Prioritized(&linkAssetTransformer{}, 901)))
 }

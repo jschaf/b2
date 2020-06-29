@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/text"
 	"strings"
 	"testing"
 
@@ -9,7 +11,6 @@ import (
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -28,20 +29,22 @@ func newMdTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, pa
 	return md, pc
 }
 
-// assertNoRenderDiff asserts the markdown instance renders src into the wanted
-// string.
-func assertNoRenderDiff(t *testing.T, md goldmark.Markdown, ctx parser.Context, src, want string) {
+// mustParseMarkdown parses markdown into a document node.
+func mustParseMarkdown(t *testing.T, md goldmark.Markdown, ctx parser.Context, src string) ast.Node {
 	t.Helper()
-	bufW := &bytes.Buffer{}
 	reader := text.NewReader([]byte(src))
 	doc := md.Parser().Parse(reader, parser.WithContext(ctx))
-	if testing.Verbose() {
-		doc.Dump([]byte(src), 0)
-	}
 	if errs := PopErrors(ctx); len(errs) > 0 {
 		t.Fatalf("errors while parsing: %v", errs)
 	}
+	return doc
+}
 
+// assertNoRenderDiff asserts the markdown instance renders src into the wanted
+// string.
+func assertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, want string) {
+	t.Helper()
+	bufW := &bytes.Buffer{}
 	if err := md.Renderer().Render(bufW, []byte(src), doc); err != nil {
 		t.Fatal(err)
 	}

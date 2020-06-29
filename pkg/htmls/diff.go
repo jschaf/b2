@@ -14,13 +14,13 @@ func DiffStrings(x, y string) (string, error) {
 }
 
 // Diff returns the diff between the normalized HTML fragments.
-func Diff(got, want io.Reader) (string, error) {
-	frag1, err := parseFragment(want)
+func Diff(rd1, rd2 io.Reader) (string, error) {
+	frag1, err := parseFragment(rd1)
 	if err != nil {
 		return "", err
 	}
 
-	frag2, err := parseFragment(got)
+	frag2, err := parseFragment(rd2)
 	if err != nil {
 		return "", err
 	}

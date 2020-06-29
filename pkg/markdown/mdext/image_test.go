@@ -53,8 +53,8 @@ func TestNewImageExt(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := newMdTester(t, NewTOMLExt(), NewImageExt())
 			SetFilePath(ctx, path)
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
-
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 			assertCtxContainsAll(t, ctx, tt.wantCtx)
 		})
 	}

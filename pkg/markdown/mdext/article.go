@@ -29,14 +29,14 @@ func (a *Article) Kind() ast.NodeKind {
 	return KindArticle
 }
 
-// ArticleTransformer wraps the markdown document in an HTML article tag.
-type ArticleTransformer struct{}
+// articleTransformer wraps the markdown document in an HTML article tag.
+type articleTransformer struct{}
 
-func NewArticleTransformer() *ArticleTransformer {
-	return &ArticleTransformer{}
+func newArticleTransformer() *articleTransformer {
+	return &articleTransformer{}
 }
 
-func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
+func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	meta := GetTOMLMeta(pc)
 	heading := firstHeading(doc)
 	if heading == nil {
@@ -69,7 +69,7 @@ func (at *ArticleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 		article.AppendChild(article, cur)
 		cur = next
 	}
-	// These step must come last. When we move a node in Goldmark, it detaches
+	// This step must come last. When we move a node in Goldmark, it detaches
 	// from the parent and connects its prev sibling to the next sibling. Since we
 	// use heading for location info, move it last so we don't disconnect it.
 	parent.ReplaceChild(parent, heading, article)
@@ -110,18 +110,17 @@ func (a articleRenderer) render(w util.BufWriter, _ []byte, _ ast.Node, entering
 	return ast.WalkContinue, nil
 }
 
-// articleExt is a Goldmark extension to render the AST transformer and
-// renderer.
-type articleExt struct{}
+// ArticleExt is a Goldmark extension to run the AST transformer and renderer.
+type ArticleExt struct{}
 
-func NewArticleExt() *articleExt {
-	return &articleExt{}
+func NewArticleExt() *ArticleExt {
+	return &ArticleExt{}
 }
 
-func (a *articleExt) Extend(m goldmark.Markdown) {
+func (a *ArticleExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(NewArticleTransformer(), 900),
+			util.Prioritized(newArticleTransformer(), 900),
 		),
 	)
 	m.Renderer().AddOptions(

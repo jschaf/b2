@@ -68,7 +68,8 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 			})
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.want)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }
@@ -141,7 +142,8 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 			})
-			assertNoRenderDiff(t, md, ctx, tt.src, tt.wantBody+"\n"+tt.wantRefs)
+			doc := mustParseMarkdown(t, md, ctx, tt.src)
+			assertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs)
 		})
 	}
 }
