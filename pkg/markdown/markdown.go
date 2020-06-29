@@ -50,7 +50,7 @@ func WithCiteStyle(c cite.Style) Option {
 }
 
 // WithCiteAttacher overrides the default attacher for references. The default
-// is to attach the references to the end of the first article tag.
+// attaches references before the end of the first article tag.
 func WithCiteAttacher(c mdext.CitationReferencesAttacher) Option {
 	return func(m *Markdown) {
 		m.opts.CiteAttacher = c
@@ -69,12 +69,14 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewCitationExt(opts.CiteStyle, opts.CiteAttacher),
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
+		mdext.NewColonLineExt(),
 		mdext.NewHeaderExt(),
 		mdext.NewImageExt(),
 		mdext.NewLinkExt(),
 		mdext.NewFigureExt(),
 		mdext.NewSmallCapsExt(),
 		mdext.NewTimeExt(),
+		mdext.NewTOCExt(),
 		mdext.NewTOMLExt(),
 		mdext.NewTypographyExt(),
 	}

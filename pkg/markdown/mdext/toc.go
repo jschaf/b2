@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -44,9 +45,14 @@ func newTOCTransformer() tocTransformer {
 }
 
 func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	toc, ok := GetTOC(pc)
+	if !ok {
+		return
+	}
+
 	depth := t.depth
 	if t.depth == 0 {
-		depth = 3
+		depth = 4
 	}
 
 	headings := make([]*ast.Heading, 0, 3*depth) // assume 3 headings per level
@@ -58,16 +64,48 @@ func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc par
 			return ast.WalkSkipChildren, nil
 		}
 		h := n.(*ast.Heading)
-		if h.Level <= depth {
+		// We ignore H1 because that's the title.
+		if h.Level > 1 && h.Level <= depth {
 			headings = append(headings, h)
 		}
 		return ast.WalkSkipChildren, nil
 	})
 
-	l := ast.NewList('.')
-	for _, heading := range headings {
-		l.AppendChild(l, heading)
+	l, _ := createTOCListLevel(headings, 2)
+	toc.AppendChild(toc, l)
+}
+
+// createTOCListLevel creates a list containing a single level of headings and
+// recurses to create deeper levels.
+func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
+	l := ast.NewList('.') // period is a marker for an ordered list
+	l.Start = 1
+	i := 0
+	for i < len(headings) {
+		h := headings[i]
+		switch {
+		case h.Level < level:
+			// Let the parent call handle it.
+			return l, i
+		case h.Level == level:
+			li := ast.NewListItem(i)
+			// Use a clone so we don't move the actual heading children.
+			asts.Reparent(li, CloneNode(h))
+			l.AppendChild(l, li)
+			i++
+			continue
+		case h.Level > level:
+			li := ast.NewListItem(i)
+			childL, n := createTOCListLevel(headings[i:], level+1)
+			li.AppendChild(li, childL)
+			l.AppendChild(l, li)
+			i += n
+			continue
+		default:
+			panic("unreachable")
+		}
 	}
+	return l, i
 }
 
 // tocRenderer is the HTML renderer for a TOC node.

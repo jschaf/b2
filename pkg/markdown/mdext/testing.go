@@ -49,7 +49,7 @@ func assertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, w
 		t.Fatal(err)
 	}
 
-	if diff, err := htmls.Diff(bufW, strings.NewReader(want)); err != nil {
+	if diff, err := htmls.Diff(strings.NewReader(want), bufW); err != nil {
 		t.Fatal(err)
 	} else if diff != "" {
 		t.Errorf("Render mismatch (-want +got):\n%s", diff)

@@ -12,13 +12,29 @@ func TestNewTOCExt(t *testing.T) {
 	}{
 		{
 			texts.Dedent(`
-       :toc:
+				:toc:
 			
-       # title
+				# h1.1
+				## h2.1
+				### h3.1
+				## h2.2
      `),
 			texts.Dedent(`
-			   <div class="toc"></div>
-				 <h1>title</h1>
+				<div class="toc">
+					<ol>
+						<li>h2.1</li>
+						<li>
+							<ol>
+								<li>h3.1</li>
+							</ol>
+						</li>
+						<li>h2.2</li>
+					</ol>
+				</div>
+				<h1>h1.1</h1>
+				<h2>h2.1</h2>
+				<h3>h3.1</h3>
+				<h2>h2.2</h2>
       `),
 		},
 	}
