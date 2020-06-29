@@ -7,9 +7,7 @@ import (
 	"runtime/pprof"
 
 	"github.com/jschaf/b2/pkg/logs"
-	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/static"
 )
 
@@ -34,15 +32,12 @@ func main() {
 		_ = pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
-	c := compiler.New(markdown.New(
-		logger,
-		markdown.WithExtender(mdext.NewNopContinueReadingExt())))
+	c := compiler.NewForPostDetail(logger)
 	if err := c.CompileAllPosts(*flagGlob); err != nil {
 		log.Fatal(err)
 	}
 
-	ic := compiler.NewForIndex(
-		markdown.New(logger, markdown.WithExtender(mdext.NewContinueReadingExt())))
+	ic := compiler.NewForIndex(logger)
 	if err := ic.Compile(); err != nil {
 		log.Fatal(err)
 	}

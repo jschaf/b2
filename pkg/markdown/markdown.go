@@ -20,7 +20,7 @@ type PostAST struct {
 	Source []byte
 	// A map where the key is the destination path relative to the public dir.
 	// The value is the absolute file path of an asset like an image.
-	// For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
+	// For example, an entry might be "./img.png" -> "/home/joe/blog/img.png".
 	Assets map[string]string
 	// The full path to the markdown file that this AST represents.
 	Path string
@@ -30,7 +30,9 @@ type PostAST struct {
 type Options struct {
 	CiteStyle    cite.Style
 	CiteAttacher mdext.CitationReferencesAttacher
-	Extenders    []goldmark.Extender
+	// TOCStyle determines how to show the TOC. Defaults to not showing a TOC.
+	TOCStyle  mdext.TOCStyle
+	Extenders []goldmark.Extender
 }
 
 type Markdown struct {
@@ -46,6 +48,13 @@ type Option func(*Markdown)
 func WithCiteStyle(c cite.Style) Option {
 	return func(m *Markdown) {
 		m.opts.CiteStyle = c
+	}
+}
+
+// WithTOCStyle overrides the default TOC style. The default is to show no TOC.
+func WithTOCStyle(s mdext.TOCStyle) Option {
+	return func(m *Markdown) {
+		m.opts.TOCStyle = s
 	}
 }
 
@@ -76,20 +85,21 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewFigureExt(),
 		mdext.NewSmallCapsExt(),
 		mdext.NewTimeExt(),
-		mdext.NewTOCExt(),
+		mdext.NewTOCExt(opts.TOCStyle),
 		mdext.NewTOMLExt(),
 		mdext.NewTypographyExt(),
 	}
 }
 
-// New creates a new markdown parser and renderer with additional extenders
-// beyond the default extenders.
+// New creates a new markdown parser and renderer allowing additional options
+// beyond the defaults.
 func New(l *zap.Logger, opts ...Option) *Markdown {
 	m := &Markdown{
 		logger: l,
 		opts: Options{
 			CiteStyle:    cite.IEEE,
 			CiteAttacher: mdext.NewCitationArticleAttacher(),
+			TOCStyle:     mdext.TOCStyleNone,
 		},
 	}
 	for _, opt := range opts {

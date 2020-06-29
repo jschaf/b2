@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"go.uber.org/zap"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -21,7 +22,8 @@ type IndexCompiler struct {
 	md *markdown.Markdown
 }
 
-func NewForIndex(md *markdown.Markdown) *IndexCompiler {
+func NewForIndex(l *zap.Logger) *IndexCompiler {
+	md := markdown.New(l, markdown.WithExtender(mdext.NewContinueReadingExt()))
 	return &IndexCompiler{md: md}
 }
 

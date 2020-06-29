@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"go.uber.org/zap"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -23,7 +25,12 @@ type Compiler struct {
 	md *markdown.Markdown
 }
 
-func New(md *markdown.Markdown) *Compiler {
+// NewForPostDetail creates a compiler for a post detail page.
+func NewForPostDetail(l *zap.Logger) *Compiler {
+	md := markdown.New(l,
+		markdown.WithTOCStyle(mdext.TOCStyleShow),
+		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
+	)
 	return &Compiler{md}
 }
 

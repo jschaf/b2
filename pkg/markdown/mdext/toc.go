@@ -2,16 +2,25 @@ package mdext
 
 import (
 	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
+	"strconv"
 )
 
 // KindTOC represents a TOC node.
 var KindTOC = ast.NewNodeKind("TOC")
+
+type TOCStyle int
+
+const (
+	TOCStyleNone TOCStyle = iota
+	TOCStyleShow
+)
 
 // TOC contains directives to format a table of contents.
 // TOC nodes are created from the ColonLine parser.
@@ -38,13 +47,17 @@ type tocTransformer struct {
 	// defaults to 3. For example, a depth of 2 includes H1 and H2 headings in the
 	// TOC.
 	depth int
+	style TOCStyle
 }
 
-func newTOCTransformer() tocTransformer {
-	return tocTransformer{}
+func newTOCTransformer(s TOCStyle) tocTransformer {
+	return tocTransformer{style: s}
 }
 
 func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	if t.style == TOCStyleNone {
+		return
+	}
 	toc, ok := GetTOC(pc)
 	if !ok {
 		return
@@ -71,7 +84,7 @@ func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc par
 		return ast.WalkSkipChildren, nil
 	})
 
-	l, _ := createTOCListLevel(headings, 2)
+	l, _ := createTOCListLevel(headings, 2) // start at 2 since 1 is the title
 	toc.AppendChild(toc, l)
 }
 
@@ -79,13 +92,14 @@ func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc par
 // recurses to create deeper levels.
 func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
 	l := ast.NewList('.') // period is a marker for an ordered list
+	attrs.AddClass(l, "toc-list", "toc-level-"+strconv.Itoa(level))
 	l.Start = 1
 	i := 0
 	for i < len(headings) {
 		h := headings[i]
 		switch {
 		case h.Level < level:
-			// Let the parent call handle it.
+			// Let the parent createTOCListLevel handle this heading.
 			return l, i
 		case h.Level == level:
 			li := ast.NewListItem(i)
@@ -109,14 +123,23 @@ func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
 }
 
 // tocRenderer is the HTML renderer for a TOC node.
-type tocRenderer struct{}
+type tocRenderer struct {
+	style TOCStyle
+}
 
-func newTOCRenderer() tocRenderer {
-	return tocRenderer{}
+func newTOCRenderer(s TOCStyle) tocRenderer {
+	return tocRenderer{style: s}
 }
 
 func (tr tocRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(KindTOC, renderTOC)
+	switch tr.style {
+	case TOCStyleNone:
+		reg.Register(KindTOC, renderTOCNop)
+	case TOCStyleShow:
+		reg.Register(KindTOC, renderTOC)
+	default:
+		panic("unknown TOC style: " + strconv.Itoa(int(tr.style)))
+	}
 }
 
 func renderTOC(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -128,17 +151,23 @@ func renderTOC(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.Wa
 	return ast.WalkContinue, nil
 }
 
-type TOCExt struct{}
-
-func NewTOCExt() goldmark.Extender {
-	return TOCExt{}
+func renderTOCNop(_ util.BufWriter, _ []byte, _ ast.Node, _ bool) (ast.WalkStatus, error) {
+	return ast.WalkSkipChildren, nil
 }
 
-func (T TOCExt) Extend(m goldmark.Markdown) {
+type TOCExt struct {
+	style TOCStyle
+}
+
+func NewTOCExt(s TOCStyle) goldmark.Extender {
+	return TOCExt{style: s}
+}
+
+func (t TOCExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
-			util.Prioritized(newTOCTransformer(), 1000)))
+			util.Prioritized(newTOCTransformer(t.style), 1000)))
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(newTOCRenderer(), 1000)))
+			util.Prioritized(newTOCRenderer(t.style), 1000)))
 }

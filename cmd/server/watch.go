@@ -13,9 +13,7 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/js"
 	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 )
@@ -140,8 +138,7 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
-	c := compiler.New(markdown.New(f.logger.Desugar(),
-		markdown.WithExtender(mdext.NewNopContinueReadingExt())))
+	c := compiler.NewForPostDetail(f.logger.Desugar())
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -150,8 +147,7 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
 
-	ic := compiler.NewForIndex(markdown.New(f.logger.Desugar(),
-		markdown.WithExtender(mdext.NewContinueReadingExt())))
+	ic := compiler.NewForIndex(f.logger.Desugar())
 	if err := ic.Compile(); err != nil {
 		return fmt.Errorf("failed to compile index for hot reload: %w", err)
 	}
