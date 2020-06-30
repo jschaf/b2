@@ -262,10 +262,13 @@ h2:target, h3:target, h4:target, h5:target, h6:target {
   animation: reference-highlight 4s;
 }
 
+/** An <a> tag at the end of every heading. */
 .heading-anchor {
   display: none;
 }
 
+/** Show the <a> tag at the end of every heading that links to the anchor
+    of this heading. */
 h2:hover .heading-anchor, h3:hover .heading-anchor {
   display: inline-block;
   text-decoration: none;
