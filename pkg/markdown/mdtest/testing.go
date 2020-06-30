@@ -1,48 +1,48 @@
-package mdext
+package mdtest
 
 import (
 	"bytes"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/text"
-	"strings"
-	"testing"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/htmls"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap/zaptest"
+	"strings"
+	"testing"
 )
 
-const testPostPath = "/md/test/path.md"
+const PostPath = "/md/test/path.md"
 
-// newMdTester creates a new markdown with the given extensions. We can't use
+// NewTester creates a new markdown with the given extensions. We can't use
 // our top level markdown because it would create a circular dependency.
-func newMdTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, parser.Context) {
+func NewTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, parser.Context) {
 	md := goldmark.New(goldmark.WithExtensions(exts...))
 	pc := parser.NewContext()
 	logger := zaptest.NewLogger(t)
-	SetFilePath(pc, testPostPath)
-	SetLogger(pc, logger)
-	SetRenderer(pc, md.Renderer())
+	mdctx.SetFilePath(pc, PostPath)
+	mdctx.SetLogger(pc, logger)
+	mdctx.SetRenderer(pc, md.Renderer())
 
 	return md, pc
 }
 
-// mustParseMarkdown parses markdown into a document node.
-func mustParseMarkdown(t *testing.T, md goldmark.Markdown, ctx parser.Context, src string) ast.Node {
+// MustParseMarkdown parses markdown into a document node.
+func MustParseMarkdown(t *testing.T, md goldmark.Markdown, ctx parser.Context, src string) ast.Node {
 	t.Helper()
 	reader := text.NewReader([]byte(src))
 	doc := md.Parser().Parse(reader, parser.WithContext(ctx))
-	if errs := PopErrors(ctx); len(errs) > 0 {
+	if errs := mdctx.PopErrors(ctx); len(errs) > 0 {
 		t.Fatalf("errors while parsing: %v", errs)
 	}
 	return doc
 }
 
-// assertNoRenderDiff asserts the markdown instance renders src into the wanted
+// AssertNoRenderDiff asserts the markdown instance renders src into the wanted
 // string.
-func assertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, want string) {
+func AssertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, want string) {
 	t.Helper()
 	bufW := &bytes.Buffer{}
 	if err := md.Renderer().Render(bufW, []byte(src), doc); err != nil {
@@ -56,9 +56,9 @@ func assertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, w
 	}
 }
 
-// assertCtxContainsAll asserts that the content contains every wanted
+// AssertCtxContainsAll asserts that the content contains every wanted
 // key-value pair.
-func assertCtxContainsAll(t *testing.T, got parser.Context, wants map[parser.ContextKey]interface{}) {
+func AssertCtxContainsAll(t *testing.T, got parser.Context, wants map[parser.ContextKey]interface{}) {
 	t.Helper()
 
 	for key, want := range wants {

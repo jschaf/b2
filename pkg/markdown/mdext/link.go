@@ -3,6 +3,7 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"path"
 	"path/filepath"
 	"strings"
@@ -37,13 +38,13 @@ func (l *linkAssetTransformer) Transform(doc *ast.Document, _ text.Reader, pc pa
 		if filepath.IsAbs(origDest) || strings.HasPrefix(origDest, "http") {
 			return ast.WalkContinue, nil
 		}
-		filePath := filepath.Dir(GetFilePath(pc))
+		filePath := filepath.Dir(mdctx.GetFilePath(pc))
 		meta := GetTOMLMeta(pc)
 		newDest := path.Join(meta.Path, origDest)
 		link.Destination = []byte(newDest)
 		localPath := filepath.Join(filePath, origDest)
 		remotePath := filepath.Join(meta.Path, origDest)
-		AddAsset(pc, remotePath, localPath)
+		mdctx.AddAsset(pc, remotePath, localPath)
 
 		return ast.WalkSkipChildren, nil
 	})
@@ -97,7 +98,7 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	if !ok {
 		return
 	}
-	renderer, ok := GetRenderer(pc)
+	renderer, ok := mdctx.GetRenderer(pc)
 	if !ok {
 		panic("link preview: no renderer")
 	}
@@ -118,7 +119,7 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	title.AppendChild(title, titleLink)
 	titleHTML := &bytes.Buffer{}
 	if err := renderer.Render(titleHTML, reader.Source(), title); err != nil {
-		panic(fmt.Sprintf("render preview title to HTML for %s: %s", GetFilePath(pc), err.Error()))
+		panic(fmt.Sprintf("render preview title to HTML for %s: %s", mdctx.GetFilePath(pc), err.Error()))
 	}
 	link.SetAttribute([]byte("class"), []byte("preview-target"))
 	link.SetAttribute([]byte("data-preview-title"), bytes.Trim(titleHTML.Bytes(), " \n"))
@@ -128,7 +129,7 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	snippetNode := title.NextSibling()
 	for snippetNode != nil {
 		if err := renderer.Render(snippetHTML, reader.Source(), snippetNode); err != nil {
-			panic(fmt.Sprintf("render preview snippet to HTML for %s: %s", GetFilePath(pc), err.Error()))
+			panic(fmt.Sprintf("render preview snippet to HTML for %s: %s", mdctx.GetFilePath(pc), err.Error()))
 		}
 		snippetNode = snippetNode.NextSibling()
 	}

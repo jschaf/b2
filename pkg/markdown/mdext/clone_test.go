@@ -3,6 +3,7 @@ package mdext
 import (
 	"bytes"
 	"github.com/jschaf/b2/pkg/htmls"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
 	"testing"
 )
@@ -34,11 +35,11 @@ func TestCloneNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t,
+			md, ctx := mdtest.NewTester(t,
 				NewArticleExt(),
 				NewTimeExt(),
 				NewHeaderExt())
-			orig := mustParseMarkdown(t, md, ctx, tt.src)
+			orig := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			clone := CloneNode(orig)
 
 			origB := &bytes.Buffer{}

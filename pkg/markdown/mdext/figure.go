@@ -184,13 +184,13 @@ func (f *figureRenderer) renderFigCaption(w util.BufWriter, _ []byte, _ ast.Node
 	return ast.WalkContinue, nil
 }
 
-type figureExt struct{}
+type FigureExt struct{}
 
-func NewFigureExt() *figureExt {
-	return &figureExt{}
+func NewFigureExt() *FigureExt {
+	return &FigureExt{}
 }
 
-func (f *figureExt) Extend(m goldmark.Markdown) {
+func (f *FigureExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithASTTransformers(
 			util.Prioritized(&figureASTTransformer{}, 999)))

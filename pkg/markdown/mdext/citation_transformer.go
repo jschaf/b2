@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"os"
 
 	"github.com/jschaf/b2/pkg/bibtex"
@@ -54,14 +55,14 @@ type citeSpan struct {
 func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	spans, err := ca.findSpans(doc, reader)
 	if err != nil {
-		PushError(pc, err)
+		mdctx.PushError(pc, err)
 		return
 	}
 
 	bibs := GetTOMLMeta(pc).BibPaths
 	bibEntries, err := ca.readBibs(bibs)
 	if err != nil {
-		PushError(pc, err)
+		mdctx.PushError(pc, err)
 		return
 	}
 
@@ -69,12 +70,12 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 	for _, span := range spans {
 		c, err := ca.newCitationParent(span)
 		if err != nil {
-			PushError(pc, err)
+			mdctx.PushError(pc, err)
 			return
 		}
 		bib, ok := bibEntries[c.Key]
 		if !ok {
-			PushError(pc, fmt.Errorf("citation: no bibtex found for key: %s", c.Key))
+			mdctx.PushError(pc, fmt.Errorf("citation: no bibtex found for key: %s", c.Key))
 			return
 		}
 		c.Bibtex = bib
@@ -84,7 +85,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 	if ca.attacher != nil {
 		if err := ca.attacher.Attach(doc, refs); err != nil {
 			doc.Dump(reader.Source(), 0)
-			PushError(pc, err)
+			mdctx.PushError(pc, err)
 			return
 		}
 	}

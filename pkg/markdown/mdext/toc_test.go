@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
 	"testing"
 )
@@ -22,13 +23,13 @@ func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 			texts.Dedent(`
 				<div class="toc">
 					<ol class="toc-list toc-level-2">
-						<li>h2.1</li>
+						<li><span class=toc-ordering>1</span> h2.1</li>
 						<li>
 							<ol class="toc-list toc-level-3">
-								<li>h3.1</li>
+								<li><span class=toc-ordering>1.1</span> h3.1</li>
 							</ol>
 						</li>
-						<li>h2.2</li>
+						<li><span class=toc-ordering>2</span> h2.2</li>
 					</ol>
 				</div>
 				<h1>h1.1</h1>
@@ -40,9 +41,9 @@ func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewColonLineExt(), NewTOCExt(TOCStyleShow))
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewColonLineExt(), NewTOCExt(TOCStyleShow))
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }
@@ -71,9 +72,9 @@ func TestNewTOCExt_TOCStyleNone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewColonLineExt(), NewTOCExt(TOCStyleNone))
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewColonLineExt(), NewTOCExt(TOCStyleNone))
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

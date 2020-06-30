@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,9 +34,9 @@ func TestNewColonBlockExt_preview(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewColonBlockExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewColonBlockExt())
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 			gotPreview, _ := GetPreview(ctx, tt.wantCtxURL)
 			if diff := cmp.Diff(tt.wantCtxURL, gotPreview.URL); diff != "" {
 				t.Errorf("Preview URL mismatch (-want +got):\n%s", diff)
@@ -62,9 +63,9 @@ func TestNewColonBlockExt_unknown(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewColonBlockExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewColonBlockExt())
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

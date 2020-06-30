@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -40,10 +41,10 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	meta := GetTOMLMeta(pc)
 	heading := firstHeading(doc)
 	if heading == nil {
-		panic("nil heading, file path: " + GetFilePath(pc))
+		panic("nil heading, file path: " + mdctx.GetFilePath(pc))
 	}
 	title := string(heading.Text(reader.Source()))
-	SetTitle(pc, title)
+	mdctx.SetTitle(pc, title)
 
 	parent := heading.Parent()
 	if parent == nil {

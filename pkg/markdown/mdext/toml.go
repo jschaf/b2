@@ -4,6 +4,7 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"path/filepath"
 	"time"
 
@@ -112,7 +113,7 @@ func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context)
 	}
 	meta.Path = "/" + meta.Slug
 
-	postPath := GetFilePath(pc)
+	postPath := mdctx.GetFilePath(pc)
 	for i, bib := range meta.BibPaths {
 		if filepath.IsAbs(bib) {
 			continue

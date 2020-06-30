@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"errors"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,13 +18,13 @@ func TestPushError(t *testing.T) {
 	push := func(errs ...error) CtxOp {
 		return func(pc parser.Context) {
 			for _, err := range errs {
-				PushError(pc, err)
+				mdctx.PushError(pc, err)
 			}
 		}
 	}
 	popExpect := func(wantErrs ...error) CtxOp {
 		return func(pc parser.Context) {
-			errs := PopErrors(pc)
+			errs := mdctx.PopErrors(pc)
 			if diff := cmp.Diff(errs, wantErrs, errCmp); diff != "" {
 				t.Errorf("PopErrors mismatch (-want +got):\n%s", diff)
 			}

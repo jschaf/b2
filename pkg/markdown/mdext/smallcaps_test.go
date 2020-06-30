@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/htmls/tags"
@@ -34,9 +35,9 @@ func TestSmallCapsExt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewSmallCapsExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tags.P(tt.want))
+			md, ctx := mdtest.NewTester(t, NewSmallCapsExt())
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tags.P(tt.want))
 		})
 	}
 }

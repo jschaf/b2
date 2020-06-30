@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/texts"
@@ -26,7 +28,7 @@ func TestNewImageExt(t *testing.T) {
         </p>
      `),
 			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"qux.png": "/home/joe/qux.png"},
+				mdctx.AssetsCtxKey: map[string]string{"qux.png": "/home/joe/qux.png"},
 			},
 		},
 		{
@@ -45,17 +47,17 @@ func TestNewImageExt(t *testing.T) {
         </p>
      `),
 			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"/some_slug/qux.png": "/home/joe/qux.png"},
+				mdctx.AssetsCtxKey: map[string]string{"/some_slug/qux.png": "/home/joe/qux.png"},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewTOMLExt(), NewImageExt())
-			SetFilePath(ctx, path)
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			assertCtxContainsAll(t, ctx, tt.wantCtx)
+			md, ctx := mdtest.NewTester(t, NewTOMLExt(), NewImageExt())
+			mdctx.SetFilePath(ctx, path)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			mdtest.AssertCtxContainsAll(t, ctx, tt.wantCtx)
 		})
 	}
 }

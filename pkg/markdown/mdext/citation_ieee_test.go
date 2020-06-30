@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"strconv"
 	"strings"
 	"testing"
@@ -64,12 +65,12 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewCitationExt(style, NewCitationNopAttacher()))
+			md, ctx := mdtest.NewTester(t, NewCitationExt(style, NewCitationNopAttacher()))
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 			})
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }
@@ -138,12 +139,12 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewCitationExt(style, citeDocAttacher{}))
+			md, ctx := mdtest.NewTester(t, NewCitationExt(style, citeDocAttacher{}))
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 			})
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs)
 		})
 	}
 }

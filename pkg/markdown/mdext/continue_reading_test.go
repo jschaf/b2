@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/texts"
@@ -36,12 +37,12 @@ func TestContinueReadingTransformer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewContinueReadingExt())
+			md, ctx := mdtest.NewTester(t, NewContinueReadingExt())
 			SetTOMLMeta(ctx, PostMeta{
 				Slug: tt.slug,
 			})
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }
@@ -75,9 +76,9 @@ func TestNopContinueReadingTransformer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewNopContinueReadingExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewNopContinueReadingExt())
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

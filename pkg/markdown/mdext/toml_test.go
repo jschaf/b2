@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 	"time"
 
@@ -39,9 +40,9 @@ func TestMeta(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewTOMLExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			md, ctx := mdtest.NewTester(t, NewTOMLExt())
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 			if diff := cmp.Diff(GetTOMLMeta(ctx), tt.wantTOMLMeta); diff != "" {
 				t.Errorf("TOML meta mismatch: (-got +want)\n%s", diff)
 			}

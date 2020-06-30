@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"bytes"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/yuin/goldmark"
@@ -16,6 +17,12 @@ import (
 var KindTOC = ast.NewNodeKind("TOC")
 
 type TOCStyle int
+
+const (
+	// The inclusive start of TOC headings. 2 means consider H2 as the top level
+	// TOC.
+	tocStartLevel = 2
+)
 
 const (
 	TOCStyleNone TOCStyle = iota
@@ -39,6 +46,20 @@ func (c *TOC) Kind() ast.NodeKind {
 
 func (c *TOC) Dump(source []byte, level int) {
 	ast.DumpHelper(c, source, level, nil, nil)
+}
+
+var tocCtxKey = parser.NewContextKey()
+
+func GetTOC(pc parser.Context) (*TOC, bool) {
+	r := pc.Get(tocCtxKey)
+	if r == nil {
+		return nil, false
+	}
+	return r.(*TOC), true
+}
+
+func SetTOC(pc parser.Context, toc *TOC) {
+	pc.Set(tocCtxKey, toc)
 }
 
 // tocTransformer adds heading entries to the TOC node.
@@ -69,28 +90,24 @@ func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc par
 	}
 
 	headings := make([]*ast.Heading, 0, 3*depth) // assume 3 headings per level
-	_ = ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if !entering || n.Kind() != ast.KindHeading {
-			return ast.WalkContinue, nil
-		}
-		if n.Type() == ast.TypeInline {
-			return ast.WalkSkipChildren, nil
-		}
-		h := n.(*ast.Heading)
+	_ = asts.WalkHeadings(node, func(h *ast.Heading) (ast.WalkStatus, error) {
 		// We ignore H1 because that's the title.
 		if h.Level > 1 && h.Level <= depth {
 			headings = append(headings, h)
 		}
 		return ast.WalkSkipChildren, nil
+
 	})
 
-	l, _ := createTOCListLevel(headings, 2) // start at 2 since 1 is the title
+	// The count per 1-indexed ast.Heading.Level: 1-6. Must increment before use.
+	counts := make([]int, 7)
+	l, _ := createTOCListLevel(headings, 2, counts) // start at 2 since 1 is the title
 	toc.AppendChild(toc, l)
 }
 
 // createTOCListLevel creates a list containing a single level of headings and
 // recurses to create deeper levels.
-func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
+func createTOCListLevel(headings []*ast.Heading, level int, counts []int) (*ast.List, int) {
 	l := ast.NewList('.') // period is a marker for an ordered list
 	attrs.AddClass(l, "toc-list", "toc-level-"+strconv.Itoa(level))
 	l.Start = 1
@@ -103,6 +120,8 @@ func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
 			return l, i
 		case h.Level == level:
 			li := ast.NewListItem(i)
+			prefix := buildCountTag(counts, level)
+			li.AppendChild(li, prefix)
 			// Use a clone so we don't move the actual heading children.
 			asts.Reparent(li, CloneNode(h))
 			l.AppendChild(l, li)
@@ -110,7 +129,7 @@ func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
 			continue
 		case h.Level > level:
 			li := ast.NewListItem(i)
-			childL, n := createTOCListLevel(headings[i:], level+1)
+			childL, n := createTOCListLevel(headings[i:], level+1, counts)
 			li.AppendChild(li, childL)
 			l.AppendChild(l, li)
 			i += n
@@ -120,6 +139,27 @@ func createTOCListLevel(headings []*ast.Heading, level int) (*ast.List, int) {
 		}
 	}
 	return l, i
+}
+
+// buildCountTag builds an HTML string representing the current TOC level at
+// depth of level. For example, a level of 3 produces an HTML tag with contents
+// like "4.2" which means this TOC entry is the 4th <h2> and 2nd <h3>. We ignore
+// levels less than tocStartLevel which is why there's no <h1> in the example.
+func buildCountTag(counts []int, level int) *ast.String {
+	counts[level]++
+	b := new(bytes.Buffer)
+	b.WriteString("<span class=toc-ordering>")
+	for i := tocStartLevel; i <= level; i++ {
+		b.WriteString(strconv.Itoa(counts[i]))
+		if i < level {
+			b.WriteByte('.')
+		}
+	}
+	b.WriteString("</span>")
+	b.WriteByte(' ')
+	s := ast.NewString(b.Bytes())
+	s.SetCode(true)
+	return s
 }
 
 // tocRenderer is the HTML renderer for a TOC node.

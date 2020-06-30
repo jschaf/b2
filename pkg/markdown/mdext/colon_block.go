@@ -29,6 +29,30 @@ type Preview struct {
 	Parent *ColonBlock
 }
 
+var previewCtxKey = parser.NewContextKey()
+
+// AddPreview adds a preview to the context so that it can be rendered into
+// the corresponding link.
+func AddPreview(pc parser.Context, p Preview) {
+	if existing := pc.Get(previewCtxKey); existing == nil {
+		pc.Set(previewCtxKey, make(map[string]Preview))
+	}
+
+	previews := pc.Get(previewCtxKey).(map[string]Preview)
+	previews[p.URL] = p
+}
+
+// GetPreview returns the preview, if any, for the URL. Returns an empty Preview
+// and false if no preview exists for the URL.
+func GetPreview(pc parser.Context, url string) (Preview, bool) {
+	previews, ok := pc.Get(previewCtxKey).(map[string]Preview)
+	if !ok {
+		return Preview{}, false
+	}
+	p, ok := previews[url]
+	return p, ok
+}
+
 // ColonBlock parses colon delimited structures inspired by
 // https://pandoc.org/MANUAL.html#extension-fenced_divs
 // For example:

@@ -3,6 +3,7 @@ package markdown
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/cite"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"io"
 	"io/ioutil"
 
@@ -67,6 +68,7 @@ func WithCiteAttacher(c mdext.CitationReferencesAttacher) Option {
 }
 
 func WithExtender(e goldmark.Extender) Option {
+	parser.WithAutoHeadingID()
 	return func(m *Markdown) {
 		m.opts.Extenders = append(m.opts.Extenders, e)
 	}
@@ -118,19 +120,19 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 		return nil, err
 	}
 	ctx := parser.NewContext()
-	mdext.SetFilePath(ctx, path)
-	mdext.SetRenderer(ctx, m.gm.Renderer())
-	mdext.SetLogger(ctx, m.logger)
+	mdctx.SetFilePath(ctx, path)
+	mdctx.SetRenderer(ctx, m.gm.Renderer())
+	mdctx.SetLogger(ctx, m.logger)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
-	if parseErrs := mdext.PopErrors(ctx); len(parseErrs) == 1 {
+	if parseErrs := mdctx.PopErrors(ctx); len(parseErrs) == 1 {
 		return nil, fmt.Errorf("parse errors in context: %w", parseErrs[0])
 	} else if len(parseErrs) > 1 {
 		return nil, fmt.Errorf("parse errors in context: %v", parseErrs)
 	}
 	meta := mdext.GetTOMLMeta(ctx)
-	meta.Title = mdext.GetTitle(ctx)
-	assets := mdext.GetAssets(ctx)
+	meta.Title = mdctx.GetTitle(ctx)
+	assets := mdctx.GetAssets(ctx)
 	return &PostAST{
 		Node:   node,
 		Meta:   meta,

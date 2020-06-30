@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/htmls/tags"
@@ -18,10 +19,10 @@ func TestNewTypographyExt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewTypographyExt())
+			md, ctx := mdtest.NewTester(t, NewTypographyExt())
 
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})
 	}
 }

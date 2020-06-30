@@ -264,6 +264,24 @@ strong {
   font-weight: 600;
 }
 
+.toc-list {
+  list-style: none;
+  padding-left: 12px;
+}
+
+.toc-list li {
+  line-height: 1.2;
+}
+
+.toc-level-2 {
+ padding-left: 0;
+}
+
+/* The prefix like 3.2.1 before a TOC list item. */
+.toc-ordering {
+  font-size: 90%;
+}
+
 p,
 blockquote, .cite-reference {
   line-height: 1.5rem;

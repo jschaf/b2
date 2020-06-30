@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/texts"
@@ -28,7 +30,7 @@ func TestNewLinkExt(t *testing.T) {
       </p>
     `),
 			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"paper.pdf": "/home/joe/paper.pdf"},
+				mdctx.AssetsCtxKey: map[string]string{"paper.pdf": "/home/joe/paper.pdf"},
 			},
 		},
 		{
@@ -48,7 +50,7 @@ func TestNewLinkExt(t *testing.T) {
       </p>
     `),
 			map[parser.ContextKey]interface{}{
-				assetsCtxKey: map[string]string{"/some_slug/paper.pdf": "/home/joe/paper.pdf"},
+				mdctx.AssetsCtxKey: map[string]string{"/some_slug/paper.pdf": "/home/joe/paper.pdf"},
 			},
 		},
 		{
@@ -96,12 +98,12 @@ func TestNewLinkExt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t, NewColonBlockExt(), NewTOMLExt(), NewLinkExt())
-			SetFilePath(ctx, path)
+			md, ctx := mdtest.NewTester(t, NewColonBlockExt(), NewTOMLExt(), NewLinkExt())
+			mdctx.SetFilePath(ctx, path)
 
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			assertCtxContainsAll(t, ctx, tt.wantCtx)
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			mdtest.AssertCtxContainsAll(t, ctx, tt.wantCtx)
 		})
 	}
 }

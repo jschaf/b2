@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -53,13 +55,13 @@ func TestArticleExt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := newMdTester(t,
+			md, ctx := mdtest.NewTester(t,
 				NewArticleExt(),
 				NewTimeExt(),
 				NewHeaderExt())
-			doc := mustParseMarkdown(t, md, ctx, tt.src)
-			assertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			if diff := cmp.Diff(GetTitle(ctx), tt.wantTitle); diff != "" {
+			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			if diff := cmp.Diff(mdctx.GetTitle(ctx), tt.wantTitle); diff != "" {
 				t.Errorf("Article title mismatch (-got +want):\n%s", diff)
 			}
 		})

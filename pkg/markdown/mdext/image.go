@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"path"
 	"path/filepath"
 	"strings"
@@ -37,10 +38,10 @@ func (f imageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc pars
 		urlPath := meta.Path
 		newDest := path.Join(urlPath, string(img.Destination))
 		img.Destination = []byte(newDest)
-		sourceDir := filepath.Dir(GetFilePath(pc))
+		sourceDir := filepath.Dir(mdctx.GetFilePath(pc))
 		localPath := filepath.Join(sourceDir, origDest)
 		remotePath := filepath.Join(meta.Path, origDest)
-		AddAsset(pc, remotePath, localPath)
+		mdctx.AddAsset(pc, remotePath, localPath)
 		return ast.WalkSkipChildren, nil
 	})
 
