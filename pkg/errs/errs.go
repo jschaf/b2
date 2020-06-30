@@ -77,7 +77,7 @@ func CloseWithErrCapture(err *error, closer io.Closer, msg string) {
 	}
 
 	if *err == nil {
-		// Only 1 error from Close()
+		// Only 1 error from Close() so replace the error pointed at by err
 		*err = wErr
 		return
 	}

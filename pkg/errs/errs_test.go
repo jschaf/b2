@@ -25,6 +25,7 @@ func errP(err error) *error {
 
 func TestCloseWithErrCapture(t *testing.T) {
 	e := errors.New
+	me := NewMultiError
 	tests := []struct {
 		name   string
 		err    *error
@@ -37,6 +38,7 @@ func TestCloseWithErrCapture(t *testing.T) {
 		{"nil_err", errP(nil), closer(e("cl")), "msg", "msg: cl"},
 		{"nil_err_msg", errP(nil), closer(e("cl")), "", "cl"},
 		{"err_err", errP(e("orig")), closer(e("cl")), "msg", "2 errors: orig; msg: cl"},
+		{"multiErr_err", errP(me(e("o1"), e("o2"))), closer(e("cl")), "", "3 errors: o1; o2; cl"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 )
 
+// WalkUp traverses up directory tree until it finds an ancestor directory that
+// contains dirToFind. WalkUp checks the current directory and then
 func WalkUp(dirToFind string) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -19,7 +21,7 @@ func WalkUp(dirToFind string) (string, error) {
 
 		if stat, err := os.Stat(p); err != nil {
 			if !os.IsNotExist(err) {
-				return "", fmt.Errorf("failed to stat %s: %w", p, err)
+				return "", fmt.Errorf("stat dirToFind %s: %w", p, err)
 			}
 		} else if stat.IsDir() {
 			return dir, nil
@@ -27,7 +29,7 @@ func WalkUp(dirToFind string) (string, error) {
 
 		dir = filepath.Dir(dir)
 	}
-	return "", fmt.Errorf("git dir not found starting from %s", dir)
+	return "", fmt.Errorf("dir not found in directory tree starting from %s", dir)
 }
 
 // Copy the src file to dst. Any existing file will be overwritten and will not
