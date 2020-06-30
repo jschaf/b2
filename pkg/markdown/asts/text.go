@@ -13,8 +13,8 @@ func WriteSlugText(dest []byte, node ast.Node, src []byte) []byte {
 // WriteSlugText writes the node text content recursively into w using URL safe
 // characters, namely ASCII letters and digits.
 func appendSlugText(dest []byte, offs int, node ast.Node, src []byte) int {
-	if offs < 0 || offs >= len(dest) {
-		return -1
+	if offs >= len(dest) {
+		return offs
 	}
 
 	var bs []byte

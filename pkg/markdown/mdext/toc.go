@@ -122,8 +122,16 @@ func createTOCListLevel(headings []*ast.Heading, level int, counts []int) (*ast.
 			li := ast.NewListItem(i)
 			prefix := buildCountTag(counts, level)
 			li.AppendChild(li, prefix)
-			// Use a clone so we don't move the actual heading children.
-			asts.Reparent(li, CloneNode(h))
+
+			id := attrs.GetStringAttr(h, "id")
+			if id != "" {
+				link := ast.NewLink()
+				link.Destination = []byte("#" + id)
+				asts.Reparent(link, CloneNode(h)) // clone to avoid moving actual headings
+				li.AppendChild(li, link)
+			} else {
+				asts.Reparent(li, CloneNode(h)) // clone to avoid moving actual headings
+			}
 			l.AppendChild(l, li)
 			i++
 			continue

@@ -38,3 +38,18 @@ func AddClass(n ast.Node, class ...string) {
 	}
 	n.SetAttribute([]byte("class"), newer)
 }
+
+func GetStringAttr(n ast.Node, k string) string {
+	a, ok := n.AttributeString(k)
+	if !ok {
+		return ""
+	}
+	switch s := a.(type) {
+	case []byte:
+		return string(s)
+	case string:
+		return s
+	default:
+		return ""
+	}
+}
