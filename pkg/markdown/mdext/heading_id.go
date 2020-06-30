@@ -11,7 +11,10 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-const maxHeadingIDLen = 30
+// 36 is a good balance between brevity and detail. The following phrase is 35
+// characters:
+//   inverted-indexes-for-experiment-ids
+const maxHeadingIDLen = 36
 
 // headingIDTransformer is an AST transformer that adds an ID attribute to each
 // heading.
@@ -27,7 +30,7 @@ func (h headingIDTransformer) Transform(node *ast.Document, reader text.Reader, 
 }
 
 func generateHeadingID(ids map[string]struct{}, h *ast.Heading, src []byte) []byte {
-	b := asts.WriteSlugText(make([]byte, maxHeadingIDLen, 32), h, src)
+	b := asts.WriteSlugText(make([]byte, maxHeadingIDLen, maxHeadingIDLen+2), h, src)
 	if !hasHeadingID(ids, b) {
 		ids[string(b)] = struct{}{}
 		return b

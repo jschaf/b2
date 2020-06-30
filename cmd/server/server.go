@@ -147,13 +147,14 @@ func run(l *zap.Logger) error {
 
 	go func() {
 		if err := watcher.Start(); err != nil {
-			server.logger.Infof("stopping server because watcher error: %s", err)
+			server.logger.Infof("server watcher start error: %s", err)
 			server.Stop()
 		}
 	}()
 
 	go func() {
 		if err := server.Serve(); err != nil {
+			server.logger.Infof("server serve error: %s", err)
 			server.Stop()
 		}
 	}()

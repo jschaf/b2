@@ -104,7 +104,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				// Send empty string which should reload all LiveReload clients
 				f.liveReload.ReloadFile("")
 
-			case filepath.Ext(rel) == ".go":
+			case filepath.Ext(rel) == ".go" && !strings.HasSuffix(rel, "_test.go"):
 				// Rebuild the server to pickup any new changes.
 				if err := f.rebuildServer(); err != nil {
 					return fmt.Errorf("failed to hotswap erver: %w", err)
