@@ -41,10 +41,6 @@ func AAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("a", attrs, ts...)
 }
 
-func Cite(ts ...string) string {
-	return CiteAttrs("", ts...)
-}
-
 func CiteAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("cite", attrs, ts...)
 }

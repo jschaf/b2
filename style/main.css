@@ -120,15 +120,6 @@ body > main {
     width: 650px;
   }
 
-  .wide-code {
-    position: relative;
-    width: calc(100vw - 2 * 10px);
-    max-width: 780px;
-    margin-top: 0.75rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
   .article-split {
     position: relative;
     width: calc(100vw - 2 * 16px);
@@ -374,11 +365,6 @@ table {
   font-feature-settings: 'tnum';
 }
 
-table.full-width {
-  width: 100%;
-  max-width: 100%;
-}
-
 table th {
   border-bottom: 1px solid #333;
   padding: 0.3em 0.5em 0;
@@ -465,10 +451,6 @@ thead th {
   text-align: left;
   border-bottom: 1px solid #aaa;
   font-weight: 400;
-}
-
-.katex {
-  font-size: 1em !important;
 }
 
 .code-block-container {

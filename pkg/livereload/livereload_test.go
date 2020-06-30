@@ -1,9 +1,6 @@
 package livereload
 
 import (
-	"bytes"
-	"encoding/json"
-
 	"github.com/go-test/deep"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap/zaptest"
@@ -102,7 +99,7 @@ func writeHTML(h http.Header, hs ...string) http.HandlerFunc {
 			}
 		}
 		for _, h := range hs {
-			w.Write([]byte(h))
+			_, _ = w.Write([]byte(h))
 		}
 	}
 }
@@ -228,22 +225,6 @@ func newWebSocketClient(t *testing.T, server *httptest.Server) (*websocket.Conn,
 	return conn, resp
 }
 
-const (
-	websocketText = 129
-)
-
-func websocketTextMsg(v interface{}) []byte {
-	b := &bytes.Buffer{}
-	b.Write([]byte{websocketText, byte(0)})
-	err := json.NewEncoder(b).Encode(v)
-	if err != nil {
-		panic(err)
-	}
-	bs := b.Bytes()
-	bs[1] = byte(len(bs) - 2)
-	return bs
-}
-
 func assertReadsHelloMsg(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
 	hello := new(helloMsg)
@@ -256,16 +237,4 @@ func assertReadsHelloMsg(t *testing.T, conn *websocket.Conn) {
 		t.Fatalf("didn't receive hello request from server; expected:\n%s\ngot:\n%s\n%s",
 			expectedResp, *hello, strings.Join(diff, "\n"))
 	}
-}
-
-func websocketCloseMsg(code int) []byte {
-	err := &websocket.CloseError{Code: code}
-	bs := websocket.FormatCloseMessage(code, err.Error())
-	finalBit := byte(1 << 7)
-	b := bytes.Buffer{}
-	b0 := byte(websocket.CloseMessage) | finalBit
-	b1 := byte(len(bs))
-	b.Write([]byte{b0, b1})
-	b.Write(bs)
-	return b.Bytes()
 }

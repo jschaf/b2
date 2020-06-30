@@ -70,11 +70,11 @@ func (c contReadingParser) CanAcceptIndentedLine() bool {
 // contReadingTransformer removes all nodes after the continue reading node.
 type contReadingTransformer struct{}
 
-func (c contReadingTransformer) Transform(doc *ast.Document, r text.Reader, _ parser.Context) {
+func (c contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
 
 	var contReading ast.Node
 
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering || n.Kind() != KindContinueReading {
 			return ast.WalkContinue, nil
 		}

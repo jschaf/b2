@@ -37,11 +37,6 @@ func (w WikiSummaryFetcher) Fetch(link string) (FetchResult, error) {
 		return FetchResult{}, fmt.Errorf("wiki summary fetcher GET: %w", err)
 	}
 	defer resp.Body.Close()
-	//bytes, err := ioutil.ReadAll(resp.Body)
-	//if err != nil {
-	//	return FetchResult{}, fmt.Errorf("wiki summary fetcher body: %w", err)
-	//}
-	//resp.Header.Get()
 
 	panic("implement me")
 }

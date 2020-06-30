@@ -134,7 +134,8 @@ class PreviewLifecycle {
   onTargetMouseOver(ev) {
     ev.preventDefault();
     this.init();
-    const targetEl = ev.target.closest('.preview-target');
+    const currentEl = /** @type {Element} */ ev.target;
+    const targetEl = currentEl.closest('.preview-target');
     if (!targetEl) {
       console.warn(`preview-box: no surrounding <a> element for ${ev.target}`)
       return
@@ -269,7 +270,7 @@ class PreviewLifecycle {
             console.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
             continue;
           }
-          const clone = p2.cloneNode(/* deep */ true);
+          const  clone = /** @type {Element} */ p2.cloneNode(/* deep */ true);
           // Remove ID attributes and highlight the node.
           this.recurseChildren(clone, (e) => {
             if (e.id === ref.id) {

@@ -15,27 +15,6 @@ func Reparent(dest, src ast.Node) {
 	}
 }
 
-func Heading(level int, children ...ast.Node) *ast.Heading {
-	h := ast.NewHeading(level)
-	for _, child := range children {
-		h.AppendChild(h, child)
-	}
-	return h
-}
-
-func String(s string) *ast.String {
-	return ast.NewString([]byte(s))
-}
-
-func Emph(children ...ast.Node) *ast.Emphasis {
-	const emLvl = 1
-	em := ast.NewEmphasis(emLvl)
-	for _, child := range children {
-		em.AppendChild(em, child)
-	}
-	return em
-}
-
 // HeadingWalker is a function that will be called when WalkHeadings find a
 // header. If HeadingWalker returns error, Walk function immediately
 // stop walking.

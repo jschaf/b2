@@ -65,14 +65,14 @@ func NewHTMLInjector(scriptTag string, next http.Handler) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Length", strconv.Itoa(len(s)))
 		w.WriteHeader(recorder.Code)
-		w.Write(s)
+		_, _ = w.Write(s)
 	}
 }
 
 // ServeJS is a http.HandlerFunc to serve the livereload.js script.
 func ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
-	w.Write(liveReloadJS)
+	_, _ = w.Write(liveReloadJS)
 }
 
 func (lr *LiveReload) Start() {

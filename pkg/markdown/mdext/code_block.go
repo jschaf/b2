@@ -166,7 +166,7 @@ func writeStrings(w io.Writer, ss ...string) {
 }
 
 // CodeBlockExt extends markdown to better render code blocks with syntax
-//highlighting.
+// highlighting.
 type CodeBlockExt struct{}
 
 func NewCodeBlockExt() CodeBlockExt {
