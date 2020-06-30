@@ -8,10 +8,10 @@ visibility = "published"
 
 Gorilla is an in-memory, time series database from Facebook optimized for
 writes, reading data in a few milliseconds, and high availability. Facebook
-open-sourced the code as [Beringei], but the repo is archived. At its core,
-Gorilla is a 26-hour write-through cache backed by durable storage in [HBase], a
-distributed key-value store. Gorilla’s contributions include a novel, streaming
-timestamp compression scheme.
+open-sourced the code as [Beringei], but the maintainers archived the repo. At 
+its core, Gorilla is a 26-hour write-through cache backed by durable storage in 
+[HBase], a distributed key-value store. Gorilla’s contributions include a novel, 
+streaming timestamp compression scheme.
 
 Paper: [Gorilla: A Fast, Scalable, In-Memory Time Series Database][gorilla]
 

@@ -37,7 +37,7 @@ Dockerfile syntax is horrendous for building scripts past about 5 lines. Instead
 of wrestling with `&&` and backslashes, move logic into a script. Then, `COPY`
 the script into the Docker image. Docker invalidates based on the hash of the
 copied script, so any changes in the copied script force Docker to rebuild that
-layer plus all following layers. The benefit of using an external scripts are
+layer plus all following layers. The benefit of using external scripts are
 that you can use Bash instead of the container shell and all the programming
 tools with external files, especially shellcheck.
 
@@ -53,7 +53,7 @@ Minor versions in Debian package repositories advance quickly into oblivion.
 Always prefix `apt-get install` with `apt-get update`. If the base image has a
 previously issued `apt-get update` command, its apt cache contains with
 available package versions that existed at the creation time of the image.
-Debian remove old versions from the package repositories, so `apt-get install`
+Debian removes old versions from the package repositories, so `apt-get install`
 can fail if the cached version is too old.
 
 ```shell script
@@ -68,8 +68,8 @@ checks its cache and avoids rerunning the commands if a cache entry exists. This
 pattern appears for:
 
 - Downloading dependencies like node_modules, Maven packages, or Go modules.
-- Downloading source code from a versioned URL. You cannot use a latest URL
-  because the object might change but the URL does not.
+- Downloading source code from a versioned URL. You cannot use the latest URL
+  because the object might change, but the URL does not.
 
 ## Robust curl commands
 

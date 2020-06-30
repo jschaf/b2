@@ -17,9 +17,8 @@ remote fetch reduces the checkout step time to 2 seconds.
 ## The default CircleCI `checkout` step
 
 We’ll start by analyzing the builtin CircleCI `checkout` step. The interesting
-parts of the default
-[CircleCI ](https://circleci.com/docs/2.0/configuration-reference/#checkout)`[checkout](https://circleci.com/docs/2.0/configuration-reference/#checkout)`
-step are below and the full code is available at this
+parts of the default [CircleCI checkout](https://circleci.com/docs/2.0/configuration-reference/#checkout) 
+step are below. The full code is available at this
 [GitHub Gist](https://gist.github.com/jschaf/31d88678cbf733e9bb749ec0afdcc418).
 
 CONTINUE_READING
@@ -60,9 +59,9 @@ clone truncates the Git history to the specified number of commits, typically 1
 commit. CircleCI doesn’t offer a shallow clone option on the builtin `checkout`
 step because GitHub would prefer to
 [avoid the expensive computation](https://github.com/circleci/circleci-docs/issues/2040#issuecomment-368129275)
-associated with shallow clones. I can’t speak to GitHub’s load but it’s much
-faster for continuous integration to clone a shallow repo of 25MB than a full
-repo of 500MB. The difference is 2 seconds instead of 30 seconds. For the full
+associated with shallow clones. I can’t speak to GitHub’s load, but it’s much
+faster for continuous integration to clone a shallow repo of 25 MB than a full
+repo of 500 MB. The difference is 2 seconds instead of 30 seconds. For the full
 code, see the `RUN_CHECKOUT_SHALLOW_GIT_REPO` alias in the example
 [CircleCI config](https://github.com/jschaf/ci_speed_test/blob/master/.circleci/config.yml).
 The relevant section is below.
@@ -92,7 +91,7 @@ The primary differences from the builtin CircleCI `checkout` step are:
 
 # Common errors and solutions
 
-## Git refusing to fetch into current branch of non-bare repository
+## Git refusing to fetch into the current branch of non-bare repository
 
 Git displays the following error if you try to fetch the currently checked out
 branch. For the specific error below, the current local branch was `master` and

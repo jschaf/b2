@@ -2,6 +2,7 @@ package paths
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/errs"
 	"io"
 	"os"
 	"path/filepath"
@@ -31,18 +32,18 @@ func WalkUp(dirToFind string) (string, error) {
 
 // Copy the src file to dst. Any existing file will be overwritten and will not
 // copy file attributes.
-func Copy(src, dst string) error {
+func Copy(src, dst string) (mErr error) {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer errs.CloseWithErrCapture(&mErr, in, "")
 
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer errs.CloseWithErrCapture(&mErr, out, "")
 
 	_, err = io.Copy(out, in)
 	if err != nil {

@@ -4,7 +4,7 @@ date = 2019-02-26
 visibility = "published"
 +++
 
-# [Advanced queries with Bazel](/advanced-queries-bazel/)
+# Advanced queries with Bazel
 
 I often need to query complex things with [Bazel](https://www.bazel.build/), an
 open-source build system from Google that focuses on performance and correctness
@@ -51,7 +51,7 @@ There are two BUILD labels for our database:
 - the `api` label for library and test code
 
 Our database library incorrectly had the `full` target in the `deps` attribute
-which meant all of the tests needlessly included the full database. Removing the
+which meant all the tests needlessly included the full database. Removing the
 `full` target from `//server:dao` requires three steps:
 
 ![Bazel removing deps from library code.](bazel_db_full.png "Things your build system probably can't do.")

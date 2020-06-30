@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/errs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,8 +39,8 @@ func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatch
 	}
 }
 
-func (f *FSWatcher) Start() error {
-	defer f.watcher.Close()
+func (f *FSWatcher) Start() (mErr error) {
+	defer errs.CloseWithErrCapture(&mErr, f.watcher, "close FSWatcher")
 	rootDir, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("failed to get root dir: %w", err)

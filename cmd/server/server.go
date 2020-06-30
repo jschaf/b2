@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/errs"
 	"log"
 	"net/http"
 	"os"
@@ -48,7 +49,7 @@ func newServer(port string) (*server, error) {
 	return s, nil
 }
 
-func (s *server) Serve() error {
+func (s *server) Serve() (mErr error) {
 	srv := http.Server{
 		Handler: s.ServeMux,
 	}
@@ -67,7 +68,7 @@ func (s *server) Serve() error {
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
-	defer ln.Close()
+	defer errs.CloseWithErrCapture(&mErr, ln, "close server upgrader")
 	return srv.Serve(ln)
 }
 
