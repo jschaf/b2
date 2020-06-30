@@ -75,7 +75,7 @@ func newTOCTransformer(s TOCStyle) tocTransformer {
 	return tocTransformer{style: s}
 }
 
-func (t tocTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+func (t tocTransformer) Transform(node *ast.Document, _ text.Reader, pc parser.Context) {
 	if t.style == TOCStyleNone {
 		return
 	}
@@ -116,6 +116,8 @@ func createTOCListLevel(headings []*ast.Heading, level int, counts []int) (*ast.
 		h := headings[i]
 		switch {
 		case h.Level < level:
+			// Reset counts because numbering starts over with a new parent heading.
+			resetCounts(counts, level)
 			// Let the parent createTOCListLevel handle this heading.
 			return l, i
 		case h.Level == level:
@@ -147,6 +149,12 @@ func createTOCListLevel(headings []*ast.Heading, level int, counts []int) (*ast.
 		}
 	}
 	return l, i
+}
+
+func resetCounts(counts []int, level int) {
+	for i := level; i < len(counts); i++ {
+		counts[i] = 0
+	}
 }
 
 // buildCountTag builds an HTML string representing the current TOC level at
@@ -190,7 +198,7 @@ func (tr tocRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	}
 }
 
-func renderTOC(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func renderTOC(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
 		w.WriteString("<div class=toc>")
 	} else {

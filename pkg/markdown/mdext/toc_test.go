@@ -33,6 +33,7 @@ func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 				## h2.1
 				### h3.1
 				## h2.2
+				### h3.2
      `),
 			tags.Join(
 				tags.DivAttrs("class=toc",
@@ -40,12 +41,14 @@ func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 						tocItem("1", "h2.1", "h2.1"),
 						tocList(3, tocItem("1.1", "h3.1", "h3.1")),
 						tocItem("2", "h2.2", "h2.2"),
+						tocList(3, tocItem("2.1", "h3.2", "h3.2")),
 					),
 				),
 				tags.H1Attrs("id=h1.1", "h1.1"),
 				tags.H2Attrs("id=h2.1", "h2.1"),
 				tags.H3Attrs("id=h3.1", "h3.1"),
 				tags.H2Attrs("id=h2.2", "h2.2"),
+				tags.H3Attrs("id=h3.2", "h3.2"),
 			),
 		},
 	}

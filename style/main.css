@@ -273,6 +273,7 @@ strong {
   line-height: 1.2;
 }
 
+/** level 2 is the first level we show because H1 is the title. */
 .toc-level-2 {
  padding-left: 0;
 }
