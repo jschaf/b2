@@ -14,6 +14,7 @@ func TestWriteSlugText(t *testing.T) {
 	}{
 		{"# h1 *em*", 32, "h1-em"},
 		{"# h1 - _ *em*", 32, "h1-em"},
+		{"# h1.2 - _ *em*", 32, "h1.2-em"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {

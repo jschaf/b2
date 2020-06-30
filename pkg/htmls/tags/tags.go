@@ -2,6 +2,10 @@ package tags
 
 import "strings"
 
+func Join(ts ...string) string {
+	return strings.Join(ts, "\n")
+}
+
 func WrapAttrs(tag string, attrs string, contents ...string) string {
 	startTagSize := len(tag) + 2
 	endTagSize := startTagSize + 1
@@ -61,16 +65,48 @@ func EmAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("em", attrs, ts...)
 }
 
+func H1(ts ...string) string {
+	return Wrap("h1", ts...)
+}
+
+func H1Attrs(attrs string, ts ...string) string {
+	return WrapAttrs("h1", attrs, ts...)
+}
+
 func H2(ts ...string) string {
 	return Wrap("h2", ts...)
+}
+
+func H2Attrs(attrs string, ts ...string) string {
+	return WrapAttrs("h2", attrs, ts...)
+}
+
+func H3(ts ...string) string {
+	return Wrap("h3", ts...)
+}
+
+func H3Attrs(attrs string, ts ...string) string {
+	return WrapAttrs("h3", attrs, ts...)
 }
 
 func P(ts ...string) string {
 	return Wrap("p", ts...)
 }
 
+func OlAttrs(attrs string, ts ...string) string {
+	lis := make([]string, len(ts))
+	for i, t := range ts {
+		lis[i] = Wrap("li", t)
+	}
+	return WrapAttrs("ol", attrs, lis...)
+}
+
 func SC(ts ...string) string {
 	return WrapAttrs("span", "class=small-caps", ts...)
+}
+
+func SpanAttrs(attrs string, ts ...string) string {
+	return WrapAttrs("span", attrs, ts...)
 }
 
 func Strong(ts ...string) string {

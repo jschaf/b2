@@ -54,7 +54,7 @@ func (clp ColonLineParser) Open(_ ast.Node, reader text.Reader, pc parser.Contex
 	line, _ := reader.PeekLine()
 	const minLen = len(":toc:")
 	if len(line) < minLen || line[0] != ':' {
-		return nil, parser.Continue
+		return nil, parser.NoChildren
 	}
 
 	// Consume the word in the colons.
@@ -66,10 +66,11 @@ func (clp ColonLineParser) Open(_ ast.Node, reader text.Reader, pc parser.Contex
 	}
 
 	if i >= len(line) || line[i] != ':' {
-		return nil, parser.Continue
+		return nil, parser.NoChildren
 	}
 	i++ // consume closing colon
 
+	// By this point we have a real colon line.
 	reader.AdvanceLine()
 	cb := NewColonLine()
 	cb.Name = ColonLineName(line[1 : i-1])
@@ -127,7 +128,7 @@ func NewColonLineExt() goldmark.Extender {
 func (c ColonLineExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithBlockParsers(
-			util.Prioritized(ColonLineParser{}, 10)))
+			util.Prioritized(ColonLineParser{}, 12)))
 
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(

@@ -1,10 +1,24 @@
 package mdext
 
 import (
+	"fmt"
+	"github.com/jschaf/b2/pkg/htmls/tags"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
 	"testing"
 )
+
+func tocList(level int, ts ...string) string {
+	return tags.OlAttrs(
+		fmt.Sprintf(`class="toc-list toc-level-%d"`, level),
+		ts...)
+}
+
+func tocItem(count, id, title string) string {
+	return tags.Join(
+		tags.SpanAttrs("class=toc-ordering", count),
+		tags.AAttrs(`href="#`+id+`"`, title))
+}
 
 func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 	tests := []struct {
@@ -20,29 +34,26 @@ func TestNewTOCExt_TOCStyleShow(t *testing.T) {
 				### h3.1
 				## h2.2
      `),
-			texts.Dedent(`
-				<div class="toc">
-					<ol class="toc-list toc-level-2">
-						<li><span class=toc-ordering>1</span> h2.1</li>
-						<li>
-							<ol class="toc-list toc-level-3">
-								<li><span class=toc-ordering>1.1</span> h3.1</li>
-							</ol>
-						</li>
-						<li><span class=toc-ordering>2</span> h2.2</li>
-					</ol>
-				</div>
-				<h1 id=h1-1>h1.1</h1>
-				<h2 id=h2-1>h2.1</h2>
-				<h3 id=h3-1>h3.1</h3>
-				<h2 id=h2-2>h2.2</h2>
-      `),
+			tags.Join(
+				tags.DivAttrs("class=toc",
+					tocList(2,
+						tocItem("1", "h2.1", "h2.1"),
+						tocList(3, tocItem("1.1", "h3.1", "h3.1")),
+						tocItem("2", "h2.2", "h2.2"),
+					),
+				),
+				tags.H1Attrs("id=h1.1", "h1.1"),
+				tags.H2Attrs("id=h2.1", "h2.1"),
+				tags.H3Attrs("id=h3.1", "h3.1"),
+				tags.H2Attrs("id=h2.2", "h2.2"),
+			),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
 			md, ctx := mdtest.NewTester(t,
-				NewColonLineExt(), NewTOCExt(TOCStyleShow), NewHeadingIDExt())
+				NewColonLineExt(), NewTOCExt(TOCStyleShow), NewHeadingIDExt(),
+				NewColonBlockExt())
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})

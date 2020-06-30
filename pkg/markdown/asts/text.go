@@ -60,5 +60,6 @@ func appendSlugText(dest []byte, offs int, node ast.Node, src []byte) int {
 func isValidSlugChar(b byte) bool {
 	return ('0' <= b && b <= '9') ||
 		('a' <= b && b <= 'z') ||
-		('A' <= b && b <= 'Z')
+		('A' <= b && b <= 'Z') ||
+		b == '.'
 }

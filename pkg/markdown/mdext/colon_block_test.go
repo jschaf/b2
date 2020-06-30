@@ -34,7 +34,7 @@ func TestNewColonBlockExt_preview(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := mdtest.NewTester(t, NewColonBlockExt())
+			md, ctx := mdtest.NewTester(t, NewColonBlockExt(), NewColonLineExt())
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 			gotPreview, _ := GetPreview(ctx, tt.wantCtxURL)
