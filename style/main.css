@@ -41,7 +41,7 @@ html {
 }
 
 body {
-  display: flex;
+  display:flex;
   min-height: 100vh;
   flex-direction: column;
   font-family:-apple-system, system-ui, BlinkMacSystemFont, segoe ui, Roboto,

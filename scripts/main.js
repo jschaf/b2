@@ -15,11 +15,13 @@
         elem.style.visibility === 'hidden';
     if (isBlocked) {
       window.adblockStatus = 'blocking';
+      console.debug(`adblock status: ${window.adblockStatus}`)
       return;
     }
     await new Promise(resolve => setTimeout(resolve, intervalMs));
   }
   window.adblockStatus = 'none';
+  console.debug(`adblock status: ${window.adblockStatus}`)
 })();
 
 // Load heap stubs that run while the real heap.js downloads.
@@ -450,9 +452,11 @@ PreviewLifecycle.hidePreviewDelayMs = 200;
     hasHover = true;
   }
   if (!hasHover) {
+    console.debug("preview: no hover support, skipping previews")
     return;
   }
 
+  console.debug("preview: hover supported, enabling previews")
   const preview = new PreviewLifecycle();
   preview.addListeners();
 })();

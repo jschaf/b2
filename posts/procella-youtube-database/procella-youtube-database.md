@@ -7,6 +7,8 @@ bib_paths = ["./ref.bib"]
 
 # Procella - YouTube’s analytical column store
 
+:toc:
+
 Procella is a horizontally scalable, eventually consistent, distributed column
 store leveraging lambda architecture to support both realtime and batch queries
 [@chattopadhyay2019procella]. Let’s define those terms one at a time:
