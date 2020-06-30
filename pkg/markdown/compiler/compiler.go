@@ -28,6 +28,7 @@ type Compiler struct {
 // NewForPostDetail creates a compiler for a post detail page.
 func NewForPostDetail(l *zap.Logger) *Compiler {
 	md := markdown.New(l,
+		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)

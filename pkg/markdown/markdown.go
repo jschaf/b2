@@ -32,8 +32,9 @@ type Options struct {
 	CiteStyle    cite.Style
 	CiteAttacher mdext.CitationReferencesAttacher
 	// TOCStyle determines how to show the TOC. Defaults to not showing a TOC.
-	TOCStyle  mdext.TOCStyle
-	Extenders []goldmark.Extender
+	TOCStyle           mdext.TOCStyle
+	Extenders          []goldmark.Extender
+	HeadingAnchorStyle mdext.HeadingAnchorStyle
 }
 
 type Markdown struct {
@@ -67,6 +68,14 @@ func WithCiteAttacher(c mdext.CitationReferencesAttacher) Option {
 	}
 }
 
+// WithHeadingAnchorStyle overrides the default content shown on hovering over
+// a heading. The default is to show nothing on hover.
+func WithHeadingAnchorStyle(s mdext.HeadingAnchorStyle) Option {
+	return func(m *Markdown) {
+		m.opts.HeadingAnchorStyle = s
+	}
+}
+
 func WithExtender(e goldmark.Extender) Option {
 	parser.WithAutoHeadingID()
 	return func(m *Markdown) {
@@ -82,6 +91,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewColonBlockExt(),
 		mdext.NewColonLineExt(),
 		mdext.NewHeaderExt(),
+		mdext.NewHeadingExt(opts.HeadingAnchorStyle),
 		mdext.NewHeadingIDExt(),
 		mdext.NewImageExt(),
 		mdext.NewLinkExt(),
@@ -100,9 +110,10 @@ func New(l *zap.Logger, opts ...Option) *Markdown {
 	m := &Markdown{
 		logger: l,
 		opts: Options{
-			CiteStyle:    cite.IEEE,
-			CiteAttacher: mdext.NewCitationArticleAttacher(),
-			TOCStyle:     mdext.TOCStyleNone,
+			CiteStyle:          cite.IEEE,
+			CiteAttacher:       mdext.NewCitationArticleAttacher(),
+			TOCStyle:           mdext.TOCStyleNone,
+			HeadingAnchorStyle: mdext.HeadingAnchorStyleNone,
 		},
 	}
 	for _, opt := range opts {

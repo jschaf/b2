@@ -262,6 +262,15 @@ h2:target, h3:target, h4:target, h5:target, h6:target {
   animation: reference-highlight 4s;
 }
 
+.heading-anchor {
+  display: none;
+}
+
+h2:hover .heading-anchor, h3:hover .heading-anchor {
+  display: inline-block;
+  text-decoration: none;
+}
+
 .toc-list {
   list-style: none;
   padding-left: 12px;
