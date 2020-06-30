@@ -264,6 +264,11 @@ strong {
   font-weight: 600;
 }
 
+/** Highlight the header when scrolling from the TOC. */
+h2:target, h3:target, h4:target, h5:target, h6:target {
+  animation: reference-highlight 4s;
+}
+
 .toc-list {
   list-style: none;
   padding-left: 12px;
