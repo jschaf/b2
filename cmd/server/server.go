@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/logs"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,6 @@ import (
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
@@ -32,21 +32,15 @@ type server struct {
 	logger   *zap.SugaredLogger
 }
 
-func newServer(port string) (*server, error) {
+func newServer(port string, l *zap.Logger) *server {
 	s := new(server)
 	s.ServeMux = http.NewServeMux()
 	s.port = port
 	s.once = sync.Once{}
 	s.stopC = make(chan struct{})
-
-	if l, err := logs.NewShortDevLogger(); err != nil {
-		return nil, fmt.Errorf("failed to create logger: %w", err)
-	} else {
-		pid := os.Getpid()
-		s.logger = l.Sugar().With("pid", pid)
-	}
-
-	return s, nil
+	pid := os.Getpid()
+	s.logger = l.Sugar().With("pid", pid)
+	return s
 }
 
 func (s *server) Serve() (mErr error) {
@@ -94,28 +88,22 @@ func (s *server) Stop() {
 	_ = s.logger.Sync()
 }
 
-func main() {
+func run(l *zap.Logger) error {
 	port := "8080"
-	server, err := newServer(port)
-	if err != nil {
-		log.Fatalf("failed to create server: %s", err)
-	}
+	server := newServer(port, l)
 	defer server.Stop()
 	root, err := git.FindRootDir()
 	if err != nil {
-		server.logger.Errorf("failed to find root dir: %s", err)
-		return
+		return fmt.Errorf("failed to find root dir: %s", err)
 	}
 	pubDir := filepath.Join(root, "public")
 
 	if err := compiler.CleanPubDir(root); err != nil {
-		server.logger.Errorf("failed to clean public dir: %w", err)
-		return
+		return fmt.Errorf("failed to clean public dir: %w", err)
 	}
 
 	if err := os.MkdirAll(pubDir, 0755); err != nil {
-		server.logger.Errorf("failed to make public dir: %w", err)
-		return
+		return fmt.Errorf("failed to make public dir: %w", err)
 	}
 
 	lrJSPath := "/dev/livereload.js"
@@ -144,8 +132,7 @@ func main() {
 		filepath.Join(root, "static"),
 		filepath.Join(root, "scripts"),
 	); err != nil {
-		server.logger.Error(err)
-		return
+		return fmt.Errorf("watch dirs: %w", err)
 	}
 
 	go server.UpgradeOnSIGHUP()
@@ -174,30 +161,26 @@ func main() {
 	server.logger.Infof("Serving at http://localhost:%s", port)
 
 	if _, err := css.WriteMainCSS(root); err != nil {
-		server.logger.Errorf("failed to write main.css: %s", err)
+		return fmt.Errorf("write main.css: %w", err)
 	}
 
 	// Compile because it might have changed since last run.
 	c := compiler.NewForPostDetail(server.logger.Desugar())
 	server.logger.Debug("compiling all markdown files")
 	if err := c.CompileAllPosts(""); err != nil {
-		server.logger.Error(err)
-		return
+		return fmt.Errorf("compile all markdown: %w", err)
 	}
 
 	ic := compiler.NewForIndex(server.logger.Desugar())
 	if err := ic.Compile(); err != nil {
-		server.logger.Error(err)
-		return
+		return fmt.Errorf("compile index: %w", err)
 	}
 	if err := static.CopyStaticFiles(); err != nil {
-		server.logger.Error(err)
-		return
+		return fmt.Errorf("copy static files: %w", err)
 	}
 
 	if err := static.LinkPapers(); err != nil {
-		server.logger.Error(err)
-		return
+		return fmt.Errorf("link papers: %w", err)
 	}
 
 	select {
@@ -205,5 +188,16 @@ func main() {
 		server.logger.Debug("upgrader exiting")
 	case <-server.stopC:
 		server.logger.Debug("server stopping")
+	}
+	return nil
+}
+
+func main() {
+	l, err := logs.NewShortDevLogger()
+	if err != nil {
+		log.Fatalf("failed to create logger: %s", err)
+	}
+	if err := run(l); err != nil {
+		l.Error(err.Error())
 	}
 }

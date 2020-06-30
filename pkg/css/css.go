@@ -17,7 +17,7 @@ func WriteMainCSS(root string) (string, error) {
 	}
 	err = paths.Copy(filepath.Join(root, "style", "main.css"), dest)
 	if err != nil {
-		return "", fmt.Errorf("failed to copy main.css into public: %w", err)
+		return "", fmt.Errorf("copy main.css to public: %w", err)
 	}
 	return dest, nil
 }

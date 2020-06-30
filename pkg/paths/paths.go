@@ -49,5 +49,5 @@ func Copy(src, dst string) (mErr error) {
 	if err != nil {
 		return err
 	}
-	return out.Close()
+	return nil
 }
