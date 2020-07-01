@@ -117,6 +117,7 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	titleLink.Destination = []byte(origDest)
 	asts.Reparent(titleLink, title)
 	title.AppendChild(title, titleLink)
+	title.SetAttributeString(attrs.CustomTagAttr, "div")
 	titleHTML := &bytes.Buffer{}
 	if err := renderer.Render(titleHTML, reader.Source(), title); err != nil {
 		panic(fmt.Sprintf("render preview title to HTML for %s: %s", mdctx.GetFilePath(pc), err.Error()))

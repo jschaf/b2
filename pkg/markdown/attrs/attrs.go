@@ -4,6 +4,12 @@ import (
 	"github.com/yuin/goldmark/ast"
 )
 
+const (
+	// CustomTagAttr supports using a different tag for an element. Must be
+	// implemented by a custom renderer.
+	CustomTagAttr = "custom-tag"
+)
+
 // AddClass adds additional classes to the node attributes, preserving existing
 // class attributes.
 func AddClass(n ast.Node, class ...string) {

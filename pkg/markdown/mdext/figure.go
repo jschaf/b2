@@ -137,7 +137,7 @@ type figureRenderer struct {
 	html.Config
 }
 
-func NewFigureRenderer() renderer.NodeRenderer {
+func newFigureRenderer() renderer.NodeRenderer {
 	return &figureRenderer{
 		Config: html.NewConfig(),
 	}
@@ -197,5 +197,5 @@ func (f *FigureExt) Extend(m goldmark.Markdown) {
 
 	m.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
-			util.Prioritized(NewFigureRenderer(), 999)))
+			util.Prioritized(newFigureRenderer(), 999)))
 }

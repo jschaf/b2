@@ -6,6 +6,10 @@ func Join(ts ...string) string {
 	return strings.Join(ts, "\n")
 }
 
+func Attrs(as ...string) string {
+	return strings.Join(as, " ")
+}
+
 func WrapAttrs(tag string, attrs string, contents ...string) string {
 	startTagSize := len(tag) + 2
 	endTagSize := startTagSize + 1
@@ -47,6 +51,10 @@ func CiteAttrs(attrs string, ts ...string) string {
 
 func Code(ts ...string) string {
 	return Wrap("code", ts...)
+}
+
+func Div(ts ...string) string {
+	return Wrap("div", ts...)
 }
 
 func DivAttrs(attrs string, ts ...string) string {

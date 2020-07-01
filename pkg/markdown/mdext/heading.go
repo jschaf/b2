@@ -10,6 +10,7 @@ import (
 	"strconv"
 )
 
+// Heading anchor style determines if a paragraph symbol is shown for a heading.
 type HeadingAnchorStyle int
 
 const (

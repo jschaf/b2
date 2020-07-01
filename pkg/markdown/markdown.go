@@ -95,12 +95,13 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewHeadingIDExt(),
 		mdext.NewImageExt(),
 		mdext.NewLinkExt(),
-		mdext.NewFigureExt(),
+		mdext.NewParagraphExt(),
 		mdext.NewSmallCapsExt(),
-		mdext.NewTimeExt(),
 		mdext.NewTOCExt(opts.TOCStyle),
 		mdext.NewTOMLExt(),
+		mdext.NewTimeExt(),
 		mdext.NewTypographyExt(),
+		mdext.NewFigureExt(), // TODO: must come last, why?
 	}
 }
 
