@@ -289,7 +289,7 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 
 /** level 2 is the first level we show because H1 is the title. */
 .toc-level-2 {
- padding-left: 0;
+  padding-left: 0;
 }
 
 /* The prefix like 3.2.1 before a TOC list item. */
@@ -297,11 +297,20 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
   font-size: 85%;
 }
 
-p,
-blockquote, .cite-reference {
+p, blockquote, li {
+  hyphens: auto;
+  hyphenate-limit-chars: 6 2 3; /* unsupported */
+  hyphenate-limit-lines: 3; /* unsupported */
+}
+
+p, blockquote, .cite-reference {
   line-height: 1.5rem;
   margin-top: 0.9rem;
   margin-bottom: 0;
+}
+
+p + p {
+  text-indent: 1em;
 }
 
 blockquote {
@@ -373,6 +382,7 @@ figcaption {
 sc {
   text-transform: lowercase;
   font-variant: small-caps;
+  font-style: normal;
 }
 
 table {
@@ -598,8 +608,7 @@ cite {
 /** The <a> link that scrolls to the citation anchor. */
 .cite-backlink-back {
   display: inline-block;
-  position: absolute;
-  margin-left: -2.5em;
+  padding-right: 0.3em;
 }
 
 /** The parent paragraph that contains the citations. */
