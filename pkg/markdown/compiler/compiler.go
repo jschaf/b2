@@ -22,7 +22,8 @@ import (
 )
 
 type Compiler struct {
-	md *markdown.Markdown
+	md     *markdown.Markdown
+	logger *zap.SugaredLogger
 }
 
 // NewForPostDetail creates a compiler for a post detail page.
@@ -32,7 +33,7 @@ func NewForPostDetail(l *zap.Logger) *Compiler {
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)
-	return &Compiler{md}
+	return &Compiler{md: md, logger: l.Sugar()}
 }
 
 // CompileAST compiles an AST into a writer.
@@ -140,11 +141,11 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 		if filepath.Ext(path) != ".md" || strings.HasSuffix(path, ".previews.md") {
 			return nil
 		}
-		if !strings.Contains(path, glob) {
+		if glob != "" && !strings.Contains(path, glob) {
 			return nil
 		}
 
-		fmt.Printf("Compiling %s\n", path)
+		c.logger.Infof("Compiling %s\n", path)
 		file, err := os.Open(path)
 		if err != nil {
 			return err

@@ -52,7 +52,7 @@ func generateHeadingID(ids map[string]struct{}, h *ast.Heading, src []byte) []by
 }
 
 func hasHeadingID(ids map[string]struct{}, b []byte) bool {
-	ss := texts.ReadonlyStringSlice(b)
+	ss := texts.ReadonlyString(b)
 	_, ok := ids[ss]
 	return ok
 }

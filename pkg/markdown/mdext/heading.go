@@ -27,7 +27,7 @@ func (hr headingRender) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindHeading, hr.renderHeading)
 }
 
-func (hr headingRender) renderHeading(w util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (hr headingRender) renderHeading(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	h := n.(*ast.Heading)
 	const levels = "0123456"
 	if entering {

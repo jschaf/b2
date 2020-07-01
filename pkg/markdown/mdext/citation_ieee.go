@@ -4,6 +4,8 @@ import "C"
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
+	"github.com/jschaf/b2/pkg/texts"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -93,57 +95,87 @@ func allCiteIDs(c *Citation, count int) []string {
 func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
 	cnt := cr.citeCounts[c.Key]
 	citeIDs := allCiteIDs(c, cnt)
-	_, _ = w.WriteString(fmt.Sprintf(`<div id="%s" class=cite-reference>`, c.ReferenceID()))
-	_, _ = w.WriteString(fmt.Sprintf(
-		`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="%s">[%d]</cite> `,
-		strings.Join(citeIDs, " "), num))
+	w.WriteString(`<div id="`)
+	w.WriteString(c.ReferenceID())
+	w.WriteString(`" class=cite-reference>`)
+	w.WriteString(`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="`)
+	for i, c := range citeIDs {
+		if i > 0 {
+			w.WriteByte(' ')
+		}
+		w.WriteString(c)
+	}
+	w.WriteString(`">[`)
+	w.WriteString(strconv.Itoa(num))
+	w.WriteString(`]</cite> `)
 
 	authors := c.Bibtex.Author
 	for i, author := range authors {
 		sp := strings.Split(author.First, " ")
 		for _, s := range sp {
 			if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
-				_, _ = w.WriteRune(r)
-				_, _ = w.WriteString(". ")
+				w.WriteRune(r)
+				w.WriteString(". ")
 			}
 		}
 		_, _ = w.WriteString(author.Last)
 		if i < len(authors)-2 {
-			_, _ = w.WriteString(", ")
+			w.WriteString(", ")
 		} else if i == len(authors)-2 {
 			if authors[len(authors)-1].IsOthers() {
-				_, _ = w.WriteString(" <em>et al</em>")
+				w.WriteString(" <em>et al</em>")
 				break
 
 			} else {
-				_, _ = w.WriteString(" and ")
+				w.WriteString(" and ")
 			}
-
 		}
 	}
 
 	title := c.Bibtex.Tags["title"]
-	title = strings.Trim(title, `"{}`)
-	_, _ = w.WriteString(fmt.Sprintf(`, "%s,"`, title))
+	title = trimBraces(title)
+	w.WriteString(`, "`)
+	w.WriteString(title)
+	w.WriteString(`,"`)
 
 	journal := c.Bibtex.Tags["journal"]
-	journal = strings.Trim(journal, `"{}`)
+	journal = trimBraces(journal)
 	if journal != "" {
-		_, _ = w.WriteString(fmt.Sprintf(" in <em class=cite-journal>%s</em>", journal))
+		w.WriteString(" in <em class=cite-journal>")
+		w.WriteString(journal)
+		w.WriteString("</em>")
 	}
 
 	vol := c.Bibtex.Tags["volume"]
-	vol = strings.Trim(vol, `"{}`)
+	vol = trimBraces(vol)
 	if vol != "" {
-		_, _ = w.WriteString(fmt.Sprintf(", Vol. %s", vol))
+		w.WriteString(", Vol. ")
+		w.WriteString(vol)
 	}
 
 	year := c.Bibtex.Tags["year"]
-	year = strings.Trim(year, `"{}`)
+	year = trimBraces(year)
 	if year != "" {
-		_, _ = w.WriteString(fmt.Sprintf(", %s", year))
+		w.WriteString(", ")
+		w.WriteString(year)
 	}
 
-	_, _ = w.WriteString(".")
-	_, _ = w.WriteString(`</div>`)
+	w.WriteString(".")
+	w.WriteString(`</div>`)
+}
+
+func trimBraces(s string) string {
+	b := texts.ReadOnlyBytes(s)
+	lo, hi := 0, len(b)
+	for ; lo < len(b); lo++ {
+		if b[lo] != '{' {
+			break
+		}
+	}
+	for ; hi > 0; hi-- {
+		if b[hi-1] != '}' {
+			break
+		}
+	}
+	return texts.ReadonlyString(b[lo:hi])
 }

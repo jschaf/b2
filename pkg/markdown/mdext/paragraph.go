@@ -18,7 +18,7 @@ func (p paragraphRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer
 	reg.Register(ast.KindParagraph, p.renderParagraph)
 }
 
-func (p paragraphRenderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (p paragraphRenderer) renderParagraph(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.Paragraph)
 	tag := "p"
 	if customTag := attrs.GetStringAttr(n, attrs.CustomTagAttr); customTag != "" {

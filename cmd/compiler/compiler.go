@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
@@ -19,7 +20,7 @@ var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
 
 func main() {
 	flag.Parse()
-	logger, err := logs.NewShortDevLogger()
+	logger, err := logs.NewShortDevSugaredLogger()
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
 	}
@@ -29,15 +30,18 @@ func main() {
 			log.Fatalf("create profile file: %s", err)
 		}
 		log.Println("created profile file: " + f.Name())
-		_ = pprof.StartCPUProfile(f)
+		if err = pprof.StartCPUProfile(f); err != nil {
+			logger.Errorf("start CPU profile: %s", err.Error())
+		}
 		defer pprof.StopCPUProfile()
 	}
-	c := compiler.NewForPostDetail(logger)
+	start := time.Now()
+	c := compiler.NewForPostDetail(logger.Desugar())
 	if err := c.CompileAllPosts(*flagGlob); err != nil {
 		log.Fatal(err)
 	}
 
-	ic := compiler.NewForIndex(logger)
+	ic := compiler.NewForIndex(logger.Desugar())
 	if err := ic.Compile(); err != nil {
 		log.Fatal(err)
 	}
@@ -49,4 +53,6 @@ func main() {
 	if err := static.LinkPapers(); err != nil {
 		log.Fatal(err)
 	}
+	duration := time.Since(start)
+	logger.Infof("finished compiling in %d ms", duration.Milliseconds())
 }

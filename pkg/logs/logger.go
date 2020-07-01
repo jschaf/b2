@@ -32,6 +32,14 @@ func NewShortDevLogger() (*zap.Logger, error) {
 	return logCfg.Build()
 }
 
+func NewShortDevSugaredLogger() (*zap.SugaredLogger, error) {
+	l, err := NewShortDevLogger()
+	if err != nil {
+		return nil, err
+	}
+	return l.Sugar(), nil
+}
+
 func hourMinSecEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	type appendTimeEncoder interface {
 		AppendTimeLayout(time.Time, string)
