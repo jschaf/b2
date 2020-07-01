@@ -282,8 +282,10 @@ class PreviewLifecycle {
 
           backLinks.push(`
             <li>
-              <a href="#${ref.id}" class=cite-backlink-back><em>back</em></a>
-              <div class="cite-backlink-preview">${clone.innerHTML}</div>
+              <div class="cite-backlink-preview">
+                <a href="#${ref.id}" class=cite-backlink-back><em>back</em></a>
+                ${clone.innerHTML}
+              </div>
             </li>`)
         }
         backLinks.push(`<ul>`);
@@ -453,11 +455,50 @@ PreviewLifecycle.hidePreviewDelayMs = 200;
     hasHover = true;
   }
   if (!hasHover) {
-    console.debug("preview: no hover support, skipping previews")
+    console.debug("preview: no hover support, skipping previews");
     return;
   }
 
-  console.debug("preview: hover supported, enabling previews")
+  console.debug("preview: hover supported, enabling previews");
   const preview = new PreviewLifecycle();
   preview.addListeners();
+})();
+
+// Copy heading link when clicking the paragraph symbol.
+(() => {
+  const copySourceEl = document.createElement('input');
+  copySourceEl.id = 'copy-source';
+  copySourceEl.type = 'hidden';
+  document.body.append(copySourceEl);
+
+  const copyHeadingUrl = (/** Event */ ev) => {
+    ev.preventDefault();
+    const paraEl = ev.target;
+    if (paraEl == null) {
+      console.warn('copy-heading-url: event target is undefined');
+      return;
+    }
+    const headingHref = paraEl.href;
+    if (headingHref == null || headingHref === '') {
+      console.warn('copy-heading-url: event target href is not defined');
+      return;
+    }
+    const headingUrl = new URL(headingHref);
+    const targetHash = headingUrl.hash;
+
+    const {origin, pathname} = window.location;
+    const newUrl = origin + pathname + targetHash;
+    history.replaceState(null, null, newUrl);
+    copySourceEl.type = ''; // show the input so we can select it
+    copySourceEl.value = newUrl;
+    copySourceEl.focus({preventScroll: true});
+    document.execCommand('SelectAll');
+    document.execCommand('Copy', /* show UI */ false, null);
+    copySourceEl.type = 'hidden';
+  };
+
+  const targets = document.getElementsByClassName('heading-anchor');
+  for (const target of targets) {
+    target.addEventListener('click', (ev) => copyHeadingUrl(ev));
+  }
 })();
