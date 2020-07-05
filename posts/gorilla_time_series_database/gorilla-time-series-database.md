@@ -6,6 +6,8 @@ visibility = "published"
 
 # Gorilla Time Series Database
 
+:toc:
+
 Gorilla is an in-memory, time series database from Facebook optimized for
 writes, reading data in a few milliseconds, and high availability. Facebook
 open-sourced the code as [Beringei], but the maintainers archived the repo. At 
@@ -57,7 +59,7 @@ Gorilla compromises on the following attributes:
   query engine in Gorilla so clients are expected to process the compressed
   blocks.
 
-# Time stamp compression
+## Time stamp compression
 
 Gorilla introduces a novel lossless compression scheme for streaming timestamps.
 Gorilla’s timestamp encoding is based on the observation that the vast majority
@@ -120,7 +122,7 @@ binary(30) in 14 bits
 0b10 + binary(-3)
 ```
 
-# Time series value compression
+## Time series value compression
 
 Gorilla uses xor compression for the floating point values associated with a
 timestamp. Using xor on similar float values drops the sign, exponent, and first
@@ -132,7 +134,7 @@ variable length, the entire two hour block must be decoded to access values.
 This isn’t a problem for time series databases because the value of the data
 lies in aggregation, not in single points.
 
-# Architecture
+## Architecture
 
 ![Gorilla architecture](gorilla_architecture.png)
 
@@ -160,7 +162,7 @@ Gorilla is a two-level map:
 3. The `TimeSeries` data structures consists of an open block for incoming
    writes and two-hour closed blocks for the previous 26 hours.
 
-## Query flow
+### Query flow
 
 ![Gorilla query flow](gorilla_query_flow.png)
 
@@ -181,7 +183,7 @@ data. Upon receiving a query:
    Gorilla sends the compressed form of data to clients. Gorilla expects clients
    to decompress the compressed data.
 
-## Write flow
+### Write flow
 
 ![Gorilla write flow](gorilla_write_flow.png)
 

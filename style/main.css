@@ -30,6 +30,7 @@ html {
 }
 
 @media screen and (prefers-reduced-motion: reduce) {
+  /** If user requests reduced motion, reset scroll-behavior. */
   html {
     scroll-behavior: auto;
   }
@@ -112,13 +113,18 @@ body > main {
   }
 
   body > main {
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2),
-      0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: var(--box-shadow-elevation-4);
   }
 
   .main-inner-container {
     margin: 0 auto;
     width: 650px;
+  }
+
+  .toc {
+    max-width: 250px;
+    float: left;
+    margin-right: 32px;
   }
 
   .article-split {
@@ -274,33 +280,42 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
   text-decoration: none;
 }
 
+.toc {
+  margin-top: 0.9rem;
+  border: 1px solid #ccc;
+  box-shadow: var(--box-shadow-elevation-2);
+  padding: 4px 6px 0 12px;
+  font-size: 85%;
+}
+
 .toc-list {
   list-style: none;
   padding-left: 12px;
+  margin-top: 0;
 }
 
 .toc-list a {
-  text-decoration: none;
+  text-decoration: none; /** underlines are too heavy in a TOC */
 }
 
-.toc-list li {
-  line-height: 1.2;
-}
-
-/** level 2 is the first level we show because H1 is the title. */
+/** Level 2 is the first level we show because H1 is the title. */
 .toc-level-2 {
   padding-left: 0;
+  margin: 0;
+}
+
+.toc-list > li {
+  line-height: 1.2;
+  display: flex;
 }
 
 /* The prefix like 3.2.1 before a TOC list item. */
 .toc-ordering {
-  font-size: 85%;
+  margin-right: 0.6ch;
 }
 
 p, blockquote, li {
   hyphens: auto;
-  hyphenate-limit-chars: 6 2 3; /* unsupported */
-  hyphenate-limit-lines: 3; /* unsupported */
 }
 
 p, blockquote, .cite-reference {
@@ -377,12 +392,6 @@ figcaption {
   padding: 0 2em;
   font-size: 16px;
   font-weight: 500;
-}
-
-sc {
-  text-transform: lowercase;
-  font-variant: small-caps;
-  font-style: normal;
 }
 
 table {
