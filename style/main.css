@@ -1,7 +1,20 @@
 :root {
   --text-color: #1b1b1b;
+
+  /**
+   * Vertical typography.
+   * Align to a 18/24 px line-height.
+   * Scale is 1.25.
+   */
+  --font-size-title: calc(1rem * 1.25 * 1.25 * 1.25);
+  --font-size-header: calc(1rem * 1.25 * 1.25);
+  --font-size-body: 1rem;
+  --font-size-caption: calc(1rem / 1.25);
+  --line-height-body: calc(1rem * 1.3333);
+
   /** The highlight color for a reference. */
   --reference-highlight-color: rgba(255, 220, 0, 0.3);
+
   /* Material design elevation box shadows. The number corresponds to the
      display points of elevation. */
   /* 1 for switch, card (resting elevation), search bar (resting elevation) */
@@ -21,8 +34,8 @@
 
 html {
   box-sizing: border-box;
-  font-size: 112.5%;
-  line-height: 24px;
+  font-size: calc(100% * 18 / 16);
+  line-height: var(--line-height-body);
   text-rendering: optimizeLegibility;
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: "onum";
@@ -67,7 +80,7 @@ body > footer a {
 
 body > header a:hover,
 body > footer a:hover {
-  color: #444;
+  color: var(--text-color);
 }
 
 .small-caps {
@@ -98,6 +111,12 @@ body > main {
     padding-top: 0;
     padding-bottom: 1.5rem;
   }
+
+  /** Don't float the toc on mobile. Use article > to increase specificity. */
+  article > .toc {
+    float: none;
+    max-width: max-content;
+  }
 }
 
 @media screen and (min-width: 682px) {
@@ -119,12 +138,6 @@ body > main {
   .main-inner-container {
     margin: 0 auto;
     width: 650px;
-  }
-
-  .toc {
-    max-width: 250px;
-    float: left;
-    margin-right: 32px;
   }
 
   .article-split {
@@ -187,7 +200,7 @@ a:hover {
 
 
 h1 {
-  font-size: 2rem;
+  font-size: var(--font-size-title);
   font-weight: normal;
   margin-top: 3rem;
   margin-bottom: 0.15rem;
@@ -218,26 +231,19 @@ header:hover > time {
 }
 
 h2 {
-  font-size: 1.414rem;
-  font-weight: 500;
+  font-size: var(--font-size-header);
+  font-weight: 400;
   line-height: 1.5rem;
   margin-top: 1.8rem;
   margin-bottom: -0.3rem;
 }
 
 h3 {
-  font-size: 1.155rem;
-  font-style: italic;
-  font-weight: 400;
+  font-size: var(--font-size-body);
+  font-weight: 600;
   line-height: 2.4rem;
   margin-top: 1.8rem;
   margin-bottom: -1.2rem;
-}
-
-h1 code,
-h2 code,
-h3 code {
-  font-size: 95%;
 }
 
 @media screen and (max-width: 650px) {
@@ -281,11 +287,14 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 }
 
 .toc {
+  float: left;
+  max-width: 250px;
+  margin-right: 32px;
   margin-top: 0.9rem;
   border: 1px solid #ccc;
   box-shadow: var(--box-shadow-elevation-2);
   padding: 4px 6px 0 12px;
-  font-size: 85%;
+  font-size: var(--font-size-caption);
 }
 
 .toc-list {
