@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 // MultiError implements the error interface and contains many errors.
@@ -22,7 +23,8 @@ func (m MultiError) Error() string {
 	var buf bytes.Buffer
 
 	if len(m) > 1 {
-		fmt.Fprintf(&buf, "%d errors: ", len(m))
+		buf.WriteString(strconv.Itoa(len(m)))
+		buf.WriteString(" errors: ")
 	}
 
 	for i, err := range m {
