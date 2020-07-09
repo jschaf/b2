@@ -7,9 +7,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func NewShortDevLogger() (*zap.Logger, error) {
+func NewShortDevLogger(lvl zapcore.Level) (*zap.Logger, error) {
 	logCfg := zap.Config{
-		Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
+		Level:       zap.NewAtomicLevelAt(lvl),
 		Development: true,
 		Encoding:    "console",
 		EncoderConfig: zapcore.EncoderConfig{
@@ -32,8 +32,8 @@ func NewShortDevLogger() (*zap.Logger, error) {
 	return logCfg.Build()
 }
 
-func NewShortDevSugaredLogger() (*zap.SugaredLogger, error) {
-	l, err := NewShortDevLogger()
+func NewShortDevSugaredLogger(lvl zapcore.Level) (*zap.SugaredLogger, error) {
+	l, err := NewShortDevLogger(lvl)
 	if err != nil {
 		return nil, err
 	}

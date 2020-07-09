@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
 	"github.com/jschaf/b2/pkg/logs"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
@@ -194,7 +195,7 @@ func run(l *zap.Logger) error {
 }
 
 func main() {
-	l, err := logs.NewShortDevLogger()
+	l, err := logs.NewShortDevLogger(zapcore.InfoLevel)
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}

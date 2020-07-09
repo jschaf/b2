@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go.uber.org/zap/zapcore"
 	"log"
 
 	"github.com/jschaf/b2/pkg/db"
@@ -16,7 +17,7 @@ func main() {
 }
 
 func runMain() (err error) {
-	l, err := logs.NewShortDevLogger()
+	l, err := logs.NewShortDevLogger(zapcore.InfoLevel)
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}

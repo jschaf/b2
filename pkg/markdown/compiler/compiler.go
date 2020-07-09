@@ -145,7 +145,7 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 			return nil
 		}
 
-		c.logger.Infof("Compiling %s\n", path)
+		c.logger.Infof("compiling %s", path)
 		file, err := os.Open(path)
 		if err != nil {
 			return err

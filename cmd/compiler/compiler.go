@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -20,7 +21,7 @@ var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
 
 func main() {
 	flag.Parse()
-	logger, err := logs.NewShortDevSugaredLogger()
+	logger, err := logs.NewShortDevSugaredLogger(zapcore.InfoLevel)
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
 	}

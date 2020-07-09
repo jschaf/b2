@@ -11,6 +11,7 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/logs"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
@@ -79,6 +80,7 @@ func gzipFile(path string, w io.Writer) (n int64, mErr error) {
 	}
 	defer errs.CloseWithErrCapture(&mErr, f, "close gzip file")
 	zw := gzip.NewWriter(w)
+	defer errs.CloseWithErrCapture(&mErr, zw, "close gzip writer")
 	zw.Name = path
 	n, err = io.Copy(zw, f)
 	return n, err
@@ -91,7 +93,7 @@ func shaSum256String(b []byte) string {
 
 // buildPopulateFilesMap creates a map of a file to the SHA-256 hash of the
 // gzipped contents of the file. Builds a map for every file in dir recursively.
-func buildPopulateFilesMap(dir string) (map[string]string, error) {
+func buildPopulateFilesMap(dir string, l *zap.SugaredLogger) (map[string]string, error) {
 	files := make(map[string]string)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -124,6 +126,7 @@ func buildPopulateFilesMap(dir string) (map[string]string, error) {
 		// or /bar/baz.
 		urlPath := strings.TrimPrefix(path, dir)
 		sum := shaSum256String(buf.Bytes())
+		l.Debugf("found url=%s sha=%s", urlPath, sum)
 		files[urlPath] = sum
 		return nil
 	})
@@ -149,7 +152,7 @@ func findFilesToUpload(baseDir string, files map[string]string, hashes []string)
 	return filePaths
 }
 
-func uploadFile(path, url string, tok bearerToken) (mErr error) {
+func uploadFile(baseDir, path, uploadURL string, tok bearerToken, l *zap.SugaredLogger) (mErr error) {
 	gzBuf := bytes.Buffer{}
 	_, err := gzipFile(path, &gzBuf)
 	if err != nil {
@@ -160,7 +163,8 @@ func uploadFile(path, url string, tok bearerToken) (mErr error) {
 	body := bytes.Buffer{}
 	w := multipart.NewWriter(&body)
 
-	part, err := w.CreateFormFile(path, path)
+	urlPath := strings.TrimPrefix(path, baseDir)
+	part, err := w.CreateFormFile(urlPath, urlPath)
 	if err != nil {
 		return fmt.Errorf("upload - create multipart form file: %w", err)
 	}
@@ -172,7 +176,8 @@ func uploadFile(path, url string, tok bearerToken) (mErr error) {
 		return fmt.Errorf("upload - close multipart writer: %w", err)
 	}
 
-	shaUrl := url + "/" + shaSum
+	shaUrl := uploadURL + "/" + shaSum
+	l.Debugf("uploading %s, sha=%s, url=%s", urlPath, shaSum, shaUrl)
 	req, err := http.NewRequest("POST", shaUrl, &body)
 	if err != nil {
 		return fmt.Errorf("upload - new post request: %w", err)
@@ -228,7 +233,7 @@ func run(l *zap.SugaredLogger) error {
 		return fmt.Errorf("find root dir: %w", err)
 	}
 	pubDir := filepath.Join(root, "public")
-	fileSums, err := buildPopulateFilesMap(pubDir)
+	fileSums, err := buildPopulateFilesMap(pubDir, l)
 	if err != nil {
 		return fmt.Errorf("build populate files: %w", err)
 	}
@@ -249,7 +254,7 @@ func run(l *zap.SugaredLogger) error {
 	}
 	for _, upload := range uploads {
 		l.Infof("uploading %s", upload)
-		err := uploadFile(upload, popFilesResp.UploadUrl, token.AccessToken)
+		err := uploadFile(pubDir, upload, popFilesResp.UploadUrl, token.AccessToken, l)
 		if err != nil {
 			return fmt.Errorf("upload %s: %w", upload, err)
 		}
@@ -259,7 +264,7 @@ func run(l *zap.SugaredLogger) error {
 }
 
 func main() {
-	l, err := logs.NewShortDevSugaredLogger()
+	l, err := logs.NewShortDevSugaredLogger(zapcore.DebugLevel)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
