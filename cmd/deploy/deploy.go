@@ -10,6 +10,7 @@ import (
 	"github.com/jschaf/b2/pkg/errs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/oauth2"
@@ -18,7 +19,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -78,7 +78,7 @@ func gzipFile(path string, w io.Writer) (n int64, mErr error) {
 	if err != nil {
 		return 0, fmt.Errorf("gzip file: %w", err)
 	}
-	defer errs.CloseWithErrCapture(&mErr, f, "close gzip file")
+	defer errs.CloseWithErrCapture(&mErr, f, "close file")
 	zw := gzip.NewWriter(w)
 	defer errs.CloseWithErrCapture(&mErr, zw, "close gzip writer")
 	zw.Name = path
@@ -91,8 +91,9 @@ func shaSum256String(b []byte) string {
 	return fmt.Sprintf("%x", sum)
 }
 
-// buildPopulateFilesMap creates a map of a file to the SHA-256 hash of the
-// gzipped contents of the file. Builds a map for every file in dir recursively.
+// buildPopulateFilesMap creates a map of a file's URL path to the SHA-256
+// hash of the gzipped contents of the file. Adds a map entry for every file in
+// dir recursively.
 func buildPopulateFilesMap(dir string, l *zap.SugaredLogger) (map[string]string, error) {
 	files := make(map[string]string)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -102,19 +103,12 @@ func buildPopulateFilesMap(dir string, l *zap.SugaredLogger) (map[string]string,
 		if info.IsDir() {
 			return nil
 		}
-		if info.Mode()&os.ModeSymlink != 0 {
-			resolved, err := os.Readlink(path)
-			if err != nil {
-				return fmt.Errorf("populate files resolve symlink: %w", err)
-			}
-			resolvedInfo, err := os.Lstat(resolved)
-			if err != nil {
-				return fmt.Errorf("populate files lstat symlink: %w", err)
-			}
-			if resolvedInfo.IsDir() {
-				return nil
-			}
+		if isDir, err := isSymlinkDir(path, info); err != nil {
+			return err
+		} else if isDir {
+			return nil
 		}
+
 		var buf = bytes.Buffer{}
 		size := int(info.Size() / 4)
 		buf.Grow(size)
@@ -136,6 +130,22 @@ func buildPopulateFilesMap(dir string, l *zap.SugaredLogger) (map[string]string,
 	return files, nil
 }
 
+func isSymlinkDir(path string, info os.FileInfo) (bool, error) {
+	if info.Mode()&os.ModeSymlink == 0 {
+		return false, nil
+	}
+
+	resolved, err := os.Readlink(path)
+	if err != nil {
+		return false, fmt.Errorf("populate files resolve symlink: %w", err)
+	}
+	resolvedInfo, err := os.Lstat(resolved)
+	if err != nil {
+		return false, fmt.Errorf("populate files lstat symlink: %w", err)
+	}
+	return resolvedInfo.IsDir(), nil
+}
+
 // findFilesToUpload returns a slice of file paths that should be uploaded.
 // baseDir contains the baseDir to turn a URL path into a file path.
 // files contains a map of a URL path to the gzipped SHA-256 hash of the file.
@@ -152,7 +162,7 @@ func findFilesToUpload(baseDir string, files map[string]string, hashes []string)
 	return filePaths
 }
 
-func uploadFile(baseDir, path, uploadURL string, tok bearerToken, l *zap.SugaredLogger) (mErr error) {
+func uploadFile(ctx context.Context, baseDir, path, uploadURL string, tok bearerToken, l *zap.SugaredLogger) (mErr error) {
 	gzBuf := bytes.Buffer{}
 	_, err := gzipFile(path, &gzBuf)
 	if err != nil {
@@ -160,29 +170,14 @@ func uploadFile(baseDir, path, uploadURL string, tok bearerToken, l *zap.Sugared
 	}
 	shaSum := shaSum256String(gzBuf.Bytes())
 
-	body := bytes.Buffer{}
-	w := multipart.NewWriter(&body)
-
 	urlPath := strings.TrimPrefix(path, baseDir)
-	part, err := w.CreateFormFile(urlPath, urlPath)
-	if err != nil {
-		return fmt.Errorf("upload - create multipart form file: %w", err)
-	}
-	_, err = io.Copy(part, &gzBuf)
-	if err != nil {
-		return fmt.Errorf("upload - copy file to multipart writer: %w", err)
-	}
-	if err := w.Close(); err != nil {
-		return fmt.Errorf("upload - close multipart writer: %w", err)
-	}
-
 	shaUrl := uploadURL + "/" + shaSum
 	l.Debugf("uploading %s, sha=%s, url=%s", urlPath, shaSum, shaUrl)
-	req, err := http.NewRequest("POST", shaUrl, &body)
+	req, err := http.NewRequestWithContext(ctx, "POST", shaUrl, &gzBuf)
 	if err != nil {
 		return fmt.Errorf("upload - new post request: %w", err)
 	}
-	req.Header.Add("Content-Type", w.FormDataContentType())
+	req.Header.Add("Content-Type", "application/octet-stream")
 	req.Header.Add("Authorization", "Bearer "+tok)
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -202,7 +197,7 @@ func uploadFile(baseDir, path, uploadURL string, tok bearerToken, l *zap.Sugared
 }
 
 func run(l *zap.SugaredLogger) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
 	l.Infof("start deployment")
@@ -218,8 +213,9 @@ func run(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("new hosting service: %w", err)
 	}
-
 	versionSvc := svc.Projects.Sites.Versions
+
+	// Create version: we'll eventually release this version.
 	createVersion := versionSvc.Create(siteParent, &hosting.Version{})
 	createVersion.Context(ctx)
 	version, err := createVersion.Do()
@@ -228,6 +224,10 @@ func run(l *zap.SugaredLogger) error {
 	}
 	l.Infof("created new version: %s", version.Name)
 
+	// Populate files: get the SHA256 hash of all gzipped files in the public
+	// directory, send them to Firebase with the URL that serves the file and
+	// receive the SHA256 hashes of the files we need to upload to firebase.
+	popFilesStart := time.Now()
 	root, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("find root dir: %w", err)
@@ -237,6 +237,7 @@ func run(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("build populate files: %w", err)
 	}
+	l.Debugf("generated populate files map in %.3f seconds", time.Since(popFilesStart).Seconds())
 	l.Infof("found %d files to populate", len(fileSums))
 	popFilesReq := hosting.PopulateVersionFilesRequest{Files: fileSums}
 	popFiles := versionSvc.PopulateFiles(version.Name, &popFilesReq)
@@ -245,8 +246,10 @@ func run(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("populate files: %w", err)
 	}
-	l.Infof("populate files response requests %d files", len(popFilesResp.UploadRequiredHashes))
+	l.Infof("populate files response requests %d files to upload", len(popFilesResp.UploadRequiredHashes))
 
+	// Upload files: only upload files that have a SHA256 hash in the populate
+	// files response
 	uploads := findFilesToUpload(pubDir, fileSums, popFilesResp.UploadRequiredHashes)
 	token, err := tokSource.Token()
 	if err != nil {
@@ -254,11 +257,35 @@ func run(l *zap.SugaredLogger) error {
 	}
 	for _, upload := range uploads {
 		l.Infof("uploading %s", upload)
-		err := uploadFile(pubDir, upload, popFilesResp.UploadUrl, token.AccessToken, l)
+		err := uploadFile(ctx, pubDir, upload, popFilesResp.UploadUrl, token.AccessToken, l)
 		if err != nil {
 			return fmt.Errorf("upload %s: %w", upload, err)
 		}
 	}
+
+	// Finalize version: prevent adding any new resources.
+	versionFinal := hosting.Version{Status: "FINALIZED"}
+	patchVersion := versionSvc.Patch(version.Name, &versionFinal)
+	patchVersion.Context(ctx)
+	patchVersionResp, err := patchVersion.Do()
+	if err != nil {
+		return fmt.Errorf("finalize version: %w", err)
+	}
+	if patchVersionResp.Status != "FINALIZED" {
+		return fmt.Errorf("finalize version status not 'FINALIZED', got %q", patchVersionResp.Status)
+	}
+
+	// Release version: promote a version to release so it's shown on the website.
+	release := hosting.Release{}
+	createRelease := svc.Sites.Releases.Create(siteParent, &release)
+	createRelease.Context(ctx)
+	createRelease.VersionName(patchVersionResp.Name)
+	createReleaseResp, err := createRelease.Do()
+	if err != nil {
+		return fmt.Errorf("create release: %w", err)
+	}
+	l.Infof("created release: %s", createReleaseResp.Name)
+
 	l.Infof("completed deployment in %.3f seconds", time.Since(start).Seconds())
 	return nil
 }
@@ -268,6 +295,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	if err := sites.Rebuild(l.Desugar()); err != nil {
+		l.Fatalf("rebuild site: %s", err)
+	}
+
 	if err := run(l); err != nil {
 		l.Fatalf("failed deploy: %s", err)
 	}

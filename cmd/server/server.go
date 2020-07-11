@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
 	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 )
 
@@ -166,23 +166,9 @@ func run(l *zap.Logger) error {
 		return fmt.Errorf("write main.css: %w", err)
 	}
 
-	// Compile because it might have changed since last run.
-	c := compiler.NewForPostDetail(server.logger.Desugar())
-	server.logger.Debug("compiling all markdown files")
-	if err := c.CompileAllPosts(""); err != nil {
-		return fmt.Errorf("compile all markdown: %w", err)
-	}
-
-	ic := compiler.NewForIndex(server.logger.Desugar())
-	if err := ic.Compile(); err != nil {
-		return fmt.Errorf("compile index: %w", err)
-	}
-	if err := static.CopyStaticFiles(); err != nil {
-		return fmt.Errorf("copy static files: %w", err)
-	}
-
-	if err := static.LinkPapers(); err != nil {
-		return fmt.Errorf("link papers: %w", err)
+	// Compile in case content changed since last run.
+	if err := sites.Rebuild(server.logger.Desugar()); err != nil {
+		return fmt.Errorf("rebuild site: %w", err)
 	}
 
 	select {
