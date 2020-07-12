@@ -28,6 +28,6 @@ func Rebuild(l *zap.Logger) error {
 	if err := static.LinkPapers(); err != nil {
 		return fmt.Errorf("link papers: %w", err)
 	}
-	l.Sugar().Debugf("rebuilt site in %.3f seconds", time.Since(start).Seconds())
+	l.Sugar().Infof("rebuilt site in %.3f seconds", time.Since(start).Seconds())
 	return nil
 }
