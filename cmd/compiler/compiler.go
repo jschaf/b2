@@ -2,14 +2,12 @@ package main
 
 import (
 	"flag"
+	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
 	"runtime/pprof"
-	"time"
-
-	"github.com/jschaf/b2/pkg/logs"
 )
 
 var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
@@ -31,10 +29,7 @@ func main() {
 		}
 		defer pprof.StopCPUProfile()
 	}
-	start := time.Now()
 	if err := sites.Rebuild(logger.Desugar()); err != nil {
 		logger.Fatal(err)
 	}
-	duration := time.Since(start)
-	logger.Infof("finished compiling in %d ms", duration.Milliseconds())
 }

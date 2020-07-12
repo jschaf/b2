@@ -2,15 +2,20 @@ package compiler
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/jschaf/b2/pkg/css"
@@ -22,8 +27,8 @@ import (
 )
 
 type Compiler struct {
-	md     *markdown.Markdown
-	logger *zap.SugaredLogger
+	md *markdown.Markdown
+	l  *zap.SugaredLogger
 }
 
 // NewForPostDetail creates a compiler for a post detail page.
@@ -33,7 +38,7 @@ func NewForPostDetail(l *zap.Logger) *Compiler {
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)
-	return &Compiler{md: md, logger: l.Sugar()}
+	return &Compiler{md: md, l: l.Sugar()}
 }
 
 // CompileAST compiles an AST into a writer.
@@ -127,39 +132,52 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 }
 
 func (c *Compiler) CompileAllPosts(glob string) error {
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		return fmt.Errorf("failed to find root git dir: %w", err)
-	}
+	rootDir := git.MustFindRootDir()
 	postsDir := filepath.Join(rootDir, "posts")
 	publicDir := filepath.Join(rootDir, "public")
 	if err := CleanPubDir(rootDir); err != nil {
 		return fmt.Errorf("failed to clean public dir: %w", err)
 	}
 
-	err = filepath.Walk(postsDir, func(path string, info os.FileInfo, err error) error {
-		if filepath.Ext(path) != ".md" || strings.HasSuffix(path, ".previews.md") {
+	sem := semaphore.NewWeighted(int64(runtime.NumCPU()))
+	g, ctx := errgroup.WithContext(context.Background())
+
+	walkFunc := func(path string, dirent *godirwalk.Dirent) error {
+		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
 		}
 		if glob != "" && !strings.Contains(path, glob) {
 			return nil
 		}
-
-		c.logger.Debugf("compiling %s", path)
-		file, err := os.Open(path)
-		if err != nil {
-			return err
+		if err := sem.Acquire(ctx, 1); err != nil {
+			return fmt.Errorf("acquire semaphore: %w", err)
 		}
+		g.Go(func() error {
+			defer sem.Release(1)
+			c.l.Debugf("compiling %s", path)
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
 
-		return c.CompileIntoDir(file.Name(), file, publicDir)
-	})
+			err = c.CompileIntoDir(file.Name(), file, publicDir)
+			if err != nil {
+				return fmt.Errorf("compile post %q: %w", path, err)
+			}
+			return nil
+		})
+		return nil
+	}
+	err := godirwalk.Walk(postsDir, &godirwalk.Options{Unsorted: true, Callback: walkFunc})
+	if err != nil {
+		return fmt.Errorf("compile walk: %w", err)
+	}
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("compile wait err group: %w", err)
+	}
 
 	if _, err := css.WriteMainCSS(rootDir); err != nil {
 		return fmt.Errorf("failed to compile main.css: %w", err)
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to render markdown to HTML: %w", err)
 	}
 
 	return nil

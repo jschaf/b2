@@ -11,6 +11,7 @@ import (
 // Rebuild rebuilds everything on the site.
 func Rebuild(l *zap.Logger) error {
 	start := time.Now()
+
 	c := compiler.NewForPostDetail(l)
 	if err := c.CompileAllPosts(""); err != nil {
 		return fmt.Errorf("compile all detail posts: %w", err)
