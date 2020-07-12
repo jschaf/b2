@@ -3,6 +3,7 @@ package js
 import (
 	"errors"
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"hash/fnv"
 	"io/ioutil"
 	"os"
@@ -28,11 +29,7 @@ var mainJSCache = jsCache{}
 
 // BundleMain minifies the main.js file and returns the bytes of the written file.
 func BundleMain() (bundler.BundleResult, error) {
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		return bundler.BundleResult{}, fmt.Errorf("failed to find root git dir: %w", err)
-	}
-	outDir := filepath.Join(rootDir, "public")
+	outDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
 
 	logOpts := logging.StderrOptions{
 		IncludeSource:      true,
@@ -62,7 +59,7 @@ func BundleMain() (bundler.BundleResult, error) {
 		ModuleName:        "",
 		ExtensionToLoader: nil,
 	}
-	entryPoint := filepath.Join(rootDir, "scripts", "main.js")
+	entryPoint := filepath.Join(git.MustFindRootDir(), dirs.Scripts, "main.js")
 	var curKey, newKey uint64
 	if bytes, err := ioutil.ReadFile(entryPoint); err != nil {
 		return bundler.BundleResult{}, fmt.Errorf("failed to read entrypoint: %w", err)
@@ -111,7 +108,7 @@ func WriteMainBundle(result bundler.BundleResult) error {
 	if err != nil {
 		return fmt.Errorf("bundle main.js find git root: %w", err)
 	}
-	out := filepath.Join(rootDir, "public", "main.min.js")
+	out := filepath.Join(rootDir, dirs.Public, "main.min.js")
 	if err := os.MkdirAll(filepath.Dir(out), 0755); err != nil {
 		return fmt.Errorf("mkdir -p for main js bundles: %w", err)
 	}

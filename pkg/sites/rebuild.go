@@ -3,6 +3,7 @@ package sites
 import (
 	"context"
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
@@ -14,7 +15,7 @@ import (
 func Rebuild(l *zap.Logger) error {
 	start := time.Now()
 
-	if err := compiler.CleanPubDir(); err != nil {
+	if err := dirs.CleanPubDir(); err != nil {
 		return fmt.Errorf("failed to clean public dir: %w", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
@@ -53,28 +54,6 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
-	return nil
-}
-
-func CleanPubDir() error {
-	publicDir := filepath.Join(git.MustFindRootDir(), "public")
-
-	if stat, err := os.Stat(publicDir); err == nil {
-		if !stat.IsDir() {
-			return errors.New("public dir is not a directory")
-		}
-		if err := os.RemoveAll(publicDir); err != nil {
-			return fmt.Errorf("failed to delete public dir: %w", err)
-		}
-	} else if os.IsNotExist(err) {
-		// Do nothing.
-	} else {
-		return fmt.Errorf("failed to stat pub dir: %w", err)
-	}
-
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
-		return fmt.Errorf("failed to make public dir: %w", err)
-	}
 	return nil
 }
 
@@ -130,8 +109,8 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 
 func (c *Compiler) CompileAllPosts(glob string) error {
 	rootDir := git.MustFindRootDir()
-	postsDir := filepath.Join(rootDir, "posts")
-	publicDir := filepath.Join(rootDir, "public")
+	postsDir := filepath.Join(rootDir, dirs.Posts)
+	publicDir := filepath.Join(rootDir, dirs.Public)
 
 	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {

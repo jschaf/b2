@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/errs"
 	"os"
 	"os/exec"
@@ -41,12 +42,7 @@ func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatch
 
 func (f *FSWatcher) Start() (mErr error) {
 	defer errs.CloseWithErrCapture(&mErr, f.watcher, "close FSWatcher")
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		return fmt.Errorf("failed to get root dir: %w", err)
-	}
-
-	publicDir := filepath.Join(rootDir, "public")
+	publicDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
 
 	for {
 		select {
@@ -60,7 +56,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				break
 			}
 
-			rel, err := filepath.Rel(rootDir, event.Name)
+			rel, err := filepath.Rel(git.MustFindRootDir(), event.Name)
 			if err != nil {
 				f.logger.Infof("failed to get relative path: %s", err)
 				break
@@ -68,7 +64,7 @@ func (f *FSWatcher) Start() (mErr error) {
 
 			switch {
 			case rel == "style/main.css":
-				f.reloadMainCSS(rootDir)
+				f.reloadMainCSS(git.MustFindRootDir())
 
 			case strings.HasPrefix(rel, "static/"):
 				f.logger.Infof("static reload: %s", rel)

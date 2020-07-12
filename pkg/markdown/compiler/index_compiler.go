@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
@@ -74,8 +75,8 @@ func (ic *IndexCompiler) compilePost(path string, r io.Reader) (*markdown.PostAS
 
 func (ic *IndexCompiler) Compile() error {
 	rootDir := git.MustFindRootDir()
-	publicDir := filepath.Join(rootDir, "public")
-	postsDir := filepath.Join(rootDir, "posts")
+	publicDir := filepath.Join(rootDir, dirs.Public)
+	postsDir := filepath.Join(rootDir, dirs.Posts)
 
 	astsC := make(chan *markdown.PostAST)
 	asts := make([]*markdown.PostAST, 0, 16)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/errs"
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
@@ -20,7 +21,6 @@ import (
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"go.uber.org/zap"
 )
 
@@ -97,9 +97,9 @@ func run(l *zap.Logger) error {
 	if err != nil {
 		return fmt.Errorf("failed to find root dir: %s", err)
 	}
-	pubDir := filepath.Join(root, "public")
+	pubDir := filepath.Join(root, dirs.Public)
 
-	if err := compiler.CleanPubDir(); err != nil {
+	if err := dirs.CleanPubDir(); err != nil {
 		return fmt.Errorf("failed to clean public dir: %w", err)
 	}
 
@@ -125,13 +125,13 @@ func run(l *zap.Logger) error {
 
 	watcher := NewFSWatcher(lr, server.logger)
 	if err := watcher.watchDirs(
-		filepath.Join(root, "public"),
-		filepath.Join(root, "style"),
-		filepath.Join(root, "posts"),
-		filepath.Join(root, "cmd"),
-		filepath.Join(root, "pkg"),
-		filepath.Join(root, "static"),
-		filepath.Join(root, "scripts"),
+		filepath.Join(root, dirs.Public),
+		filepath.Join(root, dirs.Style),
+		filepath.Join(root, dirs.Posts),
+		filepath.Join(root, dirs.Cmd),
+		filepath.Join(root, dirs.Pkg),
+		filepath.Join(root, dirs.Static),
+		filepath.Join(root, dirs.Scripts),
 	); err != nil {
 		return fmt.Errorf("watch dirs: %w", err)
 	}

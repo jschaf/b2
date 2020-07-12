@@ -2,6 +2,7 @@ package html
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"html/template"
 	"io"
 	"path/filepath"
@@ -20,11 +21,8 @@ var (
 )
 
 func init() {
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		panic(err)
-	}
-	layoutDir := filepath.Join(rootDir, "pkg", "markdown", "html")
+	rootDir := git.MustFindRootDir()
+	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
 	layouts := []string{"index.gohtml", "post.gohtml"}
 	for _, name := range layouts {

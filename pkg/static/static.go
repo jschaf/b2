@@ -2,6 +2,7 @@ package static
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/dirs"
 	"os"
 	"path/filepath"
 
@@ -14,8 +15,8 @@ func CopyStaticFiles() error {
 	if err != nil {
 		return fmt.Errorf("failed to find root dir for static files: %w", err)
 	}
-	staticDir := filepath.Join(dir, "static")
-	pubDir := filepath.Join(dir, "public")
+	staticDir := filepath.Join(dir, dirs.Static)
+	pubDir := filepath.Join(dir, dirs.Public)
 	err = filepath.Walk(staticDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -39,8 +40,8 @@ func LinkPapers() error {
 	if err != nil {
 		return fmt.Errorf("LinkPapers find root dir: %w", err)
 	}
-	papersDir := filepath.Join(dir, "papers")
-	pubPapersDir := filepath.Join(dir, "public", "papers")
+	papersDir := filepath.Join(dir, dirs.Papers)
+	pubPapersDir := filepath.Join(dir, dirs.Public, "papers")
 	if err := os.Symlink(papersDir, pubPapersDir); err != nil {
 		return fmt.Errorf("LinkPapers symlink: %w", err)
 	}
