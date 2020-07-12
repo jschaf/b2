@@ -1,8 +1,12 @@
 package paths
 
 import (
+	"context"
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/karrick/godirwalk"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 	"io"
 	"os"
 	"path/filepath"
@@ -30,6 +34,31 @@ func WalkUp(dirToFind string) (string, error) {
 		dir = filepath.Dir(dir)
 	}
 	return "", fmt.Errorf("dir not found in directory tree starting from %s", dir)
+}
+
+// WalkConcurrent walks directory recursively calling walkFunc on each entry.
+func WalkConcurrent(dir string, maxParallel int, walkFunc godirwalk.WalkFunc) error {
+	sem := semaphore.NewWeighted(int64(maxParallel))
+	g, ctx := errgroup.WithContext(context.Background())
+
+	callback := func(path string, dirent *godirwalk.Dirent) error {
+		if err := sem.Acquire(ctx, 1); err != nil {
+			return fmt.Errorf("walk concurrent acquire semaphore: %w", err)
+		}
+		g.Go(func() error {
+			defer sem.Release(1)
+			return walkFunc(path, dirent)
+		})
+		return nil
+	}
+	err := godirwalk.Walk(dir, &godirwalk.Options{Unsorted: true, Callback: callback})
+	if err != nil {
+		return fmt.Errorf("walk concurrent walk error: %w", err)
+	}
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("walk concurrent wait err group: %w", err)
+	}
+	return nil
 }
 
 // Copy the src file to dst. Any existing file will be overwritten and will not

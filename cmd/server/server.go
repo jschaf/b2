@@ -99,7 +99,7 @@ func run(l *zap.Logger) error {
 	}
 	pubDir := filepath.Join(root, "public")
 
-	if err := compiler.CleanPubDir(root); err != nil {
+	if err := compiler.CleanPubDir(); err != nil {
 		return fmt.Errorf("failed to clean public dir: %w", err)
 	}
 

@@ -2,16 +2,14 @@ package compiler
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/sync/semaphore"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -79,41 +77,8 @@ func (ic *IndexCompiler) Compile() error {
 	publicDir := filepath.Join(rootDir, "public")
 	postsDir := filepath.Join(rootDir, "posts")
 
-	sem := semaphore.NewWeighted(int64(runtime.NumCPU()))
-	g, ctx := errgroup.WithContext(context.Background())
 	astsC := make(chan *markdown.PostAST)
 	asts := make([]*markdown.PostAST, 0, 16)
-
-	walkFunc := func(path string, dirent *godirwalk.Dirent) error {
-		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
-			return nil
-		}
-		if err := sem.Acquire(ctx, 1); err != nil {
-			return fmt.Errorf("acquire semaphore: %w", err)
-		}
-
-		g.Go(func() error {
-			defer sem.Release(1)
-			ic.l.Debugf("compiling for index %s", path)
-			file, err := os.Open(path)
-			if err != nil {
-				return fmt.Errorf("open file %s: %w", path, err)
-			}
-			ast, err := ic.compilePost(path, file)
-			if err != nil {
-				return fmt.Errorf("compile into ast %s: %w", path, err)
-			}
-			astsC <- ast
-			return nil
-		})
-		return nil
-	}
-
-	err := godirwalk.Walk(
-		postsDir, &godirwalk.Options{Unsorted: true, Callback: walkFunc})
-	if err != nil {
-		return fmt.Errorf("index compiler walk: %w", err)
-	}
 
 	done := make(chan struct{})
 	go func() {
@@ -123,9 +88,26 @@ func (ic *IndexCompiler) Compile() error {
 		close(done)
 	}()
 
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("index compiler wait err group: %w", err)
+	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
+		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
+			return nil
+		}
+		ic.l.Debugf("compiling for index %s", path)
+		file, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("open file %s: %w", path, err)
+		}
+		ast, err := ic.compilePost(path, file)
+		if err != nil {
+			return fmt.Errorf("compile into ast %s: %w", path, err)
+		}
+		astsC <- ast
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("index compiler walk: %w", err)
 	}
+
 	close(astsC)
 	<-done
 
