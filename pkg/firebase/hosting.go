@@ -25,7 +25,7 @@ func GzipFile(path string, w io.Writer) (n int64, mErr error) {
 	if err != nil {
 		return 0, fmt.Errorf("gzip file: %w", err)
 	}
-	defer errs.CloseWithErrCapture(&mErr, f, "close file")
+	defer errs.CapturingClose(&mErr, f, "close file")
 	var gzipW *gzip.Writer
 	switch filepath.Ext(path) {
 	case ".png", ".pdf":
@@ -36,7 +36,7 @@ func GzipFile(path string, w io.Writer) (n int64, mErr error) {
 		gzipW = zw
 	}
 
-	defer errs.CloseWithErrCapture(&mErr, gzipW, "close gzip writer")
+	defer errs.CapturingClose(&mErr, gzipW, "close gzip writer")
 	gzipW.Name = path
 	n, err = io.Copy(gzipW, f)
 	return n, err

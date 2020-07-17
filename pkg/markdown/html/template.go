@@ -32,12 +32,12 @@ func init() {
 	}
 }
 
-func render(w io.Writer, name string, data map[string]interface{}) error {
+func render(pubDir string, w io.Writer, name string, data map[string]interface{}) error {
 	tmpl, ok := templates[name]
 	if !ok {
 		return fmt.Errorf("template %s does not exist", name)
 	}
-	result, err := js.BundleMain()
+	result, err := js.BundleMain(pubDir)
 	if err != nil {
 		return fmt.Errorf("failed to bundle main.js: %w", err)
 	}
@@ -46,18 +46,18 @@ func render(w io.Writer, name string, data map[string]interface{}) error {
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
-func RenderPost(w io.Writer, d PostTemplateData) error {
+func RenderPost(pubDir string, w io.Writer, d PostTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Content"] = d.Content
-	return render(w, "post.gohtml", m)
+	return render(pubDir, w, "post.gohtml", m)
 }
 
-func RenderIndex(w io.Writer, d IndexTemplateData) error {
+func RenderIndex(pubDir string, w io.Writer, d IndexTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Bodies"] = d.Bodies
-	return render(w, "index.gohtml", m)
+	return render(pubDir, w, "index.gohtml", m)
 }
 
 type MainTemplateData struct {

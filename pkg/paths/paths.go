@@ -61,20 +61,20 @@ func WalkConcurrent(dir string, maxParallel int, walkFunc godirwalk.WalkFunc) er
 	return nil
 }
 
-// Copy the src file to dst. Any existing file will be overwritten and will not
-// copy file attributes.
-func Copy(src, dst string) (mErr error) {
+// Copy the contents of the src file to dest. Any existing file will be
+// overwritten and will not copy file attributes.
+func Copy(dest, src string) (mErr error) {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer errs.CloseWithErrCapture(&mErr, in, "")
+	defer errs.CapturingClose(&mErr, in, "")
 
-	out, err := os.Create(dst)
+	out, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer errs.CloseWithErrCapture(&mErr, out, "")
+	defer errs.CapturingClose(&mErr, out, "")
 
 	_, err = io.Copy(out, in)
 	if err != nil {

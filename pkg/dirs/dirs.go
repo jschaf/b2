@@ -1,43 +1,55 @@
 package dirs
 
 import (
-	"errors"
 	"fmt"
-	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/errs"
 	"os"
 	"path/filepath"
 )
 
-// Top level directories.
 const (
-	Cmd     = "cmd"
-	Papers  = "papers"
-	Pkg     = "pkg"
-	Posts   = "posts"
-	Public  = "public"
-	Scripts = "scripts"
-	Static  = "static"
-	Style   = "style"
+	// Top level directories.
+	Cmd         = "cmd"
+	Papers      = "papers"
+	Pkg         = "pkg"
+	Posts       = "posts"
+	Public      = "public"
+	Scripts     = "scripts"
+	Static      = "static"
+	Style       = "style"
+	PublicMemfs = "/m/b2" // alternate public dir for development
 )
 
-func CleanPubDir() error {
-	publicDir := filepath.Join(git.MustFindRootDir(), Public)
+// RemoveAllChildren removes all children in the directory.
+func RemoveAllChildren(dir string) (mErr error) {
+	f, err := os.Open(dir)
+	if err != nil {
+		return fmt.Errorf("open dir: %w", err)
+	}
+	defer errs.CapturingClose(&mErr, f, "close readdir")
 
-	if stat, err := os.Stat(publicDir); err == nil {
-		if !stat.IsDir() {
-			return errors.New("public dir is not a directory")
-		}
-		if err := os.RemoveAll(publicDir); err != nil {
-			return fmt.Errorf("failed to delete public dir: %w", err)
-		}
-	} else if os.IsNotExist(err) {
-		// Do nothing.
-	} else {
-		return fmt.Errorf("failed to stat pub dir: %w", err)
+	files, err := f.Readdir(-1)
+	if err != nil {
+		return fmt.Errorf("readdir: %w", err)
 	}
 
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
-		return fmt.Errorf("failed to make public dir: %w", err)
+	multiErr := errs.NewMultiError()
+	for _, file := range files {
+		path := filepath.Join(dir, file.Name())
+		err := os.RemoveAll(path)
+		multiErr.Append(err)
+	}
+	return multiErr.ErrorOrNil()
+}
+
+// CleanDir creates dir if it doesn't exist and then deletes all children of the
+// dir.
+func CleanDir(dir string) error {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("make dir: %w", err)
+	}
+	if err := RemoveAllChildren(dir); err != nil {
+		return fmt.Errorf("remove all dir children: %w", err)
 	}
 	return nil
 }

@@ -16,7 +16,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -25,21 +24,22 @@ import (
 )
 
 type Compiler struct {
-	md *markdown.Markdown
-	l  *zap.SugaredLogger
+	md     *markdown.Markdown
+	pubDir string
+	l      *zap.SugaredLogger
 }
 
 // NewForPostDetail creates a compiler for a post detail page.
-func NewForPostDetail(l *zap.Logger) *Compiler {
+func NewForPostDetail(pubDir string, l *zap.Logger) *Compiler {
 	md := markdown.New(l,
 		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)
-	return &Compiler{md: md, l: l.Sugar()}
+	return &Compiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-// CompileAST compiles an AST into a writer.
+// CompileAST compiles a markdown AST into a writer.
 func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 	b := &bytes.Buffer{}
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
@@ -50,7 +50,7 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 		Title:   ast.Meta.Title,
 		Content: template.HTML(b.String()),
 	}
-	if err := html.RenderPost(w, data); err != nil {
+	if err := html.RenderPost(c.pubDir, w, data); err != nil {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
@@ -58,7 +58,7 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 }
 
 // CompileIntoDir compiles markdown into the public directory based on the slug.
-func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) error {
+func (c *Compiler) CompileIntoDir(path string, r io.Reader) error {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("failed to read all file: %w", err)
@@ -74,7 +74,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 		return fmt.Errorf("empty slug for path")
 	}
 
-	slugDir := filepath.Join(publicDir, slug)
+	slugDir := filepath.Join(c.pubDir, slug)
 	if err = os.MkdirAll(slugDir, 0755); err != nil {
 		return fmt.Errorf("failed to make dir for slug %s: %w", slug, err)
 	}
@@ -90,7 +90,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 	}
 
 	for destPath, srcPath := range postAST.Assets {
-		dest := filepath.Join(publicDir, destPath)
+		dest := filepath.Join(c.pubDir, destPath)
 		if isSame, err := files.SameBytes(srcPath, dest); errors.Is(err, os.ErrNotExist) {
 			// Ignore
 		} else if err != nil {
@@ -99,7 +99,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 			continue
 		}
 
-		if err := paths.Copy(srcPath, dest); err != nil {
+		if err := paths.Copy(dest, srcPath); err != nil {
 			return fmt.Errorf("failed to copy asset to dest: %w", err)
 		}
 	}
@@ -108,9 +108,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader, publicDir string) er
 }
 
 func (c *Compiler) CompileAllPosts(glob string) error {
-	rootDir := git.MustFindRootDir()
-	postsDir := filepath.Join(rootDir, dirs.Posts)
-	publicDir := filepath.Join(rootDir, dirs.Public)
+	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 
 	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
@@ -126,7 +124,7 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 			return err
 		}
 
-		err = c.CompileIntoDir(file.Name(), file, publicDir)
+		err = c.CompileIntoDir(file.Name(), file)
 		if err != nil {
 			return fmt.Errorf("compile post %q: %w", path, err)
 		}
@@ -134,10 +132,6 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("compile walk: %w", err)
-	}
-
-	if _, err := css.WriteMainCSS(rootDir); err != nil {
-		return fmt.Errorf("failed to compile main.css: %w", err)
 	}
 
 	return nil

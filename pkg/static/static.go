@@ -10,13 +10,14 @@ import (
 	"github.com/jschaf/b2/pkg/paths"
 )
 
-func CopyStaticFiles() error {
+// CopyStaticFiles copies static files from the source static dir into
+// pubDir/static.
+func CopyStaticFiles(pubDir string) error {
 	dir, err := git.FindRootDir()
 	if err != nil {
-		return fmt.Errorf("failed to find root dir for static files: %w", err)
+		return fmt.Errorf("find root dir for static files: %w", err)
 	}
 	staticDir := filepath.Join(dir, dirs.Static)
-	pubDir := filepath.Join(dir, dirs.Public)
 	err = filepath.Walk(staticDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -26,7 +27,7 @@ func CopyStaticFiles() error {
 			return fmt.Errorf("failed to get rel path for static files: %w", err)
 		}
 		dest := filepath.Join(pubDir, rel)
-		return paths.Copy(path, dest)
+		return paths.Copy(dest, path)
 	})
 
 	if err != nil {
@@ -35,13 +36,15 @@ func CopyStaticFiles() error {
 	return nil
 }
 
-func LinkPapers() error {
+// LinkPapers symlinks academic papers from the source papers dir into
+// pubDir/papers.
+func LinkPapers(pubDir string) error {
 	dir, err := git.FindRootDir()
 	if err != nil {
 		return fmt.Errorf("LinkPapers find root dir: %w", err)
 	}
 	papersDir := filepath.Join(dir, dirs.Papers)
-	pubPapersDir := filepath.Join(dir, dirs.Public, "papers")
+	pubPapersDir := filepath.Join(pubDir, "papers")
 	if err := os.Symlink(papersDir, pubPapersDir); err != nil {
 		return fmt.Errorf("LinkPapers symlink: %w", err)
 	}

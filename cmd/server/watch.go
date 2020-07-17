@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/errs"
 	"os"
 	"os/exec"
@@ -21,19 +20,21 @@ import (
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
-// commands to the browser client.
+// commands to browser clients.
 type FSWatcher struct {
 	liveReload *livereload.LiveReload
 	watcher    *fsnotify.Watcher
 	logger     *zap.SugaredLogger
+	pubDir     string
 }
 
-func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
+func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(err)
 	}
 	return &FSWatcher{
+		pubDir:     pubDir,
 		liveReload: lr,
 		watcher:    watcher,
 		logger:     logger.Named("watcher"),
@@ -41,8 +42,8 @@ func NewFSWatcher(lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatch
 }
 
 func (f *FSWatcher) Start() (mErr error) {
-	defer errs.CloseWithErrCapture(&mErr, f.watcher, "close FSWatcher")
-	publicDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
+	defer errs.CapturingClose(&mErr, f.watcher, "close FSWatcher")
+	rootDir := git.MustFindRootDir()
 
 	for {
 		select {
@@ -56,7 +57,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				break
 			}
 
-			rel, err := filepath.Rel(git.MustFindRootDir(), event.Name)
+			rel, err := filepath.Rel(rootDir, event.Name)
 			if err != nil {
 				f.logger.Infof("failed to get relative path: %s", err)
 				break
@@ -64,22 +65,22 @@ func (f *FSWatcher) Start() (mErr error) {
 
 			switch {
 			case rel == "style/main.css":
-				f.reloadMainCSS(git.MustFindRootDir())
+				f.reloadMainCSS()
 
 			case strings.HasPrefix(rel, "static/"):
 				f.logger.Infof("static reload: %s", rel)
-				if err := static.CopyStaticFiles(); err != nil {
+				if err := static.CopyStaticFiles(f.pubDir); err != nil {
 					return fmt.Errorf("failed to copy static files: %w", err)
 				}
 				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".md":
-				if err := f.compileReloadMd(event.Name, publicDir); err != nil {
+				if err := f.compileReloadMd(event.Name); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
 
 			case rel == "scripts/main.js":
-				result, err := js.BundleMain()
+				result, err := js.BundleMain(f.pubDir)
 				if err != nil {
 					return fmt.Errorf("watcher main.js bundle fail: %w", err)
 				}
@@ -134,17 +135,17 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 	return nil
 }
 
-func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
-	c := compiler.NewForPostDetail(f.logger.Desugar())
+func (f *FSWatcher) compileReloadMd(path string) error {
+	c := compiler.NewForPostDetail(f.pubDir, f.logger.Desugar())
 	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	if err := c.CompileIntoDir(path, file, publicDir); err != nil {
+	if err := c.CompileIntoDir(path, file); err != nil {
 		return fmt.Errorf("failed to compile md file: %s", err)
 	}
 
-	ic := compiler.NewForIndex(f.logger.Desugar())
+	ic := compiler.NewForIndex(f.pubDir, f.logger.Desugar())
 	if err := ic.Compile(); err != nil {
 		return fmt.Errorf("failed to compile index for hot reload: %w", err)
 	}
@@ -153,8 +154,8 @@ func (f *FSWatcher) compileReloadMd(path string, publicDir string) error {
 	return nil
 }
 
-func (f *FSWatcher) reloadMainCSS(root string) {
-	dest, err := css.WriteMainCSS(root)
+func (f *FSWatcher) reloadMainCSS() {
+	dest, err := css.WriteMainCSS(f.pubDir)
 	if err != nil {
 		f.logger.Info(err)
 	}

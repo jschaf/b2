@@ -26,6 +26,7 @@ func errP(err error) *error {
 func TestCloseWithErrCapture(t *testing.T) {
 	e := errors.New
 	me := NewMultiError
+
 	tests := []struct {
 		name   string
 		err    *error
@@ -42,13 +43,13 @@ func TestCloseWithErrCapture(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			CloseWithErrCapture(tt.err, tt.closer, tt.msg)
+			CapturingClose(tt.err, tt.closer, tt.msg)
 			got := "<nil error>"
 			if *tt.err != nil {
 				got = (*tt.err).Error()
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("CloseWithErrCapture() mismatch (-want +got):\n%s", diff)
+				t.Errorf("CapturingClose() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/jschaf/b2/pkg/dirs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,11 +12,9 @@ import (
 )
 
 func main() {
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	result, err := js.BundleMain()
+	rootDir := git.MustFindRootDir()
+	pubDir := filepath.Join(rootDir, dirs.Public)
+	result, err := js.BundleMain(pubDir)
 	if err != nil {
 		log.Fatal(err)
 	}

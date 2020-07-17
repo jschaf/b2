@@ -14,6 +14,7 @@ require (
 	github.com/karrick/godirwalk v1.15.6
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/yuin/goldmark v1.1.30
+	go.uber.org/atomic v1.5.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d

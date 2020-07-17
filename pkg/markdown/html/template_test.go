@@ -2,6 +2,7 @@ package html
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/dirs"
 	"html/template"
 	"strings"
 	"testing"
@@ -11,7 +12,7 @@ func TestRenderPost(t *testing.T) {
 	w := &bytes.Buffer{}
 	title := "foo_title"
 	content := "<b>foo_content</b>"
-	err := RenderPost(w, PostTemplateData{
+	err := RenderPost(dirs.PublicMemfs, w, PostTemplateData{
 		Title:   title,
 		Content: template.HTML(content),
 	})
@@ -36,7 +37,7 @@ func TestRenderIndex(t *testing.T) {
 		Bodies: []template.HTML{template.HTML(body1), template.HTML(body2)},
 	}
 
-	if err := RenderIndex(w, data); err != nil {
+	if err := RenderIndex(dirs.PublicMemfs, w, data); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(w.String(), title) {

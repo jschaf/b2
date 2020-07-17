@@ -6,7 +6,6 @@ import (
 	"github.com/jschaf/b2/pkg/dirs"
 	"hash/fnv"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sync"
 
@@ -28,9 +27,7 @@ type jsCache struct {
 var mainJSCache = jsCache{}
 
 // BundleMain minifies the main.js file and returns the bytes of the written file.
-func BundleMain() (bundler.BundleResult, error) {
-	outDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
-
+func BundleMain(pubDir string) (bundler.BundleResult, error) {
 	logOpts := logging.StderrOptions{
 		IncludeSource:      true,
 		ErrorLimit:         3,
@@ -51,7 +48,7 @@ func BundleMain() (bundler.BundleResult, error) {
 	bundleOpts := bundler.BundleOptions{
 		Bundle:            false,
 		AbsOutputFile:     "",
-		AbsOutputDir:      outDir,
+		AbsOutputDir:      pubDir,
 		RemoveWhitespace:  true,
 		MinifyIdentifiers: true,
 		MangleSyntax:      true,
@@ -61,20 +58,20 @@ func BundleMain() (bundler.BundleResult, error) {
 	}
 	entryPoint := filepath.Join(git.MustFindRootDir(), dirs.Scripts, "main.js")
 	var curKey, newKey uint64
-	if bytes, err := ioutil.ReadFile(entryPoint); err != nil {
+	bytes, err := ioutil.ReadFile(entryPoint)
+	if err != nil {
 		return bundler.BundleResult{}, fmt.Errorf("failed to read entrypoint: %w", err)
-	} else {
-		mainJSCache.mu.Lock()
-		curKey = mainJSCache.key
-		curResult := mainJSCache.bundleResult
-		mainJSCache.mu.Unlock()
+	}
+	mainJSCache.mu.Lock()
+	curKey = mainJSCache.key
+	curResult := mainJSCache.bundleResult
+	mainJSCache.mu.Unlock()
 
-		hasher := fnv.New64a()
-		_, _ = hasher.Write(bytes)
-		newKey = hasher.Sum64()
-		if newKey == curKey {
-			return curResult, nil
-		}
+	hasher := fnv.New64a()
+	_, _ = hasher.Write(bytes)
+	newKey = hasher.Sum64()
+	if newKey == curKey {
+		return curResult, nil
 	}
 	bundle := bundler.ScanBundle(
 		stderrLog, realFS, fsResolver, []string{entryPoint}, parseOpts, bundleOpts)
@@ -104,19 +101,10 @@ func BundleMain() (bundler.BundleResult, error) {
 }
 
 func WriteMainBundle(result bundler.BundleResult) error {
-	rootDir, err := git.FindRootDir()
-	if err != nil {
-		return fmt.Errorf("bundle main.js find git root: %w", err)
-	}
-	out := filepath.Join(rootDir, dirs.Public, "main.min.js")
-	if err := os.MkdirAll(filepath.Dir(out), 0755); err != nil {
-		return fmt.Errorf("mkdir -p for main js bundles: %w", err)
-	}
-
-	if err = ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
+	if err := ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
 		return fmt.Errorf("write main.js.min: %w", err)
 	}
-	if err = ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
+	if err := ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
 		return fmt.Errorf("write error for main.js source map: %w", err)
 	}
 	return nil

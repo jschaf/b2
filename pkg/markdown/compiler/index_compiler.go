@@ -21,13 +21,14 @@ import (
 )
 
 type IndexCompiler struct {
-	md *markdown.Markdown
-	l  *zap.SugaredLogger
+	md     *markdown.Markdown
+	l      *zap.SugaredLogger
+	pubDir string
 }
 
-func NewForIndex(l *zap.Logger) *IndexCompiler {
+func NewForIndex(pubDir string, l *zap.Logger) *IndexCompiler {
 	md := markdown.New(l, markdown.WithExtender(mdext.NewContinueReadingExt()))
-	return &IndexCompiler{md: md, l: l.Sugar()}
+	return &IndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
 func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
@@ -54,7 +55,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 		Bodies: bodies,
 	}
 
-	if err := html.RenderIndex(w, data); err != nil {
+	if err := html.RenderIndex(ic.pubDir, w, data); err != nil {
 		return fmt.Errorf("failed to execute index template: %w", err)
 	}
 
@@ -74,9 +75,7 @@ func (ic *IndexCompiler) compilePost(path string, r io.Reader) (*markdown.PostAS
 }
 
 func (ic *IndexCompiler) Compile() error {
-	rootDir := git.MustFindRootDir()
-	publicDir := filepath.Join(rootDir, dirs.Public)
-	postsDir := filepath.Join(rootDir, dirs.Posts)
+	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 
 	astsC := make(chan *markdown.PostAST)
 	asts := make([]*markdown.PostAST, 0, 16)
@@ -112,10 +111,10 @@ func (ic *IndexCompiler) Compile() error {
 	close(astsC)
 	<-done
 
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
+	if err := os.MkdirAll(ic.pubDir, 0755); err != nil {
 		return fmt.Errorf("failed to make dir for index: %w", err)
 	}
-	dest := filepath.Join(publicDir, "index.html")
+	dest := filepath.Join(ic.pubDir, "index.html")
 	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open index.html file for write: %w", err)

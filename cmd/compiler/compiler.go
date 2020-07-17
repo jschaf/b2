@@ -2,11 +2,14 @@ package main
 
 import (
 	"flag"
+	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime/pprof"
 )
 
@@ -29,7 +32,8 @@ func main() {
 		}
 		defer pprof.StopCPUProfile()
 	}
-	if err := sites.Rebuild(logger.Desugar()); err != nil {
+	pubDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
+	if err := sites.Rebuild(pubDir, logger.Desugar()); err != nil {
 		logger.Fatal(err)
 	}
 }

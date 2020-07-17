@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
@@ -18,8 +19,6 @@ import (
 	"time"
 
 	"github.com/cloudflare/tableflip"
-	"github.com/jschaf/b2/pkg/css"
-	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
 	"go.uber.org/zap"
 )
@@ -61,9 +60,9 @@ func (s *server) Serve() (mErr error) {
 
 	ln, err := s.upgrader.Listen("tcp", "localhost:"+s.port)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %w", err)
+		return fmt.Errorf("server listen: %w", err)
 	}
-	defer errs.CloseWithErrCapture(&mErr, ln, "close server upgrader")
+	defer errs.CapturingClose(&mErr, ln, "close server upgrader")
 	return srv.Serve(ln)
 }
 
@@ -82,35 +81,31 @@ func (s *server) UpgradeOnSIGHUP() {
 
 func (s *server) Stop() {
 	s.once.Do(func() {
-		s.upgrader.Stop()
 		close(s.stopC)
+		if s.upgrader != nil {
+			s.upgrader.Stop()
+		}
+		s.logger.Info("server stopped")
 	})
-	s.logger.Info("server stopped")
-	_ = s.logger.Sync()
+	if err := s.logger.Sync(); err != nil {
+		log.Printf("ERROR: failed to sync zap logger: %s", err.Error())
+	}
 }
 
 func run(l *zap.Logger) error {
 	port := "8080"
 	server := newServer(port, l)
 	defer server.Stop()
-	root, err := git.FindRootDir()
-	if err != nil {
-		return fmt.Errorf("failed to find root dir: %s", err)
-	}
-	pubDir := filepath.Join(root, dirs.Public)
+	pubDir := dirs.PublicMemfs
 
-	if err := dirs.CleanPubDir(); err != nil {
-		return fmt.Errorf("failed to clean public dir: %w", err)
-	}
-
-	if err := os.MkdirAll(pubDir, 0755); err != nil {
-		return fmt.Errorf("failed to make public dir: %w", err)
+	if err := dirs.CleanDir(pubDir); err != nil {
+		return fmt.Errorf("clean public dir: %w", err)
 	}
 
 	lrJSPath := "/dev/livereload.js"
 	lrPath := "/dev/livereload"
-	lr := livereload.NewWebsocketServer(server.logger.Named("livereload"))
-	server.HandleFunc(lrJSPath, livereload.ServeJSHandler)
+	lr := livereload.NewServer(server.logger.Named("livereload"))
+	server.HandleFunc(lrJSPath, lr.ServeJSHandler)
 	server.HandleFunc(lrPath, lr.WebSocketHandler)
 	go lr.Start()
 
@@ -121,9 +116,10 @@ func run(l *zap.Logger) error {
 			lrJSPath, port, strings.TrimLeft(lrPath, "/")),
 		"</script>",
 	}, "")
-	server.Handle("/", livereload.NewHTMLInjector(lrScript, pubDirHandler))
+	server.Handle("/", lr.NewHTMLInjector(lrScript, pubDirHandler))
 
-	watcher := NewFSWatcher(lr, server.logger)
+	watcher := NewFSWatcher(pubDir, lr, server.logger)
+	root := git.MustFindRootDir()
 	if err := watcher.watchDirs(
 		filepath.Join(root, dirs.Public),
 		filepath.Join(root, dirs.Style),
@@ -162,12 +158,8 @@ func run(l *zap.Logger) error {
 
 	server.logger.Infof("Serving at http://localhost:%s", port)
 
-	if _, err := css.WriteMainCSS(root); err != nil {
-		return fmt.Errorf("write main.css: %w", err)
-	}
-
 	// Compile in case content changed since last run.
-	if err := sites.Rebuild(server.logger.Desugar()); err != nil {
+	if err := sites.Rebuild(pubDir, server.logger.Desugar()); err != nil {
 		return fmt.Errorf("rebuild site: %w", err)
 	}
 
