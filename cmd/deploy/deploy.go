@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/firebase"
-	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
-	"path/filepath"
 	"time"
 
 	"golang.org/x/net/context"
@@ -21,8 +19,9 @@ import (
 )
 
 const (
-	siteName   = "joe-blog-314159"
-	siteParent = "sites/" + siteName
+	siteName     = "joe-blog-314159"
+	siteParent   = "sites/" + siteName
+	deployPubDir = dirs.PublicMemfs
 )
 
 func deploy(l *zap.SugaredLogger) error {
@@ -59,9 +58,8 @@ func deploy(l *zap.SugaredLogger) error {
 	// directory, send them to Firebase with the URL that serves the file.
 	// Firebase returns the SHA256 hashes of the files we need to upload to
 	// firebase.
-	pubDir := filepath.Join(git.MustFindRootDir(), dirs.Public)
 	siteHashes := firebase.NewSiteHashes(l)
-	if err := siteHashes.PopulateFromDir(pubDir); err != nil {
+	if err := siteHashes.PopulateFromDir(deployPubDir); err != nil {
 		return fmt.Errorf("populate from dir: %w", err)
 	}
 	popFilesStart := time.Now()
@@ -119,7 +117,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	if err := sites.Rebuild(l.Desugar()); err != nil {
+	if err := sites.Rebuild(deployPubDir, l.Desugar()); err != nil {
 		l.Fatalf("rebuild site: %s", err)
 	}
 

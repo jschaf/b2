@@ -9,9 +9,12 @@ import (
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/firebasehosting/v1beta1"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
-const AuthFile = "/home/joe/.config/firebase/b2-admin-sdk.json"
+// Relative file location to the home directory.
+const AuthFile = ".config/firebase/b2-admin-sdk.json"
 
 type ServiceAccountCreds struct {
 	Type         string `json:"type"`
@@ -27,7 +30,12 @@ type ServiceAccountCreds struct {
 // ReadServiceAccountCreds reads the credentials file for the Firebase service
 // account.
 func ReadServiceAccountCreds() (s ServiceAccountCreds, mErr error) {
-	b, err := ioutil.ReadFile(AuthFile)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return s, fmt.Errorf("get home dir: %w", err)
+	}
+
+	b, err := ioutil.ReadFile(filepath.Join(homeDir, AuthFile))
 	if err != nil {
 		return s, fmt.Errorf("read service account creds: %w", err)
 	}

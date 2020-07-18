@@ -34,7 +34,7 @@
 
 html {
   box-sizing: border-box;
-  font-size: calc(100% * 18 / 16);
+  font-size: calc(100% * 18 / 16); /* Set 1rem size to 18px. */
   line-height: var(--line-height-body);
   text-rendering: optimizeLegibility;
   font-variant-numeric: oldstyle-nums;
@@ -98,13 +98,11 @@ body > main {
 }
 
 @media screen and (max-width: 681px) {
+  html {
+    font-size: calc(100% * 16 / 16); /* Set 1rem size to 16px. */
+  }
   body {
     margin: 0 16px;
-  }
-
-  body > header,
-  body > footer {
-    font-size: 90%;
   }
 
   body > main {
@@ -220,7 +218,7 @@ header > time {
   display: block;
   margin-top: 0.45rem;
   color: #767676;
-  font-size: 16px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   transition: color 3.5s ease;
 }
@@ -244,20 +242,6 @@ h3 {
   line-height: 2.4rem;
   margin-top: 1.8rem;
   margin-bottom: -1.2rem;
-}
-
-@media screen and (max-width: 650px) {
-  h1 {
-    font-size: 1.6rem;
-  }
-
-  h2 {
-    font-size: 1.2726rem;
-  }
-
-  h3 {
-    font-size: 1.09725rem;
-  }
 }
 
 h1 > a {
@@ -304,7 +288,7 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 }
 
 .toc-list a {
-  text-decoration: none; /** underlines are too heavy in a TOC */
+  text-decoration: none; /* underlines are too heavy in a TOC */
 }
 
 /** Level 2 is the first level we show because H1 is the title. */
@@ -359,10 +343,14 @@ sub {
 }
 
 sub {
+  vertical-align: baseline;
+  position: relative;
   bottom: -0.25em;
 }
 
 sup {
+  vertical-align: baseline;
+  position: relative;
   top: -0.4em;
 }
 
