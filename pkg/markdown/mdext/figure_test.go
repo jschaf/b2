@@ -38,6 +38,7 @@ func TestNewFigureExt(t *testing.T) {
 						<img src="bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
+						<span class="caption-label">Figure:</span>
 						foobar
 					</figcaption>
 			  </figure>
@@ -60,6 +61,7 @@ func TestNewFigureExt(t *testing.T) {
 						<img src="/some_slug/bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
+						<span class="caption-label">Figure:</span>
 						foobar
 					</figcaption>
 			  </figure>
@@ -82,6 +84,7 @@ func TestNewFigureExt(t *testing.T) {
 						<img src="https://example.com/bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
+						<span class="caption-label">Figure:</span>
 						foobar
 					</figcaption>
 			  </figure>
@@ -105,6 +108,7 @@ func TestNewFigureExt(t *testing.T) {
 						<img src="bar.png" loading="lazy" alt="alt text" title="title">
 					</picture>
 					<figcaption>
+						<span class="caption-label">Figure:</span>
 						foobar
 					</figcaption>
 			  </figure>

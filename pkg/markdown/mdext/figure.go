@@ -177,7 +177,7 @@ func (f *figureRenderer) renderFigure(w util.BufWriter, _ []byte, node ast.Node,
 
 func (f *figureRenderer) renderFigCaption(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
-		_, _ = w.WriteString("<figcaption>")
+		_, _ = w.WriteString("<figcaption><span class=caption-label>Figure:</span>")
 	} else {
 		_, _ = w.WriteString("</figcaption>")
 	}
