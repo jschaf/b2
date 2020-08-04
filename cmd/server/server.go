@@ -88,6 +88,9 @@ func (s *server) Stop() {
 		s.logger.Info("server stopped")
 	})
 	if err := s.logger.Sync(); err != nil {
+		if err, ok := err.(*os.PathError); ok && err.Path == "/dev/stderr" {
+			return // ignore
+		}
 		log.Printf("ERROR: failed to sync zap logger: %s", err.Error())
 	}
 }
