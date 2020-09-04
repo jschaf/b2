@@ -38,6 +38,14 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		tc := compiler.NewForTIL(pubDir, l)
+		if err := tc.CompileAllTILs(); err != nil {
+			return fmt.Errorf("compile all TILs: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
 		if _, err := css.WriteMainCSS(pubDir); err != nil {
 			return fmt.Errorf("write main.css: %w", err)
 		}

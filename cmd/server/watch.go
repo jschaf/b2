@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/sites"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +14,6 @@ import (
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 )
@@ -121,18 +121,8 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd(path string) error {
-	c := compiler.NewForPostDetail(f.pubDir, f.logger.Desugar())
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	if err := c.CompileIntoDir(path, file); err != nil {
-		return fmt.Errorf("failed to compile md file: %s", err)
-	}
-
-	ic := compiler.NewForIndex(f.pubDir, f.logger.Desugar())
-	if err := ic.Compile(); err != nil {
-		return fmt.Errorf("failed to compile index for hot reload: %w", err)
+	if err := sites.Rebuild(f.pubDir, f.logger.Desugar()); err != nil {
+		return fmt.Errorf("rebuild for changed md: %w", err)
 	}
 	f.liveReload.ReloadFile(path)
 	f.liveReload.ReloadFile("/")

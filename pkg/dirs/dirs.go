@@ -17,6 +17,7 @@ const (
 	Scripts     = "scripts"
 	Static      = "static"
 	Style       = "style"
+	TIL       = "til"
 	PublicMemfs = "/m/b2" // alternate public dir for development
 )
 

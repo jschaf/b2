@@ -45,7 +45,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 
 		b := new(bytes.Buffer)
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
-			return fmt.Errorf("failed to markdown for index: %w", err)
+			return fmt.Errorf("render markdown for index: %w", err)
 		}
 		bodies = append(bodies, template.HTML(b.String()))
 	}
@@ -56,7 +56,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 	}
 
 	if err := html.RenderIndex(w, data); err != nil {
-		return fmt.Errorf("failed to execute index template: %w", err)
+		return fmt.Errorf("execute index template: %w", err)
 	}
 
 	return nil
@@ -112,15 +112,15 @@ func (ic *IndexCompiler) Compile() error {
 	<-done
 
 	if err := os.MkdirAll(ic.pubDir, 0755); err != nil {
-		return fmt.Errorf("failed to make dir for index: %w", err)
+		return fmt.Errorf("make dir for index: %w", err)
 	}
 	dest := filepath.Join(ic.pubDir, "index.html")
 	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open index.html file for write: %w", err)
+		return fmt.Errorf("open index.html file for write: %w", err)
 	}
 	if err := ic.compileASTs(asts, destFile); err != nil {
-		return fmt.Errorf("failed to compile asts for index: %w", err)
+		return fmt.Errorf("compile asts for index: %w", err)
 	}
 
 	return nil
