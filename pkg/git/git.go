@@ -20,9 +20,9 @@ func FindRootDir() (string, error) {
 	return rootDir, rootErr
 }
 
-// FindRootDir finds the nearest directory containing a .git folder. Checks
-// the current dir and then walks up parent directories. Panics if no parent
-// directory contains a .git folder.
+// MustFindRootDir finds the nearest directory containing a .git folder or
+// panics. Checks the current dir and then walks up parent directories.
+// Panics if no parent directory contains a .git folder.
 func MustFindRootDir() string {
 	dir, err := FindRootDir()
 	if err != nil {

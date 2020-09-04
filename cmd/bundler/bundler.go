@@ -23,10 +23,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
+	if err := ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
 		log.Fatal(err)
 	}
-	if err = ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
+	if err := ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -17,9 +17,9 @@ clean:
 	rm -rf $(DIST_DIR)
 
 .PHONY: publish
-publish: html
-	firebase deploy --only hosting:new-blog
+publish:
+	go run ./cmd/publish
 
 .PHONY: dev
 dev: html
-	go run github.com/jschaf/b2/cmd/server
+	go run ./cmd/server

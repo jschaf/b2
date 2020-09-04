@@ -130,7 +130,6 @@ func run(l *zap.Logger) error {
 		filepath.Join(root, dirs.Cmd),
 		filepath.Join(root, dirs.Pkg),
 		filepath.Join(root, dirs.Static),
-		filepath.Join(root, dirs.Scripts),
 	); err != nil {
 		return fmt.Errorf("watch dirs: %w", err)
 	}

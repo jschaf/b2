@@ -50,7 +50,7 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 		Title:   ast.Meta.Title,
 		Content: template.HTML(b.String()),
 	}
-	if err := html.RenderPost(c.pubDir, w, data); err != nil {
+	if err := html.RenderPost(w, data); err != nil {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
@@ -61,12 +61,12 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 func (c *Compiler) CompileIntoDir(path string, r io.Reader) error {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
-		return fmt.Errorf("failed to read all file: %w", err)
+		return fmt.Errorf("read all file: %w", err)
 	}
 
 	postAST, err := c.md.Parse(path, bytes.NewReader(src))
 	if err != nil {
-		return fmt.Errorf("failed to parse markdown: %w", err)
+		return fmt.Errorf("parse markdown: %w", err)
 	}
 
 	slug := postAST.Meta.Slug
@@ -76,13 +76,13 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader) error {
 
 	slugDir := filepath.Join(c.pubDir, slug)
 	if err = os.MkdirAll(slugDir, 0755); err != nil {
-		return fmt.Errorf("failed to make dir for slug %s: %w", slug, err)
+		return fmt.Errorf("make dir for slug %s: %w", slug, err)
 	}
 
 	dest := filepath.Join(slugDir, "index.html")
 	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open index.html file for write: %w", err)
+		return fmt.Errorf("index.html file for write: %w", err)
 	}
 
 	if err := c.CompileAST(postAST, destFile); err != nil {
@@ -94,7 +94,7 @@ func (c *Compiler) CompileIntoDir(path string, r io.Reader) error {
 		if isSame, err := files.SameBytes(srcPath, dest); errors.Is(err, os.ErrNotExist) {
 			// Ignore
 		} else if err != nil {
-			return fmt.Errorf("failed to check if file contents are same: %w", err)
+			return fmt.Errorf("check if file contents are same: %w", err)
 		} else if isSame {
 			continue
 		}

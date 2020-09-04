@@ -55,7 +55,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 		Bodies: bodies,
 	}
 
-	if err := html.RenderIndex(ic.pubDir, w, data); err != nil {
+	if err := html.RenderIndex(w, data); err != nil {
 		return fmt.Errorf("failed to execute index template: %w", err)
 	}
 
