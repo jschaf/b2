@@ -10,6 +10,7 @@ import (
 const (
 	// Top level directories.
 	Cmd         = "cmd"
+	Fonts       = "fonts"
 	Papers      = "papers"
 	Pkg         = "pkg"
 	Posts       = "posts"

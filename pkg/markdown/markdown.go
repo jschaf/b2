@@ -22,7 +22,8 @@ type PostAST struct {
 	Source []byte
 	Assets assets.Map
 	// The full path to the markdown file that this AST represents.
-	Path string
+	Path     string
+	Features *mdctx.Features
 }
 
 // Global configuration options for parsing and rendering markdown.
@@ -92,6 +93,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewHeadingExt(opts.HeadingAnchorStyle),
 		mdext.NewHeadingIDExt(),
 		mdext.NewImageExt(),
+		mdext.NewKatexExt(),
 		mdext.NewLinkExt(),
 		mdext.NewParagraphExt(),
 		mdext.NewSmallCapsExt(),
@@ -144,12 +146,14 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	meta := mdext.GetTOMLMeta(ctx)
 	meta.Title = mdctx.GetTitle(ctx)
 	mdAssets := mdctx.GetAssets(ctx)
+	mdFeats := mdctx.GetFeatures(ctx)
 	return &PostAST{
-		Node:   node,
-		Meta:   meta,
-		Assets: mdAssets,
-		Path:   path,
-		Source: bs,
+		Node:     node,
+		Meta:     meta,
+		Assets:   mdAssets,
+		Path:     path,
+		Source:   bs,
+		Features: mdFeats,
 	}, nil
 }
 

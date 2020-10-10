@@ -130,11 +130,13 @@ func (f *FSWatcher) compileReloadMd(path string) error {
 }
 
 func (f *FSWatcher) reloadMainCSS() {
-	dest, err := css.WriteMainCSS(f.pubDir)
+	stylePaths, err := css.CopyAllCSS(f.pubDir)
 	if err != nil {
 		f.logger.Info(err)
 	}
-	f.liveReload.ReloadFile(dest)
+	for _, stylePath := range stylePaths {
+		f.liveReload.ReloadFile(stylePath)
+	}
 }
 
 func (f *FSWatcher) AddRecursively(name string) error {

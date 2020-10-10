@@ -48,3 +48,18 @@ func TestPushError(t *testing.T) {
 		})
 	}
 }
+
+func TestAddFeature(t *testing.T) {
+	ctx := parser.NewContext()
+	if GetFeatures(ctx).Len() != 0 {
+		t.Fatalf("Expected features to be empty but had %v", GetFeatures(ctx))
+	}
+	AddFeature(ctx, FeatureKatex)
+	if diff := cmp.Diff(GetFeatures(ctx).Slice(), []Feature{FeatureKatex}); diff != "" {
+		t.Fatalf("expected features to only contain %s; but got:\n%s", FeatureKatex, diff)
+	}
+	AddFeature(ctx, FeatureKatex)
+	if diff := cmp.Diff(GetFeatures(ctx).Slice(), []Feature{FeatureKatex}); diff != "" {
+		t.Fatalf("expected features to only contain one %s; but got:\n%s", FeatureKatex, diff)
+	}
+}

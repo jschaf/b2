@@ -38,7 +38,6 @@ func GetAssets(pc parser.Context) assets.Map {
 		m = make(map[string]string)
 		pc.Set(AssetsCtxKey, m)
 	}
-
 	return m.(map[string]string)
 }
 
@@ -51,6 +50,26 @@ func AddAsset(pc parser.Context, path, src string) {
 
 	x := m.(map[string]string)
 	x[path] = src
+}
+
+var FeaturesCtxKey = parser.NewContextKey()
+
+func GetFeatures(pc parser.Context) *Features {
+	fs := pc.Get(FeaturesCtxKey)
+	if _, ok := fs.(*Features); fs == nil || !ok {
+		fs = NewFeatures()
+		pc.Set(FeaturesCtxKey, fs)
+	}
+	return fs.(*Features)
+}
+
+func AddFeature(pc parser.Context, feat Feature) {
+	fs := pc.Get(FeaturesCtxKey)
+	if _, ok := fs.(*Features); fs == nil || !ok {
+		fs = NewFeatures()
+	}
+	fs.(*Features).Add(feat)
+	pc.Set(FeaturesCtxKey, fs)
 }
 
 var titleCtxKey = parser.NewContextKey()

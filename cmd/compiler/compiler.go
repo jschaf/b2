@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+	"runtime"
 	"runtime/pprof"
 )
 
@@ -15,10 +16,11 @@ var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
 
 func main() {
 	flag.Parse()
-	logger, err := logs.NewShortDevSugaredLogger(zapcore.InfoLevel)
+	logger, err := logs.NewShortDevSugaredLogger(zapcore.DebugLevel)
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
 	}
+	runtime.GOMAXPROCS(1)
 	if *profileFlag != "" {
 		f, err := os.Create(*profileFlag)
 		if err != nil {
@@ -30,8 +32,10 @@ func main() {
 		}
 		defer pprof.StopCPUProfile()
 	}
+
 	pubDir := dirs.PublicMemfs
 	if err := sites.Rebuild(pubDir, logger.Desugar()); err != nil {
 		logger.Fatal(err)
 	}
+	logger.Info("done")
 }

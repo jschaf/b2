@@ -10,6 +10,7 @@ require (
 	github.com/go-test/deep v1.0.5
 	github.com/google/go-cmp v0.4.0
 	github.com/gorilla/websocket v1.4.1
+	github.com/graemephi/goldmark-qjs-katex v0.2.0
 	github.com/jschaf/esbuild v0.0.0-20200412044914-4287e6e06ce1
 	github.com/karrick/godirwalk v1.15.6
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible

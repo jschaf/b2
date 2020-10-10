@@ -79,8 +79,9 @@ func (c *PostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 		return fmt.Errorf("failed to render markdown: %w", err)
 	}
 	data := html.PostTemplateData{
-		Title:   ast.Meta.Title,
-		Content: template.HTML(b.String()),
+		Title:    ast.Meta.Title,
+		Content:  template.HTML(b.String()),
+		Features: ast.Features,
 	}
 	if err := html.RenderPost(w, data); err != nil {
 		return fmt.Errorf("failed to execute post template: %w", err)

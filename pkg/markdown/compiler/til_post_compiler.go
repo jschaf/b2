@@ -78,8 +78,9 @@ func (c *TILPostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 		return fmt.Errorf("failed to markdown for index: %w", err)
 	}
 	data := html.TILPostTemplateData{
-		Title:   "TIL - Joe Schafer's Blog",
-		Content: template.HTML(b.String()),
+		Title:    "TIL - Joe Schafer's Blog",
+		Content:  template.HTML(b.String()),
+		Features: ast.Features,
 	}
 	if err := html.RenderTILPost(w, data); err != nil {
 		return fmt.Errorf("render TIL: %w", err)

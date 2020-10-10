@@ -3,6 +3,7 @@ package html
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"html/template"
 	"io"
 	"path/filepath"
@@ -74,28 +75,33 @@ func RenderTILPost(w io.Writer, d TILPostTemplateData) error {
 }
 
 type MainTemplateData struct {
-	Title   string
-	Content template.HTML
+	Title    string
+	Content  template.HTML
+	Features *mdctx.Features
 }
 
 type PostTemplateData struct {
-	Title   string
-	Content template.HTML
+	Title    string
+	Content  template.HTML
+	Features *mdctx.Features
 }
 
 type IndexTemplateData struct {
-	Title  string
-	Bodies []template.HTML
+	Title    string
+	Bodies   []template.HTML
+	Features *mdctx.Features
 }
 
 type TILTemplateData struct {
-	Title  string
-	Bodies []template.HTML
+	Title    string
+	Bodies   []template.HTML
+	Features *mdctx.Features
 }
 
 type TILPostTemplateData struct {
-	Title   string
-	Content template.HTML
+	Title    string
+	Content  template.HTML
+	Features *mdctx.Features
 }
 
 // isLast returns true if index is the last index in item.

@@ -2,8 +2,10 @@ package paths
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/files"
 	"github.com/karrick/godirwalk"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
@@ -61,6 +63,53 @@ func WalkConcurrent(dir string, maxParallel int, walkFunc godirwalk.WalkFunc) er
 	return nil
 }
 
+type WalkFuncCollectString func(osPathname string, directoryEntry *godirwalk.Dirent) ([]string, error)
+
+// WalkCollectStrings walks dir, recursively calling walkFunc on each entry
+// collecting a slice of strings from each walkFunc.
+func WalkCollectStrings(dir string, maxParallel int, walkFunc WalkFuncCollectString) ([]string, error) {
+	sem := semaphore.NewWeighted(int64(maxParallel))
+	g, ctx := errgroup.WithContext(context.Background())
+
+	strs := make([]string, 0, 4)
+	strsC := make(chan string)
+	doneC := make(chan struct{})
+	go func() {
+		for d := range strsC {
+			strs = append(strs, d)
+		}
+		close(doneC)
+	}()
+
+	callback := func(path string, dirent *godirwalk.Dirent) error {
+		if err := sem.Acquire(ctx, 1); err != nil {
+			return fmt.Errorf("walk collect acquire semaphore: %w", err)
+		}
+		g.Go(func() error {
+			defer sem.Release(1)
+			ss, err := walkFunc(path, dirent)
+			if err != nil {
+				return err
+			}
+			for _, s := range ss {
+				strsC <- s
+			}
+			return nil
+		})
+		return nil
+	}
+	err := godirwalk.Walk(dir, &godirwalk.Options{Unsorted: true, Callback: callback})
+	if err != nil {
+		return nil, fmt.Errorf("walk collect walk error: %w", err)
+	}
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("walk collect wait err group: %w", err)
+	}
+	close(strsC)
+	<-doneC
+	return nil, nil
+}
+
 // Copy the contents of the src file to dest. Any existing file will be
 // overwritten and will not copy file attributes.
 func Copy(dest, src string) (mErr error) {
@@ -84,4 +133,20 @@ func Copy(dest, src string) (mErr error) {
 		return err
 	}
 	return nil
+}
+
+// CopyLazy copies the contents of the src file to dest only if the contents
+// are different. If the files are different, the existing file will be
+// overwritten and will not copy file attributes. Returns true if the file was
+// same, otherwise false.
+func CopyLazy(dest, src string) (b bool, mErr error) {
+	if isSame, err := files.IsSameBytes(src, dest); errors.Is(err, os.ErrNotExist) {
+		// Ok for file not to exist.
+	} else if err != nil {
+		return false, fmt.Errorf("check if same file before copy: %w", err)
+	} else if isSame {
+		return true, nil
+	}
+	err := Copy(dest, src)
+	return false, err
 }

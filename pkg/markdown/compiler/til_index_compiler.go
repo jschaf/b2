@@ -7,6 +7,7 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
@@ -53,6 +54,7 @@ func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) er
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
 	})
+	feats := mdctx.NewFeatures()
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue
@@ -62,10 +64,12 @@ func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) er
 			return fmt.Errorf("failed to markdown for index: %w", err)
 		}
 		bodies = append(bodies, template.HTML(b.String()))
+		feats.AddAll(ast.Features)
 	}
 	data := html.TILTemplateData{
-		Title:  "TIL - Joe Schafer's Blog",
-		Bodies: bodies,
+		Title:    "TIL - Joe Schafer's Blog",
+		Bodies:   bodies,
+		Features: feats,
 	}
 	if err := html.RenderTILIndex(w, data); err != nil {
 		return fmt.Errorf("render TIL: %w", err)

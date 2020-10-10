@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-// SameBytes returns true if path1 and path2 have the same bytes, tested with a
+// IsSameBytes returns true if path1 and path2 have the same bytes, tested with a
 // hash.
-func SameBytes(path1, path2 string) (bool, error) {
+func IsSameBytes(path1, path2 string) (bool, error) {
 	// Check if the same exact file.
 	info1, err := os.Stat(path1)
 	if err != nil {

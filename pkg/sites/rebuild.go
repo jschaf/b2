@@ -22,6 +22,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
+		l.Debug("Rebuild - compile posts")
 		c := compiler.NewForPostDetail(pubDir, l)
 		if err := c.CompileAll(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
@@ -30,6 +31,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - compile posts index")
 		ic := compiler.NewForIndex(pubDir, l)
 		if err := ic.CompileIndex(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)
@@ -38,6 +40,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - compile TIL posts")
 		tc := compiler.NewForTILPost(pubDir, l)
 		if err := tc.CompileAll(); err != nil {
 			return fmt.Errorf("compile all TIL posts: %w", err)
@@ -46,6 +49,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - compile TIL index")
 		tc := compiler.NewForTILIndex(pubDir, l)
 		if err := tc.CompileIndex(); err != nil {
 			return fmt.Errorf("compile TIL index: %w", err)
@@ -54,13 +58,23 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		if _, err := css.WriteMainCSS(pubDir); err != nil {
-			return fmt.Errorf("write main.css: %w", err)
+		l.Debug("Rebuild - copy all CSS")
+		if _, err := css.CopyAllCSS(pubDir); err != nil {
+			return fmt.Errorf("copy all css: %w", err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - Copy all fonts")
+		if err := css.CopyAllFonts(pubDir); err != nil {
+			return fmt.Errorf("copy all fonts: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		l.Debug("Rebuild - copy static files")
 		if err := static.CopyStaticFiles(pubDir); err != nil {
 			return fmt.Errorf("copy static files: %w", err)
 		}
@@ -68,6 +82,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - link papers")
 		if err := static.LinkPapers(pubDir); err != nil {
 			return fmt.Errorf("link papers: %w", err)
 		}

@@ -96,7 +96,8 @@ ARG USER_NAME=root
 RUN set -eux; \
   if [ $USER_ID != 0 ]; then \
     addgroup --gid $GROUP_ID $USER_NAME; \
-    adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER_NAME; \
+    adduser --disabled-password --gecos '' --uid $USER_ID \
+        --gid $GROUP_ID $USER_NAME; \
     adduser $USER_NAME sudo; \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
   fi;
@@ -112,7 +113,8 @@ docker build \
     --build-arg USER_ID="$(id -u)" \
     --build-arg GROUP_ID="$(id -g)" \
     --build-arg USER_NAME="user" \
-    --tag tmp-debian-docker-root-ownership - < /tmp/debian-non-root.Dockerfile
+    --tag tmp-debian-docker-root-ownership - \
+    < /tmp/debian-non-root.Dockerfile
 
 docker run --rm \                
     --mount 'type=bind,source=/tmp,destination=/tmp' \

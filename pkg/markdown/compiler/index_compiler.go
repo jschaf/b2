@@ -7,6 +7,7 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
@@ -52,6 +53,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
 	})
+	feats := mdctx.NewFeatures()
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue
@@ -61,10 +63,12 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 			return fmt.Errorf("render markdown for index: %w", err)
 		}
 		bodies = append(bodies, template.HTML(b.String()))
+		feats.AddAll(ast.Features)
 	}
 	data := html.IndexTemplateData{
-		Title:  "Joe Schafer's Blog",
-		Bodies: bodies,
+		Title:    "Joe Schafer's Blog",
+		Bodies:   bodies,
+		Features: feats,
 	}
 	if err := html.RenderIndex(w, data); err != nil {
 		return fmt.Errorf("execute index template: %w", err)

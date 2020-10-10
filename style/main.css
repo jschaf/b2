@@ -626,3 +626,7 @@ cite {
 .cite-backlink-target {
   background: var(--reference-highlight-color);
 }
+
+.katex {
+  font-size: 1em !important;
+}

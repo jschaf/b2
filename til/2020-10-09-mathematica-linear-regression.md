@@ -59,27 +59,51 @@ CAPTION: Plot of the data points and regression line.
 
 To get values programmatically:
 
-- $\bar x$ the sample mean of x:
- `Mean[First /@ data]`
+-   $\bar x$ the sample mean of x:
 
-- $\bar y$ the sample mean of dependent variable:
- `Mean[model["Response"]]`
+    ```mathematica
+    Mean[First /@ data]
+    ```
 
-- SSY, the sum of squares of the observed, dependent variables:
- `ssy = Total[#^2 & /@ model["Response"]]`
+-   $\bar y$ the sample mean of dependent variable:
+
+    ```mathematica
+    Mean[model["Response"]]
+    ```
+
+-   SSY, the sum of squares of the observed, dependent variables:
+
+    ```mathematica
+    ssy = Total[#^2 & /@ model["Response"]]
+    ```
 
 - SS0, the sum of squares of the sample mean of the dependent variable:
- `ss0 = Length[data]*Mean[model["Response"]]^2`
 
-- SSR, the sum of squares due to regression:
- `ssr = model["SequentialSumOfSquares"][[1]]`
+    ```mathematica
+    ss0 = Length[data]*Mean[model["Response"]]^2
+    ```
+ 
 
-- $R^2$, the coefficient of determination:
- `r2 = model["RSquared"]`
+-   SSR, the sum of squares due to regression:
 
-- $b_0$ and $b_1$, the parameters of the regression:
- `{b0, b1} = model["BestFitParameters"]`
+    ```mathematica
+    ssr = model["SequentialSumOfSquares"][[1]]
+    ```
+ 
+-   $R^2$, the coefficient of determination:
+    ```mathematica
+    r2 = model["RSquared"]
+    ```
+ 
+-   $b_0$ and $b_1$, the parameters of the regression:
+    ```mathematica
+    {b0, b1} = model["BestFitParameters"]
+    ```
 
-- $t_[1-\alpha/2;n-1]$, the quantile of a student-t variate at a given 
-  significance level $\alpha = 0.1$ and 6 degrees of freedom:
-  `t95 = Quantile[StudentTDistribution[6], 0.95]`
+-   $t_{[1-\alpha/2;n-1]}$, the quantile of a student-t variate at a given 
+    significance level $\alpha = 0.1$ and 6 degrees of freedom:
+  
+    ```mathematica
+    t95 = Quantile[StudentTDistribution[6], 0.95]
+    ```
+  
