@@ -23,7 +23,12 @@ func init() {
 	rootDir := git.MustFindRootDir()
 	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
-	layouts := []string{"index.gohtml", "post.gohtml", "til.gohtml"}
+	layouts := []string{
+		"index.gohtml",
+		"post.gohtml",
+		"til_index.gohtml",
+		"til_post.gohtml",
+	}
 	for _, name := range layouts {
 		f := filepath.Join(layoutDir, name)
 		templates[name] = template.Must(
@@ -54,11 +59,18 @@ func RenderIndex(w io.Writer, d IndexTemplateData) error {
 	return render(w, "index.gohtml", m)
 }
 
-func RenderTIL(w io.Writer, d TILTemplateData) error {
+func RenderTILIndex(w io.Writer, d TILTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Bodies"] = d.Bodies
-	return render(w, "til.gohtml", m)
+	return render(w, "til_index.gohtml", m)
+}
+
+func RenderTILPost(w io.Writer, d TILPostTemplateData) error {
+	m := make(map[string]interface{})
+	m["Title"] = d.Title
+	m["Content"] = d.Content
+	return render(w, "post.gohtml", m)
 }
 
 type MainTemplateData struct {
@@ -77,8 +89,13 @@ type IndexTemplateData struct {
 }
 
 type TILTemplateData struct {
-	Title string
+	Title  string
 	Bodies []template.HTML
+}
+
+type TILPostTemplateData struct {
+	Title   string
+	Content template.HTML
 }
 
 // isLast returns true if index is the last index in item.

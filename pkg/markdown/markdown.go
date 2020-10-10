@@ -3,6 +3,7 @@ package markdown
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/cite"
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"io"
 	"io/ioutil"
@@ -19,10 +20,7 @@ type PostAST struct {
 	Node   ast.Node
 	Meta   mdext.PostMeta
 	Source []byte
-	// A map where the key is the destination path relative to the public dir.
-	// The value is the absolute file path of an asset like an image.
-	// For example, an entry might be "./img.png" -> "/home/joe/blog/img.png".
-	Assets map[string]string
+	Assets assets.Map
 	// The full path to the markdown file that this AST represents.
 	Path string
 }
@@ -145,11 +143,11 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	}
 	meta := mdext.GetTOMLMeta(ctx)
 	meta.Title = mdctx.GetTitle(ctx)
-	assets := mdctx.GetAssets(ctx)
+	mdAssets := mdctx.GetAssets(ctx)
 	return &PostAST{
 		Node:   node,
 		Meta:   meta,
-		Assets: assets,
+		Assets: mdAssets,
 		Path:   path,
 		Source: bs,
 	}, nil

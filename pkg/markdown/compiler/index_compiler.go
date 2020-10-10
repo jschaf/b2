@@ -31,39 +31,12 @@ func NewForIndex(pubDir string, l *zap.Logger) *IndexCompiler {
 	return &IndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
-	bodies := make([]template.HTML, 0, len(asts))
-
-	sort.Slice(asts, func(i, j int) bool {
-		return asts[i].Meta.Date.After(asts[j].Meta.Date)
-	})
-
-	for _, ast := range asts {
-		if ast.Meta.Visibility != mdext.VisibilityPublished {
-			continue
-		}
-
-		b := new(bytes.Buffer)
-		if err := ic.md.Render(b, ast.Source, ast); err != nil {
-			return fmt.Errorf("render markdown for index: %w", err)
-		}
-		bodies = append(bodies, template.HTML(b.String()))
+func (ic *IndexCompiler) parse(path string) (*markdown.PostAST, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open file %s: %w", path, err)
 	}
-
-	data := html.IndexTemplateData{
-		Title:  "Joe Schafer's Blog",
-		Bodies: bodies,
-	}
-
-	if err := html.RenderIndex(w, data); err != nil {
-		return fmt.Errorf("execute index template: %w", err)
-	}
-
-	return nil
-}
-
-func (ic *IndexCompiler) compilePost(path string, r io.Reader) (*markdown.PostAST, error) {
-	src, err := ioutil.ReadAll(r)
+	src, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read article for index: %w", err)
 	}
@@ -74,7 +47,32 @@ func (ic *IndexCompiler) compilePost(path string, r io.Reader) (*markdown.PostAS
 	return postAST, nil
 }
 
-func (ic *IndexCompiler) Compile() error {
+func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
+	bodies := make([]template.HTML, 0, len(asts))
+	sort.Slice(asts, func(i, j int) bool {
+		return asts[i].Meta.Date.After(asts[j].Meta.Date)
+	})
+	for _, ast := range asts {
+		if ast.Meta.Visibility != mdext.VisibilityPublished {
+			continue
+		}
+		b := new(bytes.Buffer)
+		if err := ic.md.Render(b, ast.Source, ast); err != nil {
+			return fmt.Errorf("render markdown for index: %w", err)
+		}
+		bodies = append(bodies, template.HTML(b.String()))
+	}
+	data := html.IndexTemplateData{
+		Title:  "Joe Schafer's Blog",
+		Bodies: bodies,
+	}
+	if err := html.RenderIndex(w, data); err != nil {
+		return fmt.Errorf("execute index template: %w", err)
+	}
+	return nil
+}
+
+func (ic *IndexCompiler) CompileIndex() error {
 	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 
 	astsC := make(chan *markdown.PostAST)
@@ -93,13 +91,9 @@ func (ic *IndexCompiler) Compile() error {
 			return nil
 		}
 		ic.l.Debugf("compiling for index %s", path)
-		file, err := os.Open(path)
+		ast, err := ic.parse(path)
 		if err != nil {
-			return fmt.Errorf("open file %s: %w", path, err)
-		}
-		ast, err := ic.compilePost(path, file)
-		if err != nil {
-			return fmt.Errorf("compile into ast %s: %w", path, err)
+			return fmt.Errorf("parse post into ast for index at path %s: %w", path, err)
 		}
 		astsC <- ast
 		return nil

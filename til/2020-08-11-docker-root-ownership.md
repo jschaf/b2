@@ -64,7 +64,6 @@ docker build \
     --build-arg GROUP_ID="$(id -g)" \
     --build-arg USER_NAME="user" \
     --tag tmp-docker-root-ownership - < /tmp/nonroot.Dockerfile
-
 ```
 
 Finally, verify that the files created in the container are owned by the current 
@@ -83,7 +82,7 @@ ls -alh /tmp/docker-owned-new.txt
 ## Debian setup
 
 The Debian setup is similar to Alpine with some added niceties for sudo taken from 
-StackOverflow: https://stackoverflow.com/a/48329093/30900
+StackOverflow: [How to use sudo in a non-root Docker container](https://stackoverflow.com/a/48329093/30900)
 
 ```Dockerfile
 FROM debian
@@ -123,3 +122,29 @@ docker run --rm \
 ls -alh /tmp/docker-owned-new-debian.txt
 -rw-r--r-- 1 joe joe 13 Oct  3 00:59 /tmp/docker-owned-debian.txt
 ```
+
+::: preview https://stackoverflow.com/a/48329093/30900
+How to use sudo in non-root Docker container
+
+Normally, docker containers are run using the user root. I'd like to use a 
+different user, which is no problem using docker's USER directive. But this 
+user should be able to use sudo inside the container. This command is missing.
+
+The other answers didn't work for me. I kept searching and found a blog post 
+that covered how a team was running non-root inside of a docker container.
+
+```Dockerfile
+RUN apt-get update \
+ && apt-get install -y sudo
+
+RUN adduser --disabled-password --gecos '' docker
+RUN adduser docker sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+USER docker
+
+# this is where I was running into problems with 
+# the other approaches
+RUN sudo apt-get update 
+```
+:::

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -112,6 +113,9 @@ func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context)
 		panic(err)
 	}
 	meta.Path = "/" + meta.Slug
+	if strings.Contains(mdctx.GetFilePath(pc), "/til/") {
+		meta.Path = "/til" + meta.Path
+	}
 
 	postPath := mdctx.GetFilePath(pc)
 	for i, bib := range meta.BibPaths {

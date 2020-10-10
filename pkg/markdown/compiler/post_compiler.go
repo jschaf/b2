@@ -2,9 +2,9 @@ package compiler
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
@@ -16,36 +16,68 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
 	"github.com/jschaf/b2/pkg/paths"
 )
 
-type Compiler struct {
+type PostCompiler struct {
 	md     *markdown.Markdown
 	pubDir string
 	l      *zap.SugaredLogger
 }
 
 // NewForPostDetail creates a compiler for a post detail page.
-func NewForPostDetail(pubDir string, l *zap.Logger) *Compiler {
+func NewForPostDetail(pubDir string, l *zap.Logger) *PostCompiler {
 	md := markdown.New(l,
 		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)
-	return &Compiler{md: md, pubDir: pubDir, l: l.Sugar()}
+	return &PostCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-// CompileAST compiles a markdown AST into a writer.
-func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
+func (c *PostCompiler) parse(path string) (*markdown.PostAST, error) {
+	c.l.Debugf("compiling til %s", path)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
+	}
+	src, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, fmt.Errorf("read post at path %s: %w", path, err)
+	}
+	ast, err := c.md.Parse(path, bytes.NewReader(src))
+	if err != nil {
+		return nil, fmt.Errorf("parse post markdown at path %s: %w", path, err)
+	}
+	return ast, nil
+}
+
+func (c *PostCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
+	slug := ast.Meta.Slug
+	if slug == "" {
+		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
+	}
+	slugDir := filepath.Join(c.pubDir, slug)
+	if err := os.MkdirAll(slugDir, 0755); err != nil {
+		return nil, fmt.Errorf("make dir for slug %s: %w", slug, err)
+	}
+	dest := filepath.Join(slugDir, "index.html")
+	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("create dest file %q for post: %w", dest, err)
+	}
+	return destFile, nil
+}
+
+// compile compiles a markdown AST into a writer.
+func (c *PostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	b := &bytes.Buffer{}
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to render markdown: %w", err)
 	}
-
 	data := html.PostTemplateData{
 		Title:   ast.Meta.Title,
 		Content: template.HTML(b.String()),
@@ -54,62 +86,14 @@ func (c *Compiler) CompileAST(ast *markdown.PostAST, w io.Writer) error {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
+	if err := assets.CopyAll(c.pubDir, ast.Assets); err != nil {
+		return err
+	}
 	return nil
 }
 
-// CompileIntoDir compiles markdown into the public directory based on the slug.
-func (c *Compiler) CompileIntoDir(path string, r io.Reader) error {
-	src, err := ioutil.ReadAll(r)
-	if err != nil {
-		return fmt.Errorf("read all file: %w", err)
-	}
-
-	postAST, err := c.md.Parse(path, bytes.NewReader(src))
-	if err != nil {
-		return fmt.Errorf("parse markdown: %w", err)
-	}
-
-	slug := postAST.Meta.Slug
-	if slug == "" {
-		return fmt.Errorf("empty slug for path")
-	}
-
-	slugDir := filepath.Join(c.pubDir, slug)
-	if err = os.MkdirAll(slugDir, 0755); err != nil {
-		return fmt.Errorf("make dir for slug %s: %w", slug, err)
-	}
-
-	dest := filepath.Join(slugDir, "index.html")
-	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("index.html file for write: %w", err)
-	}
-
-	if err := c.CompileAST(postAST, destFile); err != nil {
-		return fmt.Errorf("failed to compile AST: %w", err)
-	}
-
-	for destPath, srcPath := range postAST.Assets {
-		dest := filepath.Join(c.pubDir, destPath)
-		if isSame, err := files.SameBytes(srcPath, dest); errors.Is(err, os.ErrNotExist) {
-			// Ignore
-		} else if err != nil {
-			return fmt.Errorf("check if file contents are same: %w", err)
-		} else if isSame {
-			continue
-		}
-
-		if err := paths.Copy(dest, srcPath); err != nil {
-			return fmt.Errorf("failed to copy asset to dest: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (c *Compiler) CompileAllPosts(glob string) error {
+func (c *PostCompiler) CompileAll(glob string) error {
 	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
-
 	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
@@ -117,22 +101,21 @@ func (c *Compiler) CompileAllPosts(glob string) error {
 		if glob != "" && !strings.Contains(path, glob) {
 			return nil
 		}
-
-		c.l.Debugf("compiling %s", path)
-		file, err := os.Open(path)
+		ast, err := c.parse(path)
+		if err != nil {
+			return fmt.Errorf("parse TIL post into AST at path %s: %w", path, err)
+		}
+		dest, err := c.createDestFile(ast)
 		if err != nil {
 			return err
 		}
-
-		err = c.CompileIntoDir(file.Name(), file)
-		if err != nil {
-			return fmt.Errorf("compile post %q: %w", path, err)
+		if err := c.compile(ast, dest); err != nil {
+			return fmt.Errorf("compile AST for path %s: %w", path, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("compile walk: %w", err)
+		return fmt.Errorf("compile all posts: %w", err)
 	}
-
 	return nil
 }

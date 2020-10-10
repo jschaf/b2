@@ -20,49 +20,24 @@ import (
 	"sort"
 )
 
-type TILCompiler struct {
+// TILIndexCompiler compiles the /til/ path, an index of all TIL posts.
+type TILIndexCompiler struct {
 	md     *markdown.Markdown
 	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewForTIL(pubDir string, l *zap.Logger) *TILCompiler {
+func NewForTILIndex(pubDir string, l *zap.Logger) *TILIndexCompiler {
 	md := markdown.New(l)
-	return &TILCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+	return &TILIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (c *TILCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
-	bodies := make([]template.HTML, 0, len(asts))
-
-	sort.Slice(asts, func(i, j int) bool {
-		return asts[i].Meta.Date.After(asts[j].Meta.Date)
-	})
-
-	for _, ast := range asts {
-		if ast.Meta.Visibility != mdext.VisibilityPublished {
-			continue
-		}
-
-		b := new(bytes.Buffer)
-		if err := c.md.Render(b, ast.Source, ast); err != nil {
-			return fmt.Errorf("failed to markdown for index: %w", err)
-		}
-		bodies = append(bodies, template.HTML(b.String()))
+func (c *TILIndexCompiler) parse(path string) (*markdown.PostAST, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
 	}
-
-	data := html.TILTemplateData{
-		Title:  "TIL - Joe Schafer's Blog",
-		Bodies: bodies,
-	}
-
-	if err := html.RenderTIL(w, data); err != nil {
-		return fmt.Errorf("render TIL: %w", err)
-	}
-	return nil
-}
-
-func (c *TILCompiler) compileTIL(path string, r io.Reader) (*markdown.PostAST, error) {
-	src, err := ioutil.ReadAll(r)
+	src, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("read TIL filepath %s: %w", path, err)
 	}
@@ -73,7 +48,32 @@ func (c *TILCompiler) compileTIL(path string, r io.Reader) (*markdown.PostAST, e
 	return ast, nil
 }
 
-func (c *TILCompiler) CompileAllTILs() error {
+func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
+	bodies := make([]template.HTML, 0, len(asts))
+	sort.Slice(asts, func(i, j int) bool {
+		return asts[i].Meta.Date.After(asts[j].Meta.Date)
+	})
+	for _, ast := range asts {
+		if ast.Meta.Visibility != mdext.VisibilityPublished {
+			continue
+		}
+		b := new(bytes.Buffer)
+		if err := c.md.Render(b, ast.Source, ast); err != nil {
+			return fmt.Errorf("failed to markdown for index: %w", err)
+		}
+		bodies = append(bodies, template.HTML(b.String()))
+	}
+	data := html.TILTemplateData{
+		Title:  "TIL - Joe Schafer's Blog",
+		Bodies: bodies,
+	}
+	if err := html.RenderTILIndex(w, data); err != nil {
+		return fmt.Errorf("render TIL: %w", err)
+	}
+	return nil
+}
+
+func (c *TILIndexCompiler) CompileIndex() error {
 	tilDir := filepath.Join(git.MustFindRootDir(), dirs.TIL)
 
 	astsC := make(chan *markdown.PostAST)
@@ -91,16 +91,10 @@ func (c *TILCompiler) CompileAllTILs() error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
 		}
-
-		c.l.Debugf("compiling %s", path)
-		file, err := os.Open(path)
+		c.l.Debugf("compiling til index %s", path)
+		ast, err := c.parse(path)
 		if err != nil {
-			return fmt.Errorf("open TIL post %s: %w", path, err)
-		}
-
-		ast, err := c.compileTIL(path, file)
-		if err != nil {
-			return fmt.Errorf("compile TIL into AST at path %s: %w", path, err)
+			return fmt.Errorf("parse TIL into AST for index at path %s: %w", path, err)
 		}
 		astsC <- ast
 		return nil
@@ -123,7 +117,5 @@ func (c *TILCompiler) CompileAllTILs() error {
 	if err := c.compileASTs(asts, destFile); err != nil {
 		return fmt.Errorf("compile asts for TILs: %w", err)
 	}
-
 	return nil
-
 }

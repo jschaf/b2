@@ -161,7 +161,7 @@ func run(l *zap.Logger) error {
 
 	server.logger.Infof("Serving at http://localhost:%s", port)
 
-	// Compile in case content changed since last run.
+	// CompileIndex in case content changed since last run.
 	if err := sites.Rebuild(pubDir, server.logger.Desugar()); err != nil {
 		return fmt.Errorf("rebuild site: %w", err)
 	}

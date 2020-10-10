@@ -11,7 +11,7 @@ func BenchmarkCompiler_CompileAllPosts(b *testing.B) {
 	c := NewForPostDetail(dirs.PublicMemfs, zap.NewNop())
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		if err := c.CompileAllPosts("procella"); err != nil {
+		if err := c.CompileAll("procella"); err != nil {
 			b.Fatal(err)
 		}
 	}

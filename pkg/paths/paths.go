@@ -36,7 +36,7 @@ func WalkUp(dirToFind string) (string, error) {
 	return "", fmt.Errorf("dir not found in directory tree starting from %s", dir)
 }
 
-// WalkConcurrent walks directory recursively calling walkFunc on each entry.
+// WalkConcurrent walks dir, recursively calling walkFunc on each entry.
 func WalkConcurrent(dir string, maxParallel int, walkFunc godirwalk.WalkFunc) error {
 	sem := semaphore.NewWeighted(int64(maxParallel))
 	g, ctx := errgroup.WithContext(context.Background())
@@ -70,6 +70,9 @@ func Copy(dest, src string) (mErr error) {
 	}
 	defer errs.CapturingClose(&mErr, in, "")
 
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		return fmt.Errorf("mkdir to copy to dest %q: %w", dest, err)
+	}
 	out, err := os.Create(dest)
 	if err != nil {
 		return err

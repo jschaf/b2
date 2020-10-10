@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"errors"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/yuin/goldmark"
@@ -41,7 +42,8 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	meta := GetTOMLMeta(pc)
 	heading := firstHeading(doc)
 	if heading == nil {
-		panic("nil heading, file path: " + mdctx.GetFilePath(pc))
+		mdctx.PushError(pc, errors.New("no main heading in file: "+mdctx.GetFilePath(pc)))
+		return
 	}
 	title := string(heading.Text(reader.Source()))
 	mdctx.SetTitle(pc, title)

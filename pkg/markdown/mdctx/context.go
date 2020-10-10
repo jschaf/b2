@@ -1,6 +1,7 @@
 package mdctx
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"go.uber.org/zap"
@@ -31,7 +32,7 @@ var AssetsCtxKey = parser.NewContextKey()
 // GetAssets returns a map of all assets associated with a post.
 // A map of the relative URL to the full file path of an asset like an image.
 // For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
-func GetAssets(pc parser.Context) map[string]string {
+func GetAssets(pc parser.Context) assets.Map {
 	m := pc.Get(AssetsCtxKey)
 	if _, ok := m.(map[string]string); m == nil || !ok {
 		m = make(map[string]string)

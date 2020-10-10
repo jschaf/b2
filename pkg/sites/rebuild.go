@@ -23,7 +23,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		c := compiler.NewForPostDetail(pubDir, l)
-		if err := c.CompileAllPosts(""); err != nil {
+		if err := c.CompileAll(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
 		}
 		return nil
@@ -31,16 +31,24 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 
 	g.Go(func() error {
 		ic := compiler.NewForIndex(pubDir, l)
-		if err := ic.Compile(); err != nil {
+		if err := ic.CompileIndex(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		tc := compiler.NewForTIL(pubDir, l)
-		if err := tc.CompileAllTILs(); err != nil {
-			return fmt.Errorf("compile all TILs: %w", err)
+		tc := compiler.NewForTILPost(pubDir, l)
+		if err := tc.CompileAll(); err != nil {
+			return fmt.Errorf("compile all TIL posts: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		tc := compiler.NewForTILIndex(pubDir, l)
+		if err := tc.CompileIndex(); err != nil {
+			return fmt.Errorf("compile TIL index: %w", err)
 		}
 		return nil
 	})
