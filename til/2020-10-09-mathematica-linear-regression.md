@@ -32,9 +32,9 @@ CAPTION: Mathematica ANOVA table
 `SS` is the sum of squares, the sum of the squared deviations from the expected 
 value.
 
--`SS` for x is the sum of squares due to regression (SSR).
--`SS` for error is the sum of squares due to error (SSE). 
--`SS` for total is the total sum of squares (SST). 
+- `SS` for x is the sum of squares due to regression (SSR).
+- `SS` for error is the sum of squares due to error (SSE). 
+- `SS` for total is the total sum of squares (SST). 
 
 `MS` is mean square, the sum of squares divided by the degrees of freedom.
 
