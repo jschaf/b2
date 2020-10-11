@@ -47,8 +47,8 @@ Let's plot the data points and regression line:
 
 ```mathematica
 Show[
-  ListPlot[data141],
-  Plot[{line}, {x, Min[First /@ data], Max[First /@ data]}]
+  ListPlot[data], 
+  Plot[model["BestFit"], {x, Min[First /@ data], Max[First /@ data]}]
 ]
 ```
 
@@ -59,51 +59,145 @@ CAPTION: Plot of the data points and regression line.
 
 To get values programmatically:
 
--   $\bar x$ the sample mean of x:
+-   $\bar x$, the sample mean of x:
 
     ```mathematica
-    Mean[First /@ data]
+    N[Mean[First /@ data]]
+    (* 38.7143 *)
     ```
 
--   $\bar y$ the sample mean of dependent variable:
+-   $\bar y$, the sample mean of dependent variables:
 
     ```mathematica
-    Mean[model["Response"]]
+    N[Mean[model["Response"]]]
+    (* 9.42857 *)
     ```
 
 -   SSY, the sum of squares of the observed, dependent variables:
 
     ```mathematica
-    ssy = Total[#^2 & /@ model["Response"]]
+    Total[#^2 & /@ model["Response"]]
+    (* 828 *)
     ```
 
-- SS0, the sum of squares of the sample mean of the dependent variable:
+-   SS0, the sum of squares of the sample mean of the dependent variable:
 
     ```mathematica
-    ss0 = Length[data]*Mean[model["Response"]]^2
+    N[Length[data]*Mean[model["Response"]]^2]
+    (* 622.286 *)
     ```
- 
 
 -   SSR, the sum of squares due to regression:
 
     ```mathematica
-    ssr = model["SequentialSumOfSquares"][[1]]
+    model["SequentialSumOfSquares"]
+    (* {199.845} *)
     ```
  
 -   $R^2$, the coefficient of determination:
+
     ```mathematica
-    r2 = model["RSquared"]
+    model["RSquared"]
+    (* 0.971471 *)
     ```
  
 -   $b_0$ and $b_1$, the parameters of the regression:
     ```mathematica
-    {b0, b1} = model["BestFitParameters"]
+    model["BestFitParameters"]
+    (* {-0.00828236, 0.243756} *)
     ```
 
 -   $t_{[1-\alpha/2;n-1]}$, the quantile of a student-t variate at a given 
-    significance level $\alpha = 0.1$ and 6 degrees of freedom:
+    significance level $\alpha = 0.1$ and $n - 1 = 6$ degrees of freedom:
   
     ```mathematica
-    t95 = Quantile[StudentTDistribution[6], 0.95]
+    Quantile[StudentTDistribution[6], 0.95]
+    (* 1.94318 *)
     ```
-  
+    
+-   $\hat y$, the predicted values for each $x$ in the data:
+
+    ```mathematica
+    model["PredictedResponse"]
+    (* alternately *)
+    model["Function"] /@ First /@ data
+    (* {3.40431, 3.89182, 6.57314, 10.2295, 9.49822, 12.1795, 20.2235} *)
+    ```
+    
+-   $e_i = y_i - \hat y_i$, the error or residuals between the observed and 
+    predicted value:
+    
+    ```mathematica
+    model["FitResiduals"]
+    (* {-1.40, 1.10, 0.42, -1.22, 0.50, 0.82, -0.22} *)
+    
+    (* squared errors *)
+    #^2 & /@ model["FitResiduals"]
+    (* {1.97, 1.22, 0.18, 1.51, 0.25, 0.67, 0.049} *)
+    ```
+    
+-   Table of info about the regression parameters:
+    
+    ```mathematica
+    model["ParameterConfidenceIntervalTable"]
+    ```
+    
+-   $s_{b_0}$ and $s_{b_1}$, the standard errors for the regression parameters:
+    
+    ```mathematica
+    model["ParameterErrors"]
+    (* {0.831105, 0.0186811} *)
+    ```
+
+-   $b_0 \mp ts_{b_0}$ and $b_1 \mp ts_{b_1}$, the confidence intervals for 
+    regression parameters:
+    
+    ```mathematica
+    (* Default confidence interval is 0.95. *)
+    model = LinearModelFit[data, x, x, ConfidenceLevel -> 0.90]
+    model["ParameterConfidenceIntervals"]
+    (* {{-1.683, 1.66643}, {0.206113, 0.2814}} *)
+    ```
+    
+-   $\hat y_p$, the mean predicted response for an arbitrary predictor variable
+    $x_p$:
+    
+    ```mathematica
+    model["Function"][x_p]
+    (* -0.00828236 + 0.243756 x_p *)
+    ```
+    
+-   $\hat y_p \mp t_{[1-\alpha/2;n-2]}s_{\hat y_p}$, the confidence interval for
+    predicted means using the regression model (assuming a large number of 
+    observations):
+    
+    With a large number of observations such that:
+    
+    $$ 
+      s_{\hat y_p} = s_e \left( 
+        \frac{1}{n} + \frac{(x_p- \bar x)^2}{\Sigma x^2 - n \bar x^2} 
+      \right)^{1/2}
+    $$
+    
+    ```mathematica
+    model = LinearModelFit[data, x, x, ConfidenceLevel -> 0.9]
+    model["MeanPredictionBands"] /. x -> 100
+    (* {21.9172, 26.8175} *)
+    ```
+    
+    Or, with a small number of observations $m$ such that:
+    
+    $$ 
+      s_{\hat y_p} = s_e \left( 
+        \frac{1}{m} + \frac{1}{n} + \frac{(x_p- \bar x)^2}{\Sigma x^2 - n \bar x^2} 
+      \right)^{1/2}
+    $$
+    
+    Mathematica only has $m=1$, a single prediction, out-of-the-box.
+    
+    ```mathematica
+    model = LinearModelFit[data, x, x, ConfidenceLevel -> 0.9]
+    model["SinglePredictionBands"] /. x -> 100
+    (* {21.0857, 27.649} *)
+    ```
+    

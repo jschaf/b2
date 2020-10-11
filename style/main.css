@@ -317,7 +317,8 @@ p, blockquote, .cite-reference {
   margin-bottom: 0;
 }
 
-p + p {
+/* Indent top level paragraphs, not nested paragraphs, like those in lists. */
+article > p + p {
   text-indent: 1em;
 }
 
