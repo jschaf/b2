@@ -41,9 +41,8 @@ value.
 - `MS` for x is also SSR because the degrees of freedom for x is 1.
 - `MS` for error is the mean squared error $MSE = SSE / DegreesFreedom$.
 
-The F-statistic is the mean square of x divided by the mean squared error.
-
-Let's plot the data points and regression line:
+The F-statistic is the mean square of x divided by the mean squared error. Let's
+plot the data points and regression line:
 
 ```mathematica
 Show[
@@ -168,10 +167,9 @@ To get values programmatically:
     ```
     
 -   $\hat y_p \mp t_{[1-\alpha/2;n-2]}s_{\hat y_p}$, the confidence interval for
-    predicted means using the regression model (assuming a large number of 
-    observations):
+    predicted means using the regression model:
     
-    With a large number of observations such that:
+    With many observations such that:
     
     $$ 
       s_{\hat y_p} = s_e \left( 
@@ -185,7 +183,7 @@ To get values programmatically:
     (* {21.9172, 26.8175} *)
     ```
     
-    Or, with a small number of observations $m$ such that:
+    Or, with a few observations $m$ such that:
     
     $$ 
       s_{\hat y_p} = s_e \left( 
@@ -201,3 +199,42 @@ To get values programmatically:
     (* {21.0857, 27.649} *)
     ```
     
+## Visual tests for verifying the regression assumptions
+
+The mnemonic LINER lists the assumptions necessary for regression. We can check
+the first four, LINE, using visual tests.
+
+-   Linear relationship between $x$ and $y$. Use a scatter plot of the data to
+    verify linearity.
+
+    ```mathematica
+    ListPlot[data]
+    ```
+
+-   Independent errors. Prepare a scatter plot of $\epsilon_i$ versus 
+    $\hat y_i$. Look for a linear trend.
+
+    ```mathematica
+    ListPlot[
+     Transpose[{model["Response"], model["FitResiduals"]}],
+     AxesLabel -> {"Predicted response", "Residual"}]
+    ```
+
+-   Normally distributed errors. Verify with a histogram of the residuals, 
+    looking for a normal distribution. Alternately, verify with a 
+    quantile-quantile plot, looking for a linear relationship.
+    
+    ```mathematica
+    Histogram[model["FitResiduals"]]
+    QuantilePlot[model["FitResiduals"]]
+    ```
+
+-   Equal standard deviation (or variance) of errors, known as homoscedasticity.
+    Check with a scatter plot of errors versus the predicted response and check
+    for spread. No spread means the standard deviation is equal.
+
+    ```mathematica
+    ListPlot[
+     Transpose[{model["Response"], model["FitResiduals"]}],
+     AxesLabel -> {"Predicted response", "Residual"}]
+    ```
