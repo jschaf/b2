@@ -15,6 +15,7 @@ func TestSmallCapsExt(t *testing.T) {
 		{"foo", "foo"},
 		{"FO", "FO"},
 		{"FOO", tags.SC("FOO")},
+		{"SS0", tags.SC("SS0")},
 		{"(FOO)", tags.SC("(FOO)")},
 		{"(FOO.", "(" + tags.SC("FOO") + "."},
 		{"FOO)", tags.SC("FOO") + ")"},

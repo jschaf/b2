@@ -79,6 +79,17 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 			break
 		}
 	}
+	// Allow trailing digits as long as we have 2 letters for cases like "SS0".
+	if run == smallCapsThreshold-1 && run < len(line) {
+		for _, b := range line[run:] {
+			if '0' <= b && b <= '9' {
+				run += 1
+			} else {
+				break
+			}
+		}
+	}
+
 	if run < smallCapsThreshold {
 		return nil
 	}
