@@ -107,7 +107,7 @@ func WalkCollectStrings(dir string, maxParallel int, walkFunc WalkFuncCollectStr
 	}
 	close(strsC)
 	<-doneC
-	return nil, nil
+	return strs, nil
 }
 
 // Copy the contents of the src file to dest. Any existing file will be

@@ -32,9 +32,9 @@ func CopyAllCSS(pubDir string) ([]string, error) {
 		if isSame, err := paths.CopyLazy(dest, path); err != nil {
 			return nil, fmt.Errorf("copy lazy css file: %w", err)
 		} else if isSame {
-			return []string{dest}, nil
+			return nil, nil
 		}
-		return nil, nil
+		return []string{dest}, nil
 	}
 	cssPaths, err := paths.WalkCollectStrings(styleDir, runtime.NumCPU(), cb)
 	if err != nil {
