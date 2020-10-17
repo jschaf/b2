@@ -89,6 +89,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
 		mdext.NewColonLineExt(),
+		mdext.NewFootnoteExt(),
 		mdext.NewHeaderExt(),
 		mdext.NewHeadingExt(opts.HeadingAnchorStyle),
 		mdext.NewHeadingIDExt(),

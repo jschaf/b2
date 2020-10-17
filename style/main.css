@@ -448,6 +448,7 @@ table caption {
 .continue-reading {
   display: inline-flex;
   justify-content: space-between;
+  text-decoration: none;
   align-items: center;
   font-size: 14px;
   margin-top: 12px;

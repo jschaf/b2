@@ -15,7 +15,7 @@ store leveraging lambda architecture to support both realtime and batch queries
 
 - Horizontally scalable means YouTube can spin up more machines and Procella
   will distribute queries to the new machines automagically.
-- Procella doesn’t support strong database [isolation] levels (the I in ACID). Queries
+- Procella doesn't support strong database [isolation] levels (the I in ACID). Queries
   support [read uncommitted] isolation which can cause _dirty reads_. A dirty
   read occurs when a transaction sees uncommitted changes from another
   transaction.
