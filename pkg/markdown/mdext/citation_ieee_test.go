@@ -135,6 +135,18 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 				),
 			),
 		},
+		{
+			"concurrent programming in java",
+			"alpha [@lea2000concurrent]",
+			tags.P(
+				"alpha ", newCiteIEEE("lea2000concurrent", "[1]"),
+			),
+			newCiteRefsIEEE(
+				newCiteRefIEEE("lea2000concurrent", 1, "[1]",
+					`D. Lea, "Concurrent Programming in Java: Design Principles and Patterns," 2000.`,
+				),
+			),
+		},
 	}
 
 	for _, tt := range tests {

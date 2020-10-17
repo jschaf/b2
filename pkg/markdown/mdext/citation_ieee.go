@@ -138,25 +138,35 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 	w.WriteString(title)
 	w.WriteString(`,"`)
 
+	hasInfoAfterTitle := false
+
 	journal := c.Bibtex.Tags["journal"]
 	journal = trimBraces(journal)
 	if journal != "" {
 		w.WriteString(" in <em class=cite-journal>")
 		w.WriteString(journal)
 		w.WriteString("</em>")
+		hasInfoAfterTitle = true
 	}
 
 	vol := c.Bibtex.Tags["volume"]
 	vol = trimBraces(vol)
 	if vol != "" {
-		w.WriteString(", Vol. ")
+		if hasInfoAfterTitle {
+			w.WriteRune(',')
+		}
+		w.WriteString(" Vol. ")
 		w.WriteString(vol)
+		hasInfoAfterTitle = true
 	}
 
 	year := c.Bibtex.Tags["year"]
 	year = trimBraces(year)
 	if year != "" {
-		w.WriteString(", ")
+		if hasInfoAfterTitle {
+			w.WriteRune(',')
+		}
+		w.WriteRune(' ')
 		w.WriteString(year)
 	}
 
