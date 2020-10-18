@@ -10,7 +10,7 @@ require (
 	github.com/evanw/esbuild v0.7.16
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/google/go-cmp v0.4.0
+	github.com/google/go-cmp v0.5.2
 	github.com/gorilla/websocket v1.4.1
 	github.com/graemephi/goldmark-qjs-katex v0.2.0
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/yuin/goldmark v1.1.30
+	github.com/yuin/goldmark v1.2.1
 	go.uber.org/atomic v1.5.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e

@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"strconv"
 	"testing"
@@ -56,22 +57,20 @@ func TestNewUnsafeJSONEncoder_WriteInt(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		is := strconv.Itoa(i)
 		keepGoing := true
-		t.Run("i="+is, func(t *testing.T) {
-			enc := NewUnsafeJSONEncoder(EncoderConfig{})
-			enc.StartObject()
-			enc.WriteIntEntry("m", i)
-			enc.WriteIntEntry("n", -i)
-			got := string(enc.EndObject())
-			neg := "-" + is
-			if i == 0 {
-				neg = is
-			}
-			want := `{"m":` + is + `,"n":` + neg + "}"
-			if diff := cmp.Diff(want, got); diff != "" {
-				keepGoing = false
-				t.Fatalf("WriteIntEntry mismatch (-want +got):\n%s", diff)
-			}
-		})
+		enc := NewUnsafeJSONEncoder(EncoderConfig{})
+		enc.StartObject()
+		enc.WriteIntEntry("m", i)
+		enc.WriteIntEntry("n", -i)
+		got := string(enc.EndObject())
+		neg := "-" + is
+		if i == 0 {
+			neg = is
+		}
+		want := `{"m":` + is + `,"n":` + neg + "}"
+		if diff := cmp.Diff(want, got); diff != "" {
+			keepGoing = false
+			t.Fatalf("WriteIntEntry mismatch (-want +got):\n%s", diff)
+		}
 		if !keepGoing {
 			// Avoid spamming 10k tests if the implementation is broken.
 			break
@@ -91,9 +90,10 @@ func TestNewUnsafeJSONEncoder_WriteInt_strangeNums(t *testing.T) {
 	}
 
 	for _, step := range steps {
-		for i := step.lo; i > 0; i = step.inc(i) {
-			is := strconv.Itoa(i)
-			t.Run("i="+is, func(t *testing.T) {
+		name := fmt.Sprintf("lo=%d next=%d", step.lo, step.inc(step.lo))
+		t.Run(name, func(t *testing.T) {
+			for i := step.lo; i > 0; i = step.inc(i) {
+				is := strconv.Itoa(i)
 				enc := NewUnsafeJSONEncoder(EncoderConfig{})
 				enc.StartObject()
 				enc.WriteIntEntry("m", i)
@@ -103,8 +103,8 @@ func TestNewUnsafeJSONEncoder_WriteInt_strangeNums(t *testing.T) {
 				if diff := cmp.Diff(want, got); diff != "" {
 					t.Fatalf("WriteIntEntry mismatch (-want +got):\n%s", diff)
 				}
-			})
-		}
+			}
+		})
 	}
 }
 
