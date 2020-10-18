@@ -1,7 +1,7 @@
 package htmls
 
 import (
-	"github.com/go-test/deep"
+	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
 
@@ -70,8 +70,8 @@ func Test_parseFragment(t *testing.T) {
 				t.Errorf("got:\n%s\nwant:\n%s", gotR, wantR)
 
 			}
-			if diff := deep.Equal(gotR, wantR); diff != nil {
-				t.Error(diff)
+			if diff := cmp.Diff(wantR, gotR); diff != "" {
+				t.Errorf("parseFragment() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

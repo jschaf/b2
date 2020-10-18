@@ -1,7 +1,7 @@
 package livereload
 
 import (
-	"github.com/go-test/deep"
+	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/websocket"
 	"github.com/jschaf/b2/pkg/errs"
 	"go.uber.org/zap/zaptest"
@@ -26,7 +26,7 @@ func TestServeJSHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer errs.CloseWithTestError(t, resp.Body)
+	defer errs.TestCapturingClose(t, resp.Body, "")
 
 	if !strings.Contains(string(body), "var LiveReload") {
 		t.Error("expected LiveReload JS to contain 'var LiveReload'")
@@ -157,9 +157,8 @@ func TestLiveReload_ReloadFile(t *testing.T) {
 	actual := new(reloadMsg)
 	readClientJSON(t, conn, actual)
 	expected := newReloadMsg("foo_bar")
-	if diff := deep.Equal(expected, *actual); diff != nil {
-		t.Fatalf("expected reload response from server:\n%v\ngot:\n%v\n%s",
-			expected, actual, strings.Join(diff, "\n"))
+	if diff := cmp.Diff(expected, *actual); diff != "" {
+		t.Fatalf("ReloadFile() mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -176,9 +175,8 @@ func TestLiveReload_Alert(t *testing.T) {
 		actual := new(alertMsg)
 		readClientJSON(t, conn, actual)
 		expected := newAlertResponse("alert!")
-		if diff := deep.Equal(expected, *actual); diff != nil {
-			t.Fatalf("expected alert response from server:\n%v\ngot:\n%v\n%s",
-				expected, actual, strings.Join(diff, "\n"))
+		if diff := cmp.Diff(expected, *actual); diff != "" {
+			t.Fatalf("Alert() mismatch (-want +got):\n%s", diff)
 		}
 	}
 }
@@ -224,8 +222,7 @@ func assertReadsHelloMsg(t *testing.T, conn *websocket.Conn) {
 		t.Fatalf("failed to read server hello request: %s", err)
 	}
 	expectedResp := newHelloMsg()
-	if diff := deep.Equal(*hello, expectedResp); diff != nil {
-		t.Fatalf("didn't receive hello request from server; expected:\n%s\ngot:\n%s\n%s",
-			expectedResp, *hello, strings.Join(diff, "\n"))
+	if diff := cmp.Diff(expectedResp, *hello); diff != "" {
+		t.Fatalf("didn't receive hello request from server; ReadJSON() mismatch (-want +got):\n%s", diff)
 	}
 }

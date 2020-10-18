@@ -8,7 +8,6 @@ require (
 	github.com/cloudflare/tableflip v1.0.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/go-test/deep v1.0.5
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/go-cmp v0.4.0
 	github.com/gorilla/websocket v1.4.1
