@@ -70,6 +70,10 @@ type SiteFile struct {
 //
 // SiteHashes allows finding the file by it's hash and retains the gzipped
 // content so we don't need to recompute it.
+//
+// One downside is that we store the entire contents of the generated site
+// in memory. If this is problem moving forward, we can skip the gzipContents
+// map and rely on the OS page cache to cache files for us.
 type SiteHashes struct {
 	hashes       map[SiteFile]FileHash
 	files        map[FileHash]SiteFile
