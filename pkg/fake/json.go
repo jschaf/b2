@@ -153,8 +153,8 @@ func (e *UnsafeJSONEncoder) WriteStringEntry(key, val string) {
 }
 
 func (e *UnsafeJSONEncoder) EndObject() []byte {
-	// No need to check for size because WriteStringEntry, WriteIntEntry, and StartObject
-	// guarantee enough room for the closing bracket.
+	// No need to check for size because WriteStringEntry, WriteIntEntry, and
+	// StartObject guarantee enough room for the closing bracket.
 	if e.buf[e.off-1] == ',' {
 		e.off--
 	}

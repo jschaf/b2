@@ -56,7 +56,7 @@ func (ex *Experiment) Populate() error {
 		return err
 	}
 	startFaker := time.Now()
-	evs := make([]api.Event, 1<<14)
+	evs := make([]api.Event, 1<<18)
 	faker := fake.NewEventFaker()
 	if err := faker.WriteEvents(evs); err != nil {
 		return fmt.Errorf("populate fake events: %w", err)

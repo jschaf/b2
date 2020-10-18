@@ -36,7 +36,7 @@ func TestExperiment_Run(t *testing.T) {
 	}
 
 	ddl := texts.Dedent(`
-		create unlogged table event (
+		create table event (
 			event_id bigint not null,
 			user_id bigint not null,
 			time bigint not null,

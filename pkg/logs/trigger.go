@@ -3,10 +3,13 @@ package logs
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"github.com/jschaf/b2/pkg/chans"
 	"io"
 	"io/ioutil"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -80,8 +83,10 @@ func (tw *TriggerWriter) Write(p []byte) (n int, err error) {
 
 // Wait blocks until the trigger string is found. If the string is not found
 // before Close, returns TriggerNotFoundErr.
-func (tw *TriggerWriter) Wait() error {
-	<-tw.doneCh
+func (tw *TriggerWriter) Wait(deadline time.Duration) error {
+	if err := chans.Wait(tw.doneCh, deadline); err != nil {
+		return fmt.Errorf("exceeded wait deadline in trigger writer wait: %w", err)
+	}
 	if tw.state == triggerStateNotFound {
 		return TriggerNotFoundErr
 	}

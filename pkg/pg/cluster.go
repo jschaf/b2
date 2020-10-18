@@ -153,7 +153,8 @@ func (pgc *Cluster) Start() error {
 	}()
 
 	pgc.l.Info("waiting for postgres ready log line")
-	if err := triggerW.Wait(); err != nil {
+	startDeadline := time.Second * 5
+	if err := triggerW.Wait(startDeadline); err != nil {
 		return fmt.Errorf("postgres start failed; ready message %q not found", pgReadyLogMsg)
 	}
 	pgc.l.Info("found postgres ready log line")
