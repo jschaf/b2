@@ -1,111 +1,77 @@
 package js
 
 import (
-	"errors"
 	"fmt"
+	"github.com/evanw/esbuild/pkg/api"
 	"github.com/jschaf/b2/pkg/dirs"
-	"hash/fnv"
+	"github.com/jschaf/b2/pkg/files"
 	"io/ioutil"
 	"path/filepath"
 	"sync"
 
 	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/esbuild/pkg/bundler"
-	"github.com/jschaf/esbuild/pkg/fs"
-	"github.com/jschaf/esbuild/pkg/logging"
-	"github.com/jschaf/esbuild/pkg/parser"
-	"github.com/jschaf/esbuild/pkg/resolver"
 )
 
 type jsCache struct {
 	mu           sync.Mutex
 	key          uint64
-	bundleResult bundler.BundleResult
+	bundleResult api.BuildResult
 }
 
 // Single entry cache for main.js.
-var mainJSCache = jsCache{}
+var mainJSCache = &jsCache{}
 
-// BundleMain minifies the main.js file and returns the bytes of the written file.
-func BundleMain(pubDir string) (bundler.BundleResult, error) {
-	logOpts := logging.StderrOptions{
-		IncludeSource:      true,
-		ErrorLimit:         3,
-		ExitWhenLimitIsHit: true,
-	}
-	stderrLog, join := logging.NewStderrLog(logOpts)
-	realFS := fs.RealFS()
-	fsResolver := resolver.NewResolver(realFS, []string{".js"})
-	parseOpts := parser.ParseOptions{
-		IsBundling:           true,
-		Defines:              nil,
-		MangleSyntax:         true,
-		KeepSingleExpression: false,
-		OmitWarnings:         false,
-		JSX:                  parser.JSXOptions{},
-		Target:               parser.ES2019,
-	}
-	bundleOpts := bundler.BundleOptions{
-		Bundle:            false,
-		AbsOutputFile:     "",
-		AbsOutputDir:      pubDir,
-		RemoveWhitespace:  true,
-		MinifyIdentifiers: true,
-		MangleSyntax:      true,
-		SourceMap:         true,
-		ModuleName:        "",
-		ExtensionToLoader: nil,
-	}
-	entryPoint := filepath.Join(git.MustFindRootDir(), dirs.Scripts, "main.js")
-	var curKey, newKey uint64
-	bytes, err := ioutil.ReadFile(entryPoint)
+func (jsCache *jsCache) isUnchanged(mainJSPath string) (bool, uint64, error) {
+	newKey, err := files.HashFnv64(mainJSPath)
 	if err != nil {
-		return bundler.BundleResult{}, fmt.Errorf("failed to read entrypoint: %w", err)
+		return false, 0, fmt.Errorf("hash main.js for JS build cache: %w", err)
 	}
-	mainJSCache.mu.Lock()
-	curKey = mainJSCache.key
-	curResult := mainJSCache.bundleResult
-	mainJSCache.mu.Unlock()
-
-	hasher := fnv.New64a()
-	_, _ = hasher.Write(bytes)
-	newKey = hasher.Sum64()
+	curKey := mainJSCache.key
 	if newKey == curKey {
-		return curResult, nil
+		return true, newKey, nil
 	}
-	bundle := bundler.ScanBundle(
-		stderrLog, realFS, fsResolver, []string{entryPoint}, parseOpts, bundleOpts)
-	if join().Errors != 0 {
-		return bundler.BundleResult{}, fmt.Errorf("bundleResult scanning had errors: %s", join())
-	}
-
-	log2, join2 := logging.NewStderrLog(logOpts)
-	result := bundle.Compile(log2, bundleOpts)
-
-	// Early exit if there were errors.
-	if join2().Errors != 0 {
-		return bundler.BundleResult{}, fmt.Errorf("bundleResult compilation had errors: %s", join())
-	}
-
-	// Return the first result, ignore other entry points.
-	if len(result) > 1 {
-		return bundler.BundleResult{}, errors.New("got more than 1 result")
-	}
-
-	item := result[0]
-	mainJSCache.mu.Lock()
-	mainJSCache.key = newKey
-	mainJSCache.bundleResult = item
-	mainJSCache.mu.Unlock()
-	return item, nil
+	return false, newKey, nil
 }
 
-func WriteMainBundle(result bundler.BundleResult) error {
-	if err := ioutil.WriteFile(result.JsAbsPath, result.JsContents, 0644); err != nil {
-		return fmt.Errorf("write main.js.min: %w", err)
+// bundleMain minifies the main.js file and returns the bytes of the written file.
+func bundleMain(pubDir string) (api.BuildResult, error) {
+	mainJS := filepath.Join(git.MustFindRootDir(), dirs.Scripts, "main.js")
+	mainJSOut := filepath.Join(pubDir, "main.js")
+
+	// Check if file is same and skip JS bundle.
+	mainJSCache.mu.Lock()
+	defer mainJSCache.mu.Unlock()
+	ok, newKey, err := mainJSCache.isUnchanged(mainJS)
+	if err != nil {
+		return api.BuildResult{}, err
+	} else if ok {
+		return mainJSCache.bundleResult, nil
 	}
-	if err := ioutil.WriteFile(result.SourceMapAbsPath, result.SourceMapContents, 0644); err != nil {
-		return fmt.Errorf("write error for main.js source map: %w", err)
+
+	// Continue with a full build.
+	result := api.Build(api.BuildOptions{
+		EntryPoints: []string{mainJS},
+		Outfile:     mainJSOut,
+		Bundle:      false,
+		Write:       true,
+		ErrorLimit:  3,
+		LogLevel:    api.LogLevelInfo,
+	})
+
+	mainJSCache.key = newKey
+	mainJSCache.bundleResult = result
+	return result, nil
+}
+
+func WriteMainBundle(pubDir string) error {
+	result, err := bundleMain(pubDir)
+	if err != nil {
+		return fmt.Errorf("write main.js bundle: %w", err)
+	}
+	for _, f := range result.OutputFiles {
+		if err := ioutil.WriteFile(f.Path, f.Contents, 0644); err != nil {
+			return fmt.Errorf("write main.js.min: %w", err)
+		}
 	}
 	return nil
 }

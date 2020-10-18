@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -50,4 +51,15 @@ func hashFileBytes(path string) (uint64, error) {
 		return 0, fmt.Errorf("failed to copy file contents to hash")
 	}
 	return h.Sum64(), nil
+}
+
+// HashFnv64 hashes the contents of the file at path using a 64-bit FNV-1a hash.
+func HashFnv64(path string) (uint64, error) {
+	bs, err := ioutil.ReadFile(path)
+	if err != nil {
+		return 0, fmt.Errorf("read path %s to hash with FNV64: %w", path, err)
+	}
+	hasher := fnv.New64a()
+	_, _ = hasher.Write(bs)
+	return hasher.Sum64(), nil
 }
