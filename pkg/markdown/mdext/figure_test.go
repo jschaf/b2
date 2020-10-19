@@ -91,6 +91,40 @@ func TestNewFigureExt(t *testing.T) {
 		`),
 		},
 		{
+			"single image nested in list",
+			texts.Dedent(`
+      +++
+      slug = "some_slug"
+      +++
+      
+      1. one
+
+         ![alt text](https://example.com/bar.png "title")
+
+         CAPTION: foobar
+      2. two
+		`),
+			texts.Dedent(`
+        <ol>
+          <li>
+            <p>one</p>
+						<figure>
+							<picture>
+								<img src="https://example.com/bar.png" loading="lazy" alt="alt text" title="title">
+							</picture>
+							<figcaption>
+								<span class="caption-label">Figure:</span>
+								foobar
+							</figcaption>
+						</figure>
+          </li>
+          <li>
+            <p>two</p>
+          </li>
+        </ol>
+		`),
+		},
+		{
 			"complex image with caption",
 			texts.Dedent(`
         foo bar

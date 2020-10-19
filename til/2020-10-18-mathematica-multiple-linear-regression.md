@@ -154,14 +154,54 @@ Create a linear model:
 lm = LinearModelFit[data, {x1, x2}, {x1, x2}]
 ```
 
-- ANOVA table: `lm["ANOVATable"]`
-- Mean of response variable $\bar y$: `N[Mean[lm["Response"]]] == 9.42857`
-- SSR, sum of squares due to regression: `lm["SequentialSumOfSquares"] == {199.845, 0.568796}`
-- Coefficient of determination $R^2$: `lm["RSquard"] == 0.974236`
-- The predicted response variables for each sample, $\hat y_i$: `lm["PredictedResponse"] == {3.3, 3.7, 6.8, 9.8, 10.0, 11.9, 20.2}`
-- The residual (error) for each data point in the sample, $e_i$: `lm["FitResiduals"] == {-1.3, 1.2, 0.15, -0.84, -0.015, 1.02, -0.25}`
-- Regression parameters $\{b_0, b_1, \ldots, b_k\}$: `lm["BestFitParameters"] == {-0.161, 0.118, 0.0265}`
-- The standard error of the regression parameters: `lm["ParameterErrors"] == {0.91, 0.19, 0.040}`
+- ANOVA table:
+
+   ```mathematica
+    lm["ANOVATable"]
+   ```
+
+- Mean of response variable, $\bar y$:
+
+   ```mathematica
+    N[Mean[lm["Response"]]] == 9.42857
+   ```
+
+- SSR, sum of squares due to regression:
+
+   ```mathematica
+    lm["SequentialSumOfSquares"] == {199.845, 0.568796}
+   ```
+
+- Coefficient of determination $R^2$:
+
+   ```mathematica
+    lm["RSquard"] == 0.974236
+   ```
+
+- The predicted response variables for each sample, $\hat y_i$:
+
+   ```mathematica
+    lm["PredictedResponse"] == {3.3, 3.7, 6.8, 9.8, 10.0, 11.9, 20.2}
+   ```
+
+- The residual (error) for each data point in the sample, $e_i$:
+
+   ```mathematica
+    lm["FitResiduals"] == {-1.3, 1.2, 0.15, -0.84, -0.015, 1.02, -0.25}
+   ```
+
+- Regression parameters $\{b_0, b_1, \ldots, b_k\}$:
+
+   ```mathematica
+    lm["BestFitParameters"] == {-0.161, 0.118, 0.0265}
+   ```
+
+- The standard error of the regression parameters:
+
+   ```mathematica
+    lm["ParameterErrors"] == {0.91, 0.19, 0.040}
+   ```
+
 - $b_0 \mp ts_{b_0}$ and $b_1 \mp ts_{b_1}$, the confidence intervals for 
   regression parameters:
   
@@ -187,4 +227,24 @@ lm = LinearModelFit[data, {x1, x2}, {x1, x2}]
   ```
 
 - Mean square values for all regression parameters and the error: 
-  `lm["ANOVATableMeanSquares"] == {199.845, 0.568796, 1.325}`
+
+  ```mathematica
+  lm["ANOVATableMeanSquares"] == {199.845, 0.568796, 1.325}
+  ```
+  
+- Plot the mean regression response with the confidence intervals:
+
+  ```mathematica
+  planes = Append[lm["MeanPredictionBands"], lm["BestFit"]];
+  Plot3D[planes, {x1, 1, 20}, {x2, 1, 1000}]
+  ```
+  
+  ![Mathematica plot of multiple linear regression prediction with confidence bands](./mlr-3d-planes.png)
+  
+  CAPTION: Regression prediction graph with 95% confidence interval graphs.
+  
+- The correlation matrix, showing $R_{x_ix_j}$ for every pair of $(i,j) < k$ 
+
+  ```mathematica
+  lm["CorrelationMatrix"] // MatrixForm
+   ```
