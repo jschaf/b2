@@ -172,14 +172,19 @@ lm = LinearModelFit[data, {x1, x2}, {x1, x2}]
   (* {{-2.69759, 2.37469}, {-0.416515, 0.652989}, {-0.0858019, 0.138805}} *)
   ```
   
-- Prediction for observations at 90% confidence level for many observations and a single 
-  observation.
+- Prediction for observations at 90% confidence level for both many observations 
+  and a single observation.
   
   ```mathematica
   lm = LinearModelFit[data, {x1, x2}, {x1, x2}, ConfidenceLevel -> 0.9]
+  (* for many observations *)
   lm["MeanPredictionBands"] /. {x1 -> 100, x2 -> 550}
   (* {19.5571, 32.919} *)
   
+  (* for a single observation *)
   lm["SinglePredictionBands"] /. {x1 -> 100, x2 -> 550}
   (* {19.1207, 33.3554} *)
   ```
+
+- Mean square values for all regression parameters and the error: 
+  `lm["ANOVATableMeanSquares"] == {199.845, 0.568796, 1.325}`
