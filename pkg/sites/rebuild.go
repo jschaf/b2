@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/js"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
@@ -85,6 +86,14 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 		l.Debug("Rebuild - link papers")
 		if err := static.LinkPapers(pubDir); err != nil {
 			return fmt.Errorf("link papers: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		l.Debug("Rebuild - typescript")
+		if err := js.WriteTypeScriptMain(pubDir); err != nil {
+			return fmt.Errorf("write typescript bundle: %w", err)
 		}
 		return nil
 	})

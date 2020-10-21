@@ -1,3 +1,87 @@
+type AdblockStatus = 'unknown' | 'blocking' | 'none';
+
+declare interface Window {
+  adblockStatus: AdblockStatus;
+  heap: HeapAnalytics;
+}
+
+type EventProps = Record<string, string | number>;
+
+interface HeapCfg {
+  disableTextCapture?: boolean,
+  secureCookie?: boolean,
+  trackingServer?: string,
+}
+
+class HeapAnalytics extends Array<any> {
+  userId?: string;
+  identity?: string;
+
+  private constructor(readonly appid: string, readonly config: HeapCfg) {
+    super();
+  }
+
+  static forEnvId(envId: string, config: HeapCfg): HeapAnalytics {
+    return new HeapAnalytics(envId, config);
+  }
+
+  track(name: string, props: EventProps): void {
+    this.push(['track', name, props]);
+  }
+
+  identify(id: string): void {
+    this.push(['identify', id]);
+  }
+
+  resetIdentity(): void {
+    this.push(['resetIdentity']);
+  }
+
+  addUserProperties(props: EventProps): void {
+    this.push(['addUserProperties', props]);
+  }
+
+  addEventProperties(props: EventProps): void {
+    this.push(['addEventProperties', props]);
+  }
+
+  removeEventProperty(prop: string): void {
+    this.push(['removeEventProperty', prop]);
+  }
+
+  clearEventProperties(): void {
+    this.push(['clearEventProperties']);
+  }
+}
+
+const checkDef = <T>(x: T, msg?: string): NonNullable<T> => {
+  if (x === null) {
+    throw new Error(msg ?? `Expression was null but expected non-null.`);
+  }
+  if (x === undefined) {
+    throw new Error(msg ?? `Expression was undefined but expected non-null.`);
+  }
+  return x as NonNullable<T>;
+};
+
+function assertDef<T>(x: T, msg?: string): asserts x is NonNullable<T> {
+  checkDef(x, msg);
+}
+
+const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNullable<T> => {
+  checkDef(x, 'Express must be non-null for instanceof check');
+  if (!(x instanceof (typ as any))) {
+    throw new Error(msg ?? `Expression had instanceof ${x} but expected ${typ}`);
+  }
+  return x as NonNullable<T>;
+};
+
+// Creates the heap stub that records API calls to eventually replay while the
+// real heap.js/ downloads. The real heap.js script is templated into
+// base.gohtml.
+window.heap = HeapAnalytics.forEnvId('1506018335',
+    { trackingServer: 'https://heapanalytics.com' });
+
 // Detect adblock.
 //
 // Find out how common adblock is. Sets window.adblockStatus to a string of:
@@ -15,35 +99,14 @@
         elem.style.visibility === 'hidden';
     if (isBlocked) {
       window.adblockStatus = 'blocking';
-      console.debug(`adblock status: ${window.adblockStatus}`)
+      console.debug(`adblock status: ${window.adblockStatus}`);
       return;
     }
     await new Promise(resolve => setTimeout(resolve, intervalMs));
   }
   window.adblockStatus = 'none';
-  console.debug(`adblock status: ${window.adblockStatus}`)
-})();
-
-// Load heap stubs that run while the real heap.js downloads.
-(() => {
-  window.heap = [];
-  const stubHeapFn = (fnName) => (...args) => {
-    window.heap.push([fnName, ...args]);
-  };
-  const fnNames = [
-    'addEventProperties',
-    'addUserProperties',
-    'clearEventProperties',
-    'identify',
-    'resetIdentity',
-    'removeEventProperty',
-    'setEventProperties',
-    'track',
-    'unsetEventProperty'
-  ];
-  for (const s of fnNames) {
-    window.heap[s] = stubHeapFn(s)
-  }
+  window.heap.addEventProperties({ adblock: window.adblockStatus });
+  console.debug(`adblock status: ${window.adblockStatus}`);
 })();
 
 /**
@@ -65,30 +128,25 @@
  *   page.
  */
 class PreviewLifecycle {
+  static readonly showPreviewDelayMs = 300;
+  // Hiding feels better if a bit faster. Usually you want to hide things
+  // "instantly."
+  static readonly hidePreviewDelayMs = 200;
+
+  // The current, displayed preview target pending or displayed. If no preview
+  // is displayed, currentTarget is null.
+  private currentTarget: HTMLElement | null = null;
+  private showPreviewTimer: number = 0;
+  private hidePreviewTimer: number = 0;
+  // A singleton div element to hold previews of preview target links.
+  // Lazily initialized on the first hover of a preview target. Contains
+  // contentEl.
+  private boxEl: HTMLElement | null = null;
+  // A singleton div element to hold the content of a preview. Contained by
+  // boxEl.
+  private contentEl: HTMLElement | null = null;
+
   constructor() {
-    /**
-     * The current, displayed preview target pending or displayed. If no preview
-     * is displayed, currentTarget is null.
-     * @type {?HTMLElement}
-     */
-    this.currentTarget = null;
-    /** @type {number} */
-    this.showPreviewTimer = 0;
-    /** @type {number} */
-    this.hidePreviewTimer = 0;
-    /**
-     * A singleton div element to hold previews of preview target links.
-     * Lazily initialized on the first hover of a preview target. Contains
-     * contentEl.
-     * @type {?HTMLElement}
-     */
-    this.boxEl = null;
-    /**
-     * A singleton div element to hold the content of a preview. Contained by
-     * boxEl.
-     * @type {?HTMLElement}
-     */
-    this.contentEl = null;
   }
 
   /** Creates the preview div element if it doesn't yet exist. */
@@ -106,14 +164,14 @@ class PreviewLifecycle {
     // Div for better box-shadow performance by leveraging GPU accelerated
     // opacity: https://tobiasahlin.com/blog/how-to-animate-box-shadow/.
     const shadow = document.createElement('div');
-    shadow.id = 'preview-shadow'
+    shadow.id = 'preview-shadow';
 
     // Div to hold the preview content.
-    this.contentEl = document.createElement('div')
-    this.contentEl.id = 'preview-content'
+    this.contentEl = document.createElement('div');
+    this.contentEl.id = 'preview-content';
 
     this.boxEl.appendChild(this.contentEl);
-    this.boxEl.appendChild(shadow)
+    this.boxEl.appendChild(shadow);
     document.body.append(this.boxEl);
   }
 
@@ -126,19 +184,15 @@ class PreviewLifecycle {
     }
   }
 
-  /**
-   * Callback for when the mouse enters the preview target bounding box.
-   * @param {Event} ev
-   * @return void
-   */
-  onTargetMouseOver(ev) {
+  /** Callback for when the mouse enters the preview target bounding box. */
+  onTargetMouseOver(ev: Event): void {
     ev.preventDefault();
     this.init();
-    const currentEl = /** @type {Element} */ ev.target;
-    const targetEl = currentEl.closest('.preview-target');
+    const currentEl = checkDef(ev.target, 'preview target mouse over') as HTMLElement;
+    const targetEl = currentEl.closest('.preview-target') as HTMLElement;
     if (!targetEl) {
-      console.warn(`preview-box: no surrounding <a> element for ${ev.target}`)
-      return
+      console.warn(`preview-box: no surrounding <a> element for ${ev.target}`);
+      return;
     }
 
     if (this.currentTarget === targetEl) {
@@ -155,12 +209,8 @@ class PreviewLifecycle {
     }
   }
 
-  /**
-   * Callback for when the mouse exits the preview target bounding box.
-   * @param {Event} ev
-   * @return void
-   */
-  onTargetMouseOut(ev) {
+  /** Callback for when the mouse exits the preview target bounding box. */
+  onTargetMouseOut(ev: Event): void {
     ev.preventDefault();
     clearTimeout(this.showPreviewTimer);
     clearTimeout(this.hidePreviewTimer);
@@ -169,24 +219,16 @@ class PreviewLifecycle {
         PreviewLifecycle.hidePreviewDelayMs);
   }
 
-  /**
-   * Callback for when the mouse enters the preview target bounding box.
-   * @param {Event} ev
-   * @return void
-   */
-  onPreviewMouseOver(ev) {
+  /** Callback for when the mouse enters the preview target bounding box. */
+  onPreviewMouseOver(ev: Event): void {
     ev.preventDefault();
     // We moved out of the preview back into to the preview so the user wants to
     // keep using the preview.
     clearTimeout(this.hidePreviewTimer);
   }
 
-  /**
-   * Callback for when the mouse exits the preview target bounding box.
-   * @param {Event} ev
-   * @return void
-   */
-  onPreviewMouseOut(ev) {
+  /** Callback for when the mouse exits the preview target bounding box. */
+  onPreviewMouseOut(ev: Event): void {
     ev.preventDefault();
     clearTimeout(this.hidePreviewTimer);
     this.hidePreviewTimer = setTimeout(
@@ -197,29 +239,27 @@ class PreviewLifecycle {
   /** Hides the preview box. */
   hidePreviewBox() {
     this.currentTarget = null;
+    if (!this.boxEl) {
+      console.warn(`boxEl was null but called hidePreviewBox`);
+      return;
+    }
     this.boxEl.classList.add('preview-disabled');
   }
 
-  /**
-   * Calls fn on root and each descendant of root using depth-first search.
-   * @param {!Element} root
-   * @param {!function(Element)} fn
-   */
-  recurseChildren(root, fn) {
-    fn(root)
+  /** Calls fn on root and each descendant of root using depth-first search. */
+  recurseChildren(root: Element, fn: (e: Element) => void) {
+    fn(root);
     for (const child of root.children) {
-      this.recurseChildren(child, fn)
+      this.recurseChildren(child, fn);
     }
   }
 
   /**
    * Builds content to show in the preview box with info about the target
-   * element.
-   * @param {HTMLElement} targetEl
-   * @return {string} HTML contents of the preview box, or empty if failed to
-   * build.
+   * element. Returns the HTML contents of the preview box, or empty if failed
+   * to build the preview box.
    */
-  buildPreviewContent(targetEl) {
+  buildPreviewContent(targetEl: HTMLElement): string {
     const title = targetEl.dataset.previewTitle;
     const snippet = targetEl.dataset.previewSnippet;
     if (title && snippet) {
@@ -228,34 +268,34 @@ class PreviewLifecycle {
 
     const type = targetEl.dataset.linkType;
     switch (type) {
-      case "citation":
-        const refId = targetEl.getAttribute('href').slice(1);
+      case 'citation':
+        const refId = checkDef(targetEl.getAttribute('href')).slice(1);
         const ref = document.getElementById(refId);
         if (!ref) {
           console.warn(`preview-box: no cite reference found for id='${refId}'`);
-          return ""
+          return '';
         }
         // Clone node for easier manipulation.
-        const clone = ref.cloneNode(/* deep */ true);
+        const clone = ref.cloneNode(/* deep */ true) as HTMLElement;
         // Drop the citation number, e.g. "[1]".
         clone.removeChild(clone.childNodes[0]);
         return clone.innerHTML;
 
-      case "cite-reference-num":
-        const strIds = targetEl.dataset.citeIds;
+      case 'cite-reference-num':
+        const strIds = checkDef(targetEl.dataset.citeIds, `no citeIds attribute found`);
         const ids = strIds.split(' ');
         if (ids.length === 0) {
           console.warn(`preview-box: no citation IDs exist for reference='${targetEl.textContent}'`);
-          return ""
+          return '';
         }
-        const /** Array<HTMLElement> */ refs =  [];
+        const refs: HTMLElement[] = [];
         for (const id of ids) {
           const ref = document.getElementById(id);
           if (!ref) {
             console.warn(`preview-box: no citation found for id='${id}'`);
             continue;
           }
-          refs.push(ref)
+          refs.push(ref);
         }
 
         const backLinks = [`<ul class="cite-backlinks">`];
@@ -270,11 +310,11 @@ class PreviewLifecycle {
             console.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
             continue;
           }
-          const  clone = /** @type {Element} */ p2.cloneNode(/* deep */ true);
+          const clone = p2.cloneNode(true) as HTMLElement;
           // Remove ID attributes and highlight the node.
           this.recurseChildren(clone, (e) => {
             if (e.id === ref.id) {
-              e.classList.add('cite-backlink-target')
+              e.classList.add('cite-backlink-target');
             }
             e.classList.remove('preview-target'); // avoid nested previews
             e.removeAttribute('id'); // avoid duplicate IDs
@@ -286,40 +326,40 @@ class PreviewLifecycle {
                 <a href="#${ref.id}" class=cite-backlink-back><em>back</em></a>
                 ${clone.innerHTML}
               </div>
-            </li>`)
+            </li>`);
         }
         backLinks.push(`<ul>`);
         const title = `<p class=preview-title>Citations for this reference</p>`;
-        return title + backLinks.join('')
+        return title + backLinks.join('');
 
       default:
-        console.warn("preview-box: unknown link type: " + type);
+        console.warn('preview-box: unknown link type: ' + type);
     }
 
     console.warn('preview-box: failed to build content', targetEl);
-    return "";
+    return '';
   }
 
   /**
    * Shows the preview box with content from the data attributes of the target
    * element.
-   * @param {HTMLElement} targetEl
-   * @return void
    */
-  showPreviewBox(targetEl) {
+  showPreviewBox(targetEl: HTMLElement): void {
     const content = this.buildPreviewContent(targetEl);
-    if (content === "") {
+    if (content === '') {
       return;
     }
+    assertDef(this.boxEl, `boxEl was null for showPreviewBox`);
+    assertDef(this.contentEl, `contentEl was null for showPreviewBox`);
 
     this.boxEl.classList.add('preview-disabled');
     // Remove all children to replace them with new title and snippet.
     while (this.contentEl.firstChild) {
-      this.contentEl.firstChild.remove()
+      this.contentEl.firstChild.remove();
     }
-    this.contentEl.insertAdjacentHTML('afterbegin', content)
-    this.contentEl.style.overflowY = null;
-    this.contentEl.style.maxHeight = null;
+    this.contentEl.insertAdjacentHTML('afterbegin', content);
+    this.contentEl.style.overflowY = '';
+    this.contentEl.style.maxHeight = '';
     // Reset transforms so we don't have to correct them in next frame.
     this.boxEl.style.transform = 'translateX(0) translateY(0)';
     this.currentTarget = targetEl;
@@ -327,14 +367,16 @@ class PreviewLifecycle {
     // Use another frame because we need the height of the preview box with the
     // HTML content to correctly position it above or below the preview target.
     requestAnimationFrame(() => {
+      assertDef(this.boxEl, `boxEl was null for showPreviewBox requestAnimationFrame`);
+      assertDef(this.contentEl, `contentEl was null for showPreviewBox requestAnimationFrame`);
       this.currentTarget = targetEl;
       const targetBox = targetEl.getBoundingClientRect();
       const previewBox = this.boxEl.getBoundingClientRect();
 
-      const horizDelta = this.calcHorizDelta(targetBox, previewBox)
+      const horizDelta = this.calcHorizDelta(targetBox, previewBox);
 
-      const {vertDelta, maxHeight, hasScroll} = this.calcVertDelta(
-          targetBox, previewBox)
+      const { vertDelta, maxHeight, hasScroll } = this.calcVertDelta(
+          targetBox, previewBox);
 
       if (hasScroll) {
         this.contentEl.style.overflowY = 'scroll';
@@ -350,11 +392,8 @@ class PreviewLifecycle {
   /**
    * Calculates the horizontal delta needed to align the preview box with the
    * target.
-   * @param targetBox {DOMRect}
-   * @param previewBox {DOMRect}
-   * @returns {number}
    */
-  calcHorizDelta(targetBox, previewBox) {
+  calcHorizDelta(targetBox: DOMRect, previewBox: DOMRect): number {
     const tb = targetBox;
     const pb = previewBox;
     const docWidth = document.documentElement.clientWidth;
@@ -379,11 +418,8 @@ class PreviewLifecycle {
    * Calculate the vertical delta needed to align the preview box with the
    * target. Also returns the max height and if preview elements needs a scroll
    * bar
-   * @param targetBox {DOMRect}
-   * @param previewBox {DOMRect}
-   * @returns {{hasScroll: boolean, maxHeight: number, vertDelta: number}}
    */
-  calcVertDelta(targetBox, previewBox) {
+  calcVertDelta(targetBox: DOMRect, previewBox: DOMRect): { hasScroll: boolean, maxHeight: number, vertDelta: number } {
     const tb = targetBox;
     const pb = previewBox;
     const spaceAbove = tb.top;
@@ -399,9 +435,9 @@ class PreviewLifecycle {
     if (spaceAbove < pb.height && pb.height < spaceBelow) {
       // Place preview below target only if it can contain the entire preview
       // and the space above cannot.
-      console.debug("preview: placing below target - no overflow");
+      console.debug('preview: placing below target - no overflow');
       vertDelta = tb.bottom - pb.top + vertNudge;
-      return {vertDelta: vertDelta, maxHeight, hasScroll: false};
+      return { vertDelta: vertDelta, maxHeight, hasScroll: false };
     }
 
     // Otherwise, we're placing below.
@@ -409,8 +445,8 @@ class PreviewLifecycle {
 
     const vertHidden = pb.height - maxHeight;
     if (vertHidden <= 0) {
-      console.debug("preview: placing above target - no overflow");
-      return {vertDelta, maxHeight, hasScroll: false};
+      console.debug('preview: placing above target - no overflow');
+      return { vertDelta, maxHeight, hasScroll: false };
     }
 
     // The preview extends past the top of the view port.
@@ -423,20 +459,16 @@ class PreviewLifecycle {
       return {
         vertDelta: vertDelta - vertHidden,
         maxHeight: maxHeight + vertHidden,
-        hasScroll: false
+        hasScroll: false,
       };
     }
 
-    console.debug('preview: using vertical scroll bar')
+    console.debug('preview: using vertical scroll bar');
+    assertDef(this.contentEl, `contentEl was null for calcVertDelta`)
     this.contentEl.style.overflowY = 'scroll';
-    return {vertDelta: vertDelta + vertHidden, maxHeight, hasScroll: true}
+    return { vertDelta: vertDelta + vertHidden, maxHeight, hasScroll: true };
   }
 }
-
-PreviewLifecycle.showPreviewDelayMs = 300;
-// Hiding feels better if a bit faster. Usually you want to hide things
-// "instantly."
-PreviewLifecycle.hidePreviewDelayMs = 200;
 
 // Preview hovers.
 // Each preview target contains data attributes describing how to display
@@ -450,16 +482,16 @@ PreviewLifecycle.hidePreviewDelayMs = 200;
   // https://stackoverflow.com/a/8758536/30900
   let hasHover = false;
   try {
-    document.createEvent("TouchEvent");
+    document.createEvent('TouchEvent');
   } catch (e) {
     hasHover = true;
   }
   if (!hasHover) {
-    console.debug("preview: no hover support, skipping previews");
+    console.debug('preview: no hover support, skipping previews');
     return;
   }
 
-  console.debug("preview: hover supported, enabling previews");
+  console.debug('preview: hover supported, enabling previews');
   const preview = new PreviewLifecycle();
   preview.addListeners();
 })();
@@ -471,9 +503,9 @@ PreviewLifecycle.hidePreviewDelayMs = 200;
   copySourceEl.type = 'hidden';
   document.body.append(copySourceEl);
 
-  const copyHeadingUrl = (/** Event */ ev) => {
+  const copyHeadingUrl = (ev: Event) => {
     ev.preventDefault();
-    const paraEl = ev.target;
+    const paraEl = ev.target as HTMLLinkElement;
     if (paraEl == null) {
       console.warn('copy-heading-url: event target is undefined');
       return;
@@ -486,14 +518,14 @@ PreviewLifecycle.hidePreviewDelayMs = 200;
     const headingUrl = new URL(headingHref);
     const targetHash = headingUrl.hash;
 
-    const {origin, pathname} = window.location;
+    const { origin, pathname } = window.location;
     const newUrl = origin + pathname + targetHash;
-    history.replaceState(null, null, newUrl);
+    history.replaceState(null, '', newUrl);
     copySourceEl.type = ''; // show the input so we can select it
     copySourceEl.value = newUrl;
-    copySourceEl.focus({preventScroll: true});
+    copySourceEl.focus({ preventScroll: true });
     document.execCommand('SelectAll');
-    document.execCommand('Copy', /* show UI */ false, null);
+    document.execCommand('Copy', /* show UI */ false, '');
     copySourceEl.type = 'hidden';
   };
 
