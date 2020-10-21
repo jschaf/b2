@@ -13,6 +13,10 @@ interface HeapCfg {
   trackingServer?: string,
 }
 
+enum TrackName {
+  HoverPreview = 'hover preview'
+}
+
 class HeapAnalytics extends Array<any> {
   userId?: string;
   identity?: string;
@@ -25,7 +29,7 @@ class HeapAnalytics extends Array<any> {
     return new HeapAnalytics(envId, config);
   }
 
-  track(name: string, props: EventProps): void {
+  track(name: TrackName, props: EventProps): void {
     this.push(['track', name, props]);
   }
 
@@ -135,7 +139,9 @@ class PreviewLifecycle {
 
   // The current, displayed preview target pending or displayed. If no preview
   // is displayed, currentTarget is null.
-  private currentTarget: HTMLElement | null = null;
+  private currentTarget: HTMLLinkElement | null = null;
+
+  private hoverStart: number | null = null;
   private showPreviewTimer: number = 0;
   private hidePreviewTimer: number = 0;
   // A singleton div element to hold previews of preview target links.
@@ -189,7 +195,7 @@ class PreviewLifecycle {
     ev.preventDefault();
     this.init();
     const currentEl = checkDef(ev.target, 'preview target mouse over') as HTMLElement;
-    const targetEl = currentEl.closest('.preview-target') as HTMLElement;
+    const targetEl = currentEl.closest('.preview-target') as HTMLLinkElement;
     if (!targetEl) {
       console.warn(`preview-box: no surrounding <a> element for ${ev.target}`);
       return;
@@ -238,11 +244,17 @@ class PreviewLifecycle {
 
   /** Hides the preview box. */
   hidePreviewBox() {
+    const attrs = {
+      hoverTarget: checkDef(this.currentTarget).href,
+      durationMillis: this.hoverStart ? Date.now() - this.hoverStart : 0,
+    }
     this.currentTarget = null;
+    this.hoverStart = null;
     if (!this.boxEl) {
       console.warn(`boxEl was null but called hidePreviewBox`);
       return;
     }
+    window.heap.track(TrackName.HoverPreview, attrs);
     this.boxEl.classList.add('preview-disabled');
   }
 
@@ -344,7 +356,7 @@ class PreviewLifecycle {
    * Shows the preview box with content from the data attributes of the target
    * element.
    */
-  showPreviewBox(targetEl: HTMLElement): void {
+  showPreviewBox(targetEl: HTMLLinkElement): void {
     const content = this.buildPreviewContent(targetEl);
     if (content === '') {
       return;
@@ -363,6 +375,7 @@ class PreviewLifecycle {
     // Reset transforms so we don't have to correct them in next frame.
     this.boxEl.style.transform = 'translateX(0) translateY(0)';
     this.currentTarget = targetEl;
+    this.hoverStart = Date.now();
 
     // Use another frame because we need the height of the preview box with the
     // HTML content to correctly position it above or below the preview target.
@@ -464,7 +477,7 @@ class PreviewLifecycle {
     }
 
     console.debug('preview: using vertical scroll bar');
-    assertDef(this.contentEl, `contentEl was null for calcVertDelta`)
+    assertDef(this.contentEl, `contentEl was null for calcVertDelta`);
     this.contentEl.style.overflowY = 'scroll';
     return { vertDelta: vertDelta + vertHidden, maxHeight, hasScroll: true };
   }

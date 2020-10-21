@@ -19,7 +19,8 @@ func CopyStaticFiles(pubDir string) error {
 	}
 	staticDir := filepath.Join(dir, dirs.Static)
 	err = filepath.Walk(staticDir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+		// Skip .ts files because we bundle into JavaScript.
+		if info.IsDir() || filepath.Ext(info.Name()) == ".ts" {
 			return nil
 		}
 		rel, err := filepath.Rel(staticDir, path)
