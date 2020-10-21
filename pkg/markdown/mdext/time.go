@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"time"
 
 	"github.com/yuin/goldmark"
@@ -67,6 +69,5 @@ func NewTimeExt() *TimeExt {
 }
 
 func (t *TimeExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(newTimeRenderer(), 500)))
+	extenders.AddRenderer(m, newTimeRenderer(), ord.TimeRenderer)
 }

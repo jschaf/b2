@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/attrs"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -220,10 +222,6 @@ func NewTOCExt(s TOCStyle) goldmark.Extender {
 }
 
 func (t TOCExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(newTOCTransformer(t.style), 1000)))
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(newTOCRenderer(t.style), 1000)))
+	extenders.AddASTTransform(m, newTOCTransformer(t.style), ord.TOCTransformer)
+	extenders.AddRenderer(m, newTOCRenderer(t.style), ord.TOCRenderer)
 }

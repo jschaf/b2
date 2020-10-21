@@ -3,7 +3,9 @@ package mdext
 import (
 	"errors"
 	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -121,14 +123,6 @@ func NewArticleExt() *ArticleExt {
 }
 
 func (a *ArticleExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(newArticleTransformer(), 900),
-		),
-	)
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(articleRenderer{}, 999),
-		),
-	)
+	extenders.AddASTTransform(m, newArticleTransformer(), ord.ArticleTransformer)
+	extenders.AddRenderer(m, articleRenderer{}, ord.ArticleRenderer)
 }

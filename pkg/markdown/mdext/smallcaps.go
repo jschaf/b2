@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -136,10 +138,6 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 // smallCapsRenderer renders small caps into HTML.
 type smallCapsRenderer struct{}
 
-func NewSmallCapsRenderer() *smallCapsRenderer {
-	return &smallCapsRenderer{}
-}
-
 func (s *smallCapsRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindSmallCaps, s.renderSmallCaps)
 }
@@ -162,11 +160,6 @@ func NewSmallCapsExt() *SmallCapsExt {
 }
 
 func (sc *SmallCapsExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithInlineParsers(
-			util.Prioritized(&smallCapsParser{}, 900)))
-
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(NewSmallCapsRenderer(), 999)))
+	extenders.AddInlineParser(m, &smallCapsParser{}, ord.SmallCapsParser)
+	extenders.AddRenderer(m, &smallCapsRenderer{}, ord.SmallCapsRenderer)
 }

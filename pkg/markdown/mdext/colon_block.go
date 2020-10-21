@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -165,11 +167,6 @@ func NewColonBlockExt() goldmark.Extender {
 }
 
 func (c ColonBlockExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithBlockParsers(
-			util.Prioritized(colonBlockParser{}, 10)))
-
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(newColonBlockRenderer(), 1000)))
+	extenders.AddBlockParser(m, colonBlockParser{}, ord.ColonBlockParser)
+	extenders.AddRenderer(m, newColonBlockRenderer(), ord.ColonBlockRenderer)
 }

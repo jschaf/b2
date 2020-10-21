@@ -2,7 +2,9 @@ package mdext
 
 import (
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"path"
 	"path/filepath"
 	"strings"
@@ -81,10 +83,6 @@ func NewImageExt() *ImageExt {
 }
 
 func (i *ImageExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(imageASTTransformer{}, 999)))
-	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(imageRenderer{}, 500),
-	))
+	extenders.AddASTTransform(m, imageASTTransformer{}, ord.ImageTransformer)
+	extenders.AddRenderer(m, imageRenderer{}, ord.ImageRenderer)
 }

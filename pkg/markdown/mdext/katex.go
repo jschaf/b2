@@ -3,12 +3,13 @@ package mdext
 import (
 	"fmt"
 	"github.com/graemephi/goldmark-qjs-katex"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
 	"go.uber.org/zap"
 )
 
@@ -16,7 +17,7 @@ import (
 // like it has TeX math.
 type katexTransformer struct{}
 
-func newKatexTransformer() *katexTransformer {
+func newKatexFeatureTransformer() *katexTransformer {
 	return &katexTransformer{}
 }
 
@@ -45,11 +46,6 @@ func NewKatexExt() *KatexExt {
 }
 
 func (ke *KatexExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(newKatexTransformer(), 1200),
-		),
-	)
-	ext := qjskatex.Extension{}
-	ext.Extend(m)
+	extenders.AddASTTransform(m, newKatexFeatureTransformer(), ord.KatexFeatureTransformer)
+	extenders.Extend(m, &qjskatex.Extension{}, int(ord.KatexParser), int(ord.KatexRenderer))
 }

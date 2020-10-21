@@ -2,13 +2,14 @@ package mdext
 
 import (
 	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/jschaf/b2/pkg/texts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
 )
 
 // maxHeadingIDLen controls the length of heading IDs. 36 is a good balance
@@ -64,7 +65,5 @@ func NewHeadingIDExt() *HeadingIDExt {
 }
 
 func (h *HeadingIDExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(headingIDTransformer{}, 600)))
+	extenders.AddASTTransform(m, headingIDTransformer{}, ord.HeadingIdTransformer)
 }

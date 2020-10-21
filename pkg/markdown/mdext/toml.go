@@ -4,7 +4,9 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"path/filepath"
 	"strings"
 	"time"
@@ -147,9 +149,5 @@ func NewTOMLExt() goldmark.Extender {
 }
 
 func (t *tomlFront) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithBlockParsers(
-			util.Prioritized(newTOMLParser(), 0),
-		),
-	)
+	extenders.AddBlockParser(m, newTOMLParser(), ord.TOMLParser)
 }

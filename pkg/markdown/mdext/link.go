@@ -3,7 +3,9 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,7 +16,6 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
 )
 
 // linkAssetTransformer is an AST transformer to extract assets that need to be
@@ -144,8 +145,6 @@ func NewLinkExt() *LinkExt {
 }
 
 func (l *LinkExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(&linkDecorationTransform{}, 900),
-			util.Prioritized(&linkAssetTransformer{}, 901)))
+	extenders.AddASTTransform(m, &linkDecorationTransform{}, ord.LinkDecorationTransformer)
+	extenders.AddASTTransform(m, &linkAssetTransformer{}, ord.LinkAssetTransformer)
 }

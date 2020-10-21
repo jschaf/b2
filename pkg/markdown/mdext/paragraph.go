@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"github.com/jschaf/b2/pkg/markdown/attrs"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/renderer"
@@ -47,7 +49,5 @@ func NewParagraphExt() ParagraphExt {
 }
 
 func (p ParagraphExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(paragraphRenderer{}, 10)))
+	extenders.AddRenderer(m, paragraphRenderer{}, ord.ParagraphRenderer)
 }

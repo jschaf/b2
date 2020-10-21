@@ -2,6 +2,7 @@ package html
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"html/template"
 	"strings"
 	"testing"
@@ -12,8 +13,9 @@ func TestRenderPost(t *testing.T) {
 	title := "foo_title"
 	content := "<b>foo_content</b>"
 	err := RenderPost(w, PostTemplateData{
-		Title:   title,
-		Content: template.HTML(content),
+		Title:    title,
+		Content:  template.HTML(content),
+		Features: mdctx.NewFeatures(),
 	})
 	if err := err; err != nil {
 		t.Fatal(err)
@@ -32,8 +34,9 @@ func TestRenderIndex(t *testing.T) {
 	body1 := "<div>body1</div>"
 	body2 := "<div>body2</div>"
 	data := IndexTemplateData{
-		Title:  title,
-		Bodies: []template.HTML{template.HTML(body1), template.HTML(body2)},
+		Title:    title,
+		Bodies:   []template.HTML{template.HTML(body1), template.HTML(body2)},
+		Features: mdctx.NewFeatures(),
 	}
 
 	if err := RenderIndex(w, data); err != nil {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func newStringReaders(ss ...string) io.Reader {
@@ -41,11 +42,11 @@ func TestTriggerWriter_Wait(t *testing.T) {
 					t.Error(err)
 				}
 			}()
-			if err := tw.Wait(); err != tt.wantErr {
+			if err := tw.Wait(time.Second); err != tt.wantErr {
 				t.Errorf("Wait() call 1 - expected error %s; got %s", tt.wantErr, err)
 			}
 			// Wait should return the same thing if called again.
-			if err := tw.Wait(); err != tt.wantErr {
+			if err := tw.Wait(time.Second); err != tt.wantErr {
 				t.Errorf("Wait() call 2 - expected error %s; got %s", tt.wantErr, err)
 			}
 			wg.Wait()
@@ -89,7 +90,7 @@ func TestTriggerWriter_DoesntBlock(t *testing.T) {
 					t.Error(err)
 				}
 			}()
-			if err := tw.Wait(); err != nil {
+			if err := tw.Wait(time.Second); err != nil {
 				t.Error(err)
 			}
 			wg.Wait()

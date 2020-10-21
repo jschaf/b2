@@ -1,11 +1,12 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
 )
 
 // typographerParser is an inline parser that replaces common ASCII typography
@@ -66,7 +67,5 @@ func NewTypographyExt() TypographyExt {
 }
 
 func (t TypographyExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithInlineParsers(
-			util.Prioritized(typographerParser{}, 999)))
+	extenders.AddInlineParser(m, typographerParser{}, ord.TypographyParser)
 }

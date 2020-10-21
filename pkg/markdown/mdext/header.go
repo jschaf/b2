@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/renderer"
@@ -50,7 +52,5 @@ func NewHeaderExt() *HeaderExt {
 }
 
 func (h *HeaderExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(headerRenderer{}, 999)))
+	extenders.AddRenderer(m, headerRenderer{}, ord.HeaderRenderer)
 }

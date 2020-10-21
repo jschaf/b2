@@ -6,9 +6,10 @@ import (
 	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/util"
 	"strconv"
@@ -147,19 +148,18 @@ func NewCitationExt(citeStyle cite.Style, attacher CitationReferencesAttacher) *
 }
 
 func (sc *CitationExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(&citationASTTransformer{
-				citeStyle:     sc.citeStyle,
-				citeOrders:    make(map[bibtex.CiteKey]citeOrder),
-				nextCiteOrder: 0,
-				attacher:      sc.attacher,
-			}, 950))) // Must come after article transformer.
-
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(&citationRenderer{
-				citeStyle:   sc.citeStyle,
-				includeRefs: sc.attacher != nil,
-			}, 999)))
+	extenders.AddASTTransform(
+		m,
+		&citationASTTransformer{
+			citeStyle:     sc.citeStyle,
+			citeOrders:    make(map[bibtex.CiteKey]citeOrder),
+			nextCiteOrder: 0,
+			attacher:      sc.attacher,
+		},
+		ord.CitationTransformer,
+	)
+	extenders.AddRenderer(m, &citationRenderer{
+		citeStyle:   sc.citeStyle,
+		includeRefs: sc.attacher != nil,
+	}, ord.CitationRenderer)
 }

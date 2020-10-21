@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"html"
 	"io"
 
@@ -174,9 +176,5 @@ func NewCodeBlockExt() CodeBlockExt {
 }
 
 func (c CodeBlockExt) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(
-		renderer.WithNodeRenderers(
-			util.Prioritized(codeBlockRenderer{}, 999),
-		),
-	)
+	extenders.AddRenderer(m, codeBlockRenderer{}, ord.CodeBlockRenderer)
 }

@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -143,15 +145,9 @@ func NewContinueReadingExt() ContinueReadingExt {
 }
 
 func (c ContinueReadingExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(parser.WithBlockParsers(
-		util.Prioritized(contReadingParser{}, 800)))
-
-	m.Parser().AddOptions(
-		parser.WithASTTransformers(
-			util.Prioritized(contReadingTransformer{}, 1001)))
-
-	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(contReadingRenderer{}, 500)))
+	extenders.AddBlockParser(m, contReadingParser{}, ord.ContinueReadingParser)
+	extenders.AddASTTransform(m, contReadingTransformer{}, ord.ContinueReadingTransformer)
+	extenders.AddRenderer(m, contReadingRenderer{}, ord.ContinueReadingRenderer)
 }
 
 // NopContinueReadingExt extends markdown to ignore the continue reading block
@@ -162,9 +158,6 @@ func NewNopContinueReadingExt() NopContinueReadingExt {
 }
 
 func (n NopContinueReadingExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(parser.WithBlockParsers(
-		util.Prioritized(contReadingParser{}, 800)))
-
-	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(nopContReadingRenderer{}, 500)))
+	extenders.AddBlockParser(m, contReadingParser{}, ord.ContinueReadingParser)
+	extenders.AddRenderer(m, nopContReadingRenderer{}, ord.ContinueReadingRenderer)
 }
