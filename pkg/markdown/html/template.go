@@ -50,6 +50,7 @@ func RenderPost(w io.Writer, d PostTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Content"] = d.Content
+	m["Features"] = d.Features
 	return render(w, "post.gohtml", m)
 }
 
@@ -57,6 +58,7 @@ func RenderIndex(w io.Writer, d IndexTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Bodies"] = d.Bodies
+	m["Features"] = d.Features
 	return render(w, "index.gohtml", m)
 }
 
@@ -64,6 +66,8 @@ func RenderTILIndex(w io.Writer, d TILTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Bodies"] = d.Bodies
+	m["Features"] = d.Features
+	m["Features"] = d.Features
 	return render(w, "til_index.gohtml", m)
 }
 
@@ -71,6 +75,7 @@ func RenderTILPost(w io.Writer, d TILPostTemplateData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Content"] = d.Content
+	m["Features"] = d.Features
 	return render(w, "post.gohtml", m)
 }
 
