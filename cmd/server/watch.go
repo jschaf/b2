@@ -2,20 +2,19 @@ package main
 
 import (
 	"fmt"
+	"github.com/fsnotify/fsnotify"
+	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/sites"
+	"github.com/jschaf/b2/pkg/static"
+	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
-
-	"github.com/fsnotify/fsnotify"
-	"github.com/jschaf/b2/pkg/css"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/static"
-	"go.uber.org/zap"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -71,12 +70,14 @@ func (f *FSWatcher) Start() (mErr error) {
 				if err := static.CopyStaticFiles(f.pubDir); err != nil {
 					return fmt.Errorf("failed to copy static files: %w", err)
 				}
-				f.liveReload.ReloadFile("") // Send empty string which should reload all LiveReload clients
+				// Send empty string which should reload all LiveReload clients
+				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".md":
 				if err := f.compileReloadMd(event.Name); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
+				f.liveReload.ReloadFile(event.Name)
 
 			case strings.HasPrefix(rel, "pkg/markdown/"):
 				// If only the markdown has changed, recompile only that.
@@ -124,8 +125,6 @@ func (f *FSWatcher) compileReloadMd(path string) error {
 	if err := sites.Rebuild(f.pubDir, f.logger.Desugar()); err != nil {
 		return fmt.Errorf("rebuild for changed md: %w", err)
 	}
-	f.liveReload.ReloadFile(path)
-	f.liveReload.ReloadFile("/")
 	return nil
 }
 

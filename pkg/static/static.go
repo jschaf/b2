@@ -1,13 +1,13 @@
 package static
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
-	"os"
-	"path/filepath"
-
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/paths"
+	"os"
+	"path/filepath"
 )
 
 // CopyStaticFiles copies static files from the source static dir into
@@ -46,8 +46,9 @@ func LinkPapers(pubDir string) error {
 	}
 	papersDir := filepath.Join(dir, dirs.Papers)
 	pubPapersDir := filepath.Join(pubDir, "papers")
-	if err := os.Symlink(papersDir, pubPapersDir); err != nil {
-		return fmt.Errorf("LinkPapers symlink: %w", err)
+	err = os.Symlink(papersDir, pubPapersDir)
+	if err != nil && !errors.Is(err.(*os.LinkError).Unwrap(), os.ErrExist) {
+		return fmt.Errorf("link papers symlink: %w", err.(*os.LinkError).Unwrap())
 	}
 	return nil
 }

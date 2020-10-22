@@ -74,7 +74,7 @@ in a supported format (typically through a batch job like an hourly map reduce
 job). The user sends the file path to the Procella registration server. The
 registration server checks that the file header matches the SQL schema for the
 user’s schema. After validation, the file is available for querying.
-Importantly, Procella doesn’t process the file or scan the data other than
+Importantly, Procella doesn't process the file or scan the data other than
 sanity checking that the schema matches. This approach is a radical departure
 from most existing row stores. For example, when we write an event into Citus,
 we create an index on every event definition for that environment.
