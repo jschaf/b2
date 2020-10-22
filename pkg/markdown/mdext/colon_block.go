@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"strings"
@@ -19,7 +20,8 @@ var KindColonBlock = ast.NewNodeKind("ColonBlock")
 type ColonBlockName string
 
 const (
-	ColonBlockPreview ColonBlockName = "preview"
+	ColonBlockPreview  ColonBlockName = "preview"
+	ColonBlockSideNote ColonBlockName = "side-note"
 )
 
 // Preview is a link preview.
@@ -101,7 +103,7 @@ func (cbp colonBlockParser) Open(_ ast.Node, reader text.Reader, _ parser.Contex
 		return nil, parser.NoChildren
 	}
 	reader.AdvanceLine()
-	rest := bytes.Trim(line[len(colonBlockDelim):], " ")
+	rest := bytes.Trim(line[len(colonBlockDelim):], " \t\n")
 	nameArgs := bytes.SplitN(rest, []byte{' '}, 2)
 	cb := NewColonBlock()
 	if len(nameArgs) >= 1 {
@@ -151,9 +153,25 @@ func newColonBlockRenderer() colonBlockRenderer {
 }
 
 func (cbr colonBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(KindColonBlock, func(util.BufWriter, []byte, ast.Node, bool) (ast.WalkStatus, error) {
+	reg.Register(KindColonBlock, cbr.renderColonBlock)
+}
+func (cbr colonBlockRenderer) renderColonBlock(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+	c := n.(*ColonBlock)
+	switch c.Name {
+	case ColonBlockPreview:
 		return ast.WalkSkipChildren, nil
-	})
+	case ColonBlockSideNote:
+		if entering {
+			w.WriteString(`<aside class="side-note" id="sn-`)
+			w.WriteString(c.Args)
+			w.WriteString(`">`)
+		} else {
+			w.WriteString("</aside>")
+		}
+		return ast.WalkContinue, nil
+	default:
+		return ast.WalkContinue, fmt.Errorf("render unknown colon block name %q", c.Name)
+	}
 }
 
 // ColonBlockExt extends markdown with support for colon blocks, like:

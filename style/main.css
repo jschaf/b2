@@ -533,6 +533,7 @@ code-fn {
   color: #6f42c1;
 }
 
+/** Previews */
 #preview-box {
   position: absolute;
   border: 1px solid #ccc;
@@ -571,6 +572,17 @@ code-fn {
 
 .preview-title {
   font-weight: 500;
+  margin-top: 0;
+}
+
+.side-note {
+  font-size: var(--font-size-caption);
+  padding: 5px 25px;
+  border-top: solid 1px #f0e9db;
+  border-bottom: solid 1px #f0e9db;
+}
+
+.side-note > p:first-child {
   margin-top: 0;
 }
 

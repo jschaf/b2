@@ -45,14 +45,19 @@ more heavily than cheaper queries.
 
 
 - `Semaphore.newWeighted(n: number)` - a static factory that creates a new
-  Semaphore that allows up to n weight. [^static_factories]
+  Semaphore that allows up to n weight. [^sn static_factories]
 - `Semaphore.acquire(n: number) => Promise<void>` - a method that blocks until at
   least n capacity is available in the semaphore.
 - `Semaphore.release(n: number) => void` - a non-blocking method that releases n
   capacity back to the semaphore.
   
-[^static_factories]: I prefer static factories over constructors primarily because static factories
-  can have descriptive names.
+::: side-note static_factories
+I prefer static factories over constructors primarily because static factories
+can have descriptive names.
+:::
+  
+[^static_factories]: I prefer static factories over constructors primarily 
+because static factories can have descriptive names.
   
 CONTINUE_READING
   
