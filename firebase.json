@@ -1,6 +1,25 @@
 {
-  "hosting": [{
-    "public": "public",
-    "target": "new-blog"
-  }]
+  "hosting": [
+    {
+      "public": "public",
+      "target": "new-blog",
+      "ignore": [
+        "firebase.json",
+        "Makefile",
+        "go.mod",
+        "go.sum",
+        ".gitignore",
+        "README.md"
+      ],
+      "rewrites": [
+        {
+          "source": "/h",
+          "run": {
+            "serviceId": "track",
+            "region": "us-west1"
+          }
+        }
+      ]
+    }
+  ]
 }

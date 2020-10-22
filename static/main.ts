@@ -84,7 +84,7 @@ const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNull
 // real heap.js/ downloads. The real heap.js script is templated into
 // base.gohtml.
 window.heap = HeapAnalytics.forEnvId('1506018335',
-    { trackingServer: 'https://heapanalytics.com' });
+    { trackingServer: 'https://joe.schafer.dev' });
 
 // Detect adblock.
 //
@@ -244,9 +244,11 @@ class PreviewLifecycle {
 
   /** Hides the preview box. */
   hidePreviewBox() {
-    const attrs = {
-      hoverTarget: checkDef(this.currentTarget).href,
-      durationMillis: this.hoverStart ? Date.now() - this.hoverStart : 0,
+    if (this.currentTarget != null) {
+      window.heap.track(TrackName.HoverPreview, {
+        hoverTarget: checkDef(this.currentTarget).href,
+        durationMillis: this.hoverStart ? Date.now() - this.hoverStart : 0,
+      });
     }
     this.currentTarget = null;
     this.hoverStart = null;
@@ -254,7 +256,6 @@ class PreviewLifecycle {
       console.warn(`boxEl was null but called hidePreviewBox`);
       return;
     }
-    window.heap.track(TrackName.HoverPreview, attrs);
     this.boxEl.classList.add('preview-disabled');
   }
 

@@ -24,6 +24,21 @@ const (
 	deployPubDir = dirs.PublicMemfs
 )
 
+// servingConfig returns the known fields for the Firebase hosting config. This
+// corresponds to the hosting field in firebase.json.
+func servingConfig() *hosting.ServingConfig {
+	return &hosting.ServingConfig{
+		Rewrites: []*hosting.Rewrite{
+			{
+				Glob: "/h",
+				Run: &hosting.CloudRunRewrite{
+					Region:    "us-west1",
+					ServiceId: "track",
+				}},
+		},
+	}
+}
+
 func deploy(l *zap.SugaredLogger) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
@@ -45,7 +60,9 @@ func deploy(l *zap.SugaredLogger) error {
 
 	// Create version: we'll eventually release this version.
 	createVersionStart := time.Now()
-	createVersion := versionSvc.Create(siteParent, &hosting.Version{})
+	createVersion := versionSvc.Create(siteParent, &hosting.Version{
+		Config: servingConfig(),
+	})
 	createVersion.Context(ctx)
 	version, err := createVersion.Do()
 	if err != nil {
