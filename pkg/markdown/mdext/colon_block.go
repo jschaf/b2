@@ -3,7 +3,9 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"strings"
 
@@ -21,7 +23,7 @@ type ColonBlockName string
 
 const (
 	ColonBlockPreview  ColonBlockName = "preview"
-	ColonBlockSideNote ColonBlockName = "side-note"
+	ColonBlockFootnote ColonBlockName = "footnote"
 )
 
 // Preview is a link preview.
@@ -41,7 +43,6 @@ func AddPreview(pc parser.Context, p Preview) {
 	if existing := pc.Get(previewCtxKey); existing == nil {
 		pc.Set(previewCtxKey, make(map[string]Preview))
 	}
-
 	previews := pc.Get(previewCtxKey).(map[string]Preview)
 	previews[p.URL] = p
 }
@@ -55,6 +56,39 @@ func GetPreview(pc parser.Context, url string) (Preview, bool) {
 	}
 	p, ok := previews[url]
 	return p, ok
+}
+
+var footnoteLinkCtxKey = parser.NewContextKey()
+var footnoteBodyCtxKey = parser.NewContextKey()
+
+func AddFootnoteLink(pc parser.Context, f *FootnoteLink) {
+	if existing := pc.Get(footnoteLinkCtxKey); existing == nil {
+		pc.Set(footnoteLinkCtxKey, make(map[FootnoteName]*FootnoteLink))
+	}
+	notes := pc.Get(footnoteLinkCtxKey).(map[FootnoteName]*FootnoteLink)
+	notes[f.Name] = f
+}
+
+func GetFootnoteLinks(pc parser.Context) map[FootnoteName]*FootnoteLink {
+	if existing := pc.Get(footnoteLinkCtxKey); existing == nil {
+		pc.Set(footnoteLinkCtxKey, make(map[FootnoteName]*FootnoteLink))
+	}
+	return pc.Get(footnoteLinkCtxKey).(map[FootnoteName]*FootnoteLink)
+}
+
+func AddFootnoteBody(pc parser.Context, f *FootnoteBody) {
+	if existing := pc.Get(footnoteBodyCtxKey); existing == nil {
+		pc.Set(footnoteBodyCtxKey, make(map[FootnoteName]*FootnoteBody))
+	}
+	notes := pc.Get(footnoteBodyCtxKey).(map[FootnoteName]*FootnoteBody)
+	notes[f.Name] = f
+}
+
+func GetFootnoteBodies(pc parser.Context) map[FootnoteName]*FootnoteBody {
+	if existing := pc.Get(footnoteBodyCtxKey); existing == nil {
+		pc.Set(footnoteBodyCtxKey, make(map[FootnoteName]*FootnoteBody))
+	}
+	return pc.Get(footnoteBodyCtxKey).(map[FootnoteName]*FootnoteBody)
 }
 
 // ColonBlock parses colon delimited structures inspired by
@@ -105,14 +139,14 @@ func (cbp colonBlockParser) Open(_ ast.Node, reader text.Reader, _ parser.Contex
 	reader.AdvanceLine()
 	rest := bytes.Trim(line[len(colonBlockDelim):], " \t\n")
 	nameArgs := bytes.SplitN(rest, []byte{' '}, 2)
-	cb := NewColonBlock()
+	block := NewColonBlock()
 	if len(nameArgs) >= 1 {
-		cb.Name = ColonBlockName(strings.Trim(string(nameArgs[0]), " "))
+		block.Name = ColonBlockName(strings.Trim(string(nameArgs[0]), " "))
 	}
 	if len(nameArgs) == 2 {
-		cb.Args = strings.Trim(string(nameArgs[1]), " \n")
+		block.Args = strings.Trim(string(nameArgs[1]), " \n")
 	}
-	return cb, parser.HasChildren
+	return block, parser.HasChildren
 }
 
 func (cbp colonBlockParser) Continue(_ ast.Node, reader text.Reader, _ parser.Context) parser.State {
@@ -125,15 +159,31 @@ func (cbp colonBlockParser) Continue(_ ast.Node, reader text.Reader, _ parser.Co
 }
 
 func (cbp colonBlockParser) Close(node ast.Node, _ text.Reader, pc parser.Context) {
-	cb := node.(*ColonBlock)
-	switch cb.Name {
+	block := node.(*ColonBlock)
+	switch block.Name {
 	case ColonBlockPreview:
-		url := cb.Args
+		url := block.Args
 		preview := Preview{
 			URL:    url,
-			Parent: cb,
+			Parent: block,
 		}
 		AddPreview(pc, preview)
+	case ColonBlockFootnote:
+		// Replace the ColonBlock with a FootnoteBody.
+		name, variant, err := parseFootnoteName(block.Args)
+		if err != nil {
+			mdctx.PushError(pc, fmt.Errorf("close colon block footnote: %w", err))
+		}
+		body := NewFootnoteBody()
+		body.Name = name
+		body.Variant = variant
+		asts.Reparent(body, node)
+		parent := node.Parent()
+		parent.ReplaceChild(parent, node, body)
+		AddFootnoteBody(pc, body)
+
+	default:
+		mdctx.PushError(pc, fmt.Errorf("unknown colon block name %q", block.Name))
 	}
 }
 
@@ -155,20 +205,14 @@ func newColonBlockRenderer() colonBlockRenderer {
 func (cbr colonBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindColonBlock, cbr.renderColonBlock)
 }
-func (cbr colonBlockRenderer) renderColonBlock(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (cbr colonBlockRenderer) renderColonBlock(_ util.BufWriter, _ []byte, n ast.Node, _ bool) (ast.WalkStatus, error) {
 	c := n.(*ColonBlock)
 	switch c.Name {
 	case ColonBlockPreview:
 		return ast.WalkSkipChildren, nil
-	case ColonBlockSideNote:
-		if entering {
-			w.WriteString(`<aside class="side-note" id="sn-`)
-			w.WriteString(c.Args)
-			w.WriteString(`">`)
-		} else {
-			w.WriteString("</aside>")
-		}
-		return ast.WalkContinue, nil
+	case ColonBlockFootnote:
+		// Transformed into a FootnoteBody in the an AST transformer.
+		return ast.WalkSkipChildren, nil
 	default:
 		return ast.WalkContinue, fmt.Errorf("render unknown colon block name %q", c.Name)
 	}

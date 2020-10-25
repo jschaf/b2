@@ -52,24 +52,24 @@ func AddAsset(pc parser.Context, path, src string) {
 	x[path] = src
 }
 
-var FeaturesCtxKey = parser.NewContextKey()
+var featuresCtxKey = parser.NewContextKey()
 
 func GetFeatures(pc parser.Context) *Features {
-	fs := pc.Get(FeaturesCtxKey)
+	fs := pc.Get(featuresCtxKey)
 	if _, ok := fs.(*Features); fs == nil || !ok {
 		fs = NewFeatures()
-		pc.Set(FeaturesCtxKey, fs)
+		pc.Set(featuresCtxKey, fs)
 	}
 	return fs.(*Features)
 }
 
 func AddFeature(pc parser.Context, feat Feature) {
-	fs := pc.Get(FeaturesCtxKey)
+	fs := pc.Get(featuresCtxKey)
 	if _, ok := fs.(*Features); fs == nil || !ok {
 		fs = NewFeatures()
 	}
 	fs.(*Features).Add(feat)
-	pc.Set(FeaturesCtxKey, fs)
+	pc.Set(featuresCtxKey, fs)
 }
 
 var titleCtxKey = parser.NewContextKey()

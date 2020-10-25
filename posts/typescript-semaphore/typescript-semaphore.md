@@ -45,28 +45,24 @@ more heavily than cheaper queries.
 
 
 - `Semaphore.newWeighted(n: number)` - a static factory that creates a new
-  Semaphore that allows up to n weight. [^sn static_factories]
+  Semaphore that allows up to n weight. [^side:static-factories]
 - `Semaphore.acquire(n: number) => Promise<void>` - a method that blocks until at
   least n capacity is available in the semaphore.
 - `Semaphore.release(n: number) => void` - a non-blocking method that releases n
   capacity back to the semaphore.
   
-::: side-note static_factories
+::: footnote side:static-factories
 I prefer static factories over constructors primarily because static factories
 can have descriptive names.
 :::
-  
-[^static_factories]: I prefer static factories over constructors primarily 
-because static factories can have descriptive names.
-  
-CONTINUE_READING
   
 The API is functionally equivalent to the standard library adjacent
 [golang.org/x/sync/semaphore][go_sem] Golang package. Here’s how’d we’d use the 
 above API to limit the number of concurrent database connections.
 
 [go_sem]: https://pkg.go.dev/golang.org/x/sync/semaphore
-  
+
+CONTINUE_READING
   
 ```ts
 const db = createDbConnection();

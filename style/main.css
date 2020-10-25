@@ -11,6 +11,7 @@
   --font-size-body: 1rem;
   --font-size-caption: calc(1rem / 1.25);
   --line-height-body: calc(1rem * 1.3333);
+  --line-height-caption: 1rem;
 
   /** The highlight color for a reference. */
   --reference-highlight-color: rgba(255, 220, 0, 0.3);
@@ -30,6 +31,9 @@
   --box-shadow-elevation-16: 0 8px 10px -5px rgba(0, 0, 0, .2), 0 16px 24px 2px rgba(0, 0, 0, .14), 0 6px 30px 5px rgba(0, 0, 0, .12);
   /* 24 for dialogs. */
   --box-shadow-elevation-24: 0 11px 15px -7px rgba(0, 0, 0, .2), 0 24px 38px 3px rgba(0, 0, 0, .14), 0 9px 46px 8px rgba(0, 0, 0, .12);
+
+  --max-body-width: 800px;
+  --min-margin-width: 300px;
 }
 
 html {
@@ -64,7 +68,7 @@ body {
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-color);
-  max-width: 800px;
+  max-width: var(--max-body-width);
   margin: 0 auto;
   position: relative;
 }
@@ -575,15 +579,41 @@ code-fn {
   margin-top: 0;
 }
 
-.side-note {
+.footnote-body {
   font-size: var(--font-size-caption);
   padding: 5px 25px;
   border-top: solid 1px #f0e9db;
   border-bottom: solid 1px #f0e9db;
 }
 
-.side-note > p:first-child {
+.footnote-body p {
+  line-height: var(--line-height-caption);
+}
+
+.footnote-body > p:first-child {
   margin-top: 0;
+}
+
+/**
+ * Add side notes if we have the max-body-width (800px) plus two margins
+ * (300px). 800 + 2 * 300 = 1400.
+ */
+@media screen and (min-width: 1400px) {
+  .footnote-body {
+    position: absolute;
+    left: calc(100% + 25px);
+    /*
+     * Compute width from left over space after removing the body. The body is
+     * at max size because we're above the breakpoint where the body stops
+     * growing as the viewport width increases. Divide by 2 since there's 2
+     * margins.
+     */
+    width: calc((100vw - var(--max-body-width)) / 2 - 50px);
+    max-width: 450px;
+    padding: 10px;
+    background: white;
+    box-shadow: var(--box-shadow-elevation-4);
+  }
 }
 
 cite {
