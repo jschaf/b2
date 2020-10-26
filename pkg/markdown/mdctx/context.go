@@ -43,12 +43,12 @@ func GetAssets(pc parser.Context) assets.Map {
 
 func AddAsset(pc parser.Context, path, src string) {
 	m := pc.Get(AssetsCtxKey)
-	if _, ok := m.(map[string]string); m == nil || !ok {
-		m = make(map[string]string)
+	if _, ok := m.(assets.Map); m == nil || !ok {
+		m = make(assets.Map)
 		pc.Set(AssetsCtxKey, m)
 	}
 
-	x := m.(map[string]string)
+	x := m.(assets.Map)
 	x[path] = src
 }
 

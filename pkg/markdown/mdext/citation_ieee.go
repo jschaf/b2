@@ -42,9 +42,9 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	cnt, ok := cr.citeCounts[c.Key]
 	cr.citeCounts[c.Key] = cnt + 1
 
-	_, _ = w.WriteString(
-		fmt.Sprintf(`<a href="#%s" class=preview-target data-link-type=%s>`,
-			c.ReferenceID(), LinkCitation))
+	w.WriteString(
+		fmt.Sprintf(`<a href="%s/#%s" class=preview-target data-link-type=%s>`,
+			c.AbsPath, c.ReferenceID(), LinkCitation))
 
 	id := c.CiteID(cnt)
 	_, _ = w.WriteString(fmt.Sprintf(`<cite id=%s>[%d]</cite>`, id, num))

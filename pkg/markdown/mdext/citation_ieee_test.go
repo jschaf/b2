@@ -17,6 +17,8 @@ func newCiteIEEE(key bibtex.CiteKey, order string) string {
 	return newCiteIEEECount(key, order, 0)
 }
 
+const testPath = "/abs-path"
+
 func newCiteIEEECount(key bibtex.CiteKey, order string, count int) string {
 	id := "cite_" + key
 	if count > 0 {
@@ -24,8 +26,8 @@ func newCiteIEEECount(key bibtex.CiteKey, order string, count int) string {
 	}
 	attrs := fmt.Sprintf(`id=%s`, id)
 	aAttrs := fmt.Sprintf(
-		`href="%s" class=preview-target data-link-type=citation`,
-		"#cite_ref_"+key)
+		`href="%s/#cite_ref_%s" class=preview-target data-link-type=citation`,
+		testPath, key)
 	return tags.AAttrs(aAttrs, tags.CiteAttrs(attrs, order))
 }
 
@@ -68,6 +70,7 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 			md, ctx := mdtest.NewTester(t, NewCitationExt(style, NewCitationNopAttacher()))
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
+				Path:     testPath,
 			})
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
@@ -154,6 +157,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			md, ctx := mdtest.NewTester(t, NewCitationExt(style, citeDocAttacher{}))
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
+				Path:     testPath,
 			})
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs)

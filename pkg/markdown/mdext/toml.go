@@ -29,7 +29,7 @@ const (
 type PostMeta struct {
 	// The slug from the markdown frontmatter.
 	Slug string
-	// The absolute URL path for this post, e.g. "/foo-bar".
+	// The absolute URL path for this post, e.g. "/foo-bar". No trailing slash.
 	Path string
 	// The title extracted from the first header.
 	Title string

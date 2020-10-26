@@ -22,6 +22,9 @@ var KindCitation = ast.NewNodeKind("citation")
 type Citation struct {
 	ast.BaseInline
 	Key bibtex.CiteKey
+	// The absolute path to the entry that contained this citation, like
+	// "/til/qux".
+	AbsPath string
 	// The order that this citation appeared in the document, relative to other
 	// citations. Starts at 0. The order always increments for each citation even
 	// if preceding citations had the same key.

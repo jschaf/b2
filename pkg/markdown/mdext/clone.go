@@ -93,6 +93,7 @@ func newNode(src ast.Node) ast.Node {
 	case *Citation:
 		c := NewCitation()
 		c.Key = n.Key
+		c.AbsPath = n.AbsPath
 		c.Order = n.Order
 		c.Bibtex = n.Bibtex
 		c.Prefix = n.Prefix

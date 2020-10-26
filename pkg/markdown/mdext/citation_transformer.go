@@ -16,9 +16,8 @@ import (
 // from the AST and reparents the nodes as children of a new Citation node at
 // the same position in the AST.
 type citationASTTransformer struct {
-	citeStyle cite.Style
-	// The cite order for bibtex keys.
-	citeOrders map[bibtex.CiteKey]citeOrder
+	citeStyle  cite.Style
+	citeOrders map[bibtex.CiteKey]citeOrder // cite order for bibtex keys
 	// The next number to use for the raw citation order. Starts at 0.
 	nextCiteOrder int
 	// Attaches citation references based on the logic in the attacher. If nil,
@@ -49,11 +48,13 @@ type citeSpan struct {
 	start, end *ast.Text
 	// Absolute offsets that delimit the start and end of a citation.
 	startOffset, endOffset int
+	absPath                string
 }
 
 // Transform extracts all citations into Citation nodes.
 func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
-	spans, err := ca.findSpans(doc, reader)
+	absPath := GetTOMLMeta(pc).Path
+	spans, err := ca.findSpans(doc, reader, absPath)
 	if err != nil {
 		mdctx.PushError(pc, err)
 		return
@@ -143,6 +144,7 @@ func (ca *citationASTTransformer) newCitationParent(span citeSpan) (*Citation, e
 	// Reparent all spans between start and end inclusive.
 	c := NewCitation()
 	c.Key = span.key
+	c.AbsPath = span.absPath
 	c.Order = span.order
 	p.InsertBefore(p, span.start, c)
 	var node ast.Node = span.start
@@ -157,7 +159,7 @@ func (ca *citationASTTransformer) newCitationParent(span citeSpan) (*Citation, e
 }
 
 // findSpans finds all bracketed citation spans, like [@foo, pp. 2].
-func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Reader) ([]citeSpan, error) {
+func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Reader, path string) ([]citeSpan, error) {
 	state := citeSearch
 	startOffset := -1
 	var start *ast.Text
@@ -254,6 +256,7 @@ func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Read
 				switch b {
 				case ']':
 					span := citeSpan{
+						absPath:     path,
 						key:         id,
 						start:       start,
 						order:       order,
