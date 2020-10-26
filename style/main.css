@@ -594,6 +594,18 @@ code-fn {
   margin-top: 0;
 }
 
+@media screen and (max-width: 1399px) {
+  .footnote-body {
+    /*
+     * We're using important because we hardcode vertical offset of the style
+     * when we render the footnote using inline styles. This vertical offset
+     * only applies when we have enough room to use margin notes so always
+     * disable if the viewport isn't big enough for margin notes.
+     */
+    margin-top: 0 !important;
+  }
+}
+
 /**
  * Add side notes if we have the max-body-width (800px) plus two margins
  * (300px). 800 + 2 * 300 = 1400.

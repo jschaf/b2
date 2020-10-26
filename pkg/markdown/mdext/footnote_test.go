@@ -15,7 +15,8 @@ func TestNewFootnoteExt(t *testing.T) {
 		{
 			"immediately after",
 			texts.Dedent(`
-        [^side:foo] link-text
+        [^side:foo] 
+        alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima
 
         ::: footnote side:foo
         body-text
@@ -23,12 +24,10 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <span class="footnote-link" id="footnote-link-side:foo" role="doc-noteref">
-            <a href="#footnote-body-side:foo">[FN]</a>
-          </span>
-          link-text
+          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[FN]</a>
+          alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima
         </p>
-        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote">
+        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -54px">
           <p>body-text</p>
         </aside>
       `),
@@ -44,12 +43,10 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <span class="footnote-link" id="footnote-link-side:foo" role="doc-noteref">
-            <a href="#footnote-body-side:foo">[FN]</a>
-          </span>
+          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[FN]</a>
           link-text
         </p>
-        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote">
+        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
           <p>body-text</p>
         </aside>
       `),

@@ -16,7 +16,7 @@ var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
 
 func main() {
 	flag.Parse()
-	logger, err := logs.NewShortDevSugaredLogger(zapcore.DebugLevel)
+	logger, err := logs.NewShortDevSugaredLogger(zapcore.InfoLevel)
 	if err != nil {
 		log.Fatalf("create dev logger: %s", err)
 	}

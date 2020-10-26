@@ -43,15 +43,14 @@ callers can acquire and release arbitrary weighted leases into the semaphore. A
 weighted semaphore supports patterns like weighting expensive database queries
 more heavily than cheaper queries.
 
-
-- `Semaphore.newWeighted(n: number)` - a static factory that creates a new
-  Semaphore that allows up to n weight. [^side:static-factories]
+- `Semaphore.newWeighted(n: number)` - a static factory [^margin:static-factories]
+  that creates a new Semaphore that allows up to n weight. 
 - `Semaphore.acquire(n: number) => Promise<void>` - a method that blocks until at
   least n capacity is available in the semaphore.
 - `Semaphore.release(n: number) => void` - a non-blocking method that releases n
   capacity back to the semaphore.
   
-::: footnote side:static-factories
+::: footnote margin:static-factories
 I prefer static factories over constructors primarily because static factories
 can have descriptive names.
 :::

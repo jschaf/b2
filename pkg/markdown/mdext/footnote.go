@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -11,6 +12,7 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
+	"strconv"
 	"strings"
 )
 
@@ -59,6 +61,9 @@ type FootnoteBody struct {
 	ast.BaseBlock
 	Variant FootnoteVariant
 	Name    FootnoteName
+	// The distance in bytes between the link and this body. The link is always
+	// above the body. Helpful to render the body close to the link.
+	LinkDistance int
 }
 
 func NewFootnoteBody() *FootnoteBody {
@@ -142,7 +147,7 @@ func farthestBlockAncestor(node ast.Node) ast.Node {
 	return parent
 }
 
-func (fb footnoteBodyTransformer) Transform(_ *ast.Document, _ text.Reader, pc parser.Context) {
+func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader, pc parser.Context) {
 	links := GetFootnoteLinks(pc)
 	bodies := GetFootnoteBodies(pc)
 	for _, link := range links {
@@ -154,12 +159,48 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, _ text.Reader, pc p
 		// Place the footnote body immediately after the block containing the
 		// corresponding footnote link.
 		ancestor := farthestBlockAncestor(link)
-		if b, ok := ancestor.NextSibling().(*FootnoteBody); ok && b == body {
-			continue // body already in correct location
+		if b, ok := ancestor.NextSibling().(*FootnoteBody); !ok || b != body {
+			// Only move the body if it's not already in the correct spot.
+			container := ancestor.Parent()
+			container.InsertAfter(container, ancestor, body)
 		}
-		container := ancestor.Parent()
-		container.InsertAfter(container, ancestor, body)
+		body.LinkDistance = fb.calcDistance(source, ancestor, link, pc)
 	}
+}
+
+// Find the distance in bytes between the body and the name of link in the
+// previous block element (ancestor). Useful to manually position footnotes
+// so that they end up closer to the link without using JavaScript.
+func (fb footnoteBodyTransformer) calcDistance(source text.Reader, ancestor ast.Node, link *FootnoteLink, pc parser.Context) int {
+	endPos := 0
+	linkPos := 0
+	srcBytes := source.Source()
+	err := ast.Walk(ancestor, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		// ast.TextBlock is normally the only node type with RawText that we can use
+		// to get segment ends and to find the footnote name.
+		if n.Type() != ast.TypeBlock {
+			return ast.WalkSkipChildren, nil
+		}
+		lines := n.Lines()
+		// Update the endPos.
+		if lines.Len() > 0 {
+			endPos = lines.At(lines.Len() - 1).Stop
+		}
+		// Find the position of the name in the ancestor.
+		for _, segment := range lines.Sliced(0, lines.Len()) {
+			bs := srcBytes[segment.Start:segment.Stop]
+			pos := bytes.Index(bs, []byte(link.Name))
+			if pos >= 0 {
+				linkPos = segment.Start + pos
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+	if err != nil {
+		mdctx.PushError(pc, fmt.Errorf("calc distance for footnote body offset: %w", err))
+		return 0
+	}
+	return endPos - linkPos
 }
 
 // footnoteRenderer renders both FootnoteLink and FootnoteBody.
@@ -176,22 +217,20 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 		return ast.WalkSkipChildren, nil
 	}
 	f := n.(*FootnoteLink)
-	w.WriteString(`<span class="footnote-link" id="footnote-link-`)
+	w.WriteString(`<a class="footnote-link" role="doc-noteref" href="#footnote-body-`)
 	w.WriteString(string(f.Name))
-	w.WriteString(`" role="doc-noteref">`)
+	w.WriteString(`" id="footnote-link-`)
+	w.WriteString(string(f.Name))
+	w.WriteString(`">`)
 	switch f.Variant {
 	case FootnoteVariantPara: // no indicator for a paragraph note
 	case FootnoteVariantMargin: // no indicator for a margin note
 	case FootnoteVariantSide:
-		w.WriteString(`<a href="#footnote-body-`)
-		w.WriteString(string(f.Name))
-		w.WriteString(`">`)
 		w.WriteString(`[FN]`) // TODO: use real footnote index
-		w.WriteString(`</a>`)
 	default:
 		return ast.WalkStop, fmt.Errorf("unknown footnote variant %q in renderFootnoteLink", f.Variant)
 	}
-	w.WriteString(`</span>`)
+	w.WriteString(`</a>`)
 	return ast.WalkSkipChildren, nil
 }
 
@@ -200,7 +239,13 @@ func (fr footnoteRenderer) renderFootnoteBody(w util.BufWriter, _ []byte, n ast.
 	if entering {
 		w.WriteString(`<aside class="footnote-body" id="footnote-body-`)
 		w.WriteString(string(f.Name))
-		w.WriteString(`" role="doc-endnote">`)
+		w.WriteString(`" role="doc-endnote"`)
+		w.WriteString(` style="margin-top: -`)
+		lineHeight := 18
+		bytesPerLine := 40
+		distancePx := (f.LinkDistance/bytesPerLine)*lineHeight + lineHeight
+		w.WriteString(strconv.Itoa(distancePx))
+		w.WriteString(`px">`)
 	} else {
 		w.WriteString("</aside>")
 	}
