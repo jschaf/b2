@@ -1,10 +1,12 @@
 package mdctx
 
 import (
+	"context"
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 var errorsCtxKey = parser.NewContextKey()
@@ -29,27 +31,22 @@ func PopErrors(pc parser.Context) []error {
 
 var AssetsCtxKey = parser.NewContextKey()
 
-// GetAssets returns a map of all assets associated with a post.
-// A map of the relative URL to the full file path of an asset like an image.
-// For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
-func GetAssets(pc parser.Context) assets.Map {
+// GetAssets returns all blobs associated with a post.
+func GetAssets(pc parser.Context) []assets.Blob {
 	m := pc.Get(AssetsCtxKey)
-	if _, ok := m.(map[string]string); m == nil || !ok {
-		m = make(map[string]string)
+	if _, ok := m.([]assets.Blob); m == nil || !ok {
+		m = make([]assets.Blob, 0)
 		pc.Set(AssetsCtxKey, m)
 	}
-	return m.(map[string]string)
+	return m.([]assets.Blob)
 }
 
-func AddAsset(pc parser.Context, path, src string) {
+func AddAsset(pc parser.Context, b assets.Blob) {
 	m := pc.Get(AssetsCtxKey)
-	if _, ok := m.(assets.Map); m == nil || !ok {
-		m = make(assets.Map)
-		pc.Set(AssetsCtxKey, m)
+	if _, ok := m.([]assets.Blob); m == nil || !ok {
+		m = make([]assets.Blob, 0, 4)
 	}
-
-	x := m.(assets.Map)
-	x[path] = src
+	pc.Set(AssetsCtxKey, append(m.([]assets.Blob), b))
 }
 
 var featuresCtxKey = parser.NewContextKey()

@@ -39,7 +39,7 @@ func NewForPostDetail(pubDir string, l *zap.Logger) *PostCompiler {
 }
 
 func (c *PostCompiler) parse(path string) (*markdown.PostAST, error) {
-	c.l.Debugf("compiling til %s", path)
+	c.l.Debugf("compiling post detail %s", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)

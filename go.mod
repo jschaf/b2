@@ -14,6 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/gorilla/websocket v1.4.1
 	github.com/graemephi/goldmark-qjs-katex v0.3.0
+	github.com/h2non/bimg v1.1.4
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/karrick/godirwalk v1.15.6
@@ -23,8 +24,7 @@ require (
 	github.com/yuin/goldmark v1.2.1
 	go.uber.org/atomic v1.5.0
 	go.uber.org/zap v1.14.0
-	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	golang.org/x/net v0.0.0-20201026091529-146b70c837a4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	google.golang.org/api v0.29.0

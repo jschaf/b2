@@ -6,15 +6,20 @@ import (
 	"path/filepath"
 )
 
-// Map maps from the relative URL to the full file path of an asset like an
-// image. For example, 1 entry might be ./img.png -> /home/joe/blog/img.png.
-type Map = map[string]string
+type Blob struct {
+	// Absolute path of the source file. If nil, GenPath must be non-nil.
+	Src string
+	// Path relative to the pub dir of the destination file path.
+	Dest string
+	// If non-nil, how to generate the output for Dest.
+	GenFunc func() error
+}
 
 // CopyAll copies all assets into the pubDir, overwriting existing files.
-func CopyAll(pubDir string, assets Map) error {
-	for destPath, srcPath := range assets {
-		dest := filepath.Join(pubDir, destPath)
-		if _, err := paths.CopyLazy(dest, srcPath); err != nil {
+func CopyAll(pubDir string, assets []Blob) error {
+	for _, blob := range assets {
+		dest := filepath.Join(pubDir, blob.Dest)
+		if _, err := paths.CopyLazy(dest, blob.Src); err != nil {
 			return fmt.Errorf("failed to copy asset to dest: %w", err)
 		}
 	}

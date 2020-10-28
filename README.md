@@ -8,6 +8,13 @@ any sense of the word. The design goals of the blog:
 - Hot reload everything, code, CSS, markdown, JS.
 - Avoid the node ecosystem. 
 
+### Installation
+
+```shell script
+sudo apt-get install libvips-dev liborc-0.4-dev libtiff5-dev \
+     libjpeg-turbo8-dev libgsf-1-dev
+```
+
 ### Dev server
 
 The dev server has the following features:

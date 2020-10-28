@@ -20,7 +20,7 @@ type PostAST struct {
 	Node   ast.Node
 	Meta   mdext.PostMeta
 	Source []byte
-	Assets assets.Map
+	Assets []assets.Blob
 	// The full path to the markdown file that this AST represents.
 	Path     string
 	Features *mdctx.Features
