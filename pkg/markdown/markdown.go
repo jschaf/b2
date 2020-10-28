@@ -98,6 +98,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewLinkExt(),
 		mdext.NewParagraphExt(),
 		mdext.NewSmallCapsExt(),
+		mdext.NewTableExt(),
 		mdext.NewTOCExt(opts.TOCStyle),
 		mdext.NewTOMLExt(),
 		mdext.NewTimeExt(),
