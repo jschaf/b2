@@ -282,7 +282,8 @@ class PreviewLifecycle {
     const type = targetEl.dataset.linkType;
     switch (type) {
       case 'citation':
-        const refId = checkDef(targetEl.getAttribute('href')).slice(1);
+        const href = checkDef(targetEl.getAttribute('href'));
+        const refId = href.replace(/^.*#/, '')
         const ref = document.getElementById(refId);
         if (!ref) {
           console.warn(`preview-box: no cite reference found for id='${refId}'`);
