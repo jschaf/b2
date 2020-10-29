@@ -1,4 +1,4 @@
-// deploy deploys the contents of the public directory to firebase.
+// publish deploys the contents of the public directory to firebase.
 package main
 
 import (
@@ -39,7 +39,7 @@ func servingConfig() *hosting.ServingConfig {
 	}
 }
 
-func deploy(l *zap.SugaredLogger) error {
+func publish(l *zap.SugaredLogger) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
@@ -138,7 +138,7 @@ func main() {
 		l.Fatalf("rebuild site: %s", err)
 	}
 
-	if err := deploy(l); err != nil {
-		l.Fatalf("failed deploy: %s", err)
+	if err := publish(l); err != nil {
+		l.Fatalf("failed publish: %s", err)
 	}
 }
