@@ -2,7 +2,9 @@ package mdext
 
 import (
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,6 +20,12 @@ func newCiteIEEE(key bibtex.CiteKey, order string) string {
 }
 
 const testPath = "/abs-path"
+
+var previewRegex = regexp.MustCompile(` data-preview-snippet=".*?"`)
+
+var removePreviewOpt = cmp.Transformer("removePreviewOpt", func(s string) string {
+	return previewRegex.ReplaceAllString(s, "")
+})
 
 func newCiteIEEECount(key bibtex.CiteKey, order string, count int) string {
 	id := "cite_" + key
@@ -73,7 +81,7 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 				Path:     testPath,
 			})
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
-			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want, removePreviewOpt)
 		})
 	}
 }
@@ -91,7 +99,7 @@ func TestNewCitationExt_IEEE_renderMultiplePosts(t *testing.T) {
 		Path:     testPath,
 	})
 	doc1 := mdtest.MustParseMarkdown(t, md, ctx, md1)
-	mdtest.AssertNoRenderDiff(t, doc1, md, md1, want1)
+	mdtest.AssertNoRenderDiff(t, doc1, md, md1, want1, removePreviewOpt)
 	// The citation IEEE renderer maintains state per post. Make sure things like
 	// cite num don't leak across different posts.
 	testPath2 := testPath + "-2"
@@ -102,7 +110,7 @@ func TestNewCitationExt_IEEE_renderMultiplePosts(t *testing.T) {
 		Path: testPath + "-2",
 	})
 	doc2 := mdtest.MustParseMarkdown(t, md, ctx, md2)
-	mdtest.AssertNoRenderDiff(t, doc2, md, md2, strings.ReplaceAll(want2, testPath, testPath2))
+	mdtest.AssertNoRenderDiff(t, doc2, md, md2, strings.ReplaceAll(want2, testPath, testPath2), removePreviewOpt)
 }
 
 type citeDocAttacher struct{}
@@ -187,7 +195,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 				Path:     testPath,
 			})
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
-			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs)
+			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.wantBody+"\n"+tt.wantRefs, removePreviewOpt)
 		})
 	}
 }

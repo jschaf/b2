@@ -564,6 +564,9 @@ code-fn {
   width: 580px;
   scroll-padding-bottom: 20px;
 }
+#preview-content > p:first-child {
+  margin-top: 0;
+}
 .preview-disabled #preview-shadow {
   opacity: 0;
   transition: opacity 0s; /* Instant transition when disabling. */

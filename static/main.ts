@@ -273,28 +273,14 @@ class PreviewLifecycle {
    * to build the preview box.
    */
   buildPreviewContent(targetEl: HTMLElement): string {
-    const title = targetEl.dataset.previewTitle;
+    const title = targetEl.dataset.previewTitle ?? '';
     const snippet = targetEl.dataset.previewSnippet;
-    if (title && snippet) {
+    if (snippet) {
       return title + snippet;
     }
 
     const type = targetEl.dataset.linkType;
     switch (type) {
-      case 'citation':
-        const href = checkDef(targetEl.getAttribute('href'));
-        const refId = href.replace(/^.*#/, '')
-        const ref = document.getElementById(refId);
-        if (!ref) {
-          console.warn(`preview-box: no cite reference found for id='${refId}'`);
-          return '';
-        }
-        // Clone node for easier manipulation.
-        const clone = ref.cloneNode(/* deep */ true) as HTMLElement;
-        // Drop the citation number, e.g. "[1]".
-        clone.removeChild(clone.childNodes[0]);
-        return clone.innerHTML;
-
       case 'cite-reference-num':
         const strIds = checkDef(targetEl.dataset.citeIds, `no citeIds attribute found`);
         const ids = strIds.split(' ');

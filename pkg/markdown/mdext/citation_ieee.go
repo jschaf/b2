@@ -2,6 +2,8 @@ package mdext
 
 import "C"
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/texts"
@@ -37,7 +39,10 @@ func (cr *citationRendererIEEE) getPostState(path absPath) *ieeeState {
 	return st
 }
 
-// ieeeState is the citation state for a single post.
+// ieeeState is the citation state for a single post. Renderers run on multiple
+// posts unchanged. Goldmark doesn't use a context object like in the parsers
+// and AST transformers so there's not a builtin way to get per-post state.
+// Work around it by using a map keyed by the absolute path of a post.
 type ieeeState struct {
 	// Next number to use as a citation reference, like [1]. Starts at 1.
 	nextNum int
@@ -69,12 +74,31 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	st.citeCounts[c.Key] = cnt + 1
 
 	w.WriteString(
-		fmt.Sprintf(`<a href="%s/#%s" class=preview-target data-link-type=%s>`,
+		fmt.Sprintf(`<a href="%s/#%s" class=preview-target data-link-type=%s`,
 			c.AbsPath, c.ReferenceID(), LinkCitation))
 
+	// Create the HTML preview on the <a> tag.
+	htmlBuf := &bytes.Buffer{}
+	citeHTML := bufio.NewWriter(htmlBuf)
+	citeHTML.WriteString("<p>")
+	renderCiteRefContent(citeHTML, c)
+	citeHTML.WriteString("</p>")
+	citeHTML.Flush()
+	w.WriteString(` data-preview-snippet="`)
+	w.Write(util.EscapeHTML(htmlBuf.Bytes()))
+	w.WriteByte('"')
+	w.WriteByte('>') // close start <a>
+
 	id := c.CiteID(cnt)
-	_, _ = w.WriteString(fmt.Sprintf(`<cite id=%s>[%d]</cite>`, id, num))
-	_, _ = w.WriteString("</a>")
+	w.WriteString(`<cite id=`)
+	w.WriteString(id)
+	w.WriteByte('>')
+	// Cite number like [1]
+	w.WriteString("[")
+	w.WriteString(strconv.Itoa(num))
+	w.WriteString("]")
+	w.WriteString("</cite>")
+	w.WriteString("</a>")
 	// Citations should generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
 }
@@ -135,6 +159,11 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 	w.WriteString(strconv.Itoa(num))
 	w.WriteString(`]</cite> `)
 
+	renderCiteRefContent(w, c)
+	w.WriteString(`</div>`)
+}
+
+func renderCiteRefContent(w util.BufWriter, c *Citation) {
 	authors := c.Bibtex.Author
 	for i, author := range authors {
 		sp := strings.Split(author.First, " ")
@@ -197,7 +226,6 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 	}
 
 	w.WriteString(".")
-	w.WriteString(`</div>`)
 }
 
 func trimBraces(s string) string {

@@ -14,7 +14,7 @@ func DiffStrings(x, y string) (string, error) {
 }
 
 // Diff returns the diff between the normalized HTML fragments.
-func Diff(rd1, rd2 io.Reader) (string, error) {
+func Diff(rd1, rd2 io.Reader, opts ...cmp.Option) (string, error) {
 	frag1, err := parseFragment(rd1)
 	if err != nil {
 		return "", err
@@ -27,7 +27,7 @@ func Diff(rd1, rd2 io.Reader) (string, error) {
 
 	r1 := RenderNodes(frag1)
 	r2 := RenderNodes(frag2)
-	return cmp.Diff(r1, r2), nil
+	return cmp.Diff(r1, r2, opts...), nil
 }
 
 // parseFragment parses a normalized version of an HTML node.

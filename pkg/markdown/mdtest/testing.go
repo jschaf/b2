@@ -42,29 +42,16 @@ func MustParseMarkdown(t *testing.T, md goldmark.Markdown, ctx parser.Context, s
 
 // AssertNoRenderDiff asserts the markdown instance renders src into the wanted
 // string.
-func AssertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, want string) {
+func AssertNoRenderDiff(t *testing.T, doc ast.Node, md goldmark.Markdown, src, want string, opts ...cmp.Option) {
 	t.Helper()
 	bufW := &bytes.Buffer{}
 	if err := md.Renderer().Render(bufW, []byte(src), doc); err != nil {
 		t.Fatal(err)
 	}
 
-	if diff, err := htmls.Diff(strings.NewReader(want), bufW); err != nil {
+	if diff, err := htmls.Diff(strings.NewReader(want), bufW, opts...); err != nil {
 		t.Fatal(err)
 	} else if diff != "" {
 		t.Errorf("Render mismatch (-want +got):\n%s", diff)
-	}
-}
-
-// AssertCtxContainsAll asserts that the content contains every wanted
-// key-value pair.
-func AssertCtxContainsAll(t *testing.T, got parser.Context, wants map[parser.ContextKey]interface{}) {
-	t.Helper()
-
-	for key, want := range wants {
-		got := got.Get(key)
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("Context key mismatch for key=%d (-want +got):\n%s", key, diff)
-		}
 	}
 }
