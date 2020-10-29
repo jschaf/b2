@@ -78,6 +78,33 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 	}
 }
 
+func TestNewCitationExt_IEEE_renderMultiplePosts(t *testing.T) {
+	style := cite.IEEE
+	md1 := "alpha [@bib_foo] bravo"
+	want1 := tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo")
+	md2 := "alpha [@bib_foo] bravo [@bib_bar]"
+	want2 := tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo ", newCiteIEEE("bib_bar", "[2]"))
+
+	md, ctx := mdtest.NewTester(t, NewCitationExt(style, NewCitationNopAttacher()))
+	SetTOMLMeta(ctx, PostMeta{
+		BibPaths: []string{"./testdata/citation_test.bib"},
+		Path:     testPath,
+	})
+	doc1 := mdtest.MustParseMarkdown(t, md, ctx, md1)
+	mdtest.AssertNoRenderDiff(t, doc1, md, md1, want1)
+	// The citation IEEE renderer maintains state per post. Make sure things like
+	// cite num don't leak across different posts.
+	testPath2 := testPath + "-2"
+	SetTOMLMeta(ctx, PostMeta{
+		BibPaths: []string{"./testdata/citation_test.bib"},
+		// Change the abs path because that's how the citation renderer
+		// differentiates state per post.
+		Path: testPath + "-2",
+	})
+	doc2 := mdtest.MustParseMarkdown(t, md, ctx, md2)
+	mdtest.AssertNoRenderDiff(t, doc2, md, md2, strings.ReplaceAll(want2, testPath, testPath2))
+}
+
 type citeDocAttacher struct{}
 
 func (c citeDocAttacher) Attach(doc *ast.Document, refs *CitationReferences) error {

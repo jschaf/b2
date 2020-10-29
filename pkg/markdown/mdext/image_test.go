@@ -1,21 +1,22 @@
 package mdext
 
 import (
+	"github.com/google/go-cmp/cmp"
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark/parser"
 )
 
 func TestNewImageExt(t *testing.T) {
 	const path = "/home/joe/file.md"
 	tests := []struct {
-		name    string
-		src     string
-		want    string
-		wantCtx map[parser.ContextKey]interface{}
+		name       string
+		src        string
+		want       string
+		wantAssets []assets.Blob
 	}{
 		{
 			"single image in a paragraph",
@@ -27,8 +28,8 @@ func TestNewImageExt(t *testing.T) {
           <img src="qux.png" alt="alt text" title="title">
         </p>
      `),
-			map[parser.ContextKey]interface{}{
-				mdctx.AssetsCtxKey: map[string]string{"qux.png": "/home/joe/qux.png"},
+			[]assets.Blob{
+				{Src: "/home/joe/qux.png", Dest: "qux.png"},
 			},
 		},
 		{
@@ -46,8 +47,8 @@ func TestNewImageExt(t *testing.T) {
           <img src="/some_slug/qux.png" alt="alt text" title="title">
         </p>
      `),
-			map[parser.ContextKey]interface{}{
-				mdctx.AssetsCtxKey: map[string]string{"/some_slug/qux.png": "/home/joe/qux.png"},
+			[]assets.Blob{
+				{Src: "/home/joe/qux.png", Dest: "/some_slug/qux.png"},
 			},
 		},
 	}
@@ -57,7 +58,9 @@ func TestNewImageExt(t *testing.T) {
 			mdctx.SetFilePath(ctx, path)
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			mdtest.AssertCtxContainsAll(t, ctx, tt.wantCtx)
+			if diff := cmp.Diff(tt.wantAssets, mdctx.GetAssets(ctx)); diff != "" {
+				t.Fatalf("assets context mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

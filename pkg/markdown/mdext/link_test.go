@@ -1,22 +1,23 @@
 package mdext
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/htmls/tags"
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
 
 	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark/parser"
 )
 
 func TestNewLinkExt_context(t *testing.T) {
 	const path = "/home/joe/file.md"
 	tests := []struct {
-		name    string
-		src     string
-		want    string
-		wantCtx map[parser.ContextKey]interface{}
+		name       string
+		src        string
+		want       string
+		wantAssets []assets.Blob
 	}{
 		{
 			"single relative link",
@@ -30,8 +31,8 @@ func TestNewLinkExt_context(t *testing.T) {
         Paper: <a href="paper.pdf" data-link-type=pdf>Gorilla Title</a>
       </p>
     `),
-			map[parser.ContextKey]interface{}{
-				mdctx.AssetsCtxKey: map[string]string{"paper.pdf": "/home/joe/paper.pdf"},
+			[]assets.Blob{
+				{Src: "/home/joe/paper.pdf", Dest: "paper.pdf"},
 			},
 		},
 		{
@@ -50,8 +51,8 @@ func TestNewLinkExt_context(t *testing.T) {
         Paper: <a href="/some_slug/paper.pdf" data-link-type=pdf>Gorilla Title</a>
       </p>
     `),
-			map[parser.ContextKey]interface{}{
-				mdctx.AssetsCtxKey: map[string]string{"/some_slug/paper.pdf": "/home/joe/paper.pdf"},
+			[]assets.Blob{
+				{Src: "/home/joe/paper.pdf", Dest: "/some_slug/paper.pdf"},
 			},
 		},
 		{
@@ -70,7 +71,7 @@ func TestNewLinkExt_context(t *testing.T) {
          Paper: <a href="http://example.com/paper.pdf" data-link-type=pdf>Gorilla Title</a>
        </p>
     `),
-			map[parser.ContextKey]interface{}{},
+			[]assets.Blob{},
 		},
 	}
 	for _, tt := range tests {
@@ -81,7 +82,9 @@ func TestNewLinkExt_context(t *testing.T) {
 
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			mdtest.AssertCtxContainsAll(t, ctx, tt.wantCtx)
+			if diff := cmp.Diff(tt.wantAssets, mdctx.GetAssets(ctx)); diff != "" {
+				t.Fatalf("assets context mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

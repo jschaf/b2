@@ -1,12 +1,10 @@
 package mdctx
 
 import (
-	"context"
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
 var errorsCtxKey = parser.NewContextKey()
@@ -29,24 +27,24 @@ func PopErrors(pc parser.Context) []error {
 	return errs
 }
 
-var AssetsCtxKey = parser.NewContextKey()
+var assetsCtxKey = parser.NewContextKey()
 
 // GetAssets returns all blobs associated with a post.
 func GetAssets(pc parser.Context) []assets.Blob {
-	m := pc.Get(AssetsCtxKey)
+	m := pc.Get(assetsCtxKey)
 	if _, ok := m.([]assets.Blob); m == nil || !ok {
 		m = make([]assets.Blob, 0)
-		pc.Set(AssetsCtxKey, m)
+		pc.Set(assetsCtxKey, m)
 	}
 	return m.([]assets.Blob)
 }
 
 func AddAsset(pc parser.Context, b assets.Blob) {
-	m := pc.Get(AssetsCtxKey)
+	m := pc.Get(assetsCtxKey)
 	if _, ok := m.([]assets.Blob); m == nil || !ok {
 		m = make([]assets.Blob, 0, 4)
 	}
-	pc.Set(AssetsCtxKey, append(m.([]assets.Blob), b))
+	pc.Set(assetsCtxKey, append(m.([]assets.Blob), b))
 }
 
 var featuresCtxKey = parser.NewContextKey()

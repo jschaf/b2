@@ -11,7 +11,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/renderer"
-	"github.com/yuin/goldmark/util"
 	"strconv"
 )
 
@@ -68,28 +67,13 @@ type citationRenderer struct {
 	includeRefs bool
 }
 
-// citationStyleRenderer renders citations and references for a specific style.
-// It's useful to have both renderers in a single struct in order to share
-// information between the citation and reference list.
-type citationStyleRenderer interface {
-	renderCitation(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error)
-	renderReferenceList(writer util.BufWriter, source []byte, n ast.Node, entering bool) (ast.WalkStatus, error)
-}
-
-func citationRenderers() map[cite.Style]citationStyleRenderer {
-	return map[cite.Style]citationStyleRenderer{
-		cite.IEEE: &citationRendererIEEE{
-			nextNum:    1,
-			citeNums:   make(map[bibtex.CiteKey]int),
-			citeCounts: make(map[bibtex.CiteKey]int),
-		},
-	}
-}
-
 func (cr *citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	r, ok := citationRenderers()[cr.citeStyle]
-	if !ok {
+	if cr.citeStyle != cite.IEEE {
 		panic("unsupported cite style: '" + cr.citeStyle + "'")
+	}
+
+	r := &citationRendererIEEE{
+		postStates: make(map[absPath]*ieeeState),
 	}
 	reg.Register(KindCitation, r.renderCitation)
 	if cr.includeRefs {

@@ -13,11 +13,36 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+type absPath = string
+
 // citationRendererIEEE renders an IEEE citation.
+//
+// All data in the renderer uses map with a key of the AbsPath. We need this
+// because we retain state in this struct. That state gets reused for other
+// posts. We don't have parser.Context which was scoped to a single document.
 type citationRendererIEEE struct {
+	postStates map[absPath]*ieeeState
+}
+
+func (cr *citationRendererIEEE) getPostState(path absPath) *ieeeState {
+	if p, ok := cr.postStates[path]; ok {
+		return p
+	}
+	st := &ieeeState{
+		nextNum:    1,
+		citeNums:   map[bibtex.CiteKey]int{},
+		citeCounts: make(map[bibtex.CiteKey]int),
+	}
+	cr.postStates[path] = st
+	return st
+}
+
+// ieeeState is the citation state for a single post.
+type ieeeState struct {
+	// Next number to use as a citation reference, like [1]. Starts at 1.
 	nextNum int
-	// Mapping from a bibtex cite key to the order the first instance of a cite
-	// key appeared in the markdown document.
+	// Mapping from the abs path to the bibtex cite key to the order the first
+	// instance of a cite key appeared in the markdown document.
 	citeNums map[bibtex.CiteKey]int
 	// The number of times a bibtex cite key has been used thus far. Useful for
 	// generating unique IDs for the citation.
@@ -32,15 +57,16 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	c := n.(*Citation)
 	// For IEEE style we need to dedupe the citation order. The raw order
 	// assigns multiple numbers for the same cite key.
-	num, ok := cr.citeNums[c.Key]
+	st := cr.getPostState(c.AbsPath)
+	num, ok := st.citeNums[c.Key]
 	if !ok {
-		num = cr.nextNum
-		cr.citeNums[c.Key] = num
-		cr.nextNum += 1
+		num = st.nextNum
+		st.citeNums[c.Key] = num
+		st.nextNum += 1
 	}
 
-	cnt, ok := cr.citeCounts[c.Key]
-	cr.citeCounts[c.Key] = cnt + 1
+	cnt := st.citeCounts[c.Key]
+	st.citeCounts[c.Key] = cnt + 1
 
 	w.WriteString(
 		fmt.Sprintf(`<a href="%s/#%s" class=preview-target data-link-type=%s>`,
@@ -71,7 +97,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 			continue
 		}
 		hasRef[c.Key] = struct{}{}
-		num, ok := cr.citeNums[c.Key]
+		num, ok := cr.getPostState(c.AbsPath).citeNums[c.Key]
 		if !ok {
 			return ast.WalkStop, fmt.Errorf("citation: no number found for reference: %s", c.Key)
 		}
@@ -93,7 +119,7 @@ func allCiteIDs(c *Citation, count int) []string {
 }
 
 func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
-	cnt := cr.citeCounts[c.Key]
+	cnt := cr.getPostState(c.AbsPath).citeCounts[c.Key]
 	citeIDs := allCiteIDs(c, cnt)
 	w.WriteString(`<div id="`)
 	w.WriteString(c.ReferenceID())
