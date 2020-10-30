@@ -23,6 +23,7 @@ const (
 	LinkDecorationTransformer  ASTTransformerPriority = 900
 	LinkAssetTransformer       ASTTransformerPriority = 901
 	CitationTransformer                               = ArticleTransformer + 10
+	CitationFormatTransformer                         = CitationTransformer + 10
 	FigureTransformer          ASTTransformerPriority = 999
 	ImageTransformer           ASTTransformerPriority = 999
 	FootnoteBodyTransformer    ASTTransformerPriority = 1000

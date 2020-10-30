@@ -1,7 +1,10 @@
 package attrs
 
 import (
+	"github.com/jschaf/b2/pkg/texts"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/util"
+	"strconv"
 )
 
 const (
@@ -57,5 +60,29 @@ func GetStringAttr(n ast.Node, k string) string {
 		return s
 	default:
 		return ""
+	}
+}
+
+// RenderAll renders all of a given node's attributes.
+func RenderAll(w util.BufWriter, node ast.Node) {
+	for _, attr := range node.Attributes() {
+		w.WriteByte(' ')
+		w.Write(attr.Name)
+		w.WriteString(`="`)
+		switch v := attr.Value.(type) {
+		case []byte:
+			w.Write(util.EscapeHTML(v))
+		case string:
+			w.Write(util.EscapeHTML(texts.ReadOnlyBytes(v)))
+		case int:
+			w.WriteString(strconv.Itoa(v))
+		case int64:
+			w.WriteString(strconv.FormatInt(v, 10))
+		case uint64:
+			w.WriteString(strconv.FormatUint(v, 10))
+		case uint:
+			w.WriteString(strconv.FormatUint(uint64(v), 10))
+		}
+		w.WriteByte('"')
 	}
 }

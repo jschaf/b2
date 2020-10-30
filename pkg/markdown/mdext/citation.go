@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/renderer"
 	"strconv"
 )
 
@@ -34,6 +32,10 @@ type Citation struct {
 	Prefix string
 	// The suffix in a citation reference, i.e the "bar" in `[@qux bar]`.
 	Suffix string
+	// The text to display for the cite reference. For IEEE, "[2]".
+	Display string
+	// The unique HTML ID of this citation.
+	ID string
 }
 
 func NewCitation() *Citation {
@@ -60,27 +62,6 @@ func (c *Citation) CiteID(count int) string {
 // citation, displayed in the reference section, if any.
 func (c *Citation) ReferenceID() string {
 	return "cite_ref_" + c.Key
-}
-
-type citationRenderer struct {
-	citeStyle   cite.Style
-	includeRefs bool
-}
-
-func (cr *citationRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	if cr.citeStyle != cite.IEEE {
-		panic("unsupported cite style: '" + cr.citeStyle + "'")
-	}
-
-	r := &citationRendererIEEE{
-		postStates: make(map[absPath]*ieeeState),
-	}
-	reg.Register(KindCitation, r.renderCitation)
-	if cr.includeRefs {
-		reg.Register(KindCitationReferences, r.renderReferenceList)
-	} else {
-		reg.Register(KindCitationReferences, asts.NopRender)
-	}
 }
 
 // CitationReferencesAttacher determines how references are attached to the
@@ -135,18 +116,17 @@ func NewCitationExt(citeStyle cite.Style, attacher CitationReferencesAttacher) *
 }
 
 func (sc *CitationExt) Extend(m goldmark.Markdown) {
-	extenders.AddASTTransform(
-		m,
-		&citationASTTransformer{
-			citeStyle:     sc.citeStyle,
-			citeOrders:    make(map[bibtex.CiteKey]citeOrder),
-			nextCiteOrder: 0,
-			attacher:      sc.attacher,
-		},
-		ord.CitationTransformer,
-	)
-	extenders.AddRenderer(m, &citationRenderer{
-		citeStyle:   sc.citeStyle,
+	if sc.citeStyle != cite.IEEE {
+		panic("unsupported cite style: " + sc.citeStyle)
+	}
+	extenders.AddASTTransform(m, &citationParseTransformer{
+		citeOrders:    make(map[bibtex.CiteKey]citeOrder),
+		nextCiteOrder: 0,
+		attacher:      sc.attacher,
+	},
+		ord.CitationTransformer)
+	extenders.AddASTTransform(m, &citationIEEEFormatTransformer{}, ord.CitationFormatTransformer)
+	extenders.AddRenderer(m, &citationRendererIEEE{
 		includeRefs: sc.attacher != nil,
 	}, ord.CitationRenderer)
 }

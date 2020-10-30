@@ -6,7 +6,13 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
+	"github.com/jschaf/b2/pkg/markdown/asts"
+	"github.com/jschaf/b2/pkg/markdown/attrs"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/texts"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/text"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -15,91 +21,78 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-type absPath = string
+type citationIEEEFormatTransformer struct{}
 
-// citationRendererIEEE renders an IEEE citation.
-//
-// All data in the renderer uses map with a key of the AbsPath. We need this
-// because we retain state in this struct. That state gets reused for other
-// posts. We don't have parser.Context which was scoped to a single document.
-type citationRendererIEEE struct {
-	postStates map[absPath]*ieeeState
-}
-
-func (cr *citationRendererIEEE) getPostState(path absPath) *ieeeState {
-	if p, ok := cr.postStates[path]; ok {
-		return p
-	}
-	st := &ieeeState{
-		nextNum:    1,
-		citeNums:   map[bibtex.CiteKey]int{},
-		citeCounts: make(map[bibtex.CiteKey]int),
-	}
-	cr.postStates[path] = st
-	return st
-}
-
-// ieeeState is the citation state for a single post. Renderers run on multiple
-// posts unchanged. Goldmark doesn't use a context object like in the parsers
-// and AST transformers so there's not a builtin way to get per-post state.
-// Work around it by using a map keyed by the absolute path of a post.
-type ieeeState struct {
+func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
 	// Next number to use as a citation reference, like [1]. Starts at 1.
-	nextNum int
+	nextNum := 1
 	// Mapping from the abs path to the bibtex cite key to the order the first
 	// instance of a cite key appeared in the markdown document.
-	citeNums map[bibtex.CiteKey]int
+	citeNums := make(map[bibtex.CiteKey]int)
 	// The number of times a bibtex cite key has been used thus far. Useful for
 	// generating unique IDs for the citation.
-	citeCounts map[bibtex.CiteKey]int
+	citeCounts := make(map[bibtex.CiteKey]int)
+
+	err := asts.WalkKind(KindCitation, doc, func(n ast.Node) (ast.WalkStatus, error) {
+		c := n.(*Citation)
+		num, ok := citeNums[c.Key]
+		if !ok {
+			num = nextNum
+			citeNums[c.Key] = num
+			nextNum++
+		}
+		cnt := citeCounts[c.Key]
+		citeCounts[c.Key] += 1
+
+		c.SetAttribute([]byte("href"), c.AbsPath+"/#"+c.ReferenceID())
+		// Create the HTML preview on the <a> tag.
+		b := &bytes.Buffer{}
+		citeHTML := bufio.NewWriter(b)
+		citeHTML.WriteString("<p>")
+		renderCiteRefContent(citeHTML, c)
+		citeHTML.WriteString("</p>")
+		citeHTML.Flush()
+		attrs.AddClass(c, "preview-target")
+		c.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
+		c.SetAttribute([]byte("data-link-type"), LinkCitation)
+		c.Display = "[" + strconv.Itoa(num) + "]"
+		c.ID = c.CiteID(cnt)
+		return ast.WalkSkipChildren, nil
+	})
+	if err != nil {
+		mdctx.PushError(pc, fmt.Errorf("walk IEEE cite format transformer: %w", err))
+	}
+}
+
+// citationRendererIEEE renders an IEEE citation.
+type citationRendererIEEE struct {
+	includeRefs bool
+}
+
+func (cr *citationRendererIEEE) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(KindCitation, cr.renderCitation)
+	if cr.includeRefs {
+		reg.Register(KindCitationReferences, cr.renderReferenceList)
+	} else {
+		reg.Register(KindCitationReferences, asts.NopRender)
+	}
 }
 
 func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
-
 	c := n.(*Citation)
-	// For IEEE style we need to dedupe the citation order. The raw order
-	// assigns multiple numbers for the same cite key.
-	st := cr.getPostState(c.AbsPath)
-	num, ok := st.citeNums[c.Key]
-	if !ok {
-		num = st.nextNum
-		st.citeNums[c.Key] = num
-		st.nextNum += 1
-	}
-
-	cnt := st.citeCounts[c.Key]
-	st.citeCounts[c.Key] = cnt + 1
-
-	w.WriteString(
-		fmt.Sprintf(`<a href="%s/#%s" class=preview-target data-link-type=%s`,
-			c.AbsPath, c.ReferenceID(), LinkCitation))
-
-	// Create the HTML preview on the <a> tag.
-	htmlBuf := &bytes.Buffer{}
-	citeHTML := bufio.NewWriter(htmlBuf)
-	citeHTML.WriteString("<p>")
-	renderCiteRefContent(citeHTML, c)
-	citeHTML.WriteString("</p>")
-	citeHTML.Flush()
-	w.WriteString(` data-preview-snippet="`)
-	w.Write(util.EscapeHTML(htmlBuf.Bytes()))
-	w.WriteByte('"')
-	w.WriteByte('>') // close start <a>
-
-	id := c.CiteID(cnt)
-	w.WriteString(`<cite id=`)
-	w.WriteString(id)
+	w.WriteString(`<a`)
+	attrs.RenderAll(w, c)
 	w.WriteByte('>')
-	// Cite number like [1]
-	w.WriteString("[")
-	w.WriteString(strconv.Itoa(num))
-	w.WriteString("]")
+	w.WriteString(`<cite id=`)
+	w.WriteString(c.ID)
+	w.WriteByte('>')
+	w.WriteString(c.Display)
 	w.WriteString("</cite>")
 	w.WriteString("</a>")
-	// Citations should generate content solely from the citation, not children.
+	// Citations generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
 }
 
@@ -113,6 +106,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 	}
 
 	hasRef := make(map[bibtex.CiteKey]struct{})
+	counts := getCiteCounts(refs)
 
 	_, _ = w.WriteString(`<div class=cite-references>`)
 	_, _ = w.WriteString(`<h2>References</h2>`)
@@ -121,11 +115,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 			continue
 		}
 		hasRef[c.Key] = struct{}{}
-		num, ok := cr.getPostState(c.AbsPath).citeNums[c.Key]
-		if !ok {
-			return ast.WalkStop, fmt.Errorf("citation: no number found for reference: %s", c.Key)
-		}
-		cr.renderCiteRef(w, c, num)
+		cr.renderCiteRef(w, c, counts)
 	}
 	_, _ = w.WriteString(`</div>`)
 
@@ -142,8 +132,18 @@ func allCiteIDs(c *Citation, count int) []string {
 	return ids
 }
 
-func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num int) {
-	cnt := cr.getPostState(c.AbsPath).citeCounts[c.Key]
+// getCiteCounts returns a map showing the number of times a citation appeared
+// in the document. Useful for backlinks from references to the citation.
+func getCiteCounts(refs *CitationReferences) map[bibtex.CiteKey]int {
+	cnts := make(map[bibtex.CiteKey]int, len(refs.Citations))
+	for _, c := range refs.Citations {
+		cnts[c.Key] += 1
+	}
+	return cnts
+}
+
+func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, counts map[bibtex.CiteKey]int) {
+	cnt := counts[c.Key]
 	citeIDs := allCiteIDs(c, cnt)
 	w.WriteString(`<div id="`)
 	w.WriteString(c.ReferenceID())
@@ -155,9 +155,9 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, num
 		}
 		w.WriteString(c)
 	}
-	w.WriteString(`">[`)
-	w.WriteString(strconv.Itoa(num))
-	w.WriteString(`]</cite> `)
+	w.WriteString(`">`)
+	w.WriteString(c.Display)
+	w.WriteString(`</cite> `)
 
 	renderCiteRefContent(w, c)
 	w.WriteString(`</div>`)

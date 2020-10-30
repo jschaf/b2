@@ -34,3 +34,17 @@ func WalkHeadings(node ast.Node, walker HeadingWalker) error {
 		return walker(h)
 	})
 }
+
+// WalkKind only walks on nodes matching kind and only calls walker when
+// entering nodes.
+func WalkKind(kind ast.NodeKind, node ast.Node, walker func(n ast.Node) (ast.WalkStatus, error)) error {
+	return ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkSkipChildren, nil
+		}
+		if n.Kind() != kind {
+			return ast.WalkContinue, nil
+		}
+		return walker(n)
+	})
+}

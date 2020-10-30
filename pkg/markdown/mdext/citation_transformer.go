@@ -6,17 +6,15 @@ import (
 	"os"
 
 	"github.com/jschaf/b2/pkg/bibtex"
-	"github.com/jschaf/b2/pkg/cite"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 )
 
-// citationASTTransformer extracts consecutive nodes that make up a citation
+// citationParseTransformer extracts consecutive nodes that make up a citation
 // from the AST and reparents the nodes as children of a new Citation node at
 // the same position in the AST.
-type citationASTTransformer struct {
-	citeStyle  cite.Style
+type citationParseTransformer struct {
 	citeOrders map[bibtex.CiteKey]citeOrder // cite order for bibtex keys
 	// The next number to use for the raw citation order. Starts at 0.
 	nextCiteOrder int
@@ -36,9 +34,9 @@ type citeParseState = int
 
 const (
 	citeSearch   citeParseState = iota // looking for '['
-	citeStart                          // after parsing '['
-	citeFoundKey                       // after parsing "@foobar"
-	citeParseKey                       // after parsing "@foo" and hitting the end
+	citeStart                          // after consuming '['
+	citeFoundKey                       // after consuming "@foobar"
+	citeParseKey                       // after consuming "@foo" and hitting the end
 )
 
 // citeSpan is the start and end span that contain a citation.
@@ -52,7 +50,7 @@ type citeSpan struct {
 }
 
 // Transform extracts all citations into Citation nodes.
-func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
+func (ca *citationParseTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	absPath := GetTOMLMeta(pc).Path
 	spans, err := ca.findSpans(doc, reader, absPath)
 	if err != nil {
@@ -85,7 +83,6 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 
 	if ca.attacher != nil {
 		if err := ca.attacher.Attach(doc, refs); err != nil {
-			doc.Dump(reader.Source(), 0)
 			mdctx.PushError(pc, err)
 			return
 		}
@@ -94,7 +91,7 @@ func (ca *citationASTTransformer) Transform(doc *ast.Document, reader text.Reade
 
 // readBibs returns all bibtex elements from the file paths in bibs merged into
 // a map by the key.
-func (ca *citationASTTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
+func (ca *citationParseTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
 	bibEntries := make(map[bibtex.CiteKey]bibtex.Entry)
 	for _, bib := range bibs {
 		f, err := os.Open(bib)
@@ -115,7 +112,7 @@ func (ca *citationASTTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bi
 // newCitationParent creates a citation node and reparents all spans between the
 // start span to the end span inclusive as children of the newly created
 // citation node.
-func (ca *citationASTTransformer) newCitationParent(span citeSpan) (*Citation, error) {
+func (ca *citationParseTransformer) newCitationParent(span citeSpan) (*Citation, error) {
 	p := span.start.Parent()
 	// Split start and end nodes if there is other text besides the citation.
 	if span.startOffset > span.start.Segment.Start {
@@ -159,7 +156,7 @@ func (ca *citationASTTransformer) newCitationParent(span citeSpan) (*Citation, e
 }
 
 // findSpans finds all bracketed citation spans, like [@foo, pp. 2].
-func (ca *citationASTTransformer) findSpans(node *ast.Document, reader text.Reader, path string) ([]citeSpan, error) {
+func (ca *citationParseTransformer) findSpans(node *ast.Document, reader text.Reader, path string) ([]citeSpan, error) {
 	state := citeSearch
 	startOffset := -1
 	var start *ast.Text
