@@ -34,6 +34,9 @@
 
   --max-body-width: 800px;
   --min-margin-width: 300px;
+
+  --gutter-width: 25px;
+  --toc-max-width: 250px;
 }
 
 html {
@@ -274,7 +277,7 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 
 .toc {
   float: left;
-  max-width: 250px;
+  max-width: var(--toc-max-width);
   margin-right: 32px;
   margin-top: 0.9rem;
   border: 1px solid #ccc;
@@ -614,7 +617,7 @@ code-fn {
 @media screen and (min-width: 1400px) {
   .footnote-body {
     position: absolute;
-    left: calc(100% + 25px);
+    left: calc(100% + var(--gutter-width));
     /*
      * Compute width from left over space after removing the body. The body is
      * at max size because we're above the breakpoint where the body stops
@@ -626,6 +629,14 @@ code-fn {
     padding: 10px;
     background: white;
     box-shadow: var(--box-shadow-elevation-4);
+  }
+
+  .toc {
+    background: white;
+    position: absolute;
+    left: calc(-1 * var(--toc-max-width) - var(--gutter-width));
+    box-shadow: var(--box-shadow-elevation-4);
+    padding: 10px;
   }
 }
 

@@ -24,26 +24,12 @@ import (
 type citationIEEEFormatTransformer struct{}
 
 func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
-	// Next number to use as a citation reference, like [1]. Starts at 1.
-	nextNum := 1
-	// Mapping from the abs path to the bibtex cite key to the order the first
-	// instance of a cite key appeared in the markdown document.
-	citeNums := make(map[bibtex.CiteKey]int)
 	// The number of times a bibtex cite key has been used thus far. Useful for
 	// generating unique IDs for the citation.
 	citeCounts := make(map[bibtex.CiteKey]int)
 
 	err := asts.WalkKind(KindCitation, doc, func(n ast.Node) (ast.WalkStatus, error) {
 		c := n.(*Citation)
-		num, ok := citeNums[c.Key]
-		if !ok {
-			num = nextNum
-			citeNums[c.Key] = num
-			nextNum++
-		}
-		cnt := citeCounts[c.Key]
-		citeCounts[c.Key] += 1
-
 		c.SetAttribute([]byte("href"), c.AbsPath+"/#"+c.ReferenceID())
 		// Create the HTML preview on the <a> tag.
 		b := &bytes.Buffer{}
@@ -55,7 +41,8 @@ func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reade
 		attrs.AddClass(c, "preview-target")
 		c.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
 		c.SetAttribute([]byte("data-link-type"), LinkCitation)
-		c.ID = c.CiteID(cnt)
+		c.ID = c.CiteID(citeCounts[c.Key])
+		citeCounts[c.Key] += 1
 		return ast.WalkSkipChildren, nil
 	})
 	if err != nil {

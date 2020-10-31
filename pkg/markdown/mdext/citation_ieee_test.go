@@ -73,24 +73,30 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 			),
 		},
 		{
-			"order numbering increases for footnote and citation",
+			"order numbering for mix of footnote and citation",
 			texts.Dedent(`
         alpha [@bib_foo] [^side:foo] 
 
         ::: footnote side:foo
         body-text
         :::
+
+        bravo [@bib_bar]
 			`),
 			tags.P(
 				"alpha ",
 				newCiteIEEE("bib_foo", "[1]"),
-				`<a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[2]</a>`,
+				`<a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">`,
+				`<cite>[2]</cite>`,
+				`</a>`,
 			) + texts.Dedent(`
         <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
-			  <cite>[2]</cite>
-        <p>body-text</p>
+        <p><cite class=cite-inline>[2]</cite> body-text</p>
         </aside>
-			`),
+			`) + tags.P(
+				"bravo ",
+				newCiteIEEE("bib_bar", "[3]"),
+			),
 		},
 	}
 
@@ -100,6 +106,7 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 				NewCitationExt(style, NewCitationNopAttacher()),
 				NewFootnoteExt(),   // contains the global orderer
 				NewColonBlockExt(), // footnote bodies are colon blocks
+				NewCustomExt(),     // cite tags are implemented via custom
 			)
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},

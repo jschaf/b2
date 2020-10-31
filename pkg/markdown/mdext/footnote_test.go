@@ -30,7 +30,7 @@ func TestNewFootnoteExt(t *testing.T) {
           alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima
         </p>
         <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -54px">
-          <p><cite>[1]</cite> body-text</p>
+          <p><cite class=cite-inline>[1]</cite> body-text</p>
         </aside>
       `),
 		},
@@ -51,7 +51,7 @@ func TestNewFootnoteExt(t *testing.T) {
           link-text
         </p>
         <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
-          <p><cite>[1]</cite> body-text</p>
+          <p><cite class=cite-inline>[1]</cite> body-text</p>
         </aside>
       `),
 		},
