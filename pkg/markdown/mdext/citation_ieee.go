@@ -55,7 +55,6 @@ func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reade
 		attrs.AddClass(c, "preview-target")
 		c.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
 		c.SetAttribute([]byte("data-link-type"), LinkCitation)
-		c.Display = "[" + strconv.Itoa(num) + "]"
 		c.ID = c.CiteID(cnt)
 		return ast.WalkSkipChildren, nil
 	})
@@ -89,7 +88,7 @@ func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast
 	w.WriteString(`<cite id=`)
 	w.WriteString(c.ID)
 	w.WriteByte('>')
-	w.WriteString(c.Display)
+	w.WriteString("[" + strconv.Itoa(c.Order) + "]")
 	w.WriteString("</cite>")
 	w.WriteString("</a>")
 	// Citations generate content solely from the citation, not children.
@@ -156,7 +155,7 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, cou
 		w.WriteString(c)
 	}
 	w.WriteString(`">`)
-	w.WriteString(c.Display)
+	w.WriteString("[" + strconv.Itoa(c.Order) + "]")
 	w.WriteString(`</cite> `)
 
 	renderCiteRefContent(w, c)

@@ -38,6 +38,9 @@ type FootnoteLink struct {
 	ast.BaseInline
 	Variant FootnoteVariant
 	Name    FootnoteName // the full name including the type prefix, like "side:arch"
+	// The order of this footnote in the document. Only applies to sidenote
+	// variant, 0 for other variants.
+	Order int
 }
 
 func NewFootnoteLink() *FootnoteLink {
@@ -52,6 +55,26 @@ func (f *FootnoteLink) Dump(source []byte, level int) {
 	ast.DumpHelper(f, source, level, nil, nil)
 }
 
+func (f *FootnoteLink) FootnoteOrder(nextOrder int, seen map[string]int, pc parser.Context) (FnAction, string) {
+	if f.Variant != FootnoteVariantSide {
+		return FnOrderKeep, string(f.Name)
+	}
+	name := string(f.Name)
+	_, ok := seen[name]
+	if ok {
+		panic(fmt.Sprintf("footnote %q already seen but keys should be unique", name))
+	} else {
+		f.Order = nextOrder
+		bodies := GetFootnoteBodies(pc)
+		body, ok := bodies[f.Name]
+		if !ok {
+			panic(fmt.Sprintf("no footnote body found for footnote %q", f.Name))
+		}
+		body.Order = nextOrder
+		return FnOrderNext, name
+	}
+}
+
 // FootnoteBody is the block content associated with a footnote link:
 //
 //   ::: footnote architecture
@@ -62,8 +85,12 @@ type FootnoteBody struct {
 	Variant FootnoteVariant
 	Name    FootnoteName
 	// The distance in bytes between the link and this body. The link is always
-	// above the body. Helpful to render the body close to the link.
+	// above the body because it's reordered in an AST transformer. Helpful to
+	// render the body close to the link.
 	LinkDistance int
+	// The order of this footnote in the document. Only applies to sidenote
+	// variant, 0 for other variants.
+	Order int
 }
 
 func NewFootnoteBody() *FootnoteBody {
@@ -78,7 +105,8 @@ func (f *FootnoteBody) Dump(source []byte, level int) {
 	ast.DumpHelper(f, source, level, nil, nil)
 }
 
-// footnoteLinkParser is an inline parser to parse footnote links like [^foo].
+// footnoteLinkParser is an inline parser to parse footnote links like
+// [^side:foo], or [^margin:qux].
 type footnoteLinkParser struct{}
 
 func (f footnoteLinkParser) Trigger() []byte {
@@ -106,7 +134,7 @@ func (f footnoteLinkParser) Parse(_ ast.Node, block text.Reader, pc parser.Conte
 	if pos >= len(line) || line[pos] != '^' {
 		return nil
 	}
-	pos++ // consume "^"
+	pos++ // consume '^'
 	if pos >= len(line) {
 		return nil
 	}
@@ -226,7 +254,7 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 	case FootnoteVariantPara: // no indicator for a paragraph note
 	case FootnoteVariantMargin: // no indicator for a margin note
 	case FootnoteVariantSide:
-		w.WriteString(`[FN]`) // TODO: use real footnote index
+		w.WriteString("[" + strconv.Itoa(f.Order) + "]")
 	default:
 		return ast.WalkStop, fmt.Errorf("unknown footnote variant %q in renderFootnoteLink", f.Variant)
 	}
@@ -242,10 +270,20 @@ func (fr footnoteRenderer) renderFootnoteBody(w util.BufWriter, _ []byte, n ast.
 		w.WriteString(`" role="doc-endnote"`)
 		w.WriteString(` style="margin-top: -`)
 		lineHeight := 18
-		bytesPerLine := 40
+		bytesPerLine := 40 // heuristic
 		distancePx := (f.LinkDistance/bytesPerLine)*lineHeight + lineHeight
 		w.WriteString(strconv.Itoa(distancePx))
 		w.WriteString(`px">`)
+		switch f.Variant {
+		case FootnoteVariantPara: // no indicator for a paragraph note
+		case FootnoteVariantMargin: // no indicator for a margin note
+		case FootnoteVariantSide:
+			w.WriteString("<cite>")
+			w.WriteString("[" + strconv.Itoa(f.Order) + "]")
+			w.WriteString("</cite>")
+		default:
+			return ast.WalkStop, fmt.Errorf("unknown footnote variant %q in renderFootnoteLink", f.Variant)
+		}
 	} else {
 		w.WriteString("</aside>")
 	}
@@ -262,5 +300,6 @@ func NewFootnoteExt() *FootnoteExt {
 func (f *FootnoteExt) Extend(m goldmark.Markdown) {
 	extenders.AddInlineParser(m, footnoteLinkParser{}, ord.FootnoteLinkParser)
 	extenders.AddASTTransform(m, footnoteBodyTransformer{}, ord.FootnoteBodyTransformer)
+	extenders.AddASTTransform(m, footnoteOrderTransformer{}, ord.FootnoteOrderTransformer)
 	extenders.AddRenderer(m, footnoteRenderer{}, ord.FootnoteRenderer)
 }

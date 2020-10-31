@@ -27,6 +27,7 @@ const (
 	FigureTransformer          ASTTransformerPriority = 999
 	ImageTransformer           ASTTransformerPriority = 999
 	FootnoteBodyTransformer    ASTTransformerPriority = 1000
+	FootnoteOrderTransformer                          = FootnoteBodyTransformer + 10
 	TOCTransformer             ASTTransformerPriority = 1000
 	ContinueReadingTransformer ASTTransformerPriority = 1001
 	KatexFeatureTransformer    ASTTransformerPriority = 1200

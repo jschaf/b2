@@ -9,6 +9,7 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/parser"
 	"strconv"
 )
 
@@ -22,9 +23,8 @@ type Citation struct {
 	// The absolute path to the entry that contained this citation, like
 	// "/til/qux".
 	AbsPath string
-	// The order that this citation appeared in the document, relative to other
-	// citations. Starts at 0. The order always increments for each citation even
-	// if preceding citations had the same key.
+	// The order number to use for this citation. Starts at 1. Updated by
+	// FootnoteOrder called by the footnote order transformer.
 	Order int
 	// The bibtex entry this citation points to.
 	Bibtex bibtex.Entry
@@ -32,10 +32,19 @@ type Citation struct {
 	Prefix string
 	// The suffix in a citation reference, i.e the "bar" in `[@qux bar]`.
 	Suffix string
-	// The text to display for the cite reference. For IEEE, "[2]".
-	Display string
 	// The unique HTML ID of this citation.
 	ID string
+}
+
+func (c *Citation) FootnoteOrder(nextOrder int, seen map[string]int, _ parser.Context) (FnAction, string) {
+	seenOrder, ok := seen[c.Key]
+	if ok {
+		c.Order = seenOrder
+		return FnOrderKeep, c.Key
+	} else {
+		c.Order = nextOrder
+		return FnOrderNext, c.Key
+	}
 }
 
 func NewCitation() *Citation {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/b2/pkg/texts"
 	"regexp"
 	"strconv"
 	"strings"
@@ -71,11 +72,35 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 				" delta ", newCiteIEEECount("bib_bar", "[2]", 1),
 			),
 		},
+		{
+			"order numbering increases for footnote and citation",
+			texts.Dedent(`
+        alpha [@bib_foo] [^side:foo] 
+
+        ::: footnote side:foo
+        body-text
+        :::
+			`),
+			tags.P(
+				"alpha ",
+				newCiteIEEE("bib_foo", "[1]"),
+				`<a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[2]</a>`,
+			) + texts.Dedent(`
+        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
+			  <cite>[2]</cite>
+        <p>body-text</p>
+        </aside>
+			`),
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := mdtest.NewTester(t, NewCitationExt(style, NewCitationNopAttacher()))
+			md, ctx := mdtest.NewTester(t,
+				NewCitationExt(style, NewCitationNopAttacher()),
+				NewFootnoteExt(),   // contains the global orderer
+				NewColonBlockExt(), // footnote bodies are colon blocks
+			)
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 				Path:     testPath,
@@ -93,7 +118,10 @@ func TestNewCitationExt_IEEE_renderMultiplePosts(t *testing.T) {
 	md2 := "alpha [@bib_foo] bravo [@bib_bar]"
 	want2 := tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo ", newCiteIEEE("bib_bar", "[2]"))
 
-	md, ctx := mdtest.NewTester(t, NewCitationExt(style, NewCitationNopAttacher()))
+	md, ctx := mdtest.NewTester(t,
+		NewCitationExt(style, NewCitationNopAttacher()),
+		NewFootnoteExt(), // contains the global orderer
+	)
 	SetTOMLMeta(ctx, PostMeta{
 		BibPaths: []string{"./testdata/citation_test.bib"},
 		Path:     testPath,
@@ -189,7 +217,10 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := mdtest.NewTester(t, NewCitationExt(style, citeDocAttacher{}))
+			md, ctx := mdtest.NewTester(t,
+				NewCitationExt(style, citeDocAttacher{}),
+				NewFootnoteExt(), // contains the global orderer
+			)
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},
 				Path:     testPath,
