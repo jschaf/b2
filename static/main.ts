@@ -565,9 +565,12 @@ class PreviewLifecycle {
 })();
 
 // Prefetch URLs on the same domain on mouseover or touch start events.
+// instant.page v1.2.2, (C) 2019 Alexandre Dieulot, https://instant.page/license
+// Originally shrunk by Chris Morgan and cleaned up by Joe Schafer.
+//
+// TODO: don't fetch same URL multiple times.
+// TODO: Allow other domains.
 (() => {
-  // instant.page v1.2.2, (C) 2019 Alexandre Dieulot, https://instant.page/license
-  // Originally shrunk by Chris Morgan and cleaned up by Joe Schafer.
   let curHref: string | null = null;
   let timer = 0;
   let startTime = 0;
@@ -586,25 +589,24 @@ class PreviewLifecycle {
   };
 
   const cancelPendingPrefetch = (ev: MouseEvent): void => {
-
     // On mouseout, target is the element we exited and relatedTarget is elem
-    // we entered (or null)
-    let exitLink = checkDef(ev.target).closest("a");
-    let enterLink = ev?.relatedTarget?.closest("a");
+    // we entered (or null).
+    let exitLink = checkDef(ev.target as HTMLLinkElement).closest("a");
+    let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest("a");
     if (ev.relatedTarget && exitLink === enterLink) {
       return;
     }
     if (timer === 0) {
       disablePrefetch();
     } else {
-      log.debug(`prefetch: canceling mouseover prefetch ${exitLink.href}`);
+      log.debug(`prefetch: canceling mouseover prefetch ${exitLink?.href}`);
       clearTimeout(timer);
       timer = 0;
     }
   };
 
-  const shouldPrefetch = (node?: HTMLLinkElement): boolean => {
-    if (!node || curHref === node?.href) {
+  const shouldPrefetch = (node: HTMLAnchorElement): boolean => {
+    if (!node || curHref === node.href) {
       return false;
     }
     const url = new URL(node.href);
@@ -633,8 +635,8 @@ class PreviewLifecycle {
 
   document.addEventListener("touchstart", (touchEv) => {
     startTime = performance.now();
-    const link = checkDef(touchEv.target).closest("a");
-    if (!shouldPrefetch(link)) {
+    const link = checkDef(touchEv.target as HTMLElement).closest("a");
+    if (!link || !shouldPrefetch(link)) {
       return;
     }
     link.addEventListener("touchcancel", disablePrefetch, {passive: true});
@@ -645,8 +647,8 @@ class PreviewLifecycle {
 
   document.addEventListener("mouseover", (ev: MouseEvent) => {
     if (1100 <= performance.now() - startTime) {
-      const link = checkDef(ev.target).closest("a");
-      if (!shouldPrefetch(link)) {
+      const link = checkDef(ev.target as HTMLElement).closest("a");
+      if (!link || !shouldPrefetch(link)) {
         return;
       }
       link.addEventListener("mouseout", cancelPendingPrefetch, {passive: true});
