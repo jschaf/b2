@@ -21,6 +21,7 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+// AST Transformer to update the cite ID and add HTML tag attributes.
 type citationIEEEFormatTransformer struct{}
 
 func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
@@ -150,68 +151,103 @@ func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, cou
 }
 
 func renderCiteRefContent(w util.BufWriter, c *Citation) {
-	authors := c.Bibtex.Author
-	for i, author := range authors {
-		sp := strings.Split(author.First, " ")
-		for _, s := range sp {
-			if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
-				w.WriteRune(r)
-				w.WriteString(". ")
-			}
+	renderAuthors(w, c)
+	renderTitle(w, c)
+	hasInfoAfterTitle := false
+	writeTitleSep := func() {
+		if hasInfoAfterTitle {
+			w.WriteRune(',')
 		}
-		_, _ = w.WriteString(author.Last)
+		w.WriteRune(' ')
+	}
+
+	if jrn := trimBraces(c.Bibtex.Tags["journal"]); jrn != "" {
+		writeTitleSep()
+		renderJournal(w, jrn)
+		hasInfoAfterTitle = true
+	}
+
+	if vol := trimBraces(c.Bibtex.Tags["volume"]); vol != "" {
+		writeTitleSep()
+		w.WriteString("Vol. ")
+		w.WriteString(vol)
+		hasInfoAfterTitle = true
+	}
+
+	if year := trimBraces(c.Bibtex.Tags["year"]); year != "" {
+		writeTitleSep()
+		w.WriteString(year)
+		hasInfoAfterTitle = true
+	}
+
+	if doi := trimBraces(c.Bibtex.Tags["doi"]); doi != "" {
+		writeTitleSep()
+		renderDOI(w, c)
+		hasInfoAfterTitle = true
+	}
+	w.WriteString(".")
+}
+
+func renderAuthors(w util.BufWriter, c *Citation) {
+	authors := c.Bibtex.Author
+	// IEEE Ref, Sec II: If there are more than six names listed, use the primary
+	// author's name followed by et al.
+	if len(authors) > 6 {
+		renderAuthor(w, authors[0])
+		w.WriteString(", <em>et al.</em>")
+		return
+	}
+
+	for i, author := range authors {
+		renderAuthor(w, author)
 		if i < len(authors)-2 {
 			w.WriteString(", ")
 		} else if i == len(authors)-2 {
 			if authors[len(authors)-1].IsOthers() {
-				w.WriteString(" <em>et al</em>")
+				w.WriteString(" <em>et al.</em>")
 				break
-
 			} else {
 				w.WriteString(" and ")
 			}
 		}
 	}
+}
 
-	title := c.Bibtex.Tags["title"]
-	title = trimBraces(title)
+func renderAuthor(w util.BufWriter, author bibtex.Author) {
+	// IEEE Ref, Sec II: In all references, the given name of the author or editor
+	// is abbreviated to the initial only and precedes the last name. Use commas
+	// around Jr., Sr., and III in names.
+	sp := strings.Split(author.First, " ")
+	for _, s := range sp {
+		if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
+			w.WriteRune(r)
+			w.WriteString(". ")
+		}
+	}
+	w.WriteString(author.Last)
+}
+
+func renderTitle(w util.BufWriter, c *Citation) {
+	title := trimBraces(c.Bibtex.Tags["title"])
 	w.WriteString(`, "`)
 	w.WriteString(title)
 	w.WriteString(`,"`)
+}
 
-	hasInfoAfterTitle := false
+func renderJournal(w util.BufWriter, journal string) {
+	w.WriteString("in <em class=cite-journal>")
+	w.WriteString(journal)
+	w.WriteString("</em>")
+}
 
-	journal := c.Bibtex.Tags["journal"]
-	journal = trimBraces(journal)
-	if journal != "" {
-		w.WriteString(" in <em class=cite-journal>")
-		w.WriteString(journal)
-		w.WriteString("</em>")
-		hasInfoAfterTitle = true
-	}
-
-	vol := c.Bibtex.Tags["volume"]
-	vol = trimBraces(vol)
-	if vol != "" {
-		if hasInfoAfterTitle {
-			w.WriteRune(',')
-		}
-		w.WriteString(" Vol. ")
-		w.WriteString(vol)
-		hasInfoAfterTitle = true
-	}
-
-	year := c.Bibtex.Tags["year"]
-	year = trimBraces(year)
-	if year != "" {
-		if hasInfoAfterTitle {
-			w.WriteRune(',')
-		}
-		w.WriteRune(' ')
-		w.WriteString(year)
-	}
-
-	w.WriteString(".")
+func renderDOI(w util.BufWriter, c *Citation) {
+	w.WriteString("doi: ")
+	doi := trimBraces(c.Bibtex.Tags["doi"])
+	w.WriteString(`<a href="https://doi.org/`)
+	w.WriteString(doi)
+	w.WriteString(`">`)
+	w.WriteString(doi)
+	w.WriteString(`</a>`)
 }
 
 func trimBraces(s string) string {

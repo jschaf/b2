@@ -220,6 +220,32 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 				),
 			),
 		},
+		{
+			"spanner",
+			"[@corbett2012spanner]",
+			tags.P(newCiteIEEE("corbett2012spanner", "[1]")),
+			newCiteRefsIEEE(
+				newCiteRefIEEE("corbett2012spanner", 1, "[1]",
+					`J. C. Corbett, <em>et al.</em>, "Spanner: Google's Globally-Distributed Database," 2012.`,
+				),
+			),
+		},
+		{
+			"corbett2013spanner",
+			"[@corbett2013spanner]",
+			tags.P(newCiteIEEE("corbett2013spanner", "[1]")),
+			newCiteRefsIEEE(
+				newCiteRefIEEE("corbett2013spanner", 1, "[1]",
+					`J. C. Corbett, <em>et al.</em>, "Spanner: Google's Globally-Distributed Database,"`,
+					" in "+newJournal("ACM Trans. Comput. Syst.")+",",
+					" Vol. 31,",
+					" 2013,",
+					" doi: ",
+					tags.AAttrs(`href="https://doi.org/10.1145/2491245"`, "10.1145/2491245"),
+					".",
+				),
+			),
+		},
 	}
 
 	for _, tt := range tests {
