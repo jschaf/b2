@@ -45,25 +45,10 @@ type Markdown struct {
 // Option is a functional option that manipulates the Markdown struct.
 type Option func(*Markdown)
 
-// WithCiteStyle overrides the default citation style.
-func WithCiteStyle(c cite.Style) Option {
-	return func(m *Markdown) {
-		m.opts.CiteStyle = c
-	}
-}
-
 // WithTOCStyle overrides the default TOC style. The default is to show no TOC.
 func WithTOCStyle(s mdext.TOCStyle) Option {
 	return func(m *Markdown) {
 		m.opts.TOCStyle = s
-	}
-}
-
-// WithCiteAttacher overrides the default attacher for references. The default
-// attaches references before the end of the first article tag.
-func WithCiteAttacher(c mdext.CitationReferencesAttacher) Option {
-	return func(m *Markdown) {
-		m.opts.CiteAttacher = c
 	}
 }
 
@@ -89,6 +74,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
 		mdext.NewColonLineExt(),
+		mdext.NewCustomExt(),
 		mdext.NewFootnoteExt(),
 		mdext.NewHeaderExt(),
 		mdext.NewHeadingExt(opts.HeadingAnchorStyle),

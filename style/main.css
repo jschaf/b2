@@ -636,6 +636,11 @@ cite {
   vertical-align: 0.1ex;
 }
 
+/** Cite node in the paragraph text of a side-note body. */
+cite.cite-inline {
+  margin-right: 0.8ch;
+}
+
 .cite-reference {
   padding-left: 2em;
 }

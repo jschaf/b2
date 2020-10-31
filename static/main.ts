@@ -81,8 +81,7 @@ const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNull
 };
 
 // Creates the heap stub that records API calls to eventually replay while the
-// real heap.js/ downloads. The real heap.js script is templated into
-// base.gohtml.
+// real heap.js downloads. The real heap.js is templated into base.gohtml.
 window.heap = HeapAnalytics.forEnvId('1506018335',
     { trackingServer: 'https://joe.schafer.dev' });
 

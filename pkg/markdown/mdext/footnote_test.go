@@ -24,12 +24,13 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[1]</a>
+          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">
+			      <cite>[1]</cite>
+			    </a>
           alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima
         </p>
         <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -54px">
-			    <cite>[1]</cite>
-          <p>body-text</p>
+          <p><cite>[1]</cite> body-text</p>
         </aside>
       `),
 		},
@@ -44,19 +45,23 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">[1]</a>
+          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">
+			      <cite>[1]</cite>
+			    </a>
           link-text
         </p>
         <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
-			    <cite>[1]</cite>
-          <p>body-text</p>
+          <p><cite>[1]</cite> body-text</p>
         </aside>
       `),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md, ctx := mdtest.NewTester(t, NewFootnoteExt(), NewColonBlockExt())
+			md, ctx := mdtest.NewTester(t,
+				NewFootnoteExt(),
+				NewColonBlockExt(),
+				NewCustomExt())
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
 		})

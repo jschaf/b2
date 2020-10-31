@@ -3,6 +3,7 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
@@ -59,20 +60,18 @@ func (f *FootnoteLink) FootnoteOrder(nextOrder int, seen map[string]int, pc pars
 	if f.Variant != FootnoteVariantSide {
 		return FnOrderKeep, string(f.Name)
 	}
-	name := string(f.Name)
-	_, ok := seen[name]
-	if ok {
-		panic(fmt.Sprintf("footnote %q already seen but keys should be unique", name))
-	} else {
-		f.Order = nextOrder
-		bodies := GetFootnoteBodies(pc)
-		body, ok := bodies[f.Name]
-		if !ok {
-			panic(fmt.Sprintf("no footnote body found for footnote %q", f.Name))
-		}
-		body.Order = nextOrder
-		return FnOrderNext, name
+	if _, ok := seen[string(f.Name)]; ok {
+		panic(fmt.Sprintf("footnote %q already seen but keys should be unique", string(f.Name)))
 	}
+	f.Order = nextOrder
+	bodies := GetFootnoteBodies(pc)
+	body, ok := bodies[f.Name]
+	if !ok {
+		panic(fmt.Sprintf("no footnote body found for footnote %q", f.Name))
+	}
+	body.Order = nextOrder
+	body.addCiteTag()
+	return FnOrderNext, string(f.Name)
 }
 
 // FootnoteBody is the block content associated with a footnote link:
@@ -103,6 +102,21 @@ func (f *FootnoteBody) Kind() ast.NodeKind {
 
 func (f *FootnoteBody) Dump(source []byte, level int) {
 	ast.DumpHelper(f, source, level, nil, nil)
+}
+
+func (f *FootnoteBody) addCiteTag() {
+	cite := NewCustomInline("cite")
+	attrs.AddClass(cite, "cite-inline")
+	txt := ast.NewString([]byte("[" + strconv.Itoa(f.Order) + "]"))
+	cite.AppendChild(cite, txt)
+	child := f.FirstChild()
+	if child != nil && child.Kind() == ast.KindParagraph {
+		// Put the cite in the paragraph so it flows in the paragraph.
+		child.InsertBefore(child, child.FirstChild(), cite)
+	} else {
+		// Otherwise, fall back to a separate element.
+		f.InsertBefore(f, child, cite)
+	}
 }
 
 // footnoteLinkParser is an inline parser to parse footnote links like
@@ -254,7 +268,9 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 	case FootnoteVariantPara: // no indicator for a paragraph note
 	case FootnoteVariantMargin: // no indicator for a margin note
 	case FootnoteVariantSide:
-		w.WriteString("[" + strconv.Itoa(f.Order) + "]")
+		w.WriteString("<cite>[")
+		w.WriteString(strconv.Itoa(f.Order))
+		w.WriteString("]</cite>")
 	default:
 		return ast.WalkStop, fmt.Errorf("unknown footnote variant %q in renderFootnoteLink", f.Variant)
 	}
@@ -274,16 +290,6 @@ func (fr footnoteRenderer) renderFootnoteBody(w util.BufWriter, _ []byte, n ast.
 		distancePx := (f.LinkDistance/bytesPerLine)*lineHeight + lineHeight
 		w.WriteString(strconv.Itoa(distancePx))
 		w.WriteString(`px">`)
-		switch f.Variant {
-		case FootnoteVariantPara: // no indicator for a paragraph note
-		case FootnoteVariantMargin: // no indicator for a margin note
-		case FootnoteVariantSide:
-			w.WriteString("<cite>")
-			w.WriteString("[" + strconv.Itoa(f.Order) + "]")
-			w.WriteString("</cite>")
-		default:
-			return ast.WalkStop, fmt.Errorf("unknown footnote variant %q in renderFootnoteLink", f.Variant)
-		}
 	} else {
 		w.WriteString("</aside>")
 	}

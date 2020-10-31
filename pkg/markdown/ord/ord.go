@@ -42,6 +42,7 @@ const (
 	ArticleRenderer         RendererPriority = 999
 	CitationRenderer        RendererPriority = 999
 	CodeBlockRenderer       RendererPriority = 999
+	CustomRenderer          RendererPriority = 999
 	FigureRenderer          RendererPriority = 999
 	HeaderRenderer          RendererPriority = 999
 	SmallCapsRenderer       RendererPriority = 999
