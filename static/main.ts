@@ -5,6 +5,14 @@ declare interface Window {
   heap: HeapAnalytics;
 }
 
+declare interface Navigator {
+  connection: NetworkInformation;
+}
+
+declare interface NetworkInformation {
+  saveData: boolean;
+}
+
 type EventProps = Record<string, string | number>;
 
 interface HeapCfg {
@@ -80,10 +88,31 @@ const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNull
   return x as NonNullable<T>;
 };
 
+class Logger {
+  private constructor() {
+  }
+
+  static forConsole(): Logger {
+    return new Logger();
+  }
+
+  info(...data: any[]) {
+    console.log(...data);
+  }
+
+  debug(...data: any[]) {
+    console.debug(...data);
+  }
+}
+
+const log = Logger.forConsole();
+
 // Creates the heap stub that records API calls to eventually replay while the
 // real heap.js downloads. The real heap.js is templated into base.gohtml.
-window.heap = HeapAnalytics.forEnvId('1506018335',
-    { trackingServer: 'https://joe.schafer.dev' });
+window.heap = HeapAnalytics.forEnvId(
+    '1506018335',
+    {trackingServer: 'https://joe.schafer.dev'}
+);
 
 // Detect adblock.
 //
@@ -533,4 +562,101 @@ class PreviewLifecycle {
   for (const target of targets) {
     target.addEventListener('click', (ev) => copyHeadingUrl(ev));
   }
+})();
+
+// Prefetch URLs on the same domain on mouseover or touch start events.
+(() => {
+  // instant.page v1.2.2, (C) 2019 Alexandre Dieulot, https://instant.page/license
+  // Originally shrunk by Chris Morgan and cleaned up by Joe Schafer.
+  let curHref: string | null = null;
+  let timer = 0;
+  let startTime = 0;
+  const prefetchEl = document.createElement("link");
+  const supportsPrefetch = prefetchEl.relList.supports("prefetch");
+  const isSavingData = navigator?.connection?.saveData ?? false;
+  if (!supportsPrefetch || isSavingData) {
+    console.debug(`prefetch: disabled`);
+    return;
+  }
+  console.debug(`prefetch: enabled`);
+
+  const disablePrefetch = (): void => {
+    curHref = null;
+    prefetchEl.removeAttribute("href");
+  };
+
+  const cancelPendingPrefetch = (ev: MouseEvent): void => {
+
+    // On mouseout, target is the element we exited and relatedTarget is elem
+    // we entered (or null)
+    let exitLink = checkDef(ev.target).closest("a");
+    let enterLink = ev?.relatedTarget?.closest("a");
+    if (ev.relatedTarget && exitLink === enterLink) {
+      return;
+    }
+    if (timer === 0) {
+      disablePrefetch();
+    } else {
+      log.debug(`prefetch: canceling mouseover prefetch ${exitLink.href}`);
+      clearTimeout(timer);
+      timer = 0;
+    }
+  };
+
+  const shouldPrefetch = (node?: HTMLLinkElement): boolean => {
+    if (!node || curHref === node?.href) {
+      return false;
+    }
+    const url = new URL(node.href);
+    if (url.origin !== location.origin) {
+      log.debug(`prefetch: skipping url, different origin ${url}`);
+      return false;
+    }
+
+    const dest = url.pathname + url.search;
+    const cur = location.pathname + location.search;
+    if (dest === cur) {
+      log.debug(`prefetch: skipping url, exactly same as current ${url}`);
+      return false;
+    }
+    // Assume URLs that only differ by a trailing slash are the same.
+    if (cur.slice(-1) === '/' && dest === cur.slice(0, -1)) {
+      log.debug(`prefetch: skipping url, same with trailing slash as current ${url}`);
+      return false;
+    }
+
+    return true;
+  };
+
+  prefetchEl.rel = "prefetch";
+  document.head.appendChild(prefetchEl);
+
+  document.addEventListener("touchstart", (touchEv) => {
+    startTime = performance.now();
+    const link = checkDef(touchEv.target).closest("a");
+    if (!shouldPrefetch(link)) {
+      return;
+    }
+    link.addEventListener("touchcancel", disablePrefetch, {passive: true});
+    link.addEventListener("touchend", disablePrefetch, {passive: true});
+    curHref = link.href;
+    prefetchEl.href = link.href;
+  }, {capture: true, passive: true});
+
+  document.addEventListener("mouseover", (ev: MouseEvent) => {
+    if (1100 <= performance.now() - startTime) {
+      const link = checkDef(ev.target).closest("a");
+      if (!shouldPrefetch(link)) {
+        return;
+      }
+      link.addEventListener("mouseout", cancelPendingPrefetch, {passive: true});
+      curHref = link.href;
+      const prefetchDelayMillis = 65;
+      timer = setTimeout(() => {
+        log.debug(`prefetch: loading mouseover link ${link.href}`);
+        prefetchEl.href = link.href;
+        timer = 0;
+      }, prefetchDelayMillis);
+    }
+  }, {capture: true, passive: true});
 })();
