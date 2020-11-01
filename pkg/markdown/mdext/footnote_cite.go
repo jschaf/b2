@@ -4,12 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
-	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/ord"
-	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/parser"
 	"strconv"
 )
 
@@ -22,10 +17,10 @@ type Citation struct {
 	Key bibtex.CiteKey
 	// The absolute path to the entry that contained this citation, like
 	// "/til/qux".
-	AbsPath string
+	AbsPath string // TODO: drop me. Should be handled by parent.
 	// The order number to use for this citation. Starts at 1. Updated by
 	// FootnoteOrder called by the footnote order transformer.
-	Order int
+	Order int // TODO: remove order in favor of FootnoteBody.Order.
 	// The bibtex entry this citation points to.
 	Bibtex bibtex.Entry
 	// The prefix in a citation reference, i.e the "foo" in `[foo @qux]`.
@@ -34,17 +29,6 @@ type Citation struct {
 	Suffix string
 	// The unique HTML ID of this citation.
 	ID string
-}
-
-func (c *Citation) FootnoteOrder(nextOrder int, seen map[string]int, _ parser.Context) (FnAction, string) {
-	seenOrder, ok := seen[c.Key]
-	if ok {
-		c.Order = seenOrder
-		return FnOrderKeep, c.Key
-	} else {
-		c.Order = nextOrder
-		return FnOrderNext, c.Key
-	}
 }
 
 func NewCitation() *Citation {
@@ -71,6 +55,27 @@ func (c *Citation) CiteID(count int) string {
 // citation, displayed in the reference section, if any.
 func (c *Citation) ReferenceID() string {
 	return "cite_ref_" + c.Key
+}
+
+var KindCitationReferences = ast.NewNodeKind("citation_references")
+
+// CitationReferences is a list of citations that appeared in the document.
+type CitationReferences struct {
+	ast.BaseBlock
+	// All citations from the source document. Ordered by appearance.
+	Citations []*Citation
+}
+
+func NewCitationReferences() *CitationReferences {
+	return &CitationReferences{}
+}
+
+func (r *CitationReferences) Kind() ast.NodeKind {
+	return KindCitationReferences
+}
+
+func (r *CitationReferences) Dump(source []byte, level int) {
+	ast.DumpHelper(r, source, level, nil, nil)
 }
 
 // CitationReferencesAttacher determines how references are attached to the
@@ -113,29 +118,4 @@ func (c CitationArticleAttacher) Attach(doc *ast.Document, refs *CitationReferen
 
 func NewCitationNopAttacher() CitationReferencesAttacher {
 	return nil
-}
-
-type CitationExt struct {
-	citeStyle cite.Style
-	attacher  CitationReferencesAttacher
-}
-
-func NewCitationExt(citeStyle cite.Style, attacher CitationReferencesAttacher) *CitationExt {
-	return &CitationExt{citeStyle: citeStyle, attacher: attacher}
-}
-
-func (sc *CitationExt) Extend(m goldmark.Markdown) {
-	if sc.citeStyle != cite.IEEE {
-		panic("unsupported cite style: " + sc.citeStyle)
-	}
-	extenders.AddASTTransform(m, &citationParseTransformer{
-		citeOrders:    make(map[bibtex.CiteKey]citeOrder),
-		nextCiteOrder: 0,
-		attacher:      sc.attacher,
-	},
-		ord.CitationTransformer)
-	extenders.AddASTTransform(m, &citationIEEEFormatTransformer{}, ord.CitationFormatTransformer)
-	extenders.AddRenderer(m, &citationRendererIEEE{
-		includeRefs: sc.attacher != nil,
-	}, ord.CitationRenderer)
 }

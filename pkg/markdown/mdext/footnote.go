@@ -1,8 +1,11 @@
 package mdext
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/jschaf/b2/pkg/bibtex"
+	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -13,6 +16,7 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -60,24 +64,6 @@ func (f *FootnoteLink) Dump(source []byte, level int) {
 	ast.DumpHelper(f, source, level, nil, nil)
 }
 
-func (f *FootnoteLink) FootnoteOrder(nextOrder int, seen map[string]int, pc parser.Context) (FnAction, string) {
-	if f.Variant != FootnoteVariantSide {
-		return FnOrderKeep, string(f.Name)
-	}
-	if _, ok := seen[string(f.Name)]; ok {
-		panic(fmt.Sprintf("footnote %q already seen but keys should be unique", string(f.Name)))
-	}
-	f.Order = nextOrder
-	bodies := GetFootnoteBodies(pc)
-	body, ok := bodies[f.Name]
-	if !ok {
-		panic(fmt.Sprintf("no footnote body found for footnote %q", f.Name))
-	}
-	body.Order = nextOrder
-	body.addCiteTag()
-	return FnOrderNext, string(f.Name)
-}
-
 // FootnoteBody is the block content associated with a footnote link:
 //
 //   ::: footnote architecture
@@ -87,10 +73,6 @@ type FootnoteBody struct {
 	ast.BaseBlock
 	Variant FootnoteVariant
 	Name    FootnoteName
-	// The distance in bytes between the link and this body. The link is always
-	// above the body because it's reordered in an AST transformer. Helpful to
-	// render the body close to the link.
-	LinkDistance int
 	// The order of this footnote in the document. Only applies to the sidenote
 	// and cite variant. Always 0 for other variants. Duplicate citations re-use
 	// the earliest order number.
@@ -110,17 +92,17 @@ func (f *FootnoteBody) Dump(source []byte, level int) {
 }
 
 func (f *FootnoteBody) addCiteTag() {
-	cite := NewCustomInline("cite")
-	attrs.AddClass(cite, "cite-inline")
+	tag := NewCustomInline("cite")
+	attrs.AddClass(tag, "cite-inline")
 	txt := ast.NewString([]byte("[" + strconv.Itoa(f.Order) + "]"))
-	cite.AppendChild(cite, txt)
+	tag.AppendChild(tag, txt)
 	child := f.FirstChild()
 	if child != nil && child.Kind() == ast.KindParagraph {
 		// Put the cite in the paragraph so it flows in the paragraph.
-		child.InsertBefore(child, child.FirstChild(), cite)
+		child.InsertBefore(child, child.FirstChild(), tag)
 	} else {
 		// Otherwise, fall back to a separate element.
-		f.InsertBefore(f, child, cite)
+		f.InsertBefore(f, child, tag)
 	}
 }
 
@@ -174,54 +156,169 @@ func (f footnoteLinkParser) Parse(_ ast.Node, block text.Reader, pc parser.Conte
 	}
 	link.Name = name
 	link.Variant = variant
+
+	attrs.AddClass(link, "footnote-link")
+	link.SetAttributeString("role", "doc-noteref")
+	link.SetAttributeString("id", "footnote-link-"+string(name))
+	if variant == FootnoteVariantCite {
+	} else {
+		link.SetAttributeString("href", "#footnote-body-"+string(name))
+	}
 	AddFootnoteLink(pc, link)
 	return link
 }
 
 // footnoteBodyTransformer adds FootnoteBody nodes stored in parser.Context
-// parsed by colonBlockParser below the location of the FootnoteLink.
+// parsed by colonBlockParser below the location of the corresponding
+// FootnoteLink.
 type footnoteBodyTransformer struct {
+	citeRefsAttacher CitationReferencesAttacher
 }
 
-// farthestBlockAncestor returns the farthest ancestor node that's not the
-// document or article. This is useful to figure out where to put footnote
-// bodies so that the body is the next block element after its footnote link.
-func farthestBlockAncestor(node ast.Node) ast.Node {
-	parent := node
-	for p := node; p.Kind() != KindArticle && p.Kind() != ast.KindDocument; p = p.Parent() {
-		parent = p
+// insertFootnoteBody inserts the body node as the next block node of the most
+// distant ancestor from link that's not the document or article.
+func insertFootnoteBody(link *FootnoteLink, body *FootnoteBody) {
+	ancestor := ast.Node(link)
+	for p := ast.Node(link); p.Kind() != KindArticle && p.Kind() != ast.KindDocument; p = p.Parent() {
+		ancestor = p
 	}
-	return parent
+	container := ancestor.Parent()
+
+	// Find the node we should insert the body before.
+	before := ancestor.NextSibling()
+	for ; before != nil; before = before.NextSibling() {
+		if _, ok := before.(*FootnoteBody); !ok {
+			break
+		}
+		if before == body {
+			return
+		}
+	}
+	container.InsertBefore(container, before, body)
 }
 
 func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader, pc parser.Context) {
 	links := GetFootnoteLinks(pc)
 	bodies := GetFootnoteBodies(pc)
-	for _, link := range links {
-		body, ok := bodies[link.Name]
-		if !ok {
-			mdctx.PushError(pc, fmt.Errorf("no footnote body for footnote link %q", link.Name))
-			continue
-		}
-		// Place the footnote body immediately after the block containing the
-		// corresponding footnote link.
-		ancestor := farthestBlockAncestor(link)
-		if b, ok := ancestor.NextSibling().(*FootnoteBody); !ok || b != body {
-			// Only move the body if it's not already in the correct spot.
-			container := ancestor.Parent()
-			container.InsertAfter(container, ancestor, body)
-		}
-		body.LinkDistance = fb.calcDistance(source, ancestor, link, pc)
+	bibs := GetTOMLMeta(pc).BibPaths
+	bibEntries, err := fb.readBibs(bibs)
+	if err != nil {
+		mdctx.PushError(pc, err)
+		return
 	}
+	refs := NewCitationReferences()
+	absPath := GetTOMLMeta(pc).Path
+	order := 1
+
+	// The number of times a bibtex cite key has been used thus far. Useful for
+	// generating unique IDs for the citation.
+
+	citeCounts := make(map[bibtex.CiteKey]int)
+	for _, link := range links {
+		var body *FootnoteBody
+		if link.Variant == FootnoteVariantCite {
+			// The citation uses an absolute path because we cut off the references list
+			// on the index pages. So instead of broken anchor, deep link to the detail
+			// page.
+			link.SetAttributeString("data-link-type", "citation")
+
+			// Cite variant bodies are defined by the bibtex entry.
+			c := NewCitation()
+			c.Key = bibtex.CiteKey(link.Name)
+			bib, ok := bibEntries[c.Key]
+			if !ok {
+				mdctx.PushError(pc, fmt.Errorf("footnote: no bibtex found for key: %s", c.Key))
+				return
+			}
+			c.Bibtex = bib
+			// Update ID based on cite count.
+			c.ID = c.CiteID(citeCounts[c.Key])
+			citeCounts[c.Key] += 1
+
+			// Render preview for hover when we're not showing side notes.
+			// Cite links are preview targets in narrow viewports, when the citation
+			// body isn't shown in a side note.
+			attrs.AddClass(link, "preview-target")
+			b := &bytes.Buffer{}
+			citeHTML := bufio.NewWriter(b)
+			citeHTML.WriteString("<p>")
+			renderCiteRefContent(citeHTML, c)
+			citeHTML.WriteString("</p>")
+			citeHTML.Flush()
+			link.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
+			link.SetAttribute([]byte("data-link-type"), LinkCitation)
+
+			link.SetAttributeString("href", absPath+"#"+c.ReferenceID())
+			body = NewFootnoteBody()
+			body.Name = link.Name
+			body.Variant = link.Variant
+			para := ast.NewParagraph()
+			para.AppendChild(para, c)
+			body.AppendChild(body, para)
+			attrs.AddClass(body, "footnote-body-cite")
+			refs.Citations = append(refs.Citations, c)
+		} else {
+			// All other variants must have a corresponding body node.
+			b, ok := bodies[link.Name]
+			if !ok {
+				mdctx.PushError(pc, fmt.Errorf("no footnote body for footnote link %q", link.Name))
+				continue
+			}
+			body = b
+		}
+
+		attrs.AddClass(body, "footnote-body")
+		body.SetAttributeString("id", "footnote-body-"+string(body.Name))
+		body.SetAttributeString("role", "doc-endnote")
+
+		insertFootnoteBody(link, body)
+		dist := fb.calcDistance(source, link, pc)
+		lineHeight := 18   // from line-height in main.css
+		bytesPerLine := 40 // heuristic
+		distancePx := (dist/bytesPerLine)*lineHeight + lineHeight
+		body.SetAttributeString("style", "margin-top: -"+strconv.Itoa(distancePx)+"px")
+
+		// TODO: don't increment order for margin notes and duplicated cites.
+		link.Order = order
+		body.Order = order
+		body.addCiteTag() // depends on order
+		order++
+	}
+}
+
+// readBibs returns all bibtex elements from the file paths in bibs merged into
+// a map by the key.
+func (fb footnoteBodyTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
+	bibEntries := make(map[bibtex.CiteKey]bibtex.Entry)
+	for _, bib := range bibs {
+		f, err := os.Open(bib)
+		if err != nil {
+			return nil, fmt.Errorf("citation: read bib file: %w", err)
+		}
+		entries, err := bibtex.Read(f)
+		if err != nil {
+			return nil, fmt.Errorf("citation: parse bib file: %w", err)
+		}
+		for _, elem := range entries {
+			bibEntries[elem.Key] = elem
+		}
+	}
+	return bibEntries, nil
 }
 
 // calcDistance finds the distance in bytes between the body and the name of
 // link in the previous block element (ancestor). Useful to manually position
 // footnotes so that they end up closer to the link without using JavaScript.
-func (fb footnoteBodyTransformer) calcDistance(source text.Reader, ancestor ast.Node, link *FootnoteLink, pc parser.Context) int {
+func (fb footnoteBodyTransformer) calcDistance(source text.Reader, link *FootnoteLink, pc parser.Context) int {
 	endPos := 0
 	linkPos := 0
 	srcBytes := source.Source()
+
+	ancestor := ast.Node(link)
+	for p := ast.Node(link); p.Kind() != KindArticle && p.Kind() != ast.KindDocument; p = p.Parent() {
+		ancestor = p
+	}
+
 	err := ast.Walk(ancestor, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		// ast.TextBlock is normally the only node type with RawText that we can use
 		// to get segment ends and to find the footnote name.
@@ -264,11 +361,9 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 		return ast.WalkSkipChildren, nil
 	}
 	f := n.(*FootnoteLink)
-	w.WriteString(`<a class="footnote-link" role="doc-noteref" href="#footnote-body-`)
-	w.WriteString(string(f.Name))
-	w.WriteString(`" id="footnote-link-`)
-	w.WriteString(string(f.Name))
-	w.WriteString(`">`)
+	w.WriteString(`<a`)
+	attrs.RenderAll(w, f)
+	w.WriteByte('>')
 	switch f.Variant {
 	case FootnoteVariantPara: // no indicator for a paragraph note
 	case FootnoteVariantMargin: // no indicator for a margin note
@@ -286,15 +381,9 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 func (fr footnoteRenderer) renderFootnoteBody(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	f := n.(*FootnoteBody)
 	if entering {
-		w.WriteString(`<aside class="footnote-body" id="footnote-body-`)
-		w.WriteString(string(f.Name))
-		w.WriteString(`" role="doc-endnote"`)
-		w.WriteString(` style="margin-top: -`)
-		lineHeight := 18
-		bytesPerLine := 40 // heuristic
-		distancePx := (f.LinkDistance/bytesPerLine)*lineHeight + lineHeight
-		w.WriteString(strconv.Itoa(distancePx))
-		w.WriteString(`px">`)
+		w.WriteString("<aside")
+		attrs.RenderAll(w, f)
+		w.WriteByte('>')
 	} else {
 		w.WriteString("</aside>")
 	}
@@ -302,15 +391,23 @@ func (fr footnoteRenderer) renderFootnoteBody(w util.BufWriter, _ []byte, n ast.
 }
 
 // FootnoteExt is the Goldmark extension to render a markdown footnote.
-type FootnoteExt struct{}
+type FootnoteExt struct {
+	citeStyle cite.Style
+	attacher  CitationReferencesAttacher
+}
 
-func NewFootnoteExt() *FootnoteExt {
-	return &FootnoteExt{}
+func NewFootnoteExt(citeStyle cite.Style, attacher CitationReferencesAttacher) *FootnoteExt {
+	return &FootnoteExt{citeStyle: citeStyle, attacher: attacher}
 }
 
 func (f *FootnoteExt) Extend(m goldmark.Markdown) {
+	if f.citeStyle != cite.IEEE {
+		panic("unsupported cite style: " + f.citeStyle)
+	}
 	extenders.AddInlineParser(m, footnoteLinkParser{}, ord.FootnoteLinkParser)
-	extenders.AddASTTransform(m, footnoteBodyTransformer{}, ord.FootnoteBodyTransformer)
-	extenders.AddASTTransform(m, footnoteOrderTransformer{}, ord.FootnoteOrderTransformer)
+	extenders.AddASTTransform(m, footnoteBodyTransformer{citeRefsAttacher: f.attacher}, ord.FootnoteBodyTransformer)
 	extenders.AddRenderer(m, footnoteRenderer{}, ord.FootnoteRenderer)
+	extenders.AddRenderer(m, &footnoteIEEERenderer{
+		includeRefs: f.attacher != nil,
+	}, ord.CitationRenderer)
 }

@@ -45,16 +45,20 @@ func AAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("a", attrs, ts...)
 }
 
+func AsideAttrs(attrs string, ts ...string) string {
+	return WrapAttrs("aside", attrs, ts...)
+}
+
+func Cite(ts ...string) string {
+	return Wrap("cite", ts...)
+}
+
 func CiteAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("cite", attrs, ts...)
 }
 
 func Code(ts ...string) string {
 	return Wrap("code", ts...)
-}
-
-func Div(ts ...string) string {
-	return Wrap("div", ts...)
 }
 
 func DivAttrs(attrs string, ts ...string) string {
@@ -69,10 +73,6 @@ func EmAttrs(attrs string, ts ...string) string {
 	return WrapAttrs("em", attrs, ts...)
 }
 
-func H1(ts ...string) string {
-	return Wrap("h1", ts...)
-}
-
 func H1Attrs(attrs string, ts ...string) string {
 	return WrapAttrs("h1", attrs, ts...)
 }
@@ -83,10 +83,6 @@ func H2(ts ...string) string {
 
 func H2Attrs(attrs string, ts ...string) string {
 	return WrapAttrs("h2", attrs, ts...)
-}
-
-func H3(ts ...string) string {
-	return Wrap("h3", ts...)
 }
 
 func H3Attrs(attrs string, ts ...string) string {

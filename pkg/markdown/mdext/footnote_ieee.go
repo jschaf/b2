@@ -2,17 +2,10 @@ package mdext
 
 import "C"
 import (
-	"bufio"
-	"bytes"
-	"fmt"
 	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/markdown/asts"
-	"github.com/jschaf/b2/pkg/markdown/attrs"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
-	"github.com/yuin/goldmark/text"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -21,69 +14,31 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-// AST Transformer to update the cite ID and add HTML tag attributes.
-type citationIEEEFormatTransformer struct{}
-
-func (c citationIEEEFormatTransformer) Transform(doc *ast.Document, _ text.Reader, pc parser.Context) {
-	// The number of times a bibtex cite key has been used thus far. Useful for
-	// generating unique IDs for the citation.
-	citeCounts := make(map[bibtex.CiteKey]int)
-
-	err := asts.WalkKind(KindCitation, doc, func(n ast.Node) (ast.WalkStatus, error) {
-		c := n.(*Citation)
-		c.SetAttribute([]byte("href"), c.AbsPath+"/#"+c.ReferenceID())
-		// Create the HTML preview on the <a> tag.
-		b := &bytes.Buffer{}
-		citeHTML := bufio.NewWriter(b)
-		citeHTML.WriteString("<p>")
-		renderCiteRefContent(citeHTML, c)
-		citeHTML.WriteString("</p>")
-		citeHTML.Flush()
-		attrs.AddClass(c, "preview-target")
-		c.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
-		c.SetAttribute([]byte("data-link-type"), LinkCitation)
-		c.ID = c.CiteID(citeCounts[c.Key])
-		citeCounts[c.Key] += 1
-		return ast.WalkSkipChildren, nil
-	})
-	if err != nil {
-		mdctx.PushError(pc, fmt.Errorf("walk IEEE cite format transformer: %w", err))
-	}
-}
-
-// citationRendererIEEE renders an IEEE citation.
-type citationRendererIEEE struct {
+// footnoteIEEERenderer renders an IEEE citation.
+type footnoteIEEERenderer struct {
 	includeRefs bool
 }
 
-func (cr *citationRendererIEEE) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(KindCitation, cr.renderCitation)
-	if cr.includeRefs {
-		reg.Register(KindCitationReferences, cr.renderReferenceList)
+func (fr *footnoteIEEERenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(KindCitation, fr.renderCitation)
+	if fr.includeRefs {
+		reg.Register(KindCitationReferences, fr.renderReferenceList)
 	} else {
 		reg.Register(KindCitationReferences, asts.NopRender)
 	}
 }
 
-func (cr *citationRendererIEEE) renderCitation(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (fr *footnoteIEEERenderer) renderCitation(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
 	c := n.(*Citation)
-	w.WriteString(`<a`)
-	attrs.RenderAll(w, c)
-	w.WriteByte('>')
-	w.WriteString(`<cite id=`)
-	w.WriteString(c.ID)
-	w.WriteByte('>')
-	w.WriteString("[" + strconv.Itoa(c.Order) + "]")
-	w.WriteString("</cite>")
-	w.WriteString("</a>")
+	renderCiteRefContent(w, c)
 	// Citations generate content solely from the citation, not children.
 	return ast.WalkSkipChildren, nil
 }
 
-func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
+func (fr *footnoteIEEERenderer) renderReferenceList(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkSkipChildren, nil
 	}
@@ -102,7 +57,7 @@ func (cr *citationRendererIEEE) renderReferenceList(w util.BufWriter, _ []byte, 
 			continue
 		}
 		hasRef[c.Key] = struct{}{}
-		cr.renderCiteRef(w, c, counts)
+		fr.renderCiteRef(w, c, counts)
 	}
 	_, _ = w.WriteString(`</div>`)
 
@@ -129,7 +84,7 @@ func getCiteCounts(refs *CitationReferences) map[bibtex.CiteKey]int {
 	return cnts
 }
 
-func (cr *citationRendererIEEE) renderCiteRef(w util.BufWriter, c *Citation, counts map[bibtex.CiteKey]int) {
+func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, c *Citation, counts map[bibtex.CiteKey]int) {
 	cnt := counts[c.Key]
 	citeIDs := allCiteIDs(c, cnt)
 	w.WriteString(`<div id="`)

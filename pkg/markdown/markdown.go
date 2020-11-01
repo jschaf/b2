@@ -70,12 +70,11 @@ func WithExtender(e goldmark.Extender) Option {
 func defaultExtensions(opts Options) []goldmark.Extender {
 	return []goldmark.Extender{
 		mdext.NewArticleExt(),
-		mdext.NewCitationExt(opts.CiteStyle, opts.CiteAttacher),
 		mdext.NewCodeBlockExt(),
 		mdext.NewColonBlockExt(),
 		mdext.NewColonLineExt(),
 		mdext.NewCustomExt(),
-		mdext.NewFootnoteExt(),
+		mdext.NewFootnoteExt(opts.CiteStyle, opts.CiteAttacher),
 		mdext.NewHeaderExt(),
 		mdext.NewHeadingExt(opts.HeadingAnchorStyle),
 		mdext.NewHeadingIDExt(),

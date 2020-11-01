@@ -11,7 +11,7 @@ bib_paths = ["./ref.bib"]
 
 Procella is a horizontally scalable, eventually consistent, distributed column
 store leveraging lambda architecture to support both realtime and batch queries
-[@chattopadhyay2019procella]. Let’s define those terms one at a time:
+[^@chattopadhyay2019procella]. Let’s define those terms one at a time:
 
 - Horizontally scalable means YouTube can spin up more machines and Procella
   will distribute queries to the new machines automagically.
@@ -104,7 +104,7 @@ time, and the min/max user ID. For example, if a file’s last event time is
 
 The output of the root server is a physical plan tree. Using trees to distribute
 large queries to many servers is similar to the approach described in the
-[Dremel (BigQuery) paper][dremel] [@melnik2010dremel]. A tree is necessary because the intermediate
+[Dremel (BigQuery) paper][dremel] [^@melnik2010dremel]. A tree is necessary because the intermediate
 data for large queries might exceed the resources for a single server. The root
 server partitions the physical query plan into sub-plans and distributes the
 sub-plans. Each data server fetches and transforms the data according to the
@@ -125,7 +125,7 @@ to a parent server for aggregation.
 
 The advantage of a column store for large analytical queries is a combination of
 four attributes as described by Abadi (think the Knuth of column stores) in
-[The Design and Implementation of Modern Column-Oriented Database Systems][abadi_col] [@abadi2013design].
+[The Design and Implementation of Modern Column-Oriented Database Systems][abadi_col] [^@abadi2013design].
 
 [abadi_col]: /papers/abadi2013design.pdf
 

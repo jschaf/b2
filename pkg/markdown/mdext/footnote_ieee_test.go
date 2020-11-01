@@ -20,7 +20,7 @@ func newCiteIEEE(key bibtex.CiteKey, order string) string {
 	return newCiteIEEECount(key, order, 0)
 }
 
-const testPath = "/abs-path"
+const testPath = "/abs-path/"
 
 var previewRegex = regexp.MustCompile(` data-preview-snippet=".*?"`)
 
@@ -33,14 +33,39 @@ func newCiteIEEECount(key bibtex.CiteKey, order string, count int) string {
 	if count > 0 {
 		id += "_" + strconv.Itoa(count)
 	}
-	attrs := fmt.Sprintf(`id=%s`, id)
-	aAttrs := fmt.Sprintf(
-		`href="%s/#cite_ref_%s" class=preview-target data-link-type=citation`,
-		testPath, key)
-	return tags.AAttrs(aAttrs, tags.CiteAttrs(attrs, order))
+	attrs := fmt.Sprintf(
+		`class="footnote-link preview-target" role=doc-noteref `+
+			`id=footnote-link-%s data-link-type=citation `+
+			`href="%s#cite_ref_%s"`,
+		key, testPath, key)
+	return tags.AAttrs(attrs, tags.Cite(order))
 }
 
-func TestNewCitationExt_IEEE(t *testing.T) {
+func newCiteIEEEAside(key bibtex.CiteKey, count int, t ...string) string {
+	id := "footnote-body-" + key
+	if count > 1 {
+		id += "_" + strconv.Itoa(count)
+	}
+	attrs := []string{
+		`class="footnote-body-cite footnote-body"`,
+		`id=` + id,
+		`role=doc-endnote`,
+		`style="margin-top: -18px"`,
+	}
+	return tags.AsideAttrs(strings.Join(attrs, " "),
+		t...,
+	)
+}
+
+func newInlineCite(order string) string {
+	return tags.CiteAttrs("class=cite-inline", order)
+}
+
+func joinElems(t ...string) string {
+	return strings.Join(t, "\n")
+}
+
+func TestNewFootnoteExt_IEEE(t *testing.T) {
 	style := cite.IEEE
 	tests := []struct {
 		name string
@@ -48,23 +73,25 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 		want string
 	}{
 		{
-			"ignores prefix and suffix",
-			"[**qux**, @bib_foo *bar*]",
-			tags.P(newCiteIEEE("bib_foo", "[1]")),
-		},
-		{
 			"keeps surrounding text",
-			"alpha [@bib_foo] bravo",
-			tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo"),
+			"alpha [^@bib_foo] bravo",
+			joinElems(
+				tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo"),
+				newCiteIEEEAside("bib_foo", 1, tags.P(newInlineCite("[1]"), newBibFooCite())),
+			),
 		},
 		{
 			"numbers different citations",
-			"alpha [@bib_foo] bravo [@bib_bar]",
-			tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo ", newCiteIEEE("bib_bar", "[2]")),
+			"alpha [^@bib_foo] bravo [^@bib_bar]",
+			joinElems(
+				tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo ", newCiteIEEE("bib_bar", "[2]")),
+				newCiteIEEEAside("bib_foo", 1, tags.P(newInlineCite("[1]"), newBibFooCite())),
+				newCiteIEEEAside("bib_bar", 1, tags.P(newInlineCite("[2]"), newBibBarCite())),
+			),
 		},
 		{
 			"re-use citation numbers",
-			"alpha [@bib_foo] bravo [@bib_bar] charlie [@bib_foo] delta [@bib_bar]",
+			"alpha [^@bib_foo] bravo [^@bib_bar] charlie [^@bib_foo] delta [^@bib_bar]",
 			tags.P(
 				"alpha ", newCiteIEEE("bib_foo", "[1]"),
 				" bravo ", newCiteIEEE("bib_bar", "[2]"),
@@ -75,13 +102,13 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 		{
 			"order numbering for mix of footnote and citation",
 			texts.Dedent(`
-        alpha [@bib_foo] [^side:foo] 
+        alpha [^@bib_foo] [^side:foo] 
 
         ::: footnote side:foo
         body-text
         :::
 
-        bravo [@bib_bar]
+        bravo [^@bib_bar]
 			`),
 			tags.P(
 				"alpha ",
@@ -103,8 +130,7 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := mdtest.NewTester(t,
-				NewCitationExt(style, NewCitationNopAttacher()),
-				NewFootnoteExt(),   // contains the global orderer
+				NewFootnoteExt(style, NewCitationNopAttacher()), // contains the global orderer
 				NewColonBlockExt(), // footnote bodies are colon blocks
 				NewCustomExt(),     // cite tags are implemented via custom
 			)
@@ -120,14 +146,13 @@ func TestNewCitationExt_IEEE(t *testing.T) {
 
 func TestNewCitationExt_IEEE_renderMultiplePosts(t *testing.T) {
 	style := cite.IEEE
-	md1 := "alpha [@bib_foo] bravo"
+	md1 := "alpha [^@bib_foo] bravo"
 	want1 := tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo")
-	md2 := "alpha [@bib_foo] bravo [@bib_bar]"
+	md2 := "alpha [^@bib_foo] bravo [@bib_bar]"
 	want2 := tags.P("alpha ", newCiteIEEE("bib_foo", "[1]"), " bravo ", newCiteIEEE("bib_bar", "[2]"))
 
 	md, ctx := mdtest.NewTester(t,
-		NewCitationExt(style, NewCitationNopAttacher()),
-		NewFootnoteExt(), // contains the global orderer
+		NewFootnoteExt(style, NewCitationNopAttacher()), // contains the global orderer
 	)
 	SetTOMLMeta(ctx, PostMeta{
 		BibPaths: []string{"./testdata/citation_test.bib"},
@@ -176,6 +201,24 @@ func newJournal(ts ...string) string {
 	return tags.EmAttrs("class=cite-journal", ts...)
 }
 
+func newBibFooCite() string {
+	return strings.Join([]string{
+		"F. Q. Blogs, J. P. Doe and A. Idiot,",
+		`"Turtles in the time continuum," in`,
+		newJournal("Turtles in the Applied Sciences"),
+		", Vol. 3, 2016.",
+	}, " ")
+}
+
+func newBibBarCite() string {
+	return strings.Join([]string{
+		"E. Ortiz, J. Breads and C. Clarisse,",
+		`"Turtles in the time continuum," in`,
+		newJournal("Nature"),
+		", Vol. 3, 2019.",
+	}, " ")
+}
+
 func TestNewCitationExt_IEEE_References(t *testing.T) {
 	style := cite.IEEE
 	tests := []struct {
@@ -186,7 +229,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 	}{
 		{
 			"2 references",
-			"alpha [@bib_foo] bravo [@bib_bar] charlie [@bib_foo] delta [@bib_bar]",
+			"alpha [^@bib_foo] bravo [^@bib_bar] charlie [^@bib_foo] delta [^@bib_bar]",
 			tags.P(
 				"alpha ", newCiteIEEE("bib_foo", "[1]"),
 				" bravo ", newCiteIEEE("bib_bar", "[2]"),
@@ -210,7 +253,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 		},
 		{
 			"concurrent programming in java",
-			"alpha [@lea2000concurrent]",
+			"alpha [^@lea2000concurrent]",
 			tags.P(
 				"alpha ", newCiteIEEE("lea2000concurrent", "[1]"),
 			),
@@ -222,7 +265,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 		},
 		{
 			"spanner",
-			"[@corbett2012spanner]",
+			"[^@corbett2012spanner]",
 			tags.P(newCiteIEEE("corbett2012spanner", "[1]")),
 			newCiteRefsIEEE(
 				newCiteRefIEEE("corbett2012spanner", 1, "[1]",
@@ -232,7 +275,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 		},
 		{
 			"corbett2013spanner",
-			"[@corbett2013spanner]",
+			"[^@corbett2013spanner]",
 			tags.P(newCiteIEEE("corbett2013spanner", "[1]")),
 			newCiteRefsIEEE(
 				newCiteRefIEEE("corbett2013spanner", 1, "[1]",
@@ -251,8 +294,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := mdtest.NewTester(t,
-				NewCitationExt(style, citeDocAttacher{}),
-				NewFootnoteExt(), // contains the global orderer
+				NewFootnoteExt(style, citeDocAttacher{}), // contains the global orderer
 			)
 			SetTOMLMeta(ctx, PostMeta{
 				BibPaths: []string{"./testdata/citation_test.bib"},

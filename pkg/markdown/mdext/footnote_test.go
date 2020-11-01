@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
 	"testing"
@@ -59,7 +60,7 @@ func TestNewFootnoteExt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := mdtest.NewTester(t,
-				NewFootnoteExt(),
+				NewFootnoteExt(cite.IEEE, NewCitationNopAttacher()),
 				NewColonBlockExt(),
 				NewCustomExt())
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
