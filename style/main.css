@@ -608,6 +608,14 @@ code-fn {
      */
     margin-top: 0 !important;
   }
+
+  /**
+   * Don't show citation bodies inline with text. Only show citation bodies if
+   * we have enough room on the side.
+   */
+  .footnote-body-cite {
+    display: none;
+  }
 }
 
 /**
