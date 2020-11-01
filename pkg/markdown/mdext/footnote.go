@@ -22,6 +22,7 @@ type FootnoteName string
 type FootnoteVariant string
 
 const (
+	FootnoteVariantCite   FootnoteVariant = "cite"
 	FootnoteVariantSide   FootnoteVariant = "side"
 	FootnoteVariantMargin FootnoteVariant = "margin"
 	FootnoteVariantPara   FootnoteVariant = "para"
@@ -34,13 +35,16 @@ var (
 
 // A FootnoteLink marks the location that the FootnoteBody describes.
 //
-// [^side:arch] or [^para:arch] or [^margin:arch]
+// [^side:arch] or [^para:arch] or [^margin:arch] or [^@spanner2012]
 type FootnoteLink struct {
 	ast.BaseInline
 	Variant FootnoteVariant
-	Name    FootnoteName // the full name including the type prefix, like "side:arch"
-	// The order of this footnote in the document. Only applies to sidenote
-	// variant, 0 for other variants.
+	// The full name including the type prefix, like "side:arch". The name for
+	// cite variants doesn't include the "@" prefix.
+	Name FootnoteName
+	// The order of this footnote in the document. Only applies to the sidenote
+	// and cite variant. Always 0 for other variants. Duplicate citations re-use
+	// the earliest order number.
 	Order int
 }
 
@@ -87,8 +91,9 @@ type FootnoteBody struct {
 	// above the body because it's reordered in an AST transformer. Helpful to
 	// render the body close to the link.
 	LinkDistance int
-	// The order of this footnote in the document. Only applies to sidenote
-	// variant, 0 for other variants.
+	// The order of this footnote in the document. Only applies to the sidenote
+	// and cite variant. Always 0 for other variants. Duplicate citations re-use
+	// the earliest order number.
 	Order int
 }
 
@@ -128,18 +133,18 @@ func (f footnoteLinkParser) Trigger() []byte {
 }
 
 func parseFootnoteName(s string) (FootnoteName, FootnoteVariant, error) {
-	var variant FootnoteVariant
 	switch {
 	case strings.HasPrefix(s, string(FootnoteVariantSide)+":"):
-		variant = FootnoteVariantSide
+		return FootnoteName(s), FootnoteVariantSide, nil
 	case strings.HasPrefix(s, string(FootnoteVariantMargin)+":"):
-		variant = FootnoteVariantMargin
+		return FootnoteName(s), FootnoteVariantMargin, nil
 	case strings.HasPrefix(s, string(FootnoteVariantPara)+":"):
-		variant = FootnoteVariantPara
+		return FootnoteName(s), FootnoteVariantPara, nil
+	case strings.HasPrefix(s, "@"):
+		return FootnoteName(s[1:]), FootnoteVariantCite, nil // drop @ from cite key
 	default:
 		return "", "", fmt.Errorf("unknown footnote variant: %q", s)
 	}
-	return FootnoteName(s), variant, nil
 }
 
 func (f footnoteLinkParser) Parse(_ ast.Node, block text.Reader, pc parser.Context) ast.Node {
@@ -210,9 +215,9 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader,
 	}
 }
 
-// Find the distance in bytes between the body and the name of link in the
-// previous block element (ancestor). Useful to manually position footnotes
-// so that they end up closer to the link without using JavaScript.
+// calcDistance finds the distance in bytes between the body and the name of
+// link in the previous block element (ancestor). Useful to manually position
+// footnotes so that they end up closer to the link without using JavaScript.
 func (fb footnoteBodyTransformer) calcDistance(source text.Reader, ancestor ast.Node, link *FootnoteLink, pc parser.Context) int {
 	endPos := 0
 	linkPos := 0
@@ -267,7 +272,7 @@ func (fr footnoteRenderer) renderFootnoteLink(w util.BufWriter, _ []byte, n ast.
 	switch f.Variant {
 	case FootnoteVariantPara: // no indicator for a paragraph note
 	case FootnoteVariantMargin: // no indicator for a margin note
-	case FootnoteVariantSide:
+	case FootnoteVariantSide, FootnoteVariantCite:
 		w.WriteString("<cite>[")
 		w.WriteString(strconv.Itoa(f.Order))
 		w.WriteString("]</cite>")
