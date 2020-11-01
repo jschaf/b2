@@ -93,17 +93,21 @@ func newNode(src ast.Node) ast.Node {
 	case *Citation:
 		c := NewCitation()
 		c.Key = n.Key
-		c.AbsPath = n.AbsPath
-		c.Order = n.Order
 		c.Bibtex = n.Bibtex
 		c.Prefix = n.Prefix
 		c.Suffix = n.Suffix
 		return c
+	case *CitationRef:
+		cr := NewCitationRef()
+		cr.Citation = newNode(n.Citation).(*Citation)
+		cr.Order = n.Order
+		cr.Count = n.Count
+		return cr
 	case *CitationReferences:
 		cr := NewCitationReferences()
-		cr.Citations = make([]*Citation, len(n.Citations))
-		for i, citation := range n.Citations {
-			cr.Citations[i] = newNode(citation).(*Citation)
+		cr.Refs = make([]*CitationRef, len(n.Refs))
+		for i, ref := range n.Refs {
+			cr.Refs[i] = newNode(ref).(*CitationRef)
 		}
 		return cr
 	case *ColonBlock:

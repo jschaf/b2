@@ -43,21 +43,14 @@ func (fr *footnoteIEEERenderer) renderReferenceList(w util.BufWriter, _ []byte, 
 		return ast.WalkSkipChildren, nil
 	}
 	refs := n.(*CitationReferences)
-	if len(refs.Citations) == 0 {
+	if len(refs.Refs) == 0 {
 		return ast.WalkSkipChildren, nil
 	}
 
-	hasRef := make(map[bibtex.CiteKey]struct{})
-	counts := getCiteCounts(refs)
-
 	_, _ = w.WriteString(`<div class=cite-references>`)
 	_, _ = w.WriteString(`<h2>References</h2>`)
-	for _, c := range refs.Citations {
-		if _, ok := hasRef[c.Key]; ok {
-			continue
-		}
-		hasRef[c.Key] = struct{}{}
-		fr.renderCiteRef(w, c, counts)
+	for _, c := range refs.Refs {
+		fr.renderCiteRef(w, c)
 	}
 	_, _ = w.WriteString(`</div>`)
 
@@ -66,29 +59,18 @@ func (fr *footnoteIEEERenderer) renderReferenceList(w util.BufWriter, _ []byte, 
 
 // allCiteIDs returns a slice of strings where each string is an HTML ID of a
 // citation.
-func allCiteIDs(c *Citation, count int) []string {
-	ids := make([]string, count)
+func allCiteIDs(cr *CitationRef) []string {
+	ids := make([]string, cr.Count)
 	for i := range ids {
-		ids[i] = c.CiteID(i)
+		ids[i] = cr.Citation.CiteID(i)
 	}
 	return ids
 }
 
-// getCiteCounts returns a map showing the number of times a citation appeared
-// in the document. Useful for backlinks from references to the citation.
-func getCiteCounts(refs *CitationReferences) map[bibtex.CiteKey]int {
-	cnts := make(map[bibtex.CiteKey]int, len(refs.Citations))
-	for _, c := range refs.Citations {
-		cnts[c.Key] += 1
-	}
-	return cnts
-}
-
-func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, c *Citation, counts map[bibtex.CiteKey]int) {
-	cnt := counts[c.Key]
-	citeIDs := allCiteIDs(c, cnt)
+func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, cr *CitationRef) {
+	citeIDs := allCiteIDs(cr)
 	w.WriteString(`<div id="`)
-	w.WriteString(c.ReferenceID())
+	w.WriteString(cr.Citation.ReferenceID())
 	w.WriteString(`" class=cite-reference>`)
 	w.WriteString(`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="`)
 	for i, c := range citeIDs {
@@ -98,10 +80,10 @@ func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, c *Citation, cou
 		w.WriteString(c)
 	}
 	w.WriteString(`">`)
-	w.WriteString("[" + strconv.Itoa(c.Order) + "]")
+	w.WriteString("[" + strconv.Itoa(cr.Order) + "]")
 	w.WriteString(`</cite> `)
 
-	renderCiteRefContent(w, c)
+	renderCiteRefContent(w, cr.Citation)
 	w.WriteString(`</div>`)
 }
 

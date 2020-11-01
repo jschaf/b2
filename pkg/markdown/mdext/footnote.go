@@ -190,7 +190,7 @@ func insertFootnoteBody(link *FootnoteLink, body *FootnoteBody) {
 	container.InsertBefore(container, before, body)
 }
 
-func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader, pc parser.Context) {
+func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reader, pc parser.Context) {
 	links := GetFootnoteLinks(pc)
 	bodies := GetFootnoteBodies(pc)
 	bibs := GetTOMLMeta(pc).BibPaths
@@ -205,18 +205,52 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader,
 	order := 1
 
 	// The number of times a key has been used thus far. Useful for
-	// generating unique IDs for the citation.
+	// generating unique IDs for citations that are used multiple times.
 	counts := make(map[FootnoteName]int)
 
 	for _, link := range links {
+		// Get the body first.
 		var body *FootnoteBody
 		if link.Variant == FootnoteVariantCite {
-			// The citation uses an absolute path because we cut off the references list
-			// on the index pages. So instead of broken anchor, deep link to the detail
-			// page.
+			// Cite bodies are generated from bibtex.
+			body = NewFootnoteBody()
+		} else {
+			// All other variants must have a corresponding body node.
+			b, ok := bodies[link.Name]
+			if !ok {
+				mdctx.PushError(pc, fmt.Errorf("no footnote body for footnote link %q", link.Name))
+				continue
+			}
+			body = b
+		}
+
+		// Keep track of already used order numbers. Only citations can be reused,
+		// but do it for all variants since it's simpler to keep logic in one spot.
+		if o, ok := seenOrders[string(link.Name)]; ok {
+			link.Order = o
+			body.Order = o
+		} else {
+			link.Order = order
+			body.Order = order
+			seenOrders[string(link.Name)] = order
+			order++
+		}
+
+		// Update ID based on count.
+		idSuffix := ""
+		if c := counts[link.Name]; c > 0 {
+			idSuffix = "-" + strconv.Itoa(c)
+		}
+		counts[link.Name] += 1
+
+		if link.Variant == FootnoteVariantCite {
+			// The citation uses an absolute path because we cut off the references
+			// list on the index pages. So instead of broken anchor, deep link to the
+			// detail page.
 			link.SetAttributeString("data-link-type", "citation")
 
 			// Cite variant bodies are defined by the bibtex entry.
+			cr := NewCitationRef()
 			c := NewCitation()
 			c.Key = bibtex.CiteKey(link.Name)
 			bib, ok := bibEntries[c.Key]
@@ -226,9 +260,9 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader,
 			}
 			c.Bibtex = bib
 
-			// Render preview for hover when we're not showing side notes.
-			// Cite links are preview targets in narrow viewports, when the citation
-			// body isn't shown in a side note.
+			// Render preview for hover when we're not showing side notes. Cite links
+			// are preview targets in narrow viewports, when the citation body isn't
+			// shown in a side note.
 			attrs.AddClass(link, "preview-target")
 			b := &bytes.Buffer{}
 			citeHTML := bufio.NewWriter(b)
@@ -240,31 +274,21 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader,
 			link.SetAttribute([]byte("data-link-type"), LinkCitation)
 
 			link.SetAttributeString("href", absPath+"#"+c.ReferenceID())
-			body = NewFootnoteBody()
 			body.Name = link.Name
 			body.Variant = link.Variant
 			para := ast.NewParagraph()
 			para.AppendChild(para, c)
 			body.AppendChild(body, para)
 			attrs.AddClass(body, "footnote-body-cite")
-			refs.Citations = append(refs.Citations, c)
+
+			cr.Citation = c
+			cr.Order = body.Order
+			cr.Count = counts[link.Name]
+			refs.Refs = append(refs.Refs, cr)
 		} else {
 			link.SetAttributeString("href", "#footnote-body-"+string(link.Name))
-			// All other variants must have a corresponding body node.
-			b, ok := bodies[link.Name]
-			if !ok {
-				mdctx.PushError(pc, fmt.Errorf("no footnote body for footnote link %q", link.Name))
-				continue
-			}
-			body = b
 		}
 
-		// Update ID based on count.
-		idSuffix := ""
-		if c := counts[link.Name]; c > 0 {
-			idSuffix = "-" + strconv.Itoa(c)
-		}
-		counts[link.Name] += 1
 		// Applies to all.
 		attrs.AddClass(link, "footnote-link")
 		link.SetAttributeString("role", "doc-noteref")
@@ -281,21 +305,12 @@ func (fb footnoteBodyTransformer) Transform(_ *ast.Document, source text.Reader,
 		distancePx := (dist/bytesPerLine)*lineHeight + lineHeight
 		body.SetAttributeString("style", "margin-top: -"+strconv.Itoa(distancePx)+"px")
 
-		// TODO: don't increment order for margin notes and duplicated cites.
-
-		// Keep track of already used order numbers. Only citations can be reused,
-		// but do it for all variants since it's simpler to keep logic in one spot.
-		if o, ok := seenOrders[string(link.Name)]; ok {
-			link.Order = o
-			body.Order = o
-		} else {
-			link.Order = order
-			body.Order = order
-			seenOrders[string(link.Name)] = order
-			order++
-		}
-
 		body.addCiteTag() // depends on order
+	}
+
+	// Attach the citation references.
+	if err := fb.citeRefsAttacher.Attach(doc, refs); err != nil {
+		mdctx.PushError(pc, fmt.Errorf("attach cite references: %w", err))
 	}
 }
 
