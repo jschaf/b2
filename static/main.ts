@@ -106,7 +106,7 @@ class Logger {
   }
 
   warn(...data: any[]) {
-    console.log(...data);
+    console.warn(...data);
   }
 
   info(...data: any[]) {
