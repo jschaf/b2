@@ -29,7 +29,7 @@ const (
 type PostMeta struct {
 	// The slug from the markdown frontmatter.
 	Slug string
-	// The absolute URL path for this post, e.g. "/foo-bar". No trailing slash.
+	// The absolute URL path for this post, e.g. "/foo-bar". Has trailing slash.
 	Path string
 	// The title extracted from the first header.
 	Title string
@@ -114,9 +114,9 @@ func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context)
 	if err := toml.Unmarshal(buf.Bytes(), &meta); err != nil {
 		panic(err)
 	}
-	meta.Path = "/" + meta.Slug
+	meta.Path = "/" + meta.Slug + "/"
 	if strings.Contains(mdctx.GetFilePath(pc), "/til/") {
-		meta.Path = "/til" + meta.Path
+		meta.Path = "/til" + meta.Path + "/"
 	}
 
 	postPath := mdctx.GetFilePath(pc)

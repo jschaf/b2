@@ -6,11 +6,12 @@ declare interface Window {
 }
 
 declare interface Navigator {
-  connection: NetworkInformation;
+  connection?: NetworkInformation;
 }
 
 declare interface NetworkInformation {
-  saveData: boolean;
+  saveData?: boolean;
+  effectiveType?: 'slow-2g'| '2g'| '3g'| '4g';
 }
 
 type EventProps = Record<string, string | number>;
@@ -76,6 +77,13 @@ const checkDef = <T>(x: T, msg?: string): NonNullable<T> => {
   return x as NonNullable<T>;
 };
 
+const checkHtmlEL = (x: unknown, msg?: string): HTMLElement => {
+  if (x instanceof HTMLElement) {
+    return x as HTMLElement;
+  }
+  throw new Error(msg ?? `Expected element to be an HTMLElement but was ${JSON.stringify(x)}.`)
+};
+
 function assertDef<T>(x: T, msg?: string): asserts x is NonNullable<T> {
   checkDef(x, msg);
 }
@@ -88,12 +96,17 @@ const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNull
   return x as NonNullable<T>;
 };
 
+/** A simple logger. */
 class Logger {
   private constructor() {
   }
 
   static forConsole(): Logger {
     return new Logger();
+  }
+
+  warn(...data: any[]) {
+    console.log(...data);
   }
 
   info(...data: any[]) {
@@ -131,14 +144,14 @@ window.heap = HeapAnalytics.forEnvId(
         elem.style.visibility === 'hidden';
     if (isBlocked) {
       window.adblockStatus = 'blocking';
-      console.debug(`adblock status: ${window.adblockStatus}`);
+      log.debug(`adblock status: ${window.adblockStatus}`);
       return;
     }
     await new Promise(resolve => setTimeout(resolve, intervalMs));
   }
   window.adblockStatus = 'none';
   window.heap.addEventProperties({ adblock: window.adblockStatus });
-  console.debug(`adblock status: ${window.adblockStatus}`);
+  log.debug(`adblock status: ${window.adblockStatus}`);
 })();
 
 /**
@@ -225,7 +238,7 @@ class PreviewLifecycle {
     const currentEl = checkDef(ev.target, 'preview target mouse over') as HTMLElement;
     const targetEl = currentEl.closest('.preview-target') as HTMLLinkElement;
     if (!targetEl) {
-      console.warn(`preview-box: no surrounding <a> element for ${ev.target}`);
+      log.info(`preview-box: no surrounding <a> element for ${ev.target}`);
       return;
     }
 
@@ -281,7 +294,7 @@ class PreviewLifecycle {
     this.currentTarget = null;
     this.hoverStart = null;
     if (!this.boxEl) {
-      console.warn(`boxEl was null but called hidePreviewBox`);
+      log.warn(`preview-box: boxEl was null but called hidePreviewBox`);
       return;
     }
     this.boxEl.classList.add('preview-disabled');
@@ -313,14 +326,14 @@ class PreviewLifecycle {
         const strIds = checkDef(targetEl.dataset.citeIds, `no citeIds attribute found`);
         const ids = strIds.split(' ');
         if (ids.length === 0) {
-          console.warn(`preview-box: no citation IDs exist for reference='${targetEl.textContent}'`);
+          log.warn(`preview-box: no citation IDs exist for reference='${targetEl.textContent}'`);
           return '';
         }
         const refs: HTMLElement[] = [];
         for (const id of ids) {
           const ref = document.getElementById(id);
           if (!ref) {
-            console.warn(`preview-box: no citation found for id='${id}'`);
+            log.warn(`preview-box: no citation found for id='${id}'`);
             continue;
           }
           refs.push(ref);
@@ -330,12 +343,12 @@ class PreviewLifecycle {
         for (const ref of refs) {
           const p1 = ref.parentElement; // Get to <a> containing the <cite>.
           if (!p1) {
-            console.warn(`preview-box: no parent for citation id='${ref.id}'`);
+            log.warn(`preview-box: no parent for citation id='${ref.id}'`);
             continue;
           }
           const p2 = p1.parentElement; // Get to enclosing elem for <a>.
           if (!p2) {
-            console.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
+            log.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
             continue;
           }
           const clone = p2.cloneNode(true) as HTMLElement;
@@ -361,10 +374,10 @@ class PreviewLifecycle {
         return title + backLinks.join('');
 
       default:
-        console.warn('preview-box: unknown link type: ' + type);
+        log.warn('preview-box: unknown link type: ' + type);
     }
 
-    console.warn('preview-box: failed to build content', targetEl);
+    log.warn('preview-box: failed to build content', targetEl);
     return '';
   }
 
@@ -464,7 +477,7 @@ class PreviewLifecycle {
     if (spaceAbove < pb.height && pb.height < spaceBelow) {
       // Place preview below target only if it can contain the entire preview
       // and the space above cannot.
-      console.debug('preview: placing below target - no overflow');
+      log.debug('preview: placing below target - no overflow');
       vertDelta = tb.bottom - pb.top + vertNudge;
       return { vertDelta: vertDelta, maxHeight, hasScroll: false };
     }
@@ -474,17 +487,17 @@ class PreviewLifecycle {
 
     const vertHidden = pb.height - maxHeight;
     if (vertHidden <= 0) {
-      console.debug('preview: placing above target - no overflow');
+      log.debug('preview: placing above target - no overflow');
       return { vertDelta, maxHeight, hasScroll: false };
     }
 
     // The preview extends past the top of the view port.
-    console.debug(
+    log.debug(
         `preview: extends past top of viewport by ${vertHidden}px.`);
     const maxSteal = marginVert * 0.6 + vertNudge * 0.6;
     // Remove the scrollbar by stealing padding.
     if (vertHidden < maxSteal) {
-      console.debug('preview: avoiding scrollbar by stealing padding');
+      log.debug('preview: avoiding scrollbar by stealing padding');
       return {
         vertDelta: vertDelta - vertHidden,
         maxHeight: maxHeight + vertHidden,
@@ -492,7 +505,7 @@ class PreviewLifecycle {
       };
     }
 
-    console.debug('preview: using vertical scroll bar');
+    log.debug('preview: using vertical scroll bar');
     assertDef(this.contentEl, `contentEl was null for calcVertDelta`);
     this.contentEl.style.overflowY = 'scroll';
     return { vertDelta: vertDelta + vertHidden, maxHeight, hasScroll: true };
@@ -516,11 +529,11 @@ class PreviewLifecycle {
     hasHover = true;
   }
   if (!hasHover) {
-    console.debug('preview: no hover support, skipping previews');
+    log.debug('preview: no hover support, skipping previews');
     return;
   }
 
-  console.debug('preview: hover supported, enabling previews');
+  log.debug('preview: hover supported, enabling previews');
   const preview = new PreviewLifecycle();
   preview.addListeners();
 })();
@@ -536,12 +549,12 @@ class PreviewLifecycle {
     ev.preventDefault();
     const paraEl = ev.target as HTMLLinkElement;
     if (paraEl == null) {
-      console.warn('copy-heading-url: event target is undefined');
+      log.warn('copy-heading-url: event target is undefined');
       return;
     }
     const headingHref = paraEl.href;
     if (headingHref == null || headingHref === '') {
-      console.warn('copy-heading-url: event target href is not defined');
+      log.warn('copy-heading-url: event target href is not defined');
       return;
     }
     const headingUrl = new URL(headingHref);
@@ -564,101 +577,106 @@ class PreviewLifecycle {
   }
 })();
 
-// Prefetch URLs on the same domain on mouseover or touch start events.
-// instant.page v1.2.2, (C) 2019 Alexandre Dieulot, https://instant.page/license
-// Originally shrunk by Chris Morgan and cleaned up by Joe Schafer.
-//
-// TODO: don't fetch same URL multiple times.
-// TODO: Allow other domains.
+// Prefetch URLs on the whitelisted domains on mouseover or touch start events.
+// Forked from instant.page, https://instant.page/license.
+// TODO: Allow other whitelisted domains.
 (() => {
-  let curHref: string | null = null;
-  let timer = 0;
-  let startTime = 0;
-  const prefetchEl = document.createElement("link");
-  const supportsPrefetch = prefetchEl.relList.supports("prefetch");
+  const preloads = new Set<string>() // hrefs already preloaded
+  let mouseoverTimer = 0;
+  const prefetcher = document.createElement("link");
+  const supportsPrefetch = prefetcher?.relList?.supports("prefetch") ?? false;
   const isSavingData = navigator?.connection?.saveData ?? false;
-  if (!supportsPrefetch || isSavingData) {
-    console.debug(`prefetch: disabled`);
+  const conn = navigator?.connection?.effectiveType ?? 'unknown'
+  const is2gConn = conn.includes('2g');
+  if (!supportsPrefetch || isSavingData || is2gConn) {
+    log.debug(`prefetch: disabled`);
     return;
   }
-  console.debug(`prefetch: enabled`);
+  log.debug(`prefetch: enabled`);
+  prefetcher.rel = "prefetch";
+  document.head.appendChild(prefetcher);
 
-  const disablePrefetch = (): void => {
-    curHref = null;
-    prefetchEl.removeAttribute("href");
-  };
+  const preload = (url: string): void => {
+    prefetcher.rel = 'prefetch';
+    prefetcher.href = url;
+    preloads.add(url);
+  }
 
-  const cancelPendingPrefetch = (ev: MouseEvent): void => {
+  const onMouseout = (ev: MouseEvent): void => {
     // On mouseout, target is the element we exited and relatedTarget is elem
     // we entered (or null).
-    let exitLink = checkDef(ev.target as HTMLLinkElement).closest("a");
+    let exitLink = checkHtmlEL(ev.target).closest("a");
     let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest("a");
     if (ev.relatedTarget && exitLink === enterLink) {
       return;
     }
-    if (timer === 0) {
-      disablePrefetch();
-    } else {
-      log.debug(`prefetch: canceling mouseover prefetch ${exitLink?.href}`);
-      clearTimeout(timer);
-      timer = 0;
+    if (mouseoverTimer !== 0) {
+      log.debug(`prefetch: canceling prefetch ${exitLink?.href}`);
+      clearTimeout(mouseoverTimer);
+      mouseoverTimer = 0;
     }
   };
 
-  const shouldPrefetch = (node: HTMLAnchorElement): boolean => {
-    if (!node || curHref === node.href) {
+  // Returns true if we should preload this anchor link, otherwise false.
+  const shouldPreload = (node: HTMLAnchorElement): boolean => {
+    if (!node) {
       return false;
     }
+    if (node.protocol !== 'http:' && node.protocol !== 'https:') {
+      return false;
+    }
+    if (node.protocol === 'http:' && location.protocol === 'https:') {
+      return false;
+    }
+    if (preloads.has(node.href)) {
+      log.debug(`prefetch: skipping url ${node.href}, already preloaded`);
+      return false;
+    }
+
     const url = new URL(node.href);
     if (url.origin !== location.origin) {
-      log.debug(`prefetch: skipping url, different origin ${url}`);
+      log.debug(`prefetch: skipping url ${url}, different origin`);
       return false;
     }
 
     const dest = url.pathname + url.search;
     const cur = location.pathname + location.search;
     if (dest === cur) {
-      log.debug(`prefetch: skipping url, exactly same as current ${url}`);
+      log.debug(`prefetch: skipping url ${url}, exactly same as current`);
       return false;
     }
     // Assume URLs that only differ by a trailing slash are the same.
     if (cur.slice(-1) === '/' && dest === cur.slice(0, -1)) {
-      log.debug(`prefetch: skipping url, same with trailing slash as current ${url}`);
+      log.debug(`prefetch: skipping url ${url}, same with trailing slash as current`);
       return false;
     }
-
     return true;
   };
 
-  prefetchEl.rel = "prefetch";
-  document.head.appendChild(prefetchEl);
-
+  // On touchstart, immediately preload the link.
   document.addEventListener("touchstart", (touchEv) => {
-    startTime = performance.now();
-    const link = checkDef(touchEv.target as HTMLElement).closest("a");
-    if (!link || !shouldPrefetch(link)) {
+    const link = checkHtmlEL(touchEv.target).closest("a");
+    if (!link || !shouldPreload(link)) {
       return;
     }
-    link.addEventListener("touchcancel", disablePrefetch, {passive: true});
-    link.addEventListener("touchend", disablePrefetch, {passive: true});
-    curHref = link.href;
-    prefetchEl.href = link.href;
+    preload(link.href)
   }, {capture: true, passive: true});
 
+  // On mouseover, preload the link after a delay.
   document.addEventListener("mouseover", (ev: MouseEvent) => {
-    if (1100 <= performance.now() - startTime) {
-      const link = checkDef(ev.target as HTMLElement).closest("a");
-      if (!link || !shouldPrefetch(link)) {
-        return;
-      }
-      link.addEventListener("mouseout", cancelPendingPrefetch, {passive: true});
-      curHref = link.href;
-      const prefetchDelayMillis = 65;
-      timer = setTimeout(() => {
-        log.debug(`prefetch: loading mouseover link ${link.href}`);
-        prefetchEl.href = link.href;
-        timer = 0;
-      }, prefetchDelayMillis);
+    // Browsers emulate mouse events from touch events so mouseover will be
+    // called after touchstart. We'll avoid double preloading because
+    // shouldPreload checks to see if we've already loaded a URL.
+    const link = checkHtmlEL(ev.target).closest("a");
+    if (!link || !shouldPreload(link)) {
+      return;
     }
+    link.addEventListener("mouseout", onMouseout, {passive: true});
+    const delayOnHover = 65;
+    mouseoverTimer = setTimeout(() => {
+      log.debug(`prefetch: loading mouseover link ${link.href}`);
+      preload(link.href)
+      mouseoverTimer = 0;
+    }, delayOnHover);
   }, {capture: true, passive: true});
 })();

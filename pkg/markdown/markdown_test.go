@@ -82,7 +82,7 @@ func articleHTML(meta mdext.PostMeta, title, text string) string {
 		meta.Date.Format("January _2, 2006"),
 	))
 	b.WriteString("<h1 class=\"title\">")
-	b.WriteString(fmt.Sprintf("<a href=%q title=%q>", "/"+meta.Slug, title))
+	b.WriteString(fmt.Sprintf("<a href=%q title=%q>", "/"+meta.Slug+"/", title))
 	b.WriteString(title)
 	b.WriteString("</a>")
 	b.WriteString("</h1>\n")
