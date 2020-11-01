@@ -634,8 +634,13 @@ class PreviewLifecycle {
     }
 
     const url = new URL(node.href);
-    if (url.origin !== location.origin) {
-      log.debug(`prefetch: skipping url ${url}, different origin`);
+    const allowedOrigins = [
+      location.origin,
+      "https://en.wikipedia.org",
+      "https://github.com",
+    ];
+    if (!allowedOrigins.includes(url.origin)) {
+      log.debug(`prefetch: skipping url ${url}, origin not allowed`);
       return false;
     }
 
