@@ -62,18 +62,19 @@ var footnoteLinkCtxKey = parser.NewContextKey()
 var footnoteBodyCtxKey = parser.NewContextKey()
 
 func AddFootnoteLink(pc parser.Context, f *FootnoteLink) {
-	if existing := pc.Get(footnoteLinkCtxKey); existing == nil {
-		pc.Set(footnoteLinkCtxKey, make(map[FootnoteName]*FootnoteLink))
+	existing := GetFootnoteLinks(pc)
+	if existing == nil {
+		existing = make([]*FootnoteLink, 0, 4)
 	}
-	notes := pc.Get(footnoteLinkCtxKey).(map[FootnoteName]*FootnoteLink)
-	notes[f.Name] = f
+	pc.Set(footnoteLinkCtxKey, append(existing, f))
 }
 
-func GetFootnoteLinks(pc parser.Context) map[FootnoteName]*FootnoteLink {
-	if existing := pc.Get(footnoteLinkCtxKey); existing == nil {
-		pc.Set(footnoteLinkCtxKey, make(map[FootnoteName]*FootnoteLink))
+func GetFootnoteLinks(pc parser.Context) []*FootnoteLink {
+	existing := pc.Get(footnoteLinkCtxKey)
+	if existing == nil {
+		return nil
 	}
-	return pc.Get(footnoteLinkCtxKey).(map[FootnoteName]*FootnoteLink)
+	return existing.([]*FootnoteLink)
 }
 
 func AddFootnoteBody(pc parser.Context, f *FootnoteBody) {
