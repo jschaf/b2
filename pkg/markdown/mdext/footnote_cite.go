@@ -38,9 +38,9 @@ func (c *Citation) Dump(source []byte, level int) {
 // CiteID returns the HTML CiteID that links to a citation.
 func (c *Citation) CiteID(count int) string {
 	if count == 0 {
-		return "cite_" + c.Key
+		return "footnote-link-" + c.Key
 	}
-	return "cite_" + c.Key + "_" + strconv.Itoa(count)
+	return "footnote-link-" + c.Key + "-" + strconv.Itoa(count)
 }
 
 // ReferenceID returns the HTML ID that links to the full reference for a

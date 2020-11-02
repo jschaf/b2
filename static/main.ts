@@ -88,14 +88,6 @@ function assertDef<T>(x: T, msg?: string): asserts x is NonNullable<T> {
   checkDef(x, msg);
 }
 
-const checkInstance = <T extends any>(x: unknown, typ: T, msg?: string): NonNullable<T> => {
-  checkDef(x, 'Express must be non-null for instanceof check');
-  if (!(x instanceof (typ as any))) {
-    throw new Error(msg ?? `Expression had instanceof ${x} but expected ${typ}`);
-  }
-  return x as NonNullable<T>;
-};
-
 /** A simple logger. */
 class Logger {
   private constructor() {
@@ -322,6 +314,7 @@ class PreviewLifecycle {
 
     const type = targetEl.dataset.linkType;
     switch (type) {
+      // A number in the citation references list.
       case 'cite-reference-num':
         const strIds = checkDef(targetEl.dataset.citeIds, `no citeIds attribute found`);
         const ids = strIds.split(' ');
@@ -341,17 +334,12 @@ class PreviewLifecycle {
 
         const backLinks = [`<ul class="cite-backlinks">`];
         for (const ref of refs) {
-          const p1 = ref.parentElement; // Get to <a> containing the <cite>.
+          const p1 = ref.parentElement; // Get enclosing elem for <a>
           if (!p1) {
             log.warn(`preview-box: no parent for citation id='${ref.id}'`);
             continue;
           }
-          const p2 = p1.parentElement; // Get to enclosing elem for <a>.
-          if (!p2) {
-            log.warn(`preview-box: no grandparent for citation id='${ref.id}'`);
-            continue;
-          }
-          const clone = p2.cloneNode(true) as HTMLElement;
+          const clone = p1.cloneNode(true) as HTMLElement;
           // Remove ID attributes and highlight the node.
           this.recurseChildren(clone, (e) => {
             if (e.id === ref.id) {
