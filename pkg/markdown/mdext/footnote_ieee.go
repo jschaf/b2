@@ -127,9 +127,11 @@ func renderCiteRefContent(w util.BufWriter, c *Citation) {
 		w.WriteString(num)
 	}
 
-	if pub := trimBraces(c.Bibtex.Tags[bibtex.FieldPublisher]); pub != "" {
-		writeSep()
-		w.WriteString(pub)
+	if c.Bibtex.Type == bibtex.EntryBook {
+		if pub := trimBraces(c.Bibtex.Tags[bibtex.FieldPublisher]); pub != "" {
+			writeSep()
+			w.WriteString(pub)
+		}
 	}
 
 	if year := trimBraces(c.Bibtex.Tags[bibtex.FieldYear]); year != "" {
