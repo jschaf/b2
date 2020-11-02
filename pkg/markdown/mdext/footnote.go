@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -200,7 +201,6 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 		mdctx.PushError(pc, err)
 		return
 	}
-	refs := NewCitationReferences()
 	absPath := GetTOMLMeta(pc).Path
 	seenOrders := make(map[string]int)
 	order := 1
@@ -208,6 +208,8 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 	// The number of times a key has been used thus far. Useful for
 	// generating unique IDs for citations that are used multiple times.
 	counts := make(map[FootnoteName]int)
+
+	citeRefs := make(map[FootnoteName]*CitationRef)
 
 	for _, link := range links {
 		// Get the body first.
@@ -285,7 +287,9 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 			cr.Citation = c
 			cr.Order = body.Order
 			cr.Count = counts[link.Name]
-			refs.Refs = append(refs.Refs, cr)
+			// Last write wins for citation references. This is okay because the order
+			// should be the same but the count will increase.
+			citeRefs[link.Name] = CloneNode(cr).(*CitationRef)
 		} else {
 			link.SetAttributeString("href", "#footnote-body-"+string(link.Name))
 		}
@@ -308,6 +312,16 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 
 		body.addCiteTag() // depends on order
 	}
+
+	// Build the citation references. The references contains 1 copy of each
+	// citation in order by appearance.
+	refs := NewCitationReferences()
+	for _, ref := range citeRefs {
+		refs.Refs = append(refs.Refs, ref)
+	}
+	sort.Slice(refs.Refs, func(i, j int) bool {
+		return refs.Refs[i].Order < refs.Refs[j].Order
+	})
 
 	// Attach the citation references.
 	if fb.citeRefsAttacher != nil {

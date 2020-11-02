@@ -25,7 +25,7 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">
+          <a href="#footnote-body-side:foo" class="footnote-link" role="doc-noteref" id="footnote-link-side:foo">
 			      <cite>[1]</cite>
 			    </a>
           alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima
@@ -46,7 +46,7 @@ func TestNewFootnoteExt(t *testing.T) {
       `),
 			texts.Dedent(`
         <p>
-          <a class="footnote-link" role="doc-noteref" href="#footnote-body-side:foo" id="footnote-link-side:foo">
+          <a href="#footnote-body-side:foo" class="footnote-link" role="doc-noteref" id="footnote-link-side:foo">
 			      <cite>[1]</cite>
 			    </a>
           link-text

@@ -289,7 +289,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			),
 		},
 		{
-			"spanner",
+			"corbett2012spanner",
 			"[^@corbett2012spanner]",
 			newCiteRefsIEEE(
 				newCiteRefIEEE("corbett2012spanner", 1, "[1]",

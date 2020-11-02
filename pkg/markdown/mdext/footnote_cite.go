@@ -17,9 +17,9 @@ type Citation struct {
 	Key bibtex.CiteKey
 	// The bibtex entry this citation points to.
 	Bibtex bibtex.Entry
-	// The prefix in a citation reference, i.e the "foo" in `[foo @qux]`.
+	// The prefix in a citation reference, i.e the "foo" in `[^foo @qux]`.
 	Prefix string
-	// The suffix in a citation reference, i.e the "bar" in `[@qux bar]`.
+	// The suffix in a citation reference, i.e the "bar" in `[^@qux bar]`.
 	Suffix string
 }
 
@@ -58,7 +58,7 @@ type CitationRef struct {
 	// Order the citation appeared in the doc. Not contiguous because sidenotes
 	// are also ordered.
 	Order int
-	// The number of times the citation appeared in the doc. Useful to generate
+	// The number of times the citation appeared in the doc. Useful for generating
 	// backlinks from the reference to the citation link in the doc.
 	Count int
 }
