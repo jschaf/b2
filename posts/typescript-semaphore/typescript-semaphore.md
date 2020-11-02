@@ -17,7 +17,7 @@ more regular work of copying JSON from one destination to another.
 
 Counting [semaphores] are used to "control the number of activities that can
 access a certain resource or perform a given action at the same time."
-[@lea2000concurrent]
+[^@lea2000concurrent]
 
 [semaphores]: https://en.wikipedia.org/wiki/Semaphore_(programming)
 
