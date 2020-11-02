@@ -678,7 +678,7 @@ cite.cite-inline {
 
 /** Highlight the reference when scrolling to it after clicking a citation. */
 .cite-reference:target, cite:target {
-  animation: reference-highlight 4s;
+  animation: reference-highlight 7s;
 }
 
 /** Dedent the cite numbers. */
