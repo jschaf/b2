@@ -2,9 +2,9 @@ package mdext
 
 import "C"
 import (
-	"github.com/jschaf/b2/pkg/bibtex"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/bibtex"
 	"github.com/yuin/goldmark/renderer"
 	"strconv"
 	"strings"

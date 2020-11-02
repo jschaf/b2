@@ -4,21 +4,22 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/jschaf/b2/pkg/bibtex"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
+	"github.com/jschaf/bibtex"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
-	"os"
-	"strconv"
-	"strings"
 )
 
 type FootnoteName string
@@ -309,8 +310,10 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 	}
 
 	// Attach the citation references.
-	if err := fb.citeRefsAttacher.Attach(doc, refs); err != nil {
-		mdctx.PushError(pc, fmt.Errorf("attach cite references: %w", err))
+	if fb.citeRefsAttacher != nil {
+		if err := fb.citeRefsAttacher.Attach(doc, refs); err != nil {
+			mdctx.PushError(pc, fmt.Errorf("attach cite references: %w", err))
+		}
 	}
 }
 

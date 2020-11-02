@@ -2,19 +2,19 @@ package mdext
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"github.com/jschaf/b2/pkg/texts"
-	"github.com/yuin/goldmark/parser"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/bibtex"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/htmls/tags"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/bibtex"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/parser"
 )
 
 func newCiteIEEE(key bibtex.CiteKey, order string) string {
@@ -154,7 +154,7 @@ func TestNewFootnoteExt_IEEE(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			md, ctx := mdtest.NewTester(t,
-				NewFootnoteExt(style, NewCitationNopAttacher()), // contains the global orderer
+				NewFootnoteExt(style, NewCitationNopAttacher()),
 				NewColonBlockExt(), // footnote bodies are colon blocks
 				NewCustomExt(),     // cite tags are implemented via custom
 			)

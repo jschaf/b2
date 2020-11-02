@@ -17,6 +17,7 @@ require (
 	github.com/h2non/bimg v1.1.4
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/jschaf/bibtex v0.0.0-20200902164015-b3e70e2ff481
 	github.com/karrick/godirwalk v1.15.6
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible

@@ -3,7 +3,7 @@ package mdext
 import (
 	"errors"
 	"fmt"
-	"github.com/jschaf/b2/pkg/bibtex"
+	"github.com/jschaf/bibtex"
 	"github.com/yuin/goldmark/ast"
 	"strconv"
 )
