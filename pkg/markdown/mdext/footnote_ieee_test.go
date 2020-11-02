@@ -137,7 +137,7 @@ func TestNewFootnoteExt_IEEE(t *testing.T) {
 					`</a>`,
 				),
 				texts.Dedent(`
-        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote" style="margin-top: -18px">
+        <aside class="footnote-body" id="footnote-body-side:foo" role="doc-endnote">
         <p><cite class=cite-inline>[2]</cite> body-text</p>
         </aside>
 			`),
