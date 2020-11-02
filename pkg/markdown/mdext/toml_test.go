@@ -1,7 +1,9 @@
 package mdext
 
 import (
+	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 )
 
 func TestMeta(t *testing.T) {
+	root := git.MustFindRootDir()
 	tests := []struct {
 		name         string
 		src          string
@@ -22,7 +25,7 @@ func TestMeta(t *testing.T) {
 				+++
 				slug = "a_slug"
 				date = 2019-09-20
-        bib_paths = ["./ref.bib"]
+        bib_paths = ["./ref.bib", "/r1/r2.bib"]
 				+++
 				# Hello goldmark-meta
       `),
@@ -33,7 +36,7 @@ func TestMeta(t *testing.T) {
 				Path:     "/a_slug/",
 				Slug:     "a_slug",
 				Date:     time.Date(2019, time.September, 20, 0, 0, 0, 0, time.Local),
-				BibPaths: []string{"/md/test/ref.bib"},
+				BibPaths: []string{"/md/test/ref.bib", filepath.Join(root, "r1/r2.bib")},
 			},
 		},
 	}

@@ -1,6 +1,7 @@
 package mdext
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -250,7 +251,7 @@ func newBibFooCite() string {
 	return strings.Join([]string{
 		"F. Q. Blogs, J. P. Doe and A. Idiot,",
 		`"Turtles in the time continuum," in`,
-		newJournal("Turtles in the Applied Sciences"),
+		newJournal("Turtles Appl. Sciences"),
 		", Vol. 3, 2016.",
 	}, " ")
 }
@@ -293,22 +294,7 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			"[^@corbett2012spanner]",
 			newCiteRefsIEEE(
 				newCiteRefIEEE("corbett2012spanner", 1, "[1]",
-					`J. C. Corbett, <em>et al.</em>, "Spanner: Google's Globally-Distributed Database," 2012.`,
-				),
-			),
-		},
-		{
-			"corbett2013spanner",
-			"[^@corbett2013spanner]",
-			newCiteRefsIEEE(
-				newCiteRefIEEE("corbett2013spanner", 1, "[1]",
-					`J. C. Corbett, <em>et al.</em>, "Spanner: Google's Globally-Distributed Database,"`,
-					" in "+newJournal("ACM Trans. Comput. Syst.")+",",
-					" Vol. 31,",
-					" 2013,",
-					" doi: ",
-					tags.AAttrs(`href="https://doi.org/10.1145/2491245"`, "10.1145/2491245"),
-					".",
+					`J. C. Corbett, <em>et al.</em>, "Spanner: Google's Globally-Distributed Database," in <em class="cite-conference">OSDI</em>, 2012.`,
 				),
 			),
 		},
@@ -327,6 +313,113 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			})
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.wantRefs, removeAllButReferences)
+		})
+	}
+}
+
+// testBufWriter is a simple implementation of util.BufWriter.
+type testBufWriter struct {
+	*bytes.Buffer
+}
+
+func newTestBufWriter() *testBufWriter {
+	return &testBufWriter{
+		Buffer: &bytes.Buffer{},
+	}
+}
+
+func (tw *testBufWriter) Available() int {
+	return tw.Cap() - tw.Len()
+}
+
+func (tw *testBufWriter) Buffered() int {
+	return tw.Len()
+}
+
+func (tw *testBufWriter) Flush() error {
+	return nil
+}
+
+func ieeePageRange(lo, hi int) string {
+	return "pp. " + strconv.Itoa(lo) + texts.EnDash + strconv.Itoa(hi)
+}
+
+func ieeeDOI(doi string) string {
+	return fmt.Sprintf(`doi: <a href="https://doi.org/%s">%s</a>`, doi, doi)
+}
+
+func ieeeJournal(journal string) string {
+	return fmt.Sprintf(`in <em class=cite-journal>%s</em>`, journal)
+}
+
+func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
+	tests := []struct {
+		bibEntry string
+		want     string
+	}{
+		{
+			texts.Dedent(`
+				@inproceedings{canonne2020learning,
+				  title={Learning from satisfying assignments under continuous distributions},
+				  author={Canonne, Clement L and De, Anindya and Servedio, Rocco A},
+				  booktitle={Proceedings of the Fourteenth Annual ACM-SIAM Symposium on Discrete Algorithms},
+				  pages={82--101},
+				  year={2020},
+				  organization={SIAM}
+			  }
+     	`),
+			texts.Join(
+				`C. L. Canonne, A. De and R. A. Servedio, `,
+				`"Learning from satisfying assignments under continuous distributions," `,
+				`in <em class=cite-conference>Proc. 14th Annu. ACM-SIAM Symp. Discrete Algorithms</em>, `,
+				`2020, `,
+				ieeePageRange(82, 101),
+				".",
+			),
+		},
+		{
+			texts.Dedent(`
+        @article{badrin2017segnet,
+        	title        = {SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation},
+        	author       = {V. {Badrinarayanan} and A. {Kendall} and R. {Cipolla}},
+        	year         = 2017,
+        	journal      = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+        	volume       = 39,
+        	number       = 12,
+        	pages        = {2481--2495},
+        	doi          = {10.1109/TPAMI.2016.2644615}
+        }
+			`),
+			texts.JoinSpace(
+				`V. Badrinarayanan, A. Kendall and R. Cipolla,`,
+				`"SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation,"`,
+				ieeeJournal(`IEEE Trans. Pattern Analysis Mach. Intell.`)+`,`,
+				`Vol. 39,`,
+				`no. 12,`,
+				`2017,`,
+				ieeePageRange(2481, 2495)+`,`,
+				ieeeDOI(`10.1109/TPAMI.2016.2644615`)+`.`,
+			),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(texts.FirstLine(strings.TrimSpace(tt.bibEntry)), func(t *testing.T) {
+			entries, err := bibtex.Read(strings.NewReader(tt.bibEntry))
+			if err != nil {
+				t.Error(err)
+			}
+			if len(entries) != 1 {
+				t.Fatalf("expected exactly 1 bibtex entry, had %d", len(entries))
+			}
+			entry := entries[0]
+			c := NewCitation()
+			c.Key = entry.Key
+			c.Bibtex = entry
+			b := newTestBufWriter()
+			renderCiteRefContent(b, c)
+			if diff := cmp.Diff(tt.want, b.String()); diff != "" {
+				t.Errorf("renderCiteRefContent() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

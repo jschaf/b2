@@ -1,0 +1,3 @@
+package texts
+
+const EnDash = "–"

@@ -2,7 +2,7 @@
 slug = "procella-youtube-analytical-database"
 date = 2020-06-21
 visibility = "published"
-bib_paths = ["./ref.bib"]
+bib_paths = ["/ref.bib"]
 +++
 
 # Procella - YouTube’s analytical column store

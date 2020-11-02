@@ -1,3 +1,4 @@
+//
 package mdext
 
 import "C"
@@ -87,40 +88,59 @@ func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, cr *CitationRef)
 	w.WriteString(`</div>`)
 }
 
+// renderCiteRefContent is the main formatter for an IEEE citation.
+// Follows https://ieeeauthorcenter.ieee.org/wp-content/uploads/IEEE-Reference-Guide.pdf.
 func renderCiteRefContent(w util.BufWriter, c *Citation) {
 	renderAuthors(w, c)
 	renderTitle(w, c)
 	hasInfoAfterTitle := false
-	writeTitleSep := func() {
+	writeSep := func() {
 		if hasInfoAfterTitle {
 			w.WriteRune(',')
 		}
 		w.WriteRune(' ')
-	}
-
-	if jrn := trimBraces(c.Bibtex.Tags["journal"]); jrn != "" {
-		writeTitleSep()
-		renderJournal(w, jrn)
 		hasInfoAfterTitle = true
 	}
 
-	if vol := trimBraces(c.Bibtex.Tags["volume"]); vol != "" {
-		writeTitleSep()
+	switch c.Bibtex.Type {
+	case bibtex.EntryArticle:
+		if jrn := trimBraces(c.Bibtex.Tags[bibtex.FieldJournal]); jrn != "" {
+			writeSep()
+			renderJournal(w, jrn)
+		}
+	case bibtex.EntryInProceedings:
+		if t := trimBraces(c.Bibtex.Tags[bibtex.FieldBookTitle]); t != "" {
+			writeSep()
+			renderConference(w, t)
+		}
+	}
+
+	if vol := trimBraces(c.Bibtex.Tags[bibtex.FieldVolume]); vol != "" {
+		writeSep()
 		w.WriteString("Vol. ")
 		w.WriteString(vol)
-		hasInfoAfterTitle = true
 	}
 
-	if year := trimBraces(c.Bibtex.Tags["year"]); year != "" {
-		writeTitleSep()
+	if num := trimBraces(c.Bibtex.Tags[bibtex.FieldNumber]); num != "" {
+		writeSep()
+		w.WriteString("no. ")
+		w.WriteString(num)
+	}
+
+	if year := trimBraces(c.Bibtex.Tags[bibtex.FieldYear]); year != "" {
+		writeSep()
 		w.WriteString(year)
-		hasInfoAfterTitle = true
+	}
+
+	if p := trimBraces(c.Bibtex.Tags[bibtex.FieldPages]); p != "" {
+		writeSep()
+		w.WriteString("pp. ")
+		w.WriteString(strings.Replace(p, "--", texts.EnDash, 1))
 	}
 
 	if doi := trimBraces(c.Bibtex.Tags["doi"]); doi != "" {
-		writeTitleSep()
+		writeSep()
 		renderDOI(w, c)
-		hasInfoAfterTitle = true
 	}
 	w.WriteString(".")
 }
@@ -173,7 +193,24 @@ func renderTitle(w util.BufWriter, c *Citation) {
 
 func renderJournal(w util.BufWriter, journal string) {
 	w.WriteString("in <em class=cite-journal>")
-	w.WriteString(journal)
+	_, _ = ieeeAbbrevReplacer.WriteString(w, journal)
+	w.WriteString("</em>")
+}
+
+// renderConference formats a conference name in IEEE style.
+//
+// IEEE reference guide, section B includes the following guidance:
+//
+// 1. Use the standard abbreviations below for all words in the conference.
+// 2. Write out all the remaining words, but omit most articles and prepositions
+//    like "of the" and "on." That is,
+//    "Proceedings of the 1996 Robotics and Automation Conference"
+//    becomes
+//    "Proc. 1996 Robotics and Automation Conf."
+// 3. All published conference or proceedings papers have page numbers.
+func renderConference(w util.BufWriter, c string) {
+	w.WriteString("in <em class=cite-conference>")
+	_, _ = ieeeAbbrevReplacer.WriteString(w, c)
 	w.WriteString("</em>")
 }
 
@@ -202,3 +239,69 @@ func trimBraces(s string) string {
 	}
 	return texts.ReadonlyString(b[lo:hi])
 }
+
+var ieeeAbbrevReplacer = strings.NewReplacer(
+	// Common abbreviations.
+	"Annals", "Ann.",
+	"Annual", "Annu.",
+	"Applied", "Appl.",
+	"Colloquium", "Colloq.",
+	"Communications", "Commun.",
+	"Conference", "Conf.",
+	"Congress", "Congr.",
+	"Convention", "Conv.",
+	"Digest", "Dig.",
+	"Exposition", "Expo.",
+	"Intelligence", "Intell.",
+	"International", "Int.",
+	"Journal", "J.",
+	"Machine", "Mach.",
+	"National", "Nat.",
+	"Proceedings", "Proc.",
+	"Record", "Rec.",
+	"Society", "Soc.",
+	"Systems", "Syst.",
+	"Symposium", "Symp.",
+	"Technical", "Tech.",
+	"Transactions", "Trans.",
+	// Replace numbers with ordinals. The general case requires our own
+	// replacer.
+	"First", "1st",
+	"Second", "2nd",
+	"Third", "3rd",
+	"Fourth", "4th",
+	"Fifth", "5th",
+	"Sixth", "6th",
+	"Seventh", "7th",
+	"Eighth", "8th",
+	"Ninth", "9th",
+	"Tenth", "10th",
+	"Eleventh", "11th",
+	"Twelfth", "12th",
+	"Thirteenth", "13th",
+	"Fourteenth", "14th",
+	"Fifteenth", "15th",
+	"Sixteenth", "16th",
+	"Seventeenth", "17th",
+	"Eighteenth", "18th",
+	"Nineteenth", "19th",
+	// To replace articles, we need to anchor with spaces. This isn't a perfect
+	// way to replace all articles but it's good enough. The best method is to
+	// write our own replacer. Multiple runs of articles must be replaced
+	// separately.
+	// Two word articles
+	" in the ", " ",
+	" of the ", " ",
+	" of a ", " ",
+	// Single word articles
+	" a ", " ",
+	" and ", " ",
+	" by ", " ",
+	" from ", " ",
+	" in ", " ",
+	" of ", " ",
+	" on ", " ",
+	" the ", " ",
+	" to ", " ",
+	" with ", " ",
+)

@@ -2,7 +2,7 @@
 slug = "typescript-semaphore"
 date = 2020-10-15
 visibility = "draft"
-bib_paths = ["./ref.bib"]
+bib_paths = ["/ref.bib"]
 +++
 
 # Creating a semaphore in TypeScript
@@ -17,7 +17,7 @@ more regular work of copying JSON from one destination to another.
 
 Counting [semaphores] are used to "control the number of activities that can
 access a certain resource or perform a given action at the same time."
-[^@lea2000concurrent]
+[^@goetz2006java]
 
 [semaphores]: https://en.wikipedia.org/wiki/Semaphore_(programming)
 

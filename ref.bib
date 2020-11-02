@@ -1,13 +1,15 @@
-@inproceedings{msker2019, 
-  title = {{Hyperion: Building the Largest In-memory Search Tree}}, 
-  author = {Mäsker, Markus and Süß, Tim and Nagel, Lars and Zeng, Lingfang and Brinkmann, André}, 
-  abstract = {Indexes are essential in data management systems to increase the speed of data retrievals. Widespread data structures to provide fast and memory-efficient indexes are prefix tries. Implementations like Judy, ART, or HOT optimize their internal alignments for cache and vector unit efficiency. While these measures usually improve the performance substantially, they can have a negative impact on memory efficiency. In this paper we present Hyperion, a trie-based main-memory key-value store achieving extreme space efficiency. In contrast to other data structures, Hyperion does not depend on CPU vector units, but scans the data structure linearly. Combined with a custom memory allocator, Hyperion accomplishes a remarkable data density while achieving a competitive point query and an exceptional range query performance. Hyperion can significantly reduce the index memory footprint and its performance-to-memory ratio is more than two times better than the best implemented alternative strategy for randomized string data sets.}, 
-  pages = {1207--1222}, 
-  doi = {10.1145/3299869.3319870}, 
-  read = {false}, 
-  year = {2019}
+@article{abadi2013design,
+  title={The design and implementation of modern column-oriented database systems},
+  author={Abadi, Daniel and Boncz, Peter and Harizopoulos, Stavros and Idreos, Stratos and Madden, Samuel and others},
+  journal={Foundations and Trends in Databases},
+  volume={5},
+  number={3},
+  pages={197--280},
+  year={2013},
+  publisher={Now Publishers, Inc.}
 }
-@article{binna2018, 
+
+@article{binna2018,
   title = {{HOT: A Height Optimized Trie Index for Main-Memory Database Systems}}, 
   author = {Binna, Robert and Zangerle, Eva and Pichl, Martin and Specht, Günther and Leis, Viktor}, 
   abstract = {We present the Height Optimized Trie (HOT), a fast and space-efficient in-memory index structure. The core algorithmic idea of HOT is to dynamically vary the number of bits considered at each node, which enables a consistently high fanout and thereby good cache efficiency. The layout of each node is carefully engineered for compactness and fast search using SIMD instructions. Our experimental results, which use a wide variety of workloads and data sets, show that HOT outperforms other state-of-the-art index structures for string keys both in terms of search performance and memory footprint, while being competitive for integer keys. We believe that these properties make HOT highly useful as a general-purpose index structure for main-memory databases.}, 
@@ -15,8 +17,68 @@
   doi = {10.1145/3183713.3196896}, 
   year = {2018}
 }
-@inproceedings{walleweineising2018, 
-  title = {{SIMD Acceleration for Main-Memory Index Structures – A Survey}}, 
+
+@article{chattopadhyay2019procella,
+  title={Procella: Unifying serving and analytical data at YouTube},
+  author={Chattopadhyay, Biswapesh and Dutta, Priyam and Liu, Weiran and Tinn, Ott and Mccormick, Andrew and Mokashi, Aniket and Harvey, Paul and Gonzalez, Hector and Lomax, David and Mittal, Sagar and others},
+  journal={Proceedings of the VLDB Endowment},
+  volume={12},
+  number={12},
+  pages={2022--2034},
+  year={2019},
+  publisher={VLDB Endowment}
+}
+
+@inproceedings{escriva2012,
+  title = {{HyperDex: A Distributed, Searchable Key-Value Store}},
+  author = {Escriva, Robert and Wong, Bernard and Sirer, Emin Gün},
+  abstract = {Distributed key-value stores are now a standard component of high-performance web services and cloud computing applications. While key-value stores offer significant performance and scalability advantages compared to traditional databases, they achieve these properties through a restricted API that limits object retrieval---an object can only be retrieved by the (primary and only) key under which it was inserted. This paper presents HyperDex, a novel distributed key-value store that provides a unique search primitive that enables queries on secondary attributes. The key insight behind HyperDex is the concept of hyperspace hashing in which objects with multiple attributes are mapped into a multidimensional hyperspace. This mapping leads to efficient implementations not only for retrieval by primary key, but also for partially-specified secondary attribute searches and range queries. A novel chaining protocol enables the system to achieve strong consistency, maintain availability and guarantee fault tolerance. An evaluation of the full system shows that HyperDex is 12-13x faster than Cassandra and MongoDB for finding partially specified objects. Additionally, HyperDex achieves 2-4x higher throughput for get/put operations.},
+  address = {Helsinki, Finland},
+  pages = {25--36},
+  doi = {10.1145/2377677.2377681},
+  read = {false},
+  year = {2012}
+}
+
+@book{goetz2006java,
+  title = {Java Concurrency in Practice},
+  author={Goetz, Brian and Peierls, Tim and Lea, Doug and Bloch, Joshua and Bowbeer, Joseph and Holmes, David},
+  abstract = {As processors become faster and multiprocessor systems become cheaper, the need to take advantage of multithreading in order to achieve full hardware resource utilization only increases the importance of being able to incorporate concurrency in a wide variety of application categories. For many developers, concurrency remains a mystery. Developing, testing and debugging multithreaded programs is extremely difficult because concurrency hazards do not manifest themselves uniformly or reliably. This book is intended to be neither an introduction to concurrency (any threading chapter in an "intro" book does that) nor is it an encyclopedic reference of All Things Concurrency (that would be Doug Lea's Concurrent Programming in Java). Instead, this title is a combination of concepts, guidelines, and examples intended to assist developers in the difficult process of understanding concurrency and its new tools in J2SE 5.0. Filled with contributions from Java gurus such as Josh Bloch, David Holmes and Doug Lea, this book provides any Java programmers with the basic building blocks they need to gain a basic understanding of concurrency and its benefits.},
+  year={2006},
+  publisher = {Addison-Wesley Professional},
+  isbn = {978-0321349606},
+}
+
+@book{lea2000concurrent,
+  title={Concurrent Programming in Java: Design Principles and Patterns},
+  author={Lea, Douglas},
+  year={2000},
+  publisher={Addison-Wesley Professional}
+}
+
+@article{melnik2010dremel,
+  title={Dremel: interactive analysis of web-scale datasets},
+  author={Melnik, Sergey and Gubarev, Andrey and Long, Jing Jing and Romer, Geoffrey and Shivakumar, Shiva and Tolton, Matt and Vassilakis, Theo},
+  journal={Proceedings of the VLDB Endowment},
+  volume={3},
+  number={1-2},
+  pages={330--339},
+  year={2010},
+  publisher={VLDB Endowment}
+}
+
+@inproceedings{msker2019,
+  title = {Hyperion: Building the Largest In-memory Search Tree},
+  author = {Mäsker, Markus and Süß, Tim and Nagel, Lars and Zeng, Lingfang and Brinkmann, André},
+  abstract = {Indexes are essential in data management systems to increase the speed of data retrievals. Widespread data structures to provide fast and memory-efficient indexes are prefix tries. Implementations like Judy, ART, or HOT optimize their internal alignments for cache and vector unit efficiency. While these measures usually improve the performance substantially, they can have a negative impact on memory efficiency. In this paper we present Hyperion, a trie-based main-memory key-value store achieving extreme space efficiency. In contrast to other data structures, Hyperion does not depend on CPU vector units, but scans the data structure linearly. Combined with a custom memory allocator, Hyperion accomplishes a remarkable data density while achieving a competitive point query and an exceptional range query performance. Hyperion can significantly reduce the index memory footprint and its performance-to-memory ratio is more than two times better than the best implemented alternative strategy for randomized string data sets.},
+  pages = {1207--1222},
+  doi = {10.1145/3299869.3319870},
+  read = {false},
+  year = {2019}
+}
+
+@inproceedings{walleweineising2018,
+  title = {SIMD Acceleration for Main-Memory Index Structures – A Survey},
   author = {Wallewein-Eising, Marten and Broneske, David and Saake, Gunter}, 
   abstract = {Index structures designed for disk-based database systems do not fulfill the requirements for modern database systems. To improve the performance of these index structures, different approaches are presented by several authors, including horizontal vectorization with SIMD and efficient cache-line usage.
 
@@ -25,14 +87,4 @@ In this work, we compare the adapted index structures Seg-Tree/Trie, FAST, VAST,
   doi = {10.1007/978-3-319-99987-6\_8}, 
   read = {false}, 
   year = {2018}
-}
-@inproceedings{escriva2012, 
-  title = {{HyperDex: A Distributed, Searchable Key-Value Store}}, 
-  author = {Escriva, Robert and Wong, Bernard and Sirer, Emin Gün}, 
-  abstract = {Distributed key-value stores are now a standard component of high-performance web services and cloud computing applications. While key-value stores offer significant performance and scalability advantages compared to traditional databases, they achieve these properties through a restricted API that limits object retrieval---an object can only be retrieved by the (primary and only) key under which it was inserted. This paper presents HyperDex, a novel distributed key-value store that provides a unique search primitive that enables queries on secondary attributes. The key insight behind HyperDex is the concept of hyperspace hashing in which objects with multiple attributes are mapped into a multidimensional hyperspace. This mapping leads to efficient implementations not only for retrieval by primary key, but also for partially-specified secondary attribute searches and range queries. A novel chaining protocol enables the system to achieve strong consistency, maintain availability and guarantee fault tolerance. An evaluation of the full system shows that HyperDex is 12-13x faster than Cassandra and MongoDB for finding partially specified objects. Additionally, HyperDex achieves 2-4x higher throughput for get/put operations.}, 
-  address = {Helsinki, Finland}, 
-  pages = {25--36}, 
-  doi = {10.1145/2377677.2377681}, 
-  read = {false}, 
-  year = {2012}
 }
