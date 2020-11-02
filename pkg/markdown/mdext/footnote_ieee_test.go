@@ -281,15 +281,6 @@ func TestNewCitationExt_IEEE_References(t *testing.T) {
 			),
 		},
 		{
-			"concurrent programming in java",
-			"alpha [^@lea2000concurrent]",
-			newCiteRefsIEEE(
-				newCiteRefIEEE("lea2000concurrent", 1, "[1]",
-					`D. Lea, "Concurrent Programming in Java: Design Principles and Patterns," 2000.`,
-				),
-			),
-		},
-		{
 			"corbett2012spanner",
 			"[^@corbett2012spanner]",
 			newCiteRefsIEEE(
@@ -352,6 +343,10 @@ func ieeeJournal(journal string) string {
 	return fmt.Sprintf(`in <em class=cite-journal>%s</em>`, journal)
 }
 
+func ieeeBook(book string) string {
+	return fmt.Sprintf(`<em class=cite-book>%s</em>`, book)
+}
+
 func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
 	tests := []struct {
 		bibEntry string
@@ -399,6 +394,25 @@ func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
 				`2017,`,
 				ieeePageRange(2481, 2495)+`,`,
 				ieeeDOI(`10.1109/TPAMI.2016.2644615`)+`.`,
+			),
+		},
+		{
+			texts.Dedent(`
+        @book{raj1991art
+        	title        = {The Art of Computer Systems Performance Analysis},
+			    subtitle     = {Techniques for Experimental Design, Measurement, Simulation, and Modeling}
+        	author       = {Jain, Raj},
+        	year         = 1991,
+        	publisher    = {Wiley},
+        	series       = {Wiley professional computing},
+        	isbn         = {978-0-471-50336-1},
+        }
+			`),
+			texts.JoinSpace(
+				`R. Jain,`,
+				ieeeBook(`The Art of Computer Systems Performance Analysis`)+`,`,
+				`Wiley,`,
+				`1991.`,
 			),
 		},
 	}

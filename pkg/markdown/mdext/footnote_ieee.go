@@ -127,6 +127,11 @@ func renderCiteRefContent(w util.BufWriter, c *Citation) {
 		w.WriteString(num)
 	}
 
+	if pub := trimBraces(c.Bibtex.Tags[bibtex.FieldPublisher]); pub != "" {
+		writeSep()
+		w.WriteString(pub)
+	}
+
 	if year := trimBraces(c.Bibtex.Tags[bibtex.FieldYear]); year != "" {
 		writeSep()
 		w.WriteString(year)
@@ -186,9 +191,16 @@ func renderAuthor(w util.BufWriter, author bibtex.Author) {
 
 func renderTitle(w util.BufWriter, c *Citation) {
 	title := trimBraces(c.Bibtex.Tags["title"])
-	w.WriteString(`, "`)
-	w.WriteString(title)
-	w.WriteString(`,"`)
+	switch c.Bibtex.Type {
+	case bibtex.EntryBook:
+		w.WriteString(`, <em class=cite-book>`)
+		w.WriteString(title)
+		w.WriteString(`</em>,`)
+	default:
+		w.WriteString(`, "`)
+		w.WriteString(title)
+		w.WriteString(`,"`)
+	}
 }
 
 func renderJournal(w util.BufWriter, journal string) {
