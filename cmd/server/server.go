@@ -127,7 +127,6 @@ func run(l *zap.Logger) error {
 		filepath.Join(root, dirs.Cmd),
 		filepath.Join(root, dirs.Pkg),
 		filepath.Join(root, dirs.Posts),
-		filepath.Join(root, dirs.Public),
 		filepath.Join(root, dirs.Static),
 		filepath.Join(root, dirs.Style),
 		filepath.Join(root, dirs.TIL),
