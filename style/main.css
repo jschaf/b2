@@ -398,12 +398,10 @@ figcaption {
 }
 
 table {
-  overflow-x: auto;
-  clear: left;
-  margin: 1.5rem 0;
-  border-collapse: separate;
   border-spacing: 0;
   font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+  margin: 1rem auto;
 }
 
 table th {
@@ -419,6 +417,7 @@ table th:last-child {
   padding-right: 0;
 }
 
+/* Give the first row a bit of breathing room */
 table tbody > tr:first-child > td {
   padding-top: 0.65ex;
 }
@@ -437,9 +436,10 @@ table tbody > tr > td:last-child {
   padding-right: 0;
 }
 
-table caption {
+table > caption {
   text-align: left;
   caption-side: top;
+  font-weight: 500;
 }
 
 .text-left {

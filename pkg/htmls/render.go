@@ -27,7 +27,7 @@ func RenderNode(n *html.Node, w *bytes.Buffer, indent int) {
 	switch n.Type {
 	case html.ElementNode:
 		switch n.Data {
-		case "p", "div", "ul", "ol", "article":
+		case "p", "div", "ul", "ol", "article", "table", "thead", "tbody":
 			renderBlockElem(n, w, indent)
 			return
 		}

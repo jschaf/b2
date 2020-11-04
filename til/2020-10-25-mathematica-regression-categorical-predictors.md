@@ -11,9 +11,12 @@ Chapter 15 of *The Art of Computer Systems Performance Analysis* [^@raj1991art]
 covers linear regression with categorical predictors.
 
 If all the variables are categorical, Jain recommends a factorial design 
-instead. Jain also notes that the factorial designs will yield more precise 
-We'll use the sample data for results with less variation.
+instead instead of linear regression with categorical predictors. Jain also 
+notes that the factorial designs will yield more precise results with 
+less variance than regression with categorical predictors.
 
+
+We'll use the following sample data for results:
 
 TABLE: Measured RPC times on Unix and Argus
 
@@ -47,7 +50,7 @@ TABLE: Measured RPC times on Unix and Argus
 | argus  | 1088              | 57.4       |
 
 
-First, we'll input into mathematica:
+First, we'll create the dataset in mathematica:
 
 ```mathematica
 data = {
@@ -85,12 +88,14 @@ Computing the linear model only requires declaring nominal variables:
 ```mathematica
 lm = LinearModelFit[data, {type, bytes}, {type, bytes}, NominalVariables -> type]
 
-(* Fitted Model [21.8124 + 0.0252066 bytes + 14.9266 DiscreteIndicator[type, argus, {argus, unix}] *)
+(* Fitted Model [21.8124 + 0.0252066 bytes
+       + 14.9266 DiscreteIndicator[type, argus, {argus, unix}] *)
 ```
 
-The model can be interpreted as follows. The setup cost for both Unix and Argus 
-is 21.8124 ms. Argus has an additional setup cost of 14.9266 ms. The per-byte
-processing time is 0.025 ms.
+The shared setup cost for both Unix and Argus is 21.8124 ms. Argus has an 
+additional setup cost of 14.9266 ms. In other words, the total setup cost
+for Unix is 21.81 ms and the total setup cost for Argus is 36.74 ms.
+The per-byte processing time for both systems is 0.025 ms.
 
 Jain ends the section by noting that this model is only valid if both the Unix
 and Argus systems use the same code path. Otherwise, two separate, simple linear 

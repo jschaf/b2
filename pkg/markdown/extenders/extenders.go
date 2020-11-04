@@ -24,6 +24,12 @@ func AddASTTransform(m goldmark.Markdown, t parser.ASTTransformer, pri ord.ASTTr
 	m.Parser().AddOptions(parser.WithASTTransformers(util.Prioritized(t, int(pri))))
 }
 
+// AddParaTransform adds the paragraph AST transformer to Goldmark markdown at
+// the priority.
+func AddParaTransform(m goldmark.Markdown, t parser.ParagraphTransformer, pri ord.ParaTransformerPriority) {
+	m.Parser().AddOptions(parser.WithParagraphTransformers(util.Prioritized(t, int(pri))))
+}
+
 // AddRenderer adds the renderer to Goldmark markdown at the priority.
 func AddRenderer(m goldmark.Markdown, t renderer.NodeRenderer, pri ord.RendererPriority) {
 	m.Renderer().AddOptions(

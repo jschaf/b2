@@ -3,6 +3,7 @@
 package ord
 
 type ParserPriority int
+type ParaTransformerPriority int
 type ASTTransformerPriority int
 type RendererPriority int
 
@@ -18,16 +19,18 @@ const (
 )
 
 const (
+	TableParaTransformer ParaTransformerPriority = 200
+)
+
+const (
 	HeadingIdTransformer       ASTTransformerPriority = 600
 	ArticleTransformer         ASTTransformerPriority = 900
 	LinkDecorationTransformer  ASTTransformerPriority = 900
 	LinkAssetTransformer       ASTTransformerPriority = 901
-	CitationTransformer                               = ArticleTransformer + 10
-	CitationFormatTransformer                         = CitationTransformer + 10
 	FigureTransformer          ASTTransformerPriority = 999
 	ImageTransformer           ASTTransformerPriority = 999
+	TableCaptionTransformer    ASTTransformerPriority = 999
 	FootnoteBodyTransformer    ASTTransformerPriority = 1000
-	FootnoteOrderTransformer                          = FootnoteBodyTransformer + 10
 	TOCTransformer             ASTTransformerPriority = 1000
 	ContinueReadingTransformer ASTTransformerPriority = 1001
 	KatexFeatureTransformer    ASTTransformerPriority = 1200
@@ -38,6 +41,8 @@ const (
 	ParagraphRenderer       RendererPriority = 10
 	KatexRenderer           RendererPriority = 150
 	ContinueReadingRenderer RendererPriority = 500
+	TableCaptionRenderer                     = TableRenderer - 1
+	TableRenderer           RendererPriority = 500
 	TimeRenderer            RendererPriority = 500
 	ArticleRenderer         RendererPriority = 999
 	CitationRenderer        RendererPriority = 999

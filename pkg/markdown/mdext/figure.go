@@ -61,7 +61,7 @@ func (f *FigCaption) Dump(source []byte, level int) {
 // figureASTTransformer converts a paragraph with a single image into a figure.
 type figureASTTransformer struct{}
 
-const FigureCaptionMarker = "CAPTION:"
+const figureCaptionMarker = "CAPTION:"
 
 func isSingleImgParagraph(n *ast.Paragraph) bool {
 	return n.ChildCount() == 1 && n.FirstChild().Kind() == ast.KindImage
@@ -72,7 +72,7 @@ func isCaption(n ast.Node, r text.Reader) bool {
 		return false
 	}
 	s := string(n.FirstChild().Text(r.Source()))
-	prefix := strings.HasPrefix(s, FigureCaptionMarker)
+	prefix := strings.HasPrefix(s, figureCaptionMarker)
 	return prefix
 }
 
@@ -125,7 +125,7 @@ func (f *figureASTTransformer) Transform(doc *ast.Document, r text.Reader, pc pa
 			continue
 		}
 		txt := capt.FirstChild().(*ast.Text)
-		txt.Segment.Start += len(FigureCaptionMarker)
+		txt.Segment.Start += len(figureCaptionMarker)
 		figCaption := NewFigCaption()
 		asts.Reparent(figCaption, capt)
 		parent := capt.Parent()
