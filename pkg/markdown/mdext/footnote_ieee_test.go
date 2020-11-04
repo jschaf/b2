@@ -398,9 +398,9 @@ func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
 		},
 		{
 			texts.Dedent(`
-        @book{raj1991art
+        @book{raj1991art,
         	title        = {The Art of Computer Systems Performance Analysis},
-			    subtitle     = {Techniques for Experimental Design, Measurement, Simulation, and Modeling}
+			    subtitle     = {Techniques for Experimental Design, Measurement, Simulation, and Modeling},
         	author       = {Jain, Raj},
         	year         = 1991,
         	publisher    = {Wiley},
