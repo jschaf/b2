@@ -3,9 +3,11 @@ package mdext
 
 import "C"
 import (
+	"fmt"
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/texts"
 	"github.com/jschaf/bibtex"
+	bibast "github.com/jschaf/bibtex/ast"
 	"github.com/yuin/goldmark/renderer"
 	"strconv"
 	"strings"
@@ -91,7 +93,9 @@ func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, cr *CitationRef)
 // renderCiteRefContent is the main formatter for an IEEE citation.
 // Follows https://ieeeauthorcenter.ieee.org/wp-content/uploads/IEEE-Reference-Guide.pdf.
 func renderCiteRefContent(w util.BufWriter, c *Citation) {
-	renderAuthors(w, c)
+	if au := c.Bibtex.Tags[bibtex.FieldAuthor]; au != nil {
+		renderAuthors(w, au)
+	}
 	renderTitle(w, c)
 	hasInfoAfterTitle := false
 	writeSep := func() {
@@ -104,56 +108,59 @@ func renderCiteRefContent(w util.BufWriter, c *Citation) {
 
 	switch c.Bibtex.Type {
 	case bibtex.EntryArticle:
-		if jrn := trimBraces(c.Bibtex.Tags[bibtex.FieldJournal]); jrn != "" {
+		if jrn := c.Bibtex.Tags[bibtex.FieldJournal]; jrn != nil {
 			writeSep()
 			renderJournal(w, jrn)
 		}
 	case bibtex.EntryInProceedings:
-		if t := trimBraces(c.Bibtex.Tags[bibtex.FieldBookTitle]); t != "" {
+		if t := c.Bibtex.Tags[bibtex.FieldBookTitle]; t != nil {
 			writeSep()
 			renderConference(w, t)
 		}
 	}
 
-	if vol := trimBraces(c.Bibtex.Tags[bibtex.FieldVolume]); vol != "" {
+	if vol := c.Bibtex.Tags[bibtex.FieldVolume]; vol != nil {
 		writeSep()
 		w.WriteString("Vol. ")
-		w.WriteString(vol)
+		w.WriteString(assertSimpleText(vol))
 	}
 
-	if num := trimBraces(c.Bibtex.Tags[bibtex.FieldNumber]); num != "" {
+	if num := c.Bibtex.Tags[bibtex.FieldNumber]; num != nil {
 		writeSep()
 		w.WriteString("no. ")
-		w.WriteString(num)
+		w.WriteString(assertSimpleText(num))
 	}
 
 	if c.Bibtex.Type == bibtex.EntryBook {
-		if pub := trimBraces(c.Bibtex.Tags[bibtex.FieldPublisher]); pub != "" {
+		if pub := c.Bibtex.Tags[bibtex.FieldPublisher]; pub != nil {
 			writeSep()
-			w.WriteString(pub)
+			w.WriteString(assertSimpleText(pub))
 		}
 	}
 
-	if year := trimBraces(c.Bibtex.Tags[bibtex.FieldYear]); year != "" {
+	if year := c.Bibtex.Tags[bibtex.FieldYear]; year != nil {
 		writeSep()
-		w.WriteString(year)
+		w.WriteString(assertSimpleText(year))
 	}
 
-	if p := trimBraces(c.Bibtex.Tags[bibtex.FieldPages]); p != "" {
+	if p := c.Bibtex.Tags[bibtex.FieldPages]; p != nil {
 		writeSep()
 		w.WriteString("pp. ")
-		w.WriteString(strings.Replace(p, "--", texts.EnDash, 1))
+		w.WriteString(strings.Replace(assertSimpleText(p), "--", texts.EnDash, 1))
 	}
 
-	if doi := trimBraces(c.Bibtex.Tags["doi"]); doi != "" {
+	if doi := c.Bibtex.Tags["doi"]; doi != nil {
 		writeSep()
-		renderDOI(w, c)
+		renderDOI(w, doi)
 	}
 	w.WriteString(".")
 }
 
-func renderAuthors(w util.BufWriter, c *Citation) {
-	authors := c.Bibtex.Author
+func renderAuthors(w util.BufWriter, x bibast.Expr) {
+	authors, ok := x.(bibast.Authors)
+	if !ok {
+		panic(fmt.Sprintf("render authors want bibast.Authors; got %T", x))
+	}
 	// IEEE Ref, Sec II: If there are more than six names listed, use the primary
 	// author's name followed by et al.
 	if len(authors) > 6 {
@@ -177,22 +184,26 @@ func renderAuthors(w util.BufWriter, c *Citation) {
 	}
 }
 
-func renderAuthor(w util.BufWriter, author bibtex.Author) {
+func renderAuthor(w util.BufWriter, author *bibast.Author) {
 	// IEEE Ref, Sec II: In all references, the given name of the author or editor
 	// is abbreviated to the initial only and precedes the last name. Use commas
 	// around Jr., Sr., and III in names.
-	sp := strings.Split(author.First, " ")
+	sp := strings.Split(assertSimpleText(author.First), " ")
 	for _, s := range sp {
 		if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
 			w.WriteRune(r)
 			w.WriteString(". ")
 		}
 	}
-	w.WriteString(author.Last)
+	w.WriteString(assertSimpleText(author.Last))
 }
 
 func renderTitle(w util.BufWriter, c *Citation) {
-	title := trimBraces(c.Bibtex.Tags["title"])
+	t := c.Bibtex.Tags[bibtex.FieldTitle]
+	if t == nil {
+		return
+	}
+	title := assertSimpleText(t)
 	switch c.Bibtex.Type {
 	case bibtex.EntryBook:
 		w.WriteString(`, <em class=cite-book>`)
@@ -204,10 +215,23 @@ func renderTitle(w util.BufWriter, c *Citation) {
 		w.WriteString(`,"`)
 	}
 }
+func assertSimpleText(x bibast.Expr) string {
+	if x == nil {
+		panic("expected simple text for bibast.Expr but was nil")
+	}
+	switch txt := x.(type) {
+	case *bibast.Text:
+		return txt.Value
+	case *bibast.Number:
+		return txt.Value
+	default:
+		panic(fmt.Sprintf("unsupported bibast type for bibast.Expr; got %T", x))
+	}
+}
 
-func renderJournal(w util.BufWriter, journal string) {
+func renderJournal(w util.BufWriter, journal bibast.Expr) {
 	w.WriteString("in <em class=cite-journal>")
-	_, _ = ieeeAbbrevReplacer.WriteString(w, journal)
+	_, _ = ieeeAbbrevReplacer.WriteString(w, assertSimpleText(journal))
 	w.WriteString("</em>")
 }
 
@@ -222,36 +246,20 @@ func renderJournal(w util.BufWriter, journal string) {
 //    becomes
 //    "Proc. 1996 Robotics and Automation Conf."
 // 3. All published conference or proceedings papers have page numbers.
-func renderConference(w util.BufWriter, c string) {
+func renderConference(w util.BufWriter, c bibast.Expr) {
 	w.WriteString("in <em class=cite-conference>")
-	_, _ = ieeeAbbrevReplacer.WriteString(w, c)
+	_, _ = ieeeAbbrevReplacer.WriteString(w, assertSimpleText(c))
 	w.WriteString("</em>")
 }
 
-func renderDOI(w util.BufWriter, c *Citation) {
+func renderDOI(w util.BufWriter, doi bibast.Expr) {
+	doiTxt := assertSimpleText(doi)
 	w.WriteString("doi: ")
-	doi := trimBraces(c.Bibtex.Tags["doi"])
 	w.WriteString(`<a href="https://doi.org/`)
-	w.WriteString(doi)
+	w.WriteString(doiTxt)
 	w.WriteString(`">`)
-	w.WriteString(doi)
+	w.WriteString(doiTxt)
 	w.WriteString(`</a>`)
-}
-
-func trimBraces(s string) string {
-	b := texts.ReadOnlyBytes(s)
-	lo, hi := 0, len(b)
-	for ; lo < len(b); lo++ {
-		if b[lo] != '{' {
-			break
-		}
-	}
-	for ; hi > 0; hi-- {
-		if b[hi-1] != '}' {
-			break
-		}
-	}
-	return texts.ReadonlyString(b[lo:hi])
 }
 
 var ieeeAbbrevReplacer = strings.NewReplacer(
@@ -303,7 +311,7 @@ var ieeeAbbrevReplacer = strings.NewReplacer(
 	// way to replace all articles but it's good enough. The best method is to
 	// write our own replacer. Multiple runs of articles must be replaced
 	// separately.
-	// Two word articles
+	// Two word articles. Must come before single word articles.
 	" in the ", " ",
 	" of the ", " ",
 	" of a ", " ",

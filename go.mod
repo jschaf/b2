@@ -14,7 +14,6 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/gorilla/websocket v1.4.1
 	github.com/graemephi/goldmark-qjs-katex v0.3.0
-	github.com/h2non/bimg v1.1.4
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jschaf/bibtex v0.0.0-20200902164015-b3e70e2ff481
@@ -30,3 +29,5 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	google.golang.org/api v0.29.0
 )
+
+replace github.com/jschaf/bibtex => ../bibtex

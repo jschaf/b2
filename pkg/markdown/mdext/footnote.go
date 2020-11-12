@@ -333,16 +333,20 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 
 // readBibs returns all bibtex elements from the file paths in bibs merged into
 // a map by the key.
-func (fb footnoteBodyTransformer) readBibs(bibs []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
+func (fb footnoteBodyTransformer) readBibs(bibFiles []string) (map[bibtex.CiteKey]bibtex.Entry, error) {
 	bibEntries := make(map[bibtex.CiteKey]bibtex.Entry)
-	for _, bib := range bibs {
-		f, err := os.Open(bib)
+	for _, bibFile := range bibFiles {
+		f, err := os.Open(bibFile)
 		if err != nil {
-			return nil, fmt.Errorf("citation: read bib file: %w", err)
+			return nil, fmt.Errorf("citation: read bibFile file: %w", err)
 		}
-		entries, err := bibtex.Read(f)
+		bibAST, err := cite.Biber.Parse(f)
 		if err != nil {
-			return nil, fmt.Errorf("citation: parse bib file: %w", err)
+			return nil, fmt.Errorf("citation: parse bibFile file %s: %w", bibFile, err)
+		}
+		entries, err := cite.Biber.Resolve(bibAST)
+		if err != nil {
+			return nil, fmt.Errorf("citation: resolve bibFile %s: %w", bibFile, err)
 		}
 		for _, elem := range entries {
 			bibEntries[elem.Key] = elem

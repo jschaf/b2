@@ -418,9 +418,14 @@ func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(texts.FirstLine(strings.TrimSpace(tt.bibEntry)), func(t *testing.T) {
-			entries, err := bibtex.Read(strings.NewReader(tt.bibEntry))
+			biber := cite.Biber
+			bibAST, err := biber.Parse(strings.NewReader(tt.bibEntry))
 			if err != nil {
 				t.Error(err)
+			}
+			entries, err := biber.Resolve(bibAST)
+			if err != nil {
+				t.Fatal(err)
 			}
 			if len(entries) != 1 {
 				t.Fatalf("expected exactly 1 bibtex entry, had %d", len(entries))
