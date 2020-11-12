@@ -11,7 +11,7 @@ declare interface Navigator {
 
 declare interface NetworkInformation {
   saveData?: boolean;
-  effectiveType?: 'slow-2g'| '2g'| '3g'| '4g';
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
 }
 
 type EventProps = Record<string, string | number>;
@@ -81,7 +81,7 @@ const checkHtmlEL = (x: unknown, msg?: string): HTMLElement => {
   if (x instanceof HTMLElement) {
     return x as HTMLElement;
   }
-  throw new Error(msg ?? `Expected element to be an HTMLElement but was ${JSON.stringify(x)}.`)
+  throw new Error(msg ?? `Expected element to be an HTMLElement but was ${JSON.stringify(x)}.`);
 };
 
 function assertDef<T>(x: T, msg?: string): asserts x is NonNullable<T> {
@@ -116,7 +116,7 @@ const log = Logger.forConsole();
 // real heap.js downloads. The real heap.js is templated into base.gohtml.
 window.heap = HeapAnalytics.forEnvId(
     '1506018335',
-    {trackingServer: 'https://joe.schafer.dev'}
+    { trackingServer: 'https://joe.schafer.dev' },
 );
 
 // Detect adblock.
@@ -567,34 +567,33 @@ class PreviewLifecycle {
 
 // Prefetch URLs on the whitelisted domains on mouseover or touch start events.
 // Forked from instant.page, https://instant.page/license.
-// TODO: Allow other whitelisted domains.
 (() => {
-  const preloads = new Set<string>() // hrefs already preloaded
+  const preloads = new Set<string>(); // hrefs already preloaded
   let mouseoverTimer = 0;
-  const prefetcher = document.createElement("link");
-  const supportsPrefetch = prefetcher?.relList?.supports("prefetch") ?? false;
+  const prefetcher = document.createElement('link');
+  const supportsPrefetch = prefetcher?.relList?.supports('prefetch') ?? false;
   const isSavingData = navigator?.connection?.saveData ?? false;
-  const conn = navigator?.connection?.effectiveType ?? 'unknown'
+  const conn = navigator?.connection?.effectiveType ?? 'unknown';
   const is2gConn = conn.includes('2g');
   if (!supportsPrefetch || isSavingData || is2gConn) {
     log.debug(`prefetch: disabled`);
     return;
   }
   log.debug(`prefetch: enabled`);
-  prefetcher.rel = "prefetch";
+  prefetcher.rel = 'prefetch';
   document.head.appendChild(prefetcher);
 
   const preload = (url: string): void => {
     prefetcher.rel = 'prefetch';
     prefetcher.href = url;
     preloads.add(url);
-  }
+  };
 
   const onMouseout = (ev: MouseEvent): void => {
     // On mouseout, target is the element we exited and relatedTarget is elem
     // we entered (or null).
-    let exitLink = checkHtmlEL(ev.target).closest("a");
-    let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest("a");
+    let exitLink = checkHtmlEL(ev.target).closest('a');
+    let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest('a');
     if (ev.relatedTarget && exitLink === enterLink) {
       return;
     }
@@ -624,8 +623,8 @@ class PreviewLifecycle {
     const url = new URL(node.href);
     const allowedOrigins = [
       location.origin,
-      "https://en.wikipedia.org",
-      "https://github.com",
+      'https://en.wikipedia.org',
+      'https://github.com',
     ];
     if (!allowedOrigins.includes(url.origin)) {
       log.debug(`prefetch: skipping url ${url}, origin not allowed`);
@@ -647,29 +646,29 @@ class PreviewLifecycle {
   };
 
   // On touchstart, immediately preload the link.
-  document.addEventListener("touchstart", (touchEv) => {
-    const link = checkHtmlEL(touchEv.target).closest("a");
+  document.addEventListener('touchstart', (touchEv) => {
+    const link = checkHtmlEL(touchEv.target).closest('a');
     if (!link || !shouldPreload(link)) {
       return;
     }
-    preload(link.href)
-  }, {capture: true, passive: true});
+    preload(link.href);
+  }, { capture: true, passive: true });
 
   // On mouseover, preload the link after a delay.
-  document.addEventListener("mouseover", (ev: MouseEvent) => {
+  document.addEventListener('mouseover', (ev: MouseEvent) => {
     // Browsers emulate mouse events from touch events so mouseover will be
     // called after touchstart. We'll avoid double preloading because
     // shouldPreload checks to see if we've already loaded a URL.
-    const link = checkHtmlEL(ev.target).closest("a");
+    const link = checkHtmlEL(ev.target).closest('a');
     if (!link || !shouldPreload(link)) {
       return;
     }
-    link.addEventListener("mouseout", onMouseout, {passive: true});
+    link.addEventListener('mouseout', onMouseout, { passive: true });
     const delayOnHover = 65;
     mouseoverTimer = setTimeout(() => {
       log.debug(`prefetch: loading mouseover link ${link.href}`);
-      preload(link.href)
+      preload(link.href);
       mouseoverTimer = 0;
     }, delayOnHover);
-  }, {capture: true, passive: true});
+  }, { capture: true, passive: true });
 })();
