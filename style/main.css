@@ -394,6 +394,9 @@ figcaption {
   margin: 0.5em auto 0;
   padding: 0 2em;
   font-size: 16px;
+}
+
+.caption-label {
   font-weight: 500;
 }
 

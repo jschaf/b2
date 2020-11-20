@@ -2,9 +2,14 @@
 slug = "art-of-profitability"
 date = 2020-11-19
 visibility = "draft"
+bib_paths = ["/ref.bib"]
 +++
 
-# The Art of Profitability
+# Notes on *The Art of Profitability*
+
+*The Art of Profitability* is a tour through the mentorship of an accountant in
+ho-hum telecom firm as he learns different models for business profitability.
+[^@slywotzky2002art] 
 
 ### 1. Customer solutions profit
 
