@@ -26,7 +26,7 @@ func WriteSlugText(dest []byte, node ast.Node, src []byte) []byte {
 			}
 		}
 	}
-	return dropStopWords(dest[:offs])
+	return removeLeadingDigits(dropStopWords(dest[:offs]))
 }
 
 func appendSlugText(dest []byte, offs int, node ast.Node, src []byte) (int, bool) {
@@ -91,6 +91,33 @@ func isValidSlugChar(b byte) bool {
 		('a' <= b && b <= 'z') ||
 		('A' <= b && b <= 'Z') ||
 		b == '.'
+}
+
+func isDigit(b byte) bool { return '0' <= b && b <= '9' }
+
+func removeLeadingDigits(dest []byte) []byte {
+	minLen := 5
+	if len(dest) <= minLen {
+		// Don't remove numbers from really short slugs
+		return dest
+	}
+	lo := 0
+
+	// Skip digits
+	for ; lo < len(dest)-minLen && isDigit(dest[lo]); lo++ {
+	}
+	// No leading digits, so bail.
+	if lo == 0 {
+		return dest
+	}
+	if dest[lo] == '.' {
+		// Skip period after number like "1. some heading"
+		lo++
+	}
+	if dest[lo] == '-' {
+		lo++
+	}
+	return dest[lo:]
 }
 
 // Removes stop words at the end of a slug but always keeps at least 2 words.

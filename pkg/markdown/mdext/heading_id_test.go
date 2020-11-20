@@ -37,6 +37,10 @@ func TestNewHeadingIDExt(t *testing.T) {
 			`## Inverted indexes for experiment IDs`,
 			`<h2 id="inverted-indexes-for-experiment-ids">Inverted indexes for experiment IDs</h2>`,
 		},
+		{
+			`## 2. strip leading nums`,
+			`<h2 id="strip-leading-nums">2. strip leading nums</h2>`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
