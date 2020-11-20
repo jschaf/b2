@@ -21,18 +21,19 @@ import (
 	"sort"
 )
 
-type IndexCompiler struct {
+// RootIndexCompiler compiles the / path, the main homepage.
+type RootIndexCompiler struct {
 	md     *markdown.Markdown
 	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewForIndex(pubDir string, l *zap.Logger) *IndexCompiler {
+func NewRootIndex(pubDir string, l *zap.Logger) *RootIndexCompiler {
 	md := markdown.New(l, markdown.WithExtender(mdext.NewContinueReadingExt()))
-	return &IndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+	return &RootIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (ic *IndexCompiler) parse(path string) (*markdown.PostAST, error) {
+func (ic *RootIndexCompiler) parse(path string) (*markdown.PostAST, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open file %s: %w", path, err)
@@ -48,7 +49,7 @@ func (ic *IndexCompiler) parse(path string) (*markdown.PostAST, error) {
 	return postAST, nil
 }
 
-func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
+func (ic *RootIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
 	bodies := make([]template.HTML, 0, len(asts))
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
@@ -76,7 +77,7 @@ func (ic *IndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) erro
 	return nil
 }
 
-func (ic *IndexCompiler) CompileIndex() error {
+func (ic *RootIndexCompiler) CompileIndex() error {
 	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 
 	astsC := make(chan *markdown.PostAST)

@@ -28,7 +28,7 @@ type TILIndexCompiler struct {
 	pubDir string
 }
 
-func NewForTILIndex(pubDir string, l *zap.Logger) *TILIndexCompiler {
+func NewTILIndex(pubDir string, l *zap.Logger) *TILIndexCompiler {
 	md := markdown.New(l)
 	return &TILIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }

@@ -22,23 +22,25 @@ import (
 	"github.com/jschaf/b2/pkg/paths"
 )
 
-type PostCompiler struct {
+// PostDetailCompiler compiles the /* paths, showing the detail page for each
+// post. Posts don't have another directory prefix.
+type PostDetailCompiler struct {
 	md     *markdown.Markdown
 	pubDir string
 	l      *zap.SugaredLogger
 }
 
-// NewForPostDetail creates a compiler for a post detail page.
-func NewForPostDetail(pubDir string, l *zap.Logger) *PostCompiler {
+// NewPostDetail creates a compiler for a post detail page.
+func NewPostDetail(pubDir string, l *zap.Logger) *PostDetailCompiler {
 	md := markdown.New(l,
 		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
 		markdown.WithTOCStyle(mdext.TOCStyleShow),
 		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
 	)
-	return &PostCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+	return &PostDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (c *PostCompiler) parse(path string) (*markdown.PostAST, error) {
+func (c *PostDetailCompiler) parse(path string) (*markdown.PostAST, error) {
 	c.l.Debugf("compiling post detail %s", path)
 	f, err := os.Open(path)
 	if err != nil {
@@ -55,7 +57,7 @@ func (c *PostCompiler) parse(path string) (*markdown.PostAST, error) {
 	return ast, nil
 }
 
-func (c *PostCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
+func (c *PostDetailCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
 	slug := ast.Meta.Slug
 	if slug == "" {
 		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
@@ -73,7 +75,7 @@ func (c *PostCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
 }
 
 // compile compiles a markdown AST into a writer.
-func (c *PostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
+func (c *PostDetailCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	b := &bytes.Buffer{}
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to render markdown: %w", err)
@@ -93,7 +95,7 @@ func (c *PostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	return nil
 }
 
-func (c *PostCompiler) CompileAll(glob string) error {
+func (c *PostDetailCompiler) CompileAll(glob string) error {
 	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {

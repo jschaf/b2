@@ -20,19 +20,20 @@ import (
 	"runtime"
 )
 
-// TILIndexCompiler compiles the /til/ path, an index of all TIL posts.
-type TILPostCompiler struct {
+// TILDetailCompiler compiles the /til/* paths, showing the detail page for each
+// TIL post.
+type TILDetailCompiler struct {
 	md     *markdown.Markdown
 	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewForTILPost(pubDir string, l *zap.Logger) *TILPostCompiler {
+func NewTILDetail(pubDir string, l *zap.Logger) *TILDetailCompiler {
 	md := markdown.New(l)
-	return &TILPostCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+	return &TILDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (c *TILPostCompiler) parse(path string) (*markdown.PostAST, error) {
+func (c *TILDetailCompiler) parse(path string) (*markdown.PostAST, error) {
 	c.l.Debugf("compiling til %s", path)
 	f, err := os.Open(path)
 	if err != nil {
@@ -49,7 +50,7 @@ func (c *TILPostCompiler) parse(path string) (*markdown.PostAST, error) {
 	return ast, nil
 }
 
-func (c *TILPostCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
+func (c *TILDetailCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
 	slug := ast.Meta.Slug
 	if slug == "" {
 		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
@@ -66,7 +67,7 @@ func (c *TILPostCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error
 	return destFile, nil
 }
 
-func (c *TILPostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
+func (c *TILDetailCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	if ast.Meta.Visibility != mdext.VisibilityPublished {
 		return nil
 	}
@@ -88,7 +89,7 @@ func (c *TILPostCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	return nil
 }
 
-func (c *TILPostCompiler) CompileAll() error {
+func (c *TILDetailCompiler) CompileAll() error {
 	tilDir := filepath.Join(git.MustFindRootDir(), dirs.TIL)
 	err := paths.WalkConcurrent(tilDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {

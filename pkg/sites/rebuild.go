@@ -23,8 +23,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
-		l.Debug("Rebuild - compile posts")
-		c := compiler.NewForPostDetail(pubDir, l)
+		l.Debug("Rebuild - compile post details")
+		c := compiler.NewPostDetail(pubDir, l)
 		if err := c.CompileAll(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
 		}
@@ -32,8 +32,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile posts index")
-		ic := compiler.NewForIndex(pubDir, l)
+		l.Debug("Rebuild - compile root index")
+		ic := compiler.NewRootIndex(pubDir, l)
 		if err := ic.CompileIndex(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)
 		}
@@ -41,8 +41,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile TIL posts")
-		tc := compiler.NewForTILPost(pubDir, l)
+		l.Debug("Rebuild - compile TIL details")
+		tc := compiler.NewTILDetail(pubDir, l)
 		if err := tc.CompileAll(); err != nil {
 			return fmt.Errorf("compile all TIL posts: %w", err)
 		}
@@ -51,7 +51,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 
 	g.Go(func() error {
 		l.Debug("Rebuild - compile TIL index")
-		tc := compiler.NewForTILIndex(pubDir, l)
+		tc := compiler.NewTILIndex(pubDir, l)
 		if err := tc.CompileIndex(); err != nil {
 			return fmt.Errorf("compile TIL index: %w", err)
 		}

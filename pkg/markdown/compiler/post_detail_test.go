@@ -8,7 +8,7 @@ import (
 
 func BenchmarkCompiler_CompileAllPosts(b *testing.B) {
 	b.StopTimer()
-	c := NewForPostDetail(dirs.PublicMemfs, zap.NewNop())
+	c := NewPostDetail(dirs.PublicMemfs, zap.NewNop())
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		if err := c.CompileAll("procella"); err != nil {
