@@ -24,6 +24,8 @@ func TestWriteSlugText(t *testing.T) {
 		{"# foo bar the", 16, "foo-bar"},
 		{"# foo bar a the on for", 32, "foo-bar"},
 		{"# foo bar a the on for baz", 32, "foo-bar-a-the-on-for-baz"},
+		{"# 1. blah blah", 32, "blah-blah"},
+		{"# 1. f", 32, "1.-f"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {

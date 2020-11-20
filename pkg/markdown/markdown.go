@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type PostAST struct {
+type AST struct {
 	Node   ast.Node
 	Meta   mdext.PostMeta
 	Source []byte
@@ -114,7 +114,7 @@ func New(l *zap.Logger, opts ...Option) *Markdown {
 	return m
 }
 
-func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
+func (m *Markdown) Parse(path string, r io.Reader) (*AST, error) {
 	bs, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	meta.Title = mdctx.GetTitle(ctx)
 	mdAssets := mdctx.GetAssets(ctx)
 	mdFeats := mdctx.GetFeatures(ctx)
-	return &PostAST{
+	return &AST{
 		Node:     node,
 		Meta:     meta,
 		Assets:   mdAssets,
@@ -144,6 +144,6 @@ func (m *Markdown) Parse(path string, r io.Reader) (*PostAST, error) {
 	}, nil
 }
 
-func (m *Markdown) Render(w io.Writer, source []byte, p *PostAST) error {
+func (m *Markdown) Render(w io.Writer, source []byte, p *AST) error {
 	return m.gm.Renderer().Render(w, source, p.Node)
 }

@@ -25,10 +25,11 @@ func init() {
 	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
 	layouts := []string{
-		"index.gohtml",
-		"post.gohtml",
+		"book_detail.gohtml",
+		"post_detail.gohtml",
+		"root_index.gohtml",
+		"til_detail.gohtml",
 		"til_index.gohtml",
-		"til_post.gohtml",
 	}
 	for _, name := range layouts {
 		f := filepath.Join(layoutDir, name)
@@ -46,67 +47,78 @@ func render(w io.Writer, name string, data map[string]interface{}) error {
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
-func RenderPost(w io.Writer, d PostTemplateData) error {
-	m := make(map[string]interface{})
-	m["Title"] = d.Title
-	m["Content"] = d.Content
-	m["Features"] = d.Features
-	return render(w, "post.gohtml", m)
+type BookDetailData struct {
+	Title    string
+	Features *mdctx.Features
+	Content  template.HTML
 }
 
-func RenderIndex(w io.Writer, d IndexTemplateData) error {
-	m := make(map[string]interface{})
-	m["Title"] = d.Title
-	m["Bodies"] = d.Bodies
-	m["Features"] = d.Features
-	return render(w, "index.gohtml", m)
+func RenderBookDetail(w io.Writer, d BookDetailData) error {
+	m := map[string]interface{}{
+		"Title":    d.Title,
+		"Content":  d.Content,
+		"Features": d.Features,
+	}
+	return render(w, "book_detail.gohtml", m)
 }
 
-func RenderTILIndex(w io.Writer, d TILTemplateData) error {
-	m := make(map[string]interface{})
-	m["Title"] = d.Title
-	m["Bodies"] = d.Bodies
-	m["Features"] = d.Features
-	m["Features"] = d.Features
+type PostDetailData struct {
+	Title    string
+	Features *mdctx.Features
+	Content  template.HTML
+}
+
+func RenderPostDetail(w io.Writer, d PostDetailData) error {
+	m := map[string]interface{}{
+		"Title":    d.Title,
+		"Content":  d.Content,
+		"Features": d.Features,
+	}
+	return render(w, "post_detail.gohtml", m)
+}
+
+type RootIndexData struct {
+	Title    string
+	Features *mdctx.Features
+	Bodies   []template.HTML
+}
+
+func RenderRootIndex(w io.Writer, d RootIndexData) error {
+	m := map[string]interface{}{
+		"Title":    d.Title,
+		"Bodies":   d.Bodies,
+		"Features": d.Features,
+	}
+	return render(w, "root_index.gohtml", m)
+}
+
+type TILIndexData struct {
+	Title    string
+	Features *mdctx.Features
+	Bodies   []template.HTML
+}
+
+func RenderTILIndex(w io.Writer, d TILIndexData) error {
+	m := map[string]interface{}{
+		"Title":    d.Title,
+		"Bodies":   d.Bodies,
+		"Features": d.Features,
+	}
 	return render(w, "til_index.gohtml", m)
 }
 
-func RenderTILPost(w io.Writer, d TILPostTemplateData) error {
+type TILDetailData struct {
+	Title    string
+	Features *mdctx.Features
+	Content  template.HTML
+}
+
+func RenderTILDetail(w io.Writer, d TILDetailData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Content"] = d.Content
 	m["Features"] = d.Features
-	return render(w, "post.gohtml", m)
-}
-
-type MainTemplateData struct {
-	Title    string
-	Content  template.HTML
-	Features *mdctx.Features
-}
-
-type PostTemplateData struct {
-	Title    string
-	Content  template.HTML
-	Features *mdctx.Features
-}
-
-type IndexTemplateData struct {
-	Title    string
-	Bodies   []template.HTML
-	Features *mdctx.Features
-}
-
-type TILTemplateData struct {
-	Title    string
-	Bodies   []template.HTML
-	Features *mdctx.Features
-}
-
-type TILPostTemplateData struct {
-	Title    string
-	Content  template.HTML
-	Features *mdctx.Features
+	return render(w, "til_detail.gohtml", m)
 }
 
 // isLast returns true if index is the last index in item.

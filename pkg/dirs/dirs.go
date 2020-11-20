@@ -9,13 +9,12 @@ import (
 
 const (
 	// Top level directories.
+	Book        = "book"
 	Cmd         = "cmd"
 	Fonts       = "fonts"
 	Papers      = "papers"
 	Pkg         = "pkg"
 	Posts       = "posts"
-	Public      = "public"
-	Scripts     = "scripts"
 	Static      = "static"
 	Style       = "style"
 	TIL         = "til"

@@ -33,7 +33,7 @@ func NewTILIndex(pubDir string, l *zap.Logger) *TILIndexCompiler {
 	return &TILIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (c *TILIndexCompiler) parse(path string) (*markdown.PostAST, error) {
+func (c *TILIndexCompiler) parse(path string) (*markdown.AST, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
@@ -49,7 +49,7 @@ func (c *TILIndexCompiler) parse(path string) (*markdown.PostAST, error) {
 	return ast, nil
 }
 
-func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
+func (c *TILIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) error {
 	bodies := make([]template.HTML, 0, len(asts))
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
@@ -66,7 +66,7 @@ func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) er
 		bodies = append(bodies, template.HTML(b.String()))
 		feats.AddAll(ast.Features)
 	}
-	data := html.TILTemplateData{
+	data := html.TILIndexData{
 		Title:    "TIL - Joe Schafer's Blog",
 		Bodies:   bodies,
 		Features: feats,
@@ -80,8 +80,8 @@ func (c *TILIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) er
 func (c *TILIndexCompiler) CompileIndex() error {
 	tilDir := filepath.Join(git.MustFindRootDir(), dirs.TIL)
 
-	astsC := make(chan *markdown.PostAST)
-	asts := make([]*markdown.PostAST, 0, 16)
+	astsC := make(chan *markdown.AST)
+	asts := make([]*markdown.AST, 0, 16)
 
 	done := make(chan struct{})
 	go func() {

@@ -33,7 +33,7 @@ func NewRootIndex(pubDir string, l *zap.Logger) *RootIndexCompiler {
 	return &RootIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (ic *RootIndexCompiler) parse(path string) (*markdown.PostAST, error) {
+func (ic *RootIndexCompiler) parse(path string) (*markdown.AST, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open file %s: %w", path, err)
@@ -49,7 +49,7 @@ func (ic *RootIndexCompiler) parse(path string) (*markdown.PostAST, error) {
 	return postAST, nil
 }
 
-func (ic *RootIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) error {
+func (ic *RootIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) error {
 	bodies := make([]template.HTML, 0, len(asts))
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
@@ -66,12 +66,12 @@ func (ic *RootIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) 
 		bodies = append(bodies, template.HTML(b.String()))
 		feats.AddAll(ast.Features)
 	}
-	data := html.IndexTemplateData{
+	data := html.RootIndexData{
 		Title:    "Joe Schafer's Blog",
 		Bodies:   bodies,
 		Features: feats,
 	}
-	if err := html.RenderIndex(w, data); err != nil {
+	if err := html.RenderRootIndex(w, data); err != nil {
 		return fmt.Errorf("execute index template: %w", err)
 	}
 	return nil
@@ -80,8 +80,8 @@ func (ic *RootIndexCompiler) compileASTs(asts []*markdown.PostAST, w io.Writer) 
 func (ic *RootIndexCompiler) CompileIndex() error {
 	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
 
-	astsC := make(chan *markdown.PostAST)
-	asts := make([]*markdown.PostAST, 0, 16)
+	astsC := make(chan *markdown.AST)
+	asts := make([]*markdown.AST, 0, 16)
 
 	done := make(chan struct{})
 	go func() {

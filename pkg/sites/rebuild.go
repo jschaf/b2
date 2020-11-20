@@ -50,6 +50,15 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
+		l.Debug("Rebuild - compile book details")
+		c := compiler.NewBookDetail(pubDir, l)
+		if err := c.CompileAll(); err != nil {
+			return fmt.Errorf("compile all book details: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
 		l.Debug("Rebuild - compile TIL index")
 		tc := compiler.NewTILIndex(pubDir, l)
 		if err := tc.CompileIndex(); err != nil {

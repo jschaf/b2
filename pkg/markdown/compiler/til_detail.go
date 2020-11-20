@@ -33,7 +33,7 @@ func NewTILDetail(pubDir string, l *zap.Logger) *TILDetailCompiler {
 	return &TILDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (c *TILDetailCompiler) parse(path string) (*markdown.PostAST, error) {
+func (c *TILDetailCompiler) parse(path string) (*markdown.AST, error) {
 	c.l.Debugf("compiling til %s", path)
 	f, err := os.Open(path)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *TILDetailCompiler) parse(path string) (*markdown.PostAST, error) {
 	return ast, nil
 }
 
-func (c *TILDetailCompiler) createDestFile(ast *markdown.PostAST) (*os.File, error) {
+func (c *TILDetailCompiler) createDestFile(ast *markdown.AST) (*os.File, error) {
 	slug := ast.Meta.Slug
 	if slug == "" {
 		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
@@ -67,7 +67,7 @@ func (c *TILDetailCompiler) createDestFile(ast *markdown.PostAST) (*os.File, err
 	return destFile, nil
 }
 
-func (c *TILDetailCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
+func (c *TILDetailCompiler) compile(ast *markdown.AST, w io.Writer) error {
 	if ast.Meta.Visibility != mdext.VisibilityPublished {
 		return nil
 	}
@@ -78,12 +78,12 @@ func (c *TILDetailCompiler) compile(ast *markdown.PostAST, w io.Writer) error {
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to markdown for index: %w", err)
 	}
-	data := html.TILPostTemplateData{
+	data := html.TILDetailData{
 		Title:    "TIL - Joe Schafer's Blog",
 		Content:  template.HTML(b.String()),
 		Features: ast.Features,
 	}
-	if err := html.RenderTILPost(w, data); err != nil {
+	if err := html.RenderTILDetail(w, data); err != nil {
 		return fmt.Errorf("render TIL: %w", err)
 	}
 	return nil
