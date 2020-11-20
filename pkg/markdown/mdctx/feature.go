@@ -6,7 +6,8 @@ const (
 	FeatureKatex Feature = "katex"
 )
 
-// Features is a special feature of a post.
+// Features is a special feature of a post. If a post has a feature, we might
+// need to change the HTML template, like load custom CSS.
 type Features struct {
 	feats map[Feature]struct{}
 }
