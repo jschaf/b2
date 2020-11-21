@@ -4,6 +4,7 @@ package mdext
 
 import (
 	"bytes"
+	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -115,9 +116,13 @@ func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context)
 	if err := toml.Unmarshal(buf.Bytes(), &meta); err != nil {
 		panic(err)
 	}
-	meta.Path = "/" + meta.Slug + "/"
-	if strings.Contains(mdctx.GetFilePath(pc), "/til/") {
-		meta.Path = "/til" + meta.Path + "/"
+	switch {
+	case strings.Contains(mdctx.GetFilePath(pc), `/`+dirs.TIL+`/`):
+		meta.Path = "/til/" + meta.Slug + "/"
+	case strings.Contains(mdctx.GetFilePath(pc), `/`+dirs.Book+`/`):
+		meta.Path = "/book/" + meta.Slug + "/"
+	default:
+		meta.Path = "/" + meta.Slug + "/"
 	}
 
 	postPath := mdctx.GetFilePath(pc)

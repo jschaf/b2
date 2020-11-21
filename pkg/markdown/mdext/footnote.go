@@ -247,9 +247,6 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 		counts[link.Name] += 1
 
 		if link.Variant == FootnoteVariantCite {
-			// The citation uses an absolute path because we cut off the references
-			// list on the index pages. So instead of broken anchor, deep link to the
-			// detail page.
 			link.SetAttributeString("data-link-type", "citation")
 
 			// Cite variant bodies are defined by the bibtex entry.
@@ -276,6 +273,9 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 			link.SetAttribute([]byte("data-preview-snippet"), b.Bytes())
 			link.SetAttribute([]byte("data-link-type"), LinkCitation)
 
+			// The citation uses an absolute path because we cut off the references
+			// list on the index pages. So instead of broken anchor, deep link to the
+			// detail page.
 			link.SetAttributeString("href", absPath+"#"+c.ReferenceID())
 			body.Name = link.Name
 			body.Variant = link.Variant
