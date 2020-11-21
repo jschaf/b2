@@ -204,14 +204,33 @@ func renderTitle(w util.BufWriter, c *Citation) {
 		return
 	}
 	title := assertSimpleText(t)
+	hasURL := c.Bibtex.Tags["url"] != nil
+	openURL := func() {
+		if hasURL {
+			w.WriteString(`<a href="`)
+			url := assertSimpleText(c.Bibtex.Tags["url"])
+			w.Write(util.EscapeHTML([]byte(url)))
+			w.WriteString(`">`)
+		}
+	}
+	closeURL := func() {
+		if hasURL {
+			w.WriteString("</a>")
+		}
+	}
+
 	switch c.Bibtex.Type {
 	case bibtex.EntryBook:
 		w.WriteString(`, <em class=cite-book>`)
+		openURL()
 		w.WriteString(title)
+		closeURL()
 		w.WriteString(`</em>,`)
 	default:
 		w.WriteString(`, "`)
+		openURL()
 		w.WriteString(title)
+		closeURL()
 		w.WriteString(`,"`)
 	}
 }
@@ -286,8 +305,8 @@ var ieeeAbbrevReplacer = strings.NewReplacer(
 	"Symposium", "Symp.",
 	"Technical", "Tech.",
 	"Transactions", "Trans.",
-	// Replace numbers with ordinals. The general case requires our own
-	// replacer.
+	// Replace numbers with ordinals. The general case requires a custom replacer
+	// so hard-code common numbers instead.
 	"First", "1st",
 	"Second", "2nd",
 	"Third", "3rd",

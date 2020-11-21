@@ -415,6 +415,23 @@ func TestNewFootnoteExt_renderCiteRefContent(t *testing.T) {
 				`1991.`,
 			),
 		},
+		{
+			texts.Dedent(`
+				@online{first2020founder,
+					title = {The First-Time Founder's Guide},
+					author = {{First Round Review}},
+					url = {https://firstround.com/review/},
+					year = {2020},
+					month = {11},
+					day = {19}
+				}
+    `),
+			texts.JoinSpace(
+				`First Round Review,`,
+				`"`+tags.AAttrs(`href="https://firstround.com/review/"`, `The First-Time Founder's Guide`)+`,"`,
+				`2020.`,
+			),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(texts.FirstLine(strings.TrimSpace(tt.bibEntry)), func(t *testing.T) {
