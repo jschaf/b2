@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/alecthomas/chroma v0.7.1
-	github.com/cloudflare/tableflip v1.0.0
+	github.com/cloudflare/tableflip v1.2.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/evanw/esbuild v0.7.16

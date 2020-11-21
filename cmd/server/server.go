@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/errs"
@@ -9,6 +10,7 @@ import (
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,13 +25,20 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	serverPIDFileTmpl = "/var/run/user/%d/b2_server.pid"
+	// Time after which an upgrade is considered a failure.
+	upgradeTimeout = 30 * time.Second
+	// How long to allow the server to handle existing connections.
+
+	serverShutdownTimeout = 25 * time.Second
+)
+
 type server struct {
 	*http.ServeMux
-	port     string
-	stopC    chan struct{}
-	once     sync.Once
-	upgrader *tableflip.Upgrader
-	logger   *zap.SugaredLogger
+	port string
+	once sync.Once
+	l    *zap.SugaredLogger
 }
 
 func newServer(port string, l *zap.Logger) *server {
@@ -37,68 +46,13 @@ func newServer(port string, l *zap.Logger) *server {
 	s.ServeMux = http.NewServeMux()
 	s.port = port
 	s.once = sync.Once{}
-	s.stopC = make(chan struct{})
-	pid := os.Getpid()
-	s.logger = l.Sugar().With("pid", pid)
+	s.l = l.Sugar()
 	return s
 }
 
-func (s *server) Serve() (mErr error) {
-	srv := http.Server{
-		Handler: s.ServeMux,
-	}
-	upg, err := tableflip.New(tableflip.Options{
-		UpgradeTimeout: time.Second * 5,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create upgrader")
-	}
-	s.upgrader = upg
-	if err := s.upgrader.Ready(); err != nil {
-		return fmt.Errorf("upgrader not ready: %w", err)
-	}
-
-	ln, err := s.upgrader.Listen("tcp", "localhost:"+s.port)
-	if err != nil {
-		return fmt.Errorf("server listen: %w", err)
-	}
-	defer errs.CapturingClose(&mErr, ln, "close server upgrader")
-	return srv.Serve(ln)
-}
-
-func (s *server) UpgradeOnSIGHUP() {
-	upgrade := make(chan os.Signal, 1)
-	signal.Notify(upgrade, syscall.SIGHUP)
-	// We might get multiple upgrade requests.
-	for range upgrade {
-		s.logger.Info("upgrading because SIGHUP")
-		if err := s.upgrader.Upgrade(); err != nil {
-			s.logger.Errorf("failed to upgrade: %s", err)
-			continue
-		}
-	}
-}
-
-func (s *server) Stop() {
-	s.once.Do(func() {
-		close(s.stopC)
-		if s.upgrader != nil {
-			s.upgrader.Stop()
-		}
-		s.logger.Info("server stopped")
-	})
-	if err := s.logger.Sync(); err != nil {
-		if err, ok := err.(*os.PathError); ok && err.Path == "/dev/stderr" {
-			return // ignore
-		}
-		log.Printf("ERROR: failed to sync zap logger: %s", err.Error())
-	}
-}
-
-func run(l *zap.Logger) error {
+func run(l *zap.Logger) (mErr error) {
 	port := "8080"
 	server := newServer(port, l)
-	defer server.Stop()
 	pubDir := dirs.PublicMemfs
 
 	if err := dirs.CleanDir(pubDir); err != nil {
@@ -107,7 +61,7 @@ func run(l *zap.Logger) error {
 
 	lrJSPath := "/dev/livereload.js"
 	lrPath := "/dev/livereload"
-	lr := livereload.NewServer(server.logger.Named("livereload"))
+	lr := livereload.NewServer(server.l.Named("livereload"))
 	server.HandleFunc(lrJSPath, lr.ServeJSHandler)
 	server.HandleFunc(lrPath, lr.WebSocketHandler)
 	go lr.Start()
@@ -121,7 +75,7 @@ func run(l *zap.Logger) error {
 	}, "")
 	server.Handle("/", lr.NewHTMLInjector(lrScript, pubDirHandler))
 
-	watcher := NewFSWatcher(pubDir, lr, server.logger)
+	watcher := NewFSWatcher(pubDir, lr, server.l)
 	root := git.MustFindRootDir()
 	if err := watcher.watchDirs(
 		filepath.Join(root, dirs.Cmd),
@@ -134,52 +88,122 @@ func run(l *zap.Logger) error {
 		return fmt.Errorf("watch dirs: %w", err)
 	}
 
-	go server.UpgradeOnSIGHUP()
+	httpServer := http.Server{
+		Handler: server.ServeMux,
+	}
+
+	upg, err := tableflip.New(tableflip.Options{
+		UpgradeTimeout: upgradeTimeout,
+		PIDFile:        fmt.Sprintf(serverPIDFileTmpl, os.Getuid()),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create upgrader")
+	}
+	defer upg.Stop()
+
+	// Upgrade on SIGHUP. The SIGHUP is sent by the watcher when any Go file
+	// changes. On a Go file change, the watcher recompiles the server binary.
+	// After the binary is compiled, the watcher sends SIGHUP to the current
+	// process which tells the upgrader to start shutting down this process.
+	go func() {
+		upgrade := make(chan os.Signal, 1)
+		signal.Notify(upgrade, syscall.SIGHUP)
+		// We might get multiple upgrade requests.
+		for range upgrade {
+			server.l.Infof("upgrading because got signal %s", syscall.SIGHUP)
+			if err := upg.Upgrade(); err != nil {
+				server.l.Errorf("upgrade server: %s", err)
+			}
+		}
+	}()
+
+	// upgrader.listen must be called before ready.
+	ln, err := upg.Listen("tcp", "localhost:"+port)
+	if err != nil {
+		return fmt.Errorf("server listen: %w", err)
+	}
+	defer errs.CapturingErr(&mErr, func() error {
+		if err := ln.Close(); err != nil {
+			// Ignore closed network connection errors. That's expected because the
+			// upgrader ceded control to the replacement process.
+			if err != http.ErrServerClosed {
+				return nil
+			}
+			if e, ok := err.(*net.OpError); ok {
+				// Ignore certain types of network connection errors that don't matter
+				// because we're closing the connection.
+				if e.Temporary() || e.Timeout() || e.Err.Error() == "use of closed network connection" {
+					return nil
+				}
+			}
+			return err
+		}
+		return nil
+	}, "close server upgrader listener")
+
+	go func() {
+		if err := httpServer.Serve(ln); err != nil {
+			if err != http.ErrServerClosed {
+				server.l.Infof("serve error: %s", err)
+			}
+			upg.Stop()
+		}
+	}()
+
+	if err := upg.Ready(); err != nil {
+		return fmt.Errorf("upgrader not ready: %w", err)
+	}
 
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 		<-c
-		server.logger.Info("received quit signal")
-		server.Stop()
+		server.l.Info("received quit signal")
+		upg.Stop()
 	}()
 
 	go func() {
 		if err := watcher.Start(); err != nil {
-			server.logger.Infof("server watcher start error: %s", err)
-			server.Stop()
+			server.l.Infof("server watcher start error: %s", err)
+			upg.Stop()
 		}
 	}()
 
-	go func() {
-		if err := server.Serve(); err != nil {
-			server.logger.Infof("server serve error: %s", err)
-			server.Stop()
-		}
-	}()
-
-	server.logger.Infof("Serving at http://localhost:%s", port)
+	server.l.Infof("serving at http://localhost:%s", port)
 
 	// CompileIndex in case content changed since last run.
-	if err := sites.Rebuild(pubDir, server.logger.Desugar()); err != nil {
+	if err := sites.Rebuild(pubDir, server.l.Desugar()); err != nil {
 		return fmt.Errorf("rebuild site: %w", err)
 	}
 
-	select {
-	case <-server.upgrader.Exit():
-		server.logger.Debug("upgrader exiting")
-	case <-server.stopC:
-		server.logger.Debug("server stopping")
+	<-upg.Exit()
+	server.l.Infof("upgrader exited")
+
+	// Set a deadline on exiting the process after upg.Exit() is closed. No new
+	// upgrades can be performed if the parent doesn't exit in Shutdown() below.
+	time.AfterFunc(serverShutdownTimeout, func() {
+		server.l.Errorf("graceful shutdown timed out")
+		os.Exit(1)
+	})
+
+	// Wait for connections to drain.
+	if err := httpServer.Shutdown(context.Background()); err != nil {
+		server.l.Errorf("server shutdown: %w", err)
 	}
+
 	return nil
 }
 
 func main() {
 	l, err := logs.NewShortDevLogger(zapcore.InfoLevel)
 	if err != nil {
-		log.Fatalf("failed to create logger: %s", err)
+		log.Fatalf("create logger: %s", err)
 	}
+	pid := os.Getpid()
+	l = l.With(zap.Int("pid", pid))
 	if err := run(l); err != nil {
 		l.Error(err.Error())
 	}
+	l.Info("server shutdown")
+	logs.Flush(l)
 }

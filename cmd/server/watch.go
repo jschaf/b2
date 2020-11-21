@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/jschaf/b2/pkg/css"
@@ -46,6 +47,7 @@ func (f *FSWatcher) Start() (mErr error) {
 	for {
 		select {
 		case event := <-f.watcher.Events:
+			f.logger.Infof("watcher event: %s", event.Name)
 			if event.Op == fsnotify.Chmod || strings.HasSuffix(event.Name, "~") {
 				// Intellij temp file
 				break
@@ -74,7 +76,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				f.liveReload.ReloadFile("")
 
 			case filepath.Ext(rel) == ".md":
-				if err := f.compileReloadMd(event.Name); err != nil {
+				if err := f.compileReloadMd(); err != nil {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
 				f.liveReload.ReloadFile(event.Name)
@@ -103,11 +105,14 @@ func (f *FSWatcher) Start() (mErr error) {
 func (f *FSWatcher) compileMdWithGoRun() error {
 	f.logger.Infof("pkg/markdown changed, compiling all markdown")
 	cmd := exec.Command("go", "run", "github.com/jschaf/b2/cmd/compiler")
+	buf := &bytes.Buffer{}
+	cmd.Stdout = buf
+	cmd.Stderr = buf
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start go run compiler: %w", err)
 	}
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("go run compiler failed: %w", err)
+		return fmt.Errorf("go run compiler failed: %w\n%s", err, buf.String())
 	}
 	return nil
 }
@@ -121,7 +126,7 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 	return nil
 }
 
-func (f *FSWatcher) compileReloadMd(path string) error {
+func (f *FSWatcher) compileReloadMd() error {
 	if err := sites.Rebuild(f.pubDir, f.logger.Desugar()); err != nil {
 		return fmt.Errorf("rebuild for changed md: %w", err)
 	}
@@ -162,13 +167,16 @@ func (f *FSWatcher) rebuildServer() error {
 	out := os.Args[0]
 	pkg := "github.com/jschaf/b2/cmd/server"
 	cmd := exec.Command("go", "build", "-o", out, pkg)
+	buf := &bytes.Buffer{}
+	cmd.Stdout = buf
+	cmd.Stderr = buf
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start server build: %w", err)
+		return fmt.Errorf("start server rebuild: %w\n%s", err, buf.String())
 	}
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("failed to rebuild server: %s", err)
+		return fmt.Errorf("wait for server rebuild: %w\n%s", err, buf.String())
 	}
-
+	f.logger.Infof("completed server rebuild")
 	f.logger.Debug("sending SIGHUP")
 	if err := sendSighup(); err != nil {
 		return err
@@ -177,6 +185,7 @@ func (f *FSWatcher) rebuildServer() error {
 }
 
 func sendSighup() error {
+
 	pid := os.Getpid()
 	process, err := os.FindProcess(pid)
 	if err != nil {

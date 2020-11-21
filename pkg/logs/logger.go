@@ -1,6 +1,8 @@
 package logs
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -26,8 +28,8 @@ func NewShortDevLogger(lvl zapcore.Level) (*zap.Logger, error) {
 			EncodeDuration: zapcore.StringDurationEncoder,
 			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
+		OutputPaths:      []string{"stderr", "/tmp/b2_server.log"},
+		ErrorOutputPaths: []string{"stderr", "/tmp/b2_server.log"},
 	}
 	return logCfg.Build()
 }
@@ -52,4 +54,14 @@ func hourMinSecEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	}
 
 	enc.AppendString(t.Format(layout))
+}
+
+// Flush flushes at any buffered logs.
+func Flush(l *zap.Logger) {
+	if err := l.Sync(); err != nil {
+		if err, ok := err.(*os.PathError); ok && err.Path == "/dev/stderr" {
+			return // ignore
+		}
+		log.Printf("ERROR: failed to sync zap logger: %s", err.Error())
+	}
 }
