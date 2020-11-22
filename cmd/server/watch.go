@@ -176,7 +176,7 @@ func (f *FSWatcher) rebuildServer() error {
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("wait for server rebuild: %w\n%s", err, buf.String())
 	}
-	f.logger.Infof("completed server rebuild in %.3f", time.Since(now).Seconds())
+	f.logger.Infof("completed server rebuild in %.3f seconds", time.Since(now).Seconds())
 	f.logger.Debug("sending SIGHUP")
 	if err := sendSighup(); err != nil {
 		return err
@@ -185,7 +185,6 @@ func (f *FSWatcher) rebuildServer() error {
 }
 
 func sendSighup() error {
-
 	pid := os.Getpid()
 	process, err := os.FindProcess(pid)
 	if err != nil {
