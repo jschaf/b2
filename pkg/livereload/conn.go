@@ -98,7 +98,7 @@ func (c *conn) readInfoCmd(bs []byte) error {
 	if err != nil {
 		return newCloseError(websocket.ClosePolicyViolation, "failed to decode info message")
 	}
-	c.l.Infof("LiveReload client info: url=%s, plugins=%s", info.URL, formatInfoMsg(info))
+	c.l.Debugf("LiveReload client info: url=%s, plugins=%s", info.URL, formatInfoMsg(info))
 	return nil
 }
 

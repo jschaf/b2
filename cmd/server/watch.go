@@ -48,7 +48,6 @@ func (f *FSWatcher) Start() (mErr error) {
 	for {
 		select {
 		case event := <-f.watcher.Events:
-			f.logger.Infof("watcher event: %s", event.Name)
 			if event.Op == fsnotify.Chmod || strings.HasSuffix(event.Name, "~") {
 				// Intellij temp file
 				break
