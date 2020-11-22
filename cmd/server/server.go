@@ -9,6 +9,7 @@ import (
 	"github.com/jschaf/b2/pkg/logs"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap/zapcore"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -26,7 +27,7 @@ import (
 )
 
 const (
-	serverPIDFileTmpl = "/var/run/user/%d/b2_server.pid"
+
 	// Time after which an upgrade is considered a failure.
 	upgradeTimeout = 30 * time.Second
 	// How long to allow the server to handle existing connections.
@@ -95,7 +96,7 @@ func run(l *zap.Logger) (mErr error) {
 
 	upg, err := tableflip.New(tableflip.Options{
 		UpgradeTimeout: upgradeTimeout,
-		PIDFile:        fmt.Sprintf(serverPIDFileTmpl, os.Getuid()),
+		PIDFile:        pidFilePath(),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create upgrader")
@@ -188,6 +189,7 @@ func run(l *zap.Logger) (mErr error) {
 	}
 
 	<-upg.Exit()
+	upg.Stop()
 	server.l.Infof("upgrader exited")
 
 	// Set a deadline on server.Shutdown after upg.Exit() is closed. No new
@@ -215,9 +217,56 @@ func run(l *zap.Logger) (mErr error) {
 	return nil
 }
 
-func forwardSignals(log *zap.Logger) error {
+func pidFilePath() string {
+	return fmt.Sprintf("/var/run/user/%d/b2_server.pid", os.Getuid())
+}
+
+func isFirstServer() (first bool, cleanup func() error, mErr error) {
+	pid := os.Getpid()
+	pgid, err := syscall.Getpgid(pid)
+	nop := func() error { return nil }
+	if err != nil {
+		return false, nop, fmt.Errorf("register pgid, get process group ID: %w", err)
+	}
+	lockfile := fmt.Sprintf("/dev/shm/b2_serve.%d.pgid", pgid)
+	if _, err := os.Stat(lockfile); err == nil {
+		// Path exists.
+		return false, nop, nil
+	} else if os.IsNotExist(err) {
+		// Path doesn't exist.
+		if err := ioutil.WriteFile(lockfile, nil, 0777); err != nil {
+			return false, nop, fmt.Errorf("write pgid lockfile: %w", err)
+		}
+		cleanup := func() error {
+			if err := os.Remove(lockfile); err != nil {
+				return fmt.Errorf("clean up lockfile: %w", err)
+			}
+			return nil
+		}
+		return true, cleanup, nil
+	} else {
+		// Unknown file error.
+		return false, nop, fmt.Errorf("check pgid lockfile existence: %w", err)
+	}
+}
+
+// forwardSignals forwards signals to all processes in the same process group
+// as this process.
+func forwardSignals(log *zap.Logger) (mErr error) {
 	pid := os.Getpid()
 	l := log.Sugar().With("pid", pid)
+
+	isFirst, cleanup, err := isFirstServer()
+	if err != nil {
+		return err
+	}
+	defer errs.CapturingErr(&mErr, cleanup, "cleanup lockfile")
+	if !isFirst {
+		l.Infof("not forwarding signals because not first server")
+		return nil
+	}
+
+	l.Infof("forwarding quit signals because is first server")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM)
 	for {
@@ -227,9 +276,8 @@ func forwardSignals(log *zap.Logger) error {
 		// https://stackoverflow.com/a/11000554/30900
 		switch sig {
 		case syscall.SIGHUP:
-			if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
-				return fmt.Errorf("forward SIGHUP from PID %d: %w", pid, err)
-			}
+			// Ignore. The active server handles SIGHUP. Ignore explicitly because
+			// the default Go action is to kill this process.
 		case syscall.SIGINT, syscall.SIGTERM:
 			signal.Stop(c)
 			if err := syscall.Kill(-pid, syscall.SIGINT); err != nil {
