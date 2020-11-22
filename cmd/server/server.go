@@ -46,7 +46,8 @@ func newServer(port string, l *zap.Logger) *server {
 	s.ServeMux = http.NewServeMux()
 	s.port = port
 	s.once = sync.Once{}
-	s.l = l.Sugar()
+	pid := os.Getpid()
+	s.l = l.Sugar().With(zap.Int("pid", pid))
 	return s
 }
 
@@ -108,11 +109,21 @@ func run(l *zap.Logger) (mErr error) {
 	go func() {
 		upgrade := make(chan os.Signal, 1)
 		signal.Notify(upgrade, syscall.SIGHUP)
-		// We might get multiple upgrade requests.
-		for range upgrade {
-			server.l.Infof("upgrading because got signal %s", syscall.SIGHUP)
-			if err := upg.Upgrade(); err != nil {
-				server.l.Errorf("upgrade server: %s", err)
+		// We might get multiple upgrade requests. If an upgrade fails, like when
+		// the replacement go server fails to compile, we want to keep trying to
+		// upgrade future requests.
+		for {
+			select {
+			// If the upgrader is done, stop listening for notifications.
+			case <-upg.Exit():
+				server.l.Infof("stopped listening for upgrade notifications")
+				signal.Stop(upgrade)
+				return
+			case <-upgrade:
+				server.l.Infof("upgrading because got signal %s", syscall.SIGHUP)
+				if err := upg.Upgrade(); err != nil {
+					server.l.Errorf("upgrade server: %s", err)
+				}
 			}
 		}
 	}()
@@ -171,7 +182,7 @@ func run(l *zap.Logger) (mErr error) {
 
 	server.l.Infof("serving at http://localhost:%s", port)
 
-	// CompileIndex in case content changed since last run.
+	// Rebuild in case content changed since last run.
 	if err := sites.Rebuild(pubDir, server.l.Desugar()); err != nil {
 		return fmt.Errorf("rebuild site: %w", err)
 	}
@@ -179,18 +190,56 @@ func run(l *zap.Logger) (mErr error) {
 	<-upg.Exit()
 	server.l.Infof("upgrader exited")
 
-	// Set a deadline on exiting the process after upg.Exit() is closed. No new
-	// upgrades can be performed if the parent doesn't exit in Shutdown() below.
-	time.AfterFunc(serverShutdownTimeout, func() {
-		server.l.Errorf("graceful shutdown timed out")
-		os.Exit(1)
-	})
+	// Set a deadline on server.Shutdown after upg.Exit() is closed. No new
+	// upgrades can be performed if server has not Shutdown below.
+	shutdownC := make(chan struct{})
+	go func() {
+		select {
+		case <-time.After(serverShutdownTimeout):
+			server.l.Errorf("graceful shutdown timed out")
+			os.Exit(1)
+		case <-shutdownC:
+			// If we get here, the server successfully shutdown.
+			return
+		}
+	}()
 
 	// Wait for connections to drain.
 	if err := httpServer.Shutdown(context.Background()); err != nil {
 		server.l.Errorf("server shutdown: %w", err)
 	}
+	close(shutdownC)
+	watcher.Stop()
+	// Defer so it shutdown log entry appears after other defers.
+	defer server.l.Info("server shutdown")
+	return nil
+}
 
+func forwardSignals(log *zap.Logger) error {
+	pid := os.Getpid()
+	l := log.Sugar().With("pid", pid)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM)
+	for {
+		sig := <-c
+		l.Infof("forwarding signal to process group: %s", sig)
+		// The negative PID kills all processes within the process group started by the PID.
+		// https://stackoverflow.com/a/11000554/30900
+		switch sig {
+		case syscall.SIGHUP:
+			if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
+				return fmt.Errorf("forward SIGHUP from PID %d: %w", pid, err)
+			}
+		case syscall.SIGINT, syscall.SIGTERM:
+			signal.Stop(c)
+			if err := syscall.Kill(-pid, syscall.SIGINT); err != nil {
+				return fmt.Errorf("forward %s from PID %d: %w", sig, pid, err)
+			}
+			return nil
+		default:
+			panic("unhandled forwarded signal " + sig.String())
+		}
+	}
 	return nil
 }
 
@@ -199,11 +248,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("create logger: %s", err)
 	}
-	pid := os.Getpid()
-	l = l.With(zap.Int("pid", pid))
 	if err := run(l); err != nil {
 		l.Error(err.Error())
 	}
-	l.Info("server shutdown")
+	logs.Flush(l)
+	if err := forwardSignals(l); err != nil {
+		l.Error(err.Error())
+	}
 	logs.Flush(l)
 }

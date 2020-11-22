@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -26,6 +27,8 @@ type FSWatcher struct {
 	watcher    *fsnotify.Watcher
 	logger     *zap.SugaredLogger
 	pubDir     string
+	stopOnce   *sync.Once
+	stopC      chan struct{}
 }
 
 func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
@@ -38,6 +41,8 @@ func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredL
 		liveReload: lr,
 		watcher:    watcher,
 		logger:     logger.Named("watcher"),
+		stopOnce:   &sync.Once{},
+		stopC:      make(chan struct{}),
 	}
 }
 
@@ -47,6 +52,9 @@ func (f *FSWatcher) Start() (mErr error) {
 
 	for {
 		select {
+		case <-f.stopC:
+			return nil
+
 		case event := <-f.watcher.Events:
 			if event.Op == fsnotify.Chmod || strings.HasSuffix(event.Name, "~") {
 				// Intellij temp file
@@ -99,6 +107,12 @@ func (f *FSWatcher) Start() (mErr error) {
 			f.logger.Infof("error: %s", err)
 		}
 	}
+}
+
+func (f *FSWatcher) Stop() {
+	f.stopOnce.Do(func() {
+		close(f.stopC)
+	})
 }
 
 func (f *FSWatcher) compileMdWithGoRun() error {
