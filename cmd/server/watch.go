@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -92,10 +93,9 @@ func (f *FSWatcher) Start() (mErr error) {
 			case filepath.Ext(rel) == ".go" && !strings.HasSuffix(rel, "_test.go"):
 				// Rebuild the server to pickup any new changes.
 				if err := f.rebuildServer(); err != nil {
-					return fmt.Errorf("failed to hotswap erver: %w", err)
+					f.logger.Errorf("rebuild server: %s", err)
 				}
 			}
-
 		case err := <-f.watcher.Errors:
 			f.logger.Infof("error: %s", err)
 		}
@@ -170,13 +170,14 @@ func (f *FSWatcher) rebuildServer() error {
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
 	cmd.Stderr = buf
+	now := time.Now()
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("start server rebuild: %w\n%s", err, buf.String())
 	}
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("wait for server rebuild: %w\n%s", err, buf.String())
 	}
-	f.logger.Infof("completed server rebuild")
+	f.logger.Infof("completed server rebuild in %.3f", time.Since(now).Seconds())
 	f.logger.Debug("sending SIGHUP")
 	if err := sendSighup(); err != nil {
 		return err
