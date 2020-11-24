@@ -3,7 +3,6 @@ package errs
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"strconv"
 	"testing"
 )
@@ -69,21 +68,7 @@ func (m *MultiError) ErrorOrNil() error {
 	return m
 }
 
-// CapturingClose runs closer.Close() and assigns the error, if any, to err.
-// Preserves the original err by wrapping in a MultiError if err is non-nil.
-//
-// If msg is not empty, wrap the error returned by closer with the msg.
-//
-// - If closer.Close() does not error, do nothing.
-// - If closer.Close() errors and *err == nil, replace *err with the Close()
-//   error.
-// - If closer.Close() errors and *err != nil, create a MultiError containing
-//   *err and the Close() err, then replace *err with the MultiError.
-func CapturingClose(err *error, closer io.Closer, msg string) {
-	CapturingErr(err, closer.Close, msg)
-}
-
-// CapturingErr runs errF and assigns the error, if any, to err.
+// Capturing runs errF and assigns the error, if any, to err.
 // Preserves the original err by wrapping in a MultiError if err is non-nil.
 //
 // If msg is not empty, wrap the error returned by closer with the msg.
@@ -92,7 +77,7 @@ func CapturingClose(err *error, closer io.Closer, msg string) {
 // - If errF errors and *err == nil, replace *err with the error.
 // - If errF errors and *err != nil, create a MultiError containing
 //   *err and the errF err, then replace *err with the MultiError.
-func CapturingErr(err *error, errF func() error, msg string) {
+func Capturing(err *error, errF func() error, msg string) {
 	fErr := errF()
 	if fErr == nil {
 		return
@@ -111,8 +96,8 @@ func CapturingErr(err *error, errF func() error, msg string) {
 	*err = NewMultiError(*err, wErr)
 }
 
-// TestCapturingErr call t.Error if errF returns an error with an optional message.
-func TestCapturingErr(t *testing.T, errF func() error, msg string) {
+// CapturingT call t.Error if errF returns an error with an optional message.
+func CapturingT(t *testing.T, errF func() error, msg string) {
 	t.Helper()
 	if err := errF(); err != nil {
 		if msg == "" {
@@ -121,11 +106,4 @@ func TestCapturingErr(t *testing.T, errF func() error, msg string) {
 			t.Errorf(msg+": %s", err)
 		}
 	}
-}
-
-// TestCapturingClose runs closer.Close() and calls t.Error if Close returned
-// an error.
-func TestCapturingClose(t *testing.T, closer io.Closer, msg string) {
-	t.Helper()
-	TestCapturingErr(t, closer.Close, msg)
 }

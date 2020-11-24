@@ -43,7 +43,7 @@ func TestCloseWithErrCapture(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			CapturingClose(tt.err, tt.closer, tt.msg)
+			Capturing(tt.err, tt.closer.Close, tt.msg)
 			got := "<nil error>"
 			if *tt.err != nil {
 				got = (*tt.err).Error()

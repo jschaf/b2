@@ -22,7 +22,7 @@ func TestExperiment_Run(t *testing.T) {
 		InstallDir: pgDevDir,
 		DataDir:    dir,
 	}, zaptest.NewLogger(t))
-	defer errs.TestCapturingErr(t, pgc.RemoveAllData, "remove all data")
+	defer errs.CapturingT(t, pgc.RemoveAllData, "remove all data")
 
 	if err := pgc.InitCluster(InitClusterConf{}); err != nil {
 		t.Fatalf("init db: %s", err)

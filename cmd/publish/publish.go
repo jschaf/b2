@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/firebase"
-	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"time"
 
 	"golang.org/x/net/context"
@@ -129,9 +128,9 @@ func publish(l *zap.SugaredLogger) error {
 }
 
 func main() {
-	l, err := logs.NewShortDevSugaredLogger(zapcore.InfoLevel)
+	l, err := log.NewShortDevSugaredLogger(zapcore.InfoLevel)
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(err.Error())
 	}
 
 	if err := sites.Rebuild(deployPubDir, l.Desugar()); err != nil {

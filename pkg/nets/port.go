@@ -22,7 +22,7 @@ func FindAvailablePort() (p Port, mErr error) {
 	if err != nil {
 		return 0, err
 	}
-	defer errs.CapturingClose(&mErr, l, "")
+	defer errs.Capturing(&mErr, l.Close, "")
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
@@ -31,6 +31,6 @@ func IsPortOpen(p Port) (r bool, mErr error) {
 	if err != nil {
 		return false, nil
 	}
-	defer errs.CapturingClose(&mErr, l, "close listener for port open check")
+	defer errs.Capturing(&mErr, l.Close, "close listener for port open check")
 	return true, nil
 }

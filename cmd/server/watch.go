@@ -47,7 +47,7 @@ func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredL
 }
 
 func (f *FSWatcher) Start() (mErr error) {
-	defer errs.CapturingClose(&mErr, f.watcher, "close FSWatcher")
+	defer errs.Capturing(&mErr, f.watcher.Close, "close FSWatcher")
 	rootDir := git.MustFindRootDir()
 
 	for {

@@ -4,11 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 )
 
 var postGlobFlag = flag.String("glob", "", "if given, only compile files that match glob")
@@ -24,9 +23,9 @@ func compile(glob string, l *zap.Logger) error {
 
 func main() {
 	flag.Parse()
-	logger, err := logs.NewShortDevSugaredLogger(zapcore.DebugLevel)
+	logger, err := log.NewShortDevSugaredLogger(zapcore.DebugLevel)
 	if err != nil {
-		log.Fatalf("create dev logger: %s", err)
+		panic("create dev logger:" + err.Error())
 	}
 	if err := compile(*postGlobFlag, logger.Desugar()); err != nil {
 		logger.Fatalf("compile cmd: %s", err)

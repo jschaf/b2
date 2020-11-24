@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx"
 	"github.com/jschaf/b2/pkg/chans"
-	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/nets"
 	"github.com/jschaf/b2/runner"
 	"go.uber.org/zap"
@@ -131,7 +131,7 @@ func (pgc *Cluster) Start() error {
 	}
 	pgc.Port = strconv.Itoa(port)
 
-	triggerW := logs.NewTriggerWriter(pgReadyLogMsg)
+	triggerW := log.NewTriggerWriter(pgReadyLogMsg)
 
 	pgc.Process = runner.NewProcess(runner.ProcessConfig{
 		Path: filepath.Join(pgc.InstallDir, "bin", "postgres"),

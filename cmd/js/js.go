@@ -3,15 +3,14 @@ package main
 import (
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/js"
-	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/log"
 	"go.uber.org/zap/zapcore"
-	"log"
 )
 
 func main() {
-	l, err := logs.NewShortDevSugaredLogger(zapcore.DebugLevel)
+	l, err := log.NewShortDevSugaredLogger(zapcore.DebugLevel)
 	if err != nil {
-		log.Fatalf("create dev logger: %s", err)
+		panic("create dev logger: " + err.Error())
 	}
 	if err = js.WriteTypeScriptMain(dirs.PublicMemfs); err != nil {
 		l.Fatal(err)

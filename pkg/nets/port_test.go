@@ -19,5 +19,5 @@ func TestFindAvailablePort(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer errs.TestCapturingClose(t, l, "")
+	defer errs.CapturingT(t, l.Close, "")
 }

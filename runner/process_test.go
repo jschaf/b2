@@ -335,7 +335,7 @@ func TestProcess_ChangesWorkingDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer errs.TestCapturingErr(t, func() error { return os.RemoveAll(dir) }, "remove temp dir")
+	defer errs.CapturingT(t, func() error { return os.RemoveAll(dir) }, "remove temp dir")
 	// Use basename to skip resolving symlinks.
 	basename := filepath.Base(dir)
 

@@ -27,7 +27,7 @@ func RemoveAllChildren(dir string) (mErr error) {
 	if err != nil {
 		return fmt.Errorf("open dir: %w", err)
 	}
-	defer errs.CapturingClose(&mErr, f, "close readdir")
+	defer errs.Capturing(&mErr, f.Close, "close readdir")
 
 	files, err := f.Readdir(-1)
 	if err != nil {

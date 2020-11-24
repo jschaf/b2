@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/logs"
+	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/pg"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"os"
 	"time"
 )
@@ -21,7 +20,7 @@ func run(l *zap.Logger) (mErr error) {
 		InstallDir: pgDevDir,
 	}, l)
 
-	defer errs.CapturingErr(&mErr,
+	defer errs.Capturing(&mErr,
 		func() error { return os.RemoveAll(pgc.DataDir) },
 		"remove temp postgres data dir")
 
@@ -70,9 +69,9 @@ func run(l *zap.Logger) (mErr error) {
 }
 
 func main() {
-	l, err := logs.NewShortDevLogger(zapcore.DebugLevel)
+	l, err := log.NewShortDevLogger(zapcore.DebugLevel)
 	if err != nil {
-		log.Fatalf("create zap logger: %s", err.Error())
+		panic("create zap logger: " + err.Error())
 	}
 
 	if err := run(l); err != nil {
