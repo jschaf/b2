@@ -9,6 +9,7 @@ import (
 	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/net/srv"
 	"github.com/jschaf/b2/pkg/sites"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -72,6 +73,7 @@ func run() (mErr error) {
 
 	go func() {
 		if err := watcher.Start(); err != nil {
+			logger.Error("watcher error", zap.Error(err))
 			server.Stop()
 		}
 	}()

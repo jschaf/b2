@@ -56,6 +56,25 @@ func TestNewFootnoteExt(t *testing.T) {
         </aside>
       `),
 		},
+		{
+			"margin note",
+			texts.Dedent(`
+        [^margin:foo] alpha bravo charlie
+
+        ::: footnote margin:foo
+        body-text
+        :::
+      `),
+			texts.Dedent(`
+        <p>
+          <a href="#footnote-body-margin:foo" class="footnote-link" role="doc-noteref" id="footnote-link-margin:foo"></a>
+          alpha bravo charlie
+        </p>
+        <aside class="footnote-body" id="footnote-body-margin:foo" role="doc-endnote" style="margin-top: -18px">
+          <p>body-text</p>
+        </aside>
+      `),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

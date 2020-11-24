@@ -28,10 +28,13 @@ type FootnoteName string
 type FootnoteVariant string
 
 const (
-	FootnoteVariantCite   FootnoteVariant = "cite"
-	FootnoteVariantSide   FootnoteVariant = "side"
+	FootnoteVariantCite FootnoteVariant = "cite"
+	// A note in the margin with a citation number
+	FootnoteVariantSide FootnoteVariant = "side"
+	// A note in the margin without a citation number.
 	FootnoteVariantMargin FootnoteVariant = "margin"
-	FootnoteVariantPara   FootnoteVariant = "para"
+	// A note with the topic of a paragraph.
+	FootnoteVariantPara FootnoteVariant = "para"
 )
 
 var (
@@ -310,7 +313,11 @@ func (fb footnoteBodyTransformer) Transform(doc *ast.Document, source text.Reade
 		distancePx := (dist/bytesPerLine)*lineHeight + lineHeight
 		body.SetAttributeString("style", "margin-top: -"+strconv.Itoa(distancePx)+"px")
 
-		body.addCiteTag() // depends on order
+		switch link.Variant {
+		case FootnoteVariantMargin, FootnoteVariantPara: // no cite tag
+		case FootnoteVariantSide, FootnoteVariantCite:
+			body.addCiteTag() // depends on order
+		}
 	}
 
 	// Build the citation references. The references contains 1 copy of each

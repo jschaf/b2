@@ -90,12 +90,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				f.liveReload.ReloadFile(event.Name)
 
 			case strings.HasPrefix(rel, "pkg/markdown/"):
-				// If only the markdown has changed, recompile only that.
-				if err := f.compileMdWithGoRun(); err != nil {
-					return err
-				}
-				// Send empty string which should reload all LiveReload clients
-				f.liveReload.ReloadFile("")
+				// Skip recompiling since we don't have server hot-reload enabled.
 
 			case filepath.Ext(rel) == ".go" && !strings.HasSuffix(rel, "_test.go"):
 				// Rebuild the server to pickup any new changes.
