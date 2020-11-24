@@ -80,6 +80,7 @@ func run(l *zap.Logger) (mErr error) {
 	watcher := NewFSWatcher(pubDir, lr, server.l)
 	root := git.MustFindRootDir()
 	if err := watcher.watchDirs(
+		filepath.Join(root, dirs.Book),
 		filepath.Join(root, dirs.Cmd),
 		filepath.Join(root, dirs.Pkg),
 		filepath.Join(root, dirs.Posts),
