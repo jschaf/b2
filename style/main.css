@@ -609,7 +609,8 @@ code-fn {
      * only applies when we have enough room to use margin notes so always
      * disable if the viewport isn't big enough for margin notes.
      */
-    margin-top: 0 !important;
+    margin-top: var(--line-height-body) !important;
+    margin-bottom: var(--line-height-body);
   }
 
   /**
