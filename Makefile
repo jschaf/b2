@@ -10,7 +10,7 @@ js: $(DIST_DIR)
 
 .PHONY: html
 html: clean $(DIST_DIR)
-	go run github.com/jschaf/b2/cmd/compiler
+	go run github.com/jschaf/b2/cmd/compile
 
 .PHONY: clean
 clean:
