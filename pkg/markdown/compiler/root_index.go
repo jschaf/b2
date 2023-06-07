@@ -49,7 +49,7 @@ func (ic *RootIndexCompiler) parse(path string) (*markdown.AST, error) {
 }
 
 func (ic *RootIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) error {
-	bodies := make([]template.HTML, 0, len(asts))
+	posts := make([]html.RootPostData, 0, len(asts))
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
 	})
@@ -62,12 +62,17 @@ func (ic *RootIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) erro
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
 			return fmt.Errorf("render markdown for index: %w", err)
 		}
-		bodies = append(bodies, template.HTML(b.String()))
+		posts = append(posts, html.RootPostData{
+			Title: ast.Meta.Title,
+			Slug:  ast.Meta.Slug,
+			Date:  ast.Meta.Date,
+			Body:  template.HTML(b.String()),
+		})
 		feats.AddAll(ast.Features)
 	}
 	data := html.RootIndexData{
 		Title:    "Joe Schafer's Blog",
-		Bodies:   bodies,
+		Posts:    posts,
 		Features: feats,
 	}
 	if err := html.RenderRootIndex(w, data); err != nil {

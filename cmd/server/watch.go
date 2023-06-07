@@ -56,7 +56,7 @@ func (f *FSWatcher) Start() (mErr error) {
 			return nil
 
 		case event := <-f.watcher.Events:
-			if event.Op == fsnotify.Chmod || strings.HasSuffix(event.Name, "~") {
+			if strings.HasSuffix(event.Name, "~") {
 				// Intellij temp file
 				break
 			}
@@ -88,6 +88,13 @@ func (f *FSWatcher) Start() (mErr error) {
 					return fmt.Errorf("failed to compiled changed markdown: %w", err)
 				}
 				f.liveReload.ReloadFile(event.Name)
+
+			case strings.HasPrefix(rel, "pkg/markdown/html"):
+				err := f.compileReloadMd()
+				if err != nil {
+					return fmt.Errorf("compile markdown for changed file %s: %w", rel, err)
+				}
+				f.liveReload.ReloadFile("")
 
 			case strings.HasPrefix(rel, "pkg/markdown/"):
 				// Skip recompiling since we don't have server hot-reload enabled.

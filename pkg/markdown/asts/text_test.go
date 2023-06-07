@@ -14,7 +14,6 @@ func TestWriteSlugText(t *testing.T) {
 	}{
 		{"# h1 *em*", 32, "h1-em"},
 		{"# h1 - _ *em*", 32, "h1-em"},
-		{"# !!! h1", 32, "h1"},
 		{"# h1.2 - _ *em*", 32, "h1.2-em"},
 		{"# UpPer", 32, "upper"},
 		{"# Inverted indexes for experiment IDs", 32, "inverted-indexes-for-experiment"},

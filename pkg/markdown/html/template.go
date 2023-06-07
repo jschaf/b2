@@ -8,15 +8,13 @@ import (
 	"io"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	"github.com/jschaf/b2/pkg/git"
 )
 
-var (
-	templates = make(map[string]*template.Template)
-)
-
-func init() {
+func compileTemplates() map[string]*template.Template {
+	templates := make(map[string]*template.Template, 8)
 	rootDir := git.MustFindRootDir()
 	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
@@ -32,9 +30,11 @@ func init() {
 		templates[name] = template.Must(
 			template.New(name).Funcs(TemplateFuncs()).ParseFiles(f, baseTmpl))
 	}
+	return templates
 }
 
 func render(w io.Writer, name string, data map[string]interface{}) error {
+	templates := compileTemplates()
 	tmpl, ok := templates[name]
 	if !ok {
 		return fmt.Errorf("template %s does not exist", name)
@@ -73,16 +73,23 @@ func RenderPostDetail(w io.Writer, d PostDetailData) error {
 	return render(w, "post_detail.gohtml", m)
 }
 
+type RootPostData struct {
+	Title string
+	Slug  string
+	Body  template.HTML
+	Date  time.Time
+}
+
 type RootIndexData struct {
 	Title    string
 	Features *mdctx.Features
-	Bodies   []template.HTML
+	Posts    []RootPostData
 }
 
 func RenderRootIndex(w io.Writer, d RootIndexData) error {
 	m := map[string]interface{}{
 		"Title":    d.Title,
-		"Bodies":   d.Bodies,
+		"Posts":    d.Posts,
 		"Features": d.Features,
 	}
 	return render(w, "root_index.gohtml", m)

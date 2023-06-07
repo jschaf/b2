@@ -33,7 +33,7 @@ func NewServer(l *zap.SugaredLogger) *LiveReload {
 	}
 }
 
-// Handler is a http.HandlerFunc to handle LiveReload websocket interaction.
+// WebSocketHandler is a http.HandlerFunc to handle LiveReload websocket interaction.
 // The goroutine running the handler is left open.
 func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := lr.upgrader.Upgrade(w, r, nil)

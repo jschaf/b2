@@ -2,9 +2,11 @@
 {{ define "content" }}
     {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.RootIndexData*/ -}}
     <section>
-        {{range $i, $body := .Bodies}}
-            {{$body}}
-            {{if not (isLast $i $.Bodies)}}
+        {{range $i, $post := .Posts}}
+            <a href="/{{$post.Slug}}">
+                {{$post.Title}}
+            </a>
+            {{if not (isLast $i $.Posts)}}
               <hr class="article-split">
             {{end}}
         {{end}}
