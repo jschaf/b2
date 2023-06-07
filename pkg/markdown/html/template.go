@@ -12,10 +12,6 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 )
 
-var fns = template.FuncMap{
-	"isLast": isLast,
-}
-
 var (
 	templates = make(map[string]*template.Template)
 )
@@ -34,7 +30,7 @@ func init() {
 	for _, name := range layouts {
 		f := filepath.Join(layoutDir, name)
 		templates[name] = template.Must(
-			template.New(name).Funcs(fns).ParseFiles(f, baseTmpl))
+			template.New(name).Funcs(TemplateFuncs()).ParseFiles(f, baseTmpl))
 	}
 }
 

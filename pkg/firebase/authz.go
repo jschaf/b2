@@ -9,7 +9,6 @@ import (
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/firebasehosting/v1beta1"
 	"os"
-	"path/filepath"
 )
 
 // AuthFile relative to source dir.
@@ -29,12 +28,7 @@ type ServiceAccountCreds struct {
 // ReadServiceAccountCreds reads the credentials file for the Firebase service
 // account.
 func ReadServiceAccountCreds() (s ServiceAccountCreds, mErr error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return s, fmt.Errorf("get home dir: %w", err)
-	}
-
-	b, err := os.ReadFile(filepath.Join(homeDir, AuthFile))
+	b, err := os.ReadFile(AuthFile)
 	if err != nil {
 		return s, fmt.Errorf("read service account creds: %w", err)
 	}
