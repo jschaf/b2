@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	// Top level directories.
 	Book        = "book"
 	Cmd         = "cmd"
 	Fonts       = "fonts"
@@ -18,7 +17,7 @@ const (
 	Static      = "static"
 	Style       = "style"
 	TIL         = "til"
-	PublicMemfs = "/m/b2" // alternate public dir for development
+	PublicMemfs = "/opt/p/b2/public" // alternate public dir for development
 )
 
 // RemoveAllChildren removes all children in the directory.

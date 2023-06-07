@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -21,14 +21,14 @@ func NewHeapForwarder() *HeapForwarder {
 }
 
 func (hf *HeapForwarder) ForwardHandler(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Printf("error: read body: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+	req.Body = io.NopCloser(bytes.NewReader(body))
 	url := "https://heapanalytics.com" + req.RequestURI
 	proxyReq, err := http.NewRequest(req.Method, url, bytes.NewReader(body))
 	if err != nil {

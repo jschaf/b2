@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -47,7 +46,7 @@ func (c *PostDetailCompiler) parse(path string) (*markdown.AST, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
 	}
-	src, err := ioutil.ReadAll(f)
+	src, err := io.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("read post at path %s: %w", path, err)
 	}

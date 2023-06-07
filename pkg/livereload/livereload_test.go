@@ -5,8 +5,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jschaf/b2/pkg/errs"
 	"go.uber.org/zap/zaptest"
+	"io"
 
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,7 +22,7 @@ func TestServeJSHandler(t *testing.T) {
 	lr.ServeJSHandler(w, req)
 
 	resp := w.Result()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 			injector(w, req)
 
 			resp := w.Result()
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err)
 			}

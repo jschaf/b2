@@ -5,15 +5,13 @@ import (
 	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"io"
-	"io/ioutil"
-
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap"
+	"io"
 )
 
 type AST struct {
@@ -115,7 +113,7 @@ func New(l *zap.Logger, opts ...Option) *Markdown {
 }
 
 func (m *Markdown) Parse(path string, r io.Reader) (*AST, error) {
-	bs, err := ioutil.ReadAll(r)
+	bs, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

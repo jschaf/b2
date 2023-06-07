@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -65,7 +65,7 @@ func (u *Uploader) Upload(ctx context.Context, f SiteFile) (mErr error) {
 	}
 	defer errs.Capturing(&mErr, resp.Body.Close, "upload - close response body")
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("upload - read response body: %w", err)
 	}

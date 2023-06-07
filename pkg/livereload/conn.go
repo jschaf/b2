@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
+	"io"
 
-	"io/ioutil"
 	"sync"
 	"time"
 )
@@ -65,7 +65,7 @@ func (c *conn) readText() ([]byte, error) {
 	if msgType == websocket.BinaryMessage {
 		return nil, newCloseError(websocket.CloseUnsupportedData, "expected text data, got binary")
 	}
-	bs, err := ioutil.ReadAll(reader)
+	bs, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("websocket read all: %w", err)
 	}

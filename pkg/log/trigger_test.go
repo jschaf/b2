@@ -3,7 +3,6 @@ package log
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"strings"
 	"sync"
 	"testing"
@@ -94,9 +93,9 @@ func TestTriggerWriter_DoesntBlock(t *testing.T) {
 				t.Error(err)
 			}
 			wg.Wait()
-			// If tw blocks on writes, we'll get stuck trying to ioutil.ReadAll
+			// If tw blocks on writes, we'll get stuck trying to io.ReadAll
 			// from the other writer.
-			if _, err := ioutil.ReadAll(buf); err != nil {
+			if _, err := io.ReadAll(buf); err != nil {
 				t.Error(err)
 			}
 		})

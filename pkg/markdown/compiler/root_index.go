@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,7 +37,7 @@ func (ic *RootIndexCompiler) parse(path string) (*markdown.AST, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open file %s: %w", path, err)
 	}
-	src, err := ioutil.ReadAll(f)
+	src, err := io.ReadAll(f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read article for index: %w", err)
 	}
