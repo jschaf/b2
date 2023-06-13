@@ -5,6 +5,7 @@ import (
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/karrick/godirwalk"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -20,8 +21,8 @@ func CopyAllCSS(pubDir string) ([]string, error) {
 		return nil, fmt.Errorf("create public style dir: %w", err)
 	}
 
-	cb := func(path string, dirent *godirwalk.Dirent) ([]string, error) {
-		if !dirent.IsRegular() || filepath.Ext(path) != ".css" {
+	cssPaths, err := paths.WalkCollect(styleDir, func(path string, dirent fs.DirEntry) ([]string, error) {
+		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".css" {
 			return nil, nil
 		}
 		rel, err := filepath.Rel(styleDir, path)
@@ -35,8 +36,7 @@ func CopyAllCSS(pubDir string) ([]string, error) {
 			return nil, nil
 		}
 		return []string{dest}, nil
-	}
-	cssPaths, err := paths.WalkCollectStrings(styleDir, runtime.NumCPU(), cb)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("copy css to public dir: %w", err)
 	}

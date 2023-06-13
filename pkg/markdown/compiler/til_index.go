@@ -53,7 +53,7 @@ func (c *TILIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) error 
 	sort.Slice(asts, func(i, j int) bool {
 		return asts[i].Meta.Date.After(asts[j].Meta.Date)
 	})
-	feats := mdctx.NewFeatures()
+	feats := mdctx.NewFeatureSet()
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue

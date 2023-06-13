@@ -49,27 +49,28 @@ func AddAsset(pc parser.Context, b assets.Blob) {
 
 var featuresCtxKey = parser.NewContextKey()
 
-func GetFeatures(pc parser.Context) *Features {
+func GetFeatures(pc parser.Context) *FeatureSet {
 	fs := pc.Get(featuresCtxKey)
-	if _, ok := fs.(*Features); fs == nil || !ok {
-		fs = NewFeatures()
+	if _, ok := fs.(*FeatureSet); fs == nil || !ok {
+		fs = NewFeatureSet()
 		pc.Set(featuresCtxKey, fs)
 	}
-	return fs.(*Features)
+	return fs.(*FeatureSet)
 }
 
 func AddFeature(pc parser.Context, feat Feature) {
 	fs := pc.Get(featuresCtxKey)
-	if _, ok := fs.(*Features); fs == nil || !ok {
-		fs = NewFeatures()
+	if _, ok := fs.(*FeatureSet); fs == nil || !ok {
+		fs = NewFeatureSet()
 	}
-	fs.(*Features).Add(feat)
+	fs.(*FeatureSet).Add(feat)
 	pc.Set(featuresCtxKey, fs)
 }
 
 var titleCtxKey = parser.NewContextKey()
 
-// Returns the title as parsed from the first H1 header in the document.
+// GetTitle returns the title as parsed from the first H1 header in the
+// document.
 func GetTitle(pc parser.Context) string {
 	return pc.Get(titleCtxKey).(string)
 }
@@ -102,7 +103,8 @@ var rendererCtxKey = parser.NewContextKey()
 // for rendering markdown into HTML that doesn't fit into the
 // parse-transform-render model. For example, link preview data is rendered into
 // HTML stored in the data attributes of <a> tags, like:
-//   <a data-preview-title="<h1>foo</h1>">
+//
+//	<a data-preview-title="<h1>foo</h1>">
 func GetRenderer(pc parser.Context) (renderer.Renderer, bool) {
 	r := pc.Get(rendererCtxKey)
 	if r == nil {

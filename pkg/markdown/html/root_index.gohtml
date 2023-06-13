@@ -3,7 +3,8 @@
     {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.RootIndexData*/ -}}
     <section>
         {{range $i, $post := .Posts}}
-            <a href="/{{$post.Slug}}">
+            <time datetime="{{$post.Date.UTC.Format "2006-01-02"}}">{{$post.Date.UTC.Format "2006-01-02"}}</time>
+            <a href="/{{$post.Slug}}/">
                 {{$post.Title}}
             </a>
             {{if not (isLast $i $.Posts)}}

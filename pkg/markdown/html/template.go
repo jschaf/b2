@@ -45,30 +45,30 @@ func render(w io.Writer, name string, data map[string]interface{}) error {
 
 type BookDetailData struct {
 	Title    string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 	Content  template.HTML
 }
 
 func RenderBookDetail(w io.Writer, d BookDetailData) error {
 	m := map[string]interface{}{
-		"Title":    d.Title,
-		"Content":  d.Content,
-		"Features": d.Features,
+		"Title":      d.Title,
+		"Content":    d.Content,
+		"FeatureSet": d.Features,
 	}
 	return render(w, "book_detail.gohtml", m)
 }
 
 type PostDetailData struct {
 	Title    string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 	Content  template.HTML
 }
 
 func RenderPostDetail(w io.Writer, d PostDetailData) error {
 	m := map[string]interface{}{
-		"Title":    d.Title,
-		"Content":  d.Content,
-		"Features": d.Features,
+		"Title":      d.Title,
+		"Content":    d.Content,
+		"FeatureSet": d.Features,
 	}
 	return render(w, "post_detail.gohtml", m)
 }
@@ -82,37 +82,39 @@ type RootPostData struct {
 
 type RootIndexData struct {
 	Title    string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 	Posts    []RootPostData
+	TILs     []TILIndexData
 }
 
 func RenderRootIndex(w io.Writer, d RootIndexData) error {
 	m := map[string]interface{}{
-		"Title":    d.Title,
-		"Posts":    d.Posts,
-		"Features": d.Features,
+		"Title":      d.Title,
+		"Posts":      d.Posts,
+		"TILs":       d.TILs,
+		"FeatureSet": d.Features,
 	}
 	return render(w, "root_index.gohtml", m)
 }
 
 type TILIndexData struct {
 	Title    string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 	Bodies   []template.HTML
 }
 
 func RenderTILIndex(w io.Writer, d TILIndexData) error {
 	m := map[string]interface{}{
-		"Title":    d.Title,
-		"Bodies":   d.Bodies,
-		"Features": d.Features,
+		"Title":      d.Title,
+		"Bodies":     d.Bodies,
+		"FeatureSet": d.Features,
 	}
 	return render(w, "til_index.gohtml", m)
 }
 
 type TILDetailData struct {
 	Title    string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 	Content  template.HTML
 }
 
@@ -120,7 +122,7 @@ func RenderTILDetail(w io.Writer, d TILDetailData) error {
 	m := make(map[string]interface{})
 	m["Title"] = d.Title
 	m["Content"] = d.Content
-	m["Features"] = d.Features
+	m["FeatureSet"] = d.Features
 	return render(w, "til_detail.gohtml", m)
 }
 

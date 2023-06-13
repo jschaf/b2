@@ -10,8 +10,11 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 )
 
 // WalkUp traverses up directory tree until it finds an ancestor directory that
@@ -63,51 +66,46 @@ func WalkConcurrent(dir string, maxParallel int, walkFunc godirwalk.WalkFunc) er
 	return nil
 }
 
-type WalkFuncCollectString func(osPathname string, directoryEntry *godirwalk.Dirent) ([]string, error)
+type WalkCollectFunc[T any] func(path string, directoryEntry fs.DirEntry) ([]T, error)
 
-// WalkCollectStrings walks dir, recursively calling walkFunc on each entry
-// collecting a slice of strings from each walkFunc.
-func WalkCollectStrings(dir string, maxParallel int, walkFunc WalkFuncCollectString) ([]string, error) {
-	sem := semaphore.NewWeighted(int64(maxParallel))
-	g, ctx := errgroup.WithContext(context.Background())
+// WalkCollect walks dir, recursively calling walkFunc on each entry collecting
+// a slice of T from each walkFunc.
+func WalkCollect[T any](dir string, walkFunc WalkCollectFunc[T]) ([]T, error) {
+	sem := semaphore.NewWeighted(int64(runtime.NumCPU()))
+	eg, ctx := errgroup.WithContext(context.Background())
+	mu := sync.Mutex{}
+	vals := make([]T, 0, 4)
 
-	strs := make([]string, 0, 4)
-	strsC := make(chan string)
-	doneC := make(chan struct{})
-	go func() {
-		for d := range strsC {
-			strs = append(strs, d)
+	err := filepath.WalkDir(dir, func(path string, dirent fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
 		}
-		close(doneC)
-	}()
-
-	callback := func(path string, dirent *godirwalk.Dirent) error {
 		if err := sem.Acquire(ctx, 1); err != nil {
 			return fmt.Errorf("walk collect acquire semaphore: %w", err)
 		}
-		g.Go(func() error {
+		eg.Go(func() error {
 			defer sem.Release(1)
-			ss, err := walkFunc(path, dirent)
+			vs, err := walkFunc(path, dirent)
 			if err != nil {
 				return err
 			}
-			for _, s := range ss {
-				strsC <- s
+			if len(vs) > 0 {
+				mu.Lock()
+				vals = append(vals, vs...)
+				mu.Unlock()
 			}
 			return nil
 		})
 		return nil
-	}
-	err := godirwalk.Walk(dir, &godirwalk.Options{Unsorted: true, Callback: callback})
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("walk collect walk error: %w", err)
 	}
-	if err := g.Wait(); err != nil {
+	if err := eg.Wait(); err != nil {
 		return nil, fmt.Errorf("walk collect wait err group: %w", err)
 	}
-	close(strsC)
-	<-doneC
-	return strs, nil
+	return vals, nil
 }
 
 // Copy the contents of the src file to dest. Any existing file will be

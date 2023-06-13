@@ -10,13 +10,11 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
-	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
 	"html/template"
-	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 )
 
@@ -32,35 +30,35 @@ func NewRootIndex(pubDir string, l *zap.Logger) *RootIndexCompiler {
 	return &RootIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
 }
 
-func (ic *RootIndexCompiler) parse(path string) (*markdown.AST, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("open file %s: %w", path, err)
-	}
-	src, err := io.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read article for index: %w", err)
-	}
-	postAST, err := ic.md.Parse(path, bytes.NewReader(src))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse markdown for index: %w", err)
-	}
-	return postAST, nil
+func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
+	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
+	asts, err := paths.WalkCollect(postsDir, func(path string, dirent fs.DirEntry) ([]*markdown.AST, error) {
+		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".md" {
+			return nil, nil
+		}
+		ic.l.Debugf("compiling for index %s", path)
+		bs, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("read post at path %s: %w", path, err)
+		}
+		ast, err := ic.md.Parse(path, bytes.NewReader(bs))
+		if err != nil {
+			return nil, fmt.Errorf("parse markdown for root index: %w", err)
+		}
+		return []*markdown.AST{ast}, nil
+	})
+	return asts, err
 }
 
-func (ic *RootIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) error {
+func (ic *RootIndexCompiler) renderPosts(asts []*markdown.AST) ([]html.RootPostData, error) {
 	posts := make([]html.RootPostData, 0, len(asts))
-	sort.Slice(asts, func(i, j int) bool {
-		return asts[i].Meta.Date.After(asts[j].Meta.Date)
-	})
-	feats := mdctx.NewFeatures()
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue
 		}
 		b := new(bytes.Buffer)
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
-			return fmt.Errorf("render markdown for index: %w", err)
+			return nil, fmt.Errorf("render markdown for index: %w", err)
 		}
 		posts = append(posts, html.RootPostData{
 			Title: ast.Meta.Title,
@@ -68,62 +66,43 @@ func (ic *RootIndexCompiler) compileASTs(asts []*markdown.AST, w io.Writer) erro
 			Date:  ast.Meta.Date,
 			Body:  template.HTML(b.String()),
 		})
-		feats.AddAll(ast.Features)
 	}
-	data := html.RootIndexData{
-		Title:    "Joe Schafer's Blog",
-		Posts:    posts,
-		Features: feats,
-	}
-	if err := html.RenderRootIndex(w, data); err != nil {
-		return fmt.Errorf("execute index template: %w", err)
-	}
-	return nil
+	sort.Slice(posts, func(i, j int) bool { return posts[i].Date.After(posts[j].Date) })
+	return posts, nil
 }
 
 func (ic *RootIndexCompiler) CompileIndex() error {
-	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
-
-	astsC := make(chan *markdown.AST)
-	asts := make([]*markdown.AST, 0, 16)
-
-	done := make(chan struct{})
-	go func() {
-		for ast := range astsC {
-			asts = append(asts, ast)
-		}
-		close(done)
-	}()
-
-	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
-		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
-			return nil
-		}
-		ic.l.Debugf("compiling for index %s", path)
-		ast, err := ic.parse(path)
-		if err != nil {
-			return fmt.Errorf("parse post into ast for index at path %s: %w", path, err)
-		}
-		astsC <- ast
-		return nil
-	})
+	postASTs, err := ic.parsePosts()
 	if err != nil {
-		return fmt.Errorf("index compiler walk: %w", err)
+		return err
 	}
 
-	close(astsC)
-	<-done
+	featureSet := mdctx.NewFeatureSet()
+	for _, ast := range postASTs {
+		featureSet.AddAll(ast.Features)
+	}
+
+	posts, err := ic.renderPosts(postASTs)
+	if err != nil {
+		return fmt.Errorf("compile postASTs for index: %w", err)
+	}
 
 	if err := os.MkdirAll(ic.pubDir, 0755); err != nil {
 		return fmt.Errorf("make dir for index: %w", err)
 	}
 	dest := filepath.Join(ic.pubDir, "index.html")
+
 	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("open index.html file for write: %w", err)
 	}
-	if err := ic.compileASTs(asts, destFile); err != nil {
-		return fmt.Errorf("compile asts for index: %w", err)
+	data := html.RootIndexData{
+		Title:    "Joe Schafer's Blog",
+		Posts:    posts,
+		Features: featureSet,
+	}
+	if err := html.RenderRootIndex(destFile, data); err != nil {
+		return fmt.Errorf("execute index template: %w", err)
 	}
 
 	return nil

@@ -15,7 +15,7 @@ func TestRenderPost(t *testing.T) {
 	err := RenderPostDetail(w, PostDetailData{
 		Title:    title,
 		Content:  template.HTML(content),
-		Features: mdctx.NewFeatures(),
+		Features: mdctx.NewFeatureSet(),
 	})
 	if err := err; err != nil {
 		t.Fatal(err)
@@ -36,7 +36,7 @@ func TestRenderIndex(t *testing.T) {
 	data := RootIndexData{
 		Title:    title,
 		Bodies:   []template.HTML{template.HTML(body1), template.HTML(body2)},
-		Features: mdctx.NewFeatures(),
+		Features: mdctx.NewFeatureSet(),
 	}
 
 	if err := RenderRootIndex(w, data); err != nil {

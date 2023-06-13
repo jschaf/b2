@@ -6,36 +6,36 @@ const (
 	FeatureKatex Feature = "katex"
 )
 
-// Features is a special feature of a post. If a post has a feature, we might
+// FeatureSet is a special feature of a post. If a post has a feature, we might
 // need to change the HTML template, like load custom CSS.
-type Features struct {
+type FeatureSet struct {
 	feats map[Feature]struct{}
 }
 
-func NewFeatures() *Features {
-	return &Features{feats: make(map[Feature]struct{})}
+func NewFeatureSet() *FeatureSet {
+	return &FeatureSet{feats: make(map[Feature]struct{})}
 }
 
-func (fs *Features) Add(f Feature) {
+func (fs *FeatureSet) Add(f Feature) {
 	fs.feats[f] = struct{}{}
 }
 
-func (fs *Features) AddAll(f2 *Features) {
+func (fs *FeatureSet) AddAll(f2 *FeatureSet) {
 	for f := range f2.feats {
 		fs.feats[f] = struct{}{}
 	}
 }
 
-func (fs *Features) Has(f Feature) bool {
+func (fs *FeatureSet) Has(f Feature) bool {
 	_, ok := fs.feats[f]
 	return ok
 }
 
-func (fs *Features) Len() int {
+func (fs *FeatureSet) Len() int {
 	return len(fs.feats)
 }
 
-func (fs *Features) Slice() []Feature {
+func (fs *FeatureSet) Slice() []Feature {
 	s := make([]Feature, 0, len(fs.feats))
 	for f := range fs.feats {
 		s = append(s, f)

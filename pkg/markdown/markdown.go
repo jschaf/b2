@@ -21,10 +21,10 @@ type AST struct {
 	Assets []assets.Blob
 	// The full path to the markdown file that this AST represents.
 	Path     string
-	Features *mdctx.Features
+	Features *mdctx.FeatureSet
 }
 
-// Global configuration options for parsing and rendering markdown.
+// Options are global configuration options for parsing and rendering markdown.
 type Options struct {
 	CiteStyle    cite.Style
 	CiteAttacher mdext.CitationReferencesAttacher
