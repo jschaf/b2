@@ -3,6 +3,12 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"html/template"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -11,11 +17,6 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"go.uber.org/zap"
-	"html/template"
-	"io/fs"
-	"os"
-	"path/filepath"
-	"sort"
 )
 
 // RootIndexCompiler compiles the / path, the main homepage.
@@ -31,7 +32,7 @@ func NewRootIndex(pubDir string, l *zap.Logger) *RootIndexCompiler {
 }
 
 func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
-	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
+	postsDir := filepath.Join(git.RootDir(), dirs.Posts)
 	asts, err := paths.WalkCollect(postsDir, func(path string, dirent fs.DirEntry) ([]*markdown.AST, error) {
 		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".md" {
 			return nil, nil

@@ -4,14 +4,15 @@ package mdext
 
 import (
 	"bytes"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/yuin/goldmark"
@@ -126,7 +127,7 @@ func (t *tomlParser) Close(node ast.Node, reader text.Reader, pc parser.Context)
 	}
 
 	postPath := mdctx.GetFilePath(pc)
-	root := git.MustFindRootDir()
+	root := git.RootDir()
 	for i, bib := range meta.BibPaths {
 		if filepath.IsAbs(bib) {
 			// Absolute starts from the root of the repository.

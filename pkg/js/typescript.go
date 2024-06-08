@@ -2,13 +2,14 @@ package js
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"sync"
+
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
-	"io/ioutil"
-	"path/filepath"
-	"sync"
 )
 
 // Single entry cache for main.js.
@@ -33,7 +34,7 @@ func (jsCache *jsCache) isUnchanged(mainJSPath string) (bool, uint64, error) {
 }
 
 func bundleTypeScript(pubDir string) (api.BuildResult, error) {
-	mainTS := filepath.Join(git.MustFindRootDir(), dirs.Static, "main.ts")
+	mainTS := filepath.Join(git.RootDir(), dirs.Static, "main.ts")
 	mainTSOut := filepath.Join(pubDir, "main.js")
 
 	// Check if file is same and skip JS bundle.

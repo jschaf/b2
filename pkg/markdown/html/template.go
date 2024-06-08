@@ -2,20 +2,21 @@ package html
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"html/template"
 	"io"
 	"path/filepath"
 	"reflect"
 	"time"
 
+	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
+
 	"github.com/jschaf/b2/pkg/git"
 )
 
 func compileTemplates() map[string]*template.Template {
 	templates := make(map[string]*template.Template, 8)
-	rootDir := git.MustFindRootDir()
+	rootDir := git.RootDir()
 	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
 	layouts := []string{

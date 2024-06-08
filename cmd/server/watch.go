@@ -3,6 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/errs"
@@ -11,13 +19,6 @@ import (
 	"github.com/jschaf/b2/pkg/sites"
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"sync"
-	"syscall"
-	"time"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -48,7 +49,7 @@ func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredL
 
 func (f *FSWatcher) Start() (mErr error) {
 	defer errs.Capturing(&mErr, f.watcher.Close, "close FSWatcher")
-	rootDir := git.MustFindRootDir()
+	rootDir := git.RootDir()
 
 	for {
 		select {

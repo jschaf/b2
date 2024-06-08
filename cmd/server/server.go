@@ -3,6 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/livereload"
@@ -10,10 +15,6 @@ import (
 	"github.com/jschaf/b2/pkg/net/srv"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func run() (mErr error) {
@@ -53,7 +54,7 @@ func run() (mErr error) {
 	mux.Handle("/", lr.NewHTMLInjector(lrScript, pubDirHandler))
 
 	watcher := NewFSWatcher(pubDir, lr, logger.Sugar())
-	root := git.MustFindRootDir()
+	root := git.RootDir()
 	if err := watcher.watchDirs(
 		filepath.Join(root, dirs.Book),
 		filepath.Join(root, dirs.Cmd),

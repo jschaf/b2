@@ -3,17 +3,18 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/markdown/assets"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
-	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
 	"html/template"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/markdown/assets"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
+	"github.com/karrick/godirwalk"
+	"go.uber.org/zap"
 
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -96,7 +97,7 @@ func (c *PostDetailCompiler) compile(ast *markdown.AST, w io.Writer) error {
 }
 
 func (c *PostDetailCompiler) CompileAll(glob string) error {
-	postsDir := filepath.Join(git.MustFindRootDir(), dirs.Posts)
+	postsDir := filepath.Join(git.RootDir(), dirs.Posts)
 	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil

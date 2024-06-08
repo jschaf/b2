@@ -1,30 +1,20 @@
 package git
 
 import (
-	"github.com/jschaf/b2/pkg/paths"
 	"sync"
+
+	"github.com/jschaf/b2/pkg/paths"
 )
 
-var (
-	rootOnce sync.Once
-	rootDir  string
-	rootErr  error
-)
+var rootFunc = sync.OnceValues[string, error](func() (string, error) {
+	return paths.WalkUp(".git")
+})
 
-// FindRootDir finds the nearest directory containing a .git folder. Checks
-// the current dir and then walks up parent directories.
-func FindRootDir() (string, error) {
-	rootOnce.Do(func() {
-		rootDir, rootErr = paths.WalkUp(".git")
-	})
-	return rootDir, rootErr
-}
-
-// MustFindRootDir finds the nearest directory containing a .git folder or
-// panics. Checks the current dir and then walks up parent directories.
+// RootDir finds the nearest directory containing a .git folder or panics.
+// Checks the current dir and then walks up parent directories.
 // Panics if no parent directory contains a .git folder.
-func MustFindRootDir() string {
-	dir, err := FindRootDir()
+func RootDir() string {
+	dir, err := rootFunc()
 	if err != nil {
 		panic(err)
 	}

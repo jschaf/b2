@@ -2,20 +2,21 @@ package css
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/karrick/godirwalk"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/karrick/godirwalk"
 
 	"github.com/jschaf/b2/pkg/paths"
 )
 
 // CopyAllCSS copies all CSS files into pubDir/style.
 func CopyAllCSS(pubDir string) ([]string, error) {
-	styleDir := filepath.Join(git.MustFindRootDir(), dirs.Style)
+	styleDir := filepath.Join(git.RootDir(), dirs.Style)
 	destDir := filepath.Join(pubDir, dirs.Style)
 	if err := os.MkdirAll(filepath.Dir(destDir), 0755); err != nil {
 		return nil, fmt.Errorf("create public style dir: %w", err)
@@ -45,7 +46,7 @@ func CopyAllCSS(pubDir string) ([]string, error) {
 
 // CopyAllFonts copies all font files into pubDir/fonts.
 func CopyAllFonts(pubDir string) error {
-	fontDir := filepath.Join(git.MustFindRootDir(), dirs.Style, dirs.Fonts)
+	fontDir := filepath.Join(git.RootDir(), dirs.Style, dirs.Fonts)
 	destDir := filepath.Join(pubDir, dirs.Style, dirs.Fonts)
 	if err := os.MkdirAll(filepath.Dir(destDir), 0755); err != nil {
 		return fmt.Errorf("create public font dir: %w", err)

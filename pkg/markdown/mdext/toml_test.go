@@ -1,18 +1,19 @@
 package mdext
 
 import (
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/texts"
 )
 
 func TestMeta(t *testing.T) {
-	root := git.MustFindRootDir()
+	root := git.RootDir()
 	tests := []struct {
 		name         string
 		src          string

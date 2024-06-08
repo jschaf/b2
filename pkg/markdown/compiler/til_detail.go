@@ -3,6 +3,12 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"html/template"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
@@ -12,11 +18,6 @@ import (
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
 	"go.uber.org/zap"
-	"html/template"
-	"io"
-	"os"
-	"path/filepath"
-	"runtime"
 )
 
 // TILDetailCompiler compiles the /til/* paths, showing the detail page for each
@@ -89,7 +90,7 @@ func (c *TILDetailCompiler) compile(ast *markdown.AST, w io.Writer) error {
 }
 
 func (c *TILDetailCompiler) CompileAll() error {
-	tilDir := filepath.Join(git.MustFindRootDir(), dirs.TIL)
+	tilDir := filepath.Join(git.RootDir(), dirs.TIL)
 	err := paths.WalkConcurrent(tilDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
