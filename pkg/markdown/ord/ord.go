@@ -1,4 +1,4 @@
-// package ord contains ordering used to run parser, renderer, and AST
+// Package ord contains ordering used to run parser, renderer, and AST
 // transformation extensions.
 package ord
 

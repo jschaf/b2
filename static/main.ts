@@ -480,8 +480,7 @@ class PreviewLifecycle {
     }
 
     // The preview extends past the top of the view port.
-    log.debug(
-        `preview: extends past top of viewport by ${vertHidden}px.`);
+    log.debug(`preview: extends past top of viewport by ${vertHidden}px.`);
     const maxSteal = marginVert * 0.6 + vertNudge * 0.6;
     // Remove the scrollbar by stealing padding.
     if (vertHidden < maxSteal) {
