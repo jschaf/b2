@@ -28,7 +28,6 @@ func CopyStaticFiles(pubDir string) error {
 		dest := filepath.Join(pubDir, rel)
 		return paths.Copy(dest, path)
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to copy static files: %w", err)
 	}

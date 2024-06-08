@@ -2,10 +2,12 @@
 // transformation extensions.
 package ord
 
-type ParserPriority int
-type ParaTransformerPriority int
-type ASTTransformerPriority int
-type RendererPriority int
+type (
+	ParserPriority          int
+	ParaTransformerPriority int
+	ASTTransformerPriority  int
+	RendererPriority        int
+)
 
 const (
 	TOMLParser            ParserPriority = 0

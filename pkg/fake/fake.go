@@ -1,9 +1,10 @@
 package fake
 
 import (
-	"github.com/jschaf/b2/pkg/api"
 	"math/rand"
 	"time"
+
+	"github.com/jschaf/b2/pkg/api"
 )
 
 // EventFaker is a non-thread-safe, deterministic pseudo-RNG. Deterministic

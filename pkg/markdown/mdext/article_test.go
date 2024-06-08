@@ -1,9 +1,10 @@
 package mdext
 
 import (
+	"testing"
+
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/texts"

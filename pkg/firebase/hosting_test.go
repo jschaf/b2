@@ -1,10 +1,11 @@
 package firebase
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 func TestSiteHashes_PopulateFromDir(t *testing.T) {

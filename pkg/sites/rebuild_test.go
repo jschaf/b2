@@ -1,9 +1,10 @@
 package sites
 
 import (
+	"testing"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"go.uber.org/zap"
-	"testing"
 )
 
 func BenchmarkRebuild(b *testing.B) {

@@ -73,10 +73,10 @@ func (m *MultiError) ErrorOrNil() error {
 //
 // If msg is not empty, wrap the error returned by closer with the msg.
 //
-// - If errF does not error, do nothing.
-// - If errF errors and *err == nil, replace *err with the error.
-// - If errF errors and *err != nil, create a MultiError containing
-//   *err and the errF err, then replace *err with the MultiError.
+//   - If errF does not error, do nothing.
+//   - If errF errors and *err == nil, replace *err with the error.
+//   - If errF errors and *err != nil, create a MultiError containing
+//     *err and the errF err, then replace *err with the MultiError.
 func Capturing(err *error, errF func() error, msg string) {
 	fErr := errF()
 	if fErr == nil {

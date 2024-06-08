@@ -60,8 +60,7 @@ func SetTOMLMeta(pc parser.Context, m PostMeta) {
 }
 
 // tomlParser is a block parser for toml frontmatter.
-type tomlParser struct {
-}
+type tomlParser struct{}
 
 var defaultTOMLMetaParser = &tomlParser{}
 
@@ -151,8 +150,7 @@ func (t *tomlParser) CanAcceptIndentedLine() bool {
 	return false
 }
 
-type tomlFront struct {
-}
+type tomlFront struct{}
 
 // New returns a new TOMLFrontmatter extension.
 func NewTOMLExt() goldmark.Extender {

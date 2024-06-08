@@ -2,9 +2,10 @@ package dirs
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/errs"
 	"os"
 	"path/filepath"
+
+	"github.com/jschaf/b2/pkg/errs"
 )
 
 const (
@@ -45,7 +46,7 @@ func RemoveAllChildren(dir string) (mErr error) {
 // CleanDir creates dir if it doesn't exist and then deletes all children of the
 // dir.
 func CleanDir(dir string) error {
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("make dir: %w", err)
 	}
 	if err := RemoveAllChildren(dir); err != nil {

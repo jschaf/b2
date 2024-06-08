@@ -78,7 +78,7 @@ func WriteTypeScriptMain(pubDir string) error {
 		return fmt.Errorf("write main.ts bundle: %w", err)
 	}
 	for _, f := range result.OutputFiles {
-		if err := ioutil.WriteFile(f.Path, f.Contents, 0644); err != nil {
+		if err := ioutil.WriteFile(f.Path, f.Contents, 0o644); err != nil {
 			return fmt.Errorf("write main.js.min: %w", err)
 		}
 	}

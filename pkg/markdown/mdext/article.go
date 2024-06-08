@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"errors"
+
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"

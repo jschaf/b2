@@ -1,17 +1,17 @@
 package livereload
 
 import (
-	"github.com/google/go-cmp/cmp"
-	"github.com/gorilla/websocket"
-	"github.com/jschaf/b2/pkg/errs"
-	"go.uber.org/zap/zaptest"
 	"io"
-
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/gorilla/websocket"
+	"github.com/jschaf/b2/pkg/errs"
+	"go.uber.org/zap/zaptest"
 )
 
 func TestServeJSHandler(t *testing.T) {
@@ -43,18 +43,28 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 		want    string
 	}{
 		{"only head tag", writeHTMLBody("</head>"), headers(), replaced},
-		{"2 tags with head",
+		{
+			"2 tags with head",
 			writeHTMLBody("<html><head></head></html>"), headers(),
-			"<html><head>" + replaced + "</html>"},
-		{"split head tag </he ad>",
-			writeHTMLBody("</he", "ad>"), headers(), replaced},
-		{"split head tag with prefix",
-			writeHTMLBody("<html></he", "ad>"), headers(), "<html>" + replaced},
-		{"split head tag multiple writes",
-			writeHTMLBody("<html>", "</he", "ad>"), headers(), "<html>" + replaced},
-		{"headers preserved",
+			"<html><head>" + replaced + "</html>",
+		},
+		{
+			"split head tag </he ad>",
+			writeHTMLBody("</he", "ad>"), headers(), replaced,
+		},
+		{
+			"split head tag with prefix",
+			writeHTMLBody("<html></he", "ad>"), headers(), "<html>" + replaced,
+		},
+		{
+			"split head tag multiple writes",
+			writeHTMLBody("<html>", "</he", "ad>"), headers(), "<html>" + replaced,
+		},
+		{
+			"headers preserved",
 			writeHTML(headers("FOO", "bar"), "<html>", "</he", "ad>"), headers("FOO", "bar"),
-			"<html>" + replaced},
+			"<html>" + replaced,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

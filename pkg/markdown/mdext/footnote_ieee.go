@@ -1,17 +1,18 @@
-//
 package mdext
 
 import "C"
+
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/texts"
 	"github.com/jschaf/bibtex"
 	bibast "github.com/jschaf/bibtex/ast"
 	"github.com/yuin/goldmark/renderer"
-	"strconv"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/util"
@@ -234,6 +235,7 @@ func renderTitle(w util.BufWriter, c *Citation) {
 		w.WriteString(`,"`)
 	}
 }
+
 func assertSimpleText(x bibast.Expr) string {
 	if x == nil {
 		panic("expected simple text for bibast.Expr but was nil")
@@ -258,13 +260,13 @@ func renderJournal(w util.BufWriter, journal bibast.Expr) {
 //
 // IEEE reference guide, section B includes the following guidance:
 //
-// 1. Use the standard abbreviations below for all words in the conference.
-// 2. Write out all the remaining words, but omit most articles and prepositions
-//    like "of the" and "on." That is,
-//    "Proceedings of the 1996 Robotics and Automation Conference"
-//    becomes
-//    "Proc. 1996 Robotics and Automation Conf."
-// 3. All published conference or proceedings papers have page numbers.
+//  1. Use the standard abbreviations below for all words in the conference.
+//  2. Write out all the remaining words, but omit most articles and prepositions
+//     like "of the" and "on." That is,
+//     "Proceedings of the 1996 Robotics and Automation Conference"
+//     becomes
+//     "Proc. 1996 Robotics and Automation Conf."
+//  3. All published conference or proceedings papers have page numbers.
 func renderConference(w util.BufWriter, c bibast.Expr) {
 	w.WriteString("in <em class=cite-conference>")
 	_, _ = ieeeAbbrevReplacer.WriteString(w, assertSimpleText(c))

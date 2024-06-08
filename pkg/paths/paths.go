@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/files"
-	"github.com/karrick/godirwalk"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/sync/semaphore"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+
+	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/files"
+	"github.com/karrick/godirwalk"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 )
 
 // WalkUp traverses up directory tree until it finds an ancestor directory that
@@ -98,7 +99,6 @@ func WalkCollect[T any](dir string, walkFunc WalkCollectFunc[T]) ([]T, error) {
 		})
 		return nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("walk collect walk error: %w", err)
 	}
@@ -117,7 +117,7 @@ func Copy(dest, src string) (mErr error) {
 	}
 	defer errs.Capturing(&mErr, in.Close, "")
 
-	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return fmt.Errorf("mkdir to copy to dest %q: %w", dest, err)
 	}
 	out, err := os.Create(dest)

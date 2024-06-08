@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/sites"
 	"os"
 	"runtime"
 	"runtime/pprof"
+
+	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/b2/pkg/log"
+	"github.com/jschaf/b2/pkg/sites"
 )
 
 var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")

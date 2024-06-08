@@ -1,9 +1,10 @@
 package mdext
 
 import (
+	"testing"
+
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/yuin/goldmark/ast"
-	"testing"
 )
 
 func TestNewCustomExt(t *testing.T) {

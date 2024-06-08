@@ -64,11 +64,11 @@ func (c *PostDetailCompiler) createDestFile(ast *markdown.AST) (*os.File, error)
 		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
 	}
 	slugDir := filepath.Join(c.pubDir, slug)
-	if err := os.MkdirAll(slugDir, 0755); err != nil {
+	if err := os.MkdirAll(slugDir, 0o755); err != nil {
 		return nil, fmt.Errorf("make dir for slug %s: %w", slug, err)
 	}
 	dest := filepath.Join(slugDir, "index.html")
-	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("create dest file %q for post: %w", dest, err)
 	}

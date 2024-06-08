@@ -88,12 +88,12 @@ func (ic *RootIndexCompiler) CompileIndex() error {
 		return fmt.Errorf("compile postASTs for index: %w", err)
 	}
 
-	if err := os.MkdirAll(ic.pubDir, 0755); err != nil {
+	if err := os.MkdirAll(ic.pubDir, 0o755); err != nil {
 		return fmt.Errorf("make dir for index: %w", err)
 	}
 	dest := filepath.Join(ic.pubDir, "index.html")
 
-	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("open index.html file for write: %w", err)
 	}

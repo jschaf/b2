@@ -2,13 +2,14 @@ package mdext
 
 import (
 	"fmt"
+	"path"
+	"path/filepath"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -50,7 +51,6 @@ func (f imageASTTransformer) Transform(doc *ast.Document, _ text.Reader, pc pars
 		})
 		return ast.WalkSkipChildren, nil
 	})
-
 	if err != nil {
 		panic(err)
 	}

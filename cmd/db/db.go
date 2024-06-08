@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"go.uber.org/zap/zapcore"
 
 	"github.com/jschaf/b2/pkg/db"

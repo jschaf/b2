@@ -2,8 +2,9 @@ package assets
 
 import (
 	"fmt"
-	"github.com/jschaf/b2/pkg/paths"
 	"path/filepath"
+
+	"github.com/jschaf/b2/pkg/paths"
 )
 
 type Blob struct {

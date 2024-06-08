@@ -1,10 +1,11 @@
 package attrs
 
 import (
+	"strconv"
+
 	"github.com/jschaf/b2/pkg/texts"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/util"
-	"strconv"
 )
 
 const (

@@ -1,9 +1,10 @@
 package compiler
 
 import (
+	"testing"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"go.uber.org/zap"
-	"testing"
 )
 
 func BenchmarkCompiler_CompileAllPosts(b *testing.B) {

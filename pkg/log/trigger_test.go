@@ -64,14 +64,16 @@ func TestTriggerWriter_DoesntBlock(t *testing.T) {
 		{"foo", newStringReaders("qux\nfoo\nbar\n")},
 		{"foo", newStringReaders(
 			"qux\nfoo\n", strings.Repeat("qux-bar-baz-qux\n", 1024))},
-		{"foo",
+		{
+			"foo",
 			newStringReaders(
 				"qux\nbar\n",
 				strings.Repeat("qux-bar-baz-qux\n", 1024),
 				"qux\nfoo\n",
 				"end",
 				strings.Repeat("qux-bar-baz-qux\n", 1024),
-			)},
+			),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.trigger, func(t1 *testing.T) {

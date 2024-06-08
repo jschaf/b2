@@ -36,8 +36,7 @@ func (s *SmallCaps) Dump(source []byte, level int) {
 }
 
 // smallCapsParser parses text into small caps.
-type smallCapsParser struct {
-}
+type smallCapsParser struct{}
 
 func (p *smallCapsParser) Trigger() []byte {
 	// ' ' indicates whitespace and newlines.

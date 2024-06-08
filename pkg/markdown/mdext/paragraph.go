@@ -13,8 +13,7 @@ import (
 
 // paragraphRenderer is an HTML renderer for paragraphs that supports using a
 // tag other than <p> if customTagAttr is set.
-type paragraphRenderer struct {
-}
+type paragraphRenderer struct{}
 
 func (p paragraphRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindParagraph, p.renderParagraph)
@@ -38,11 +37,9 @@ func (p paragraphRenderer) renderParagraph(w util.BufWriter, _ []byte, node ast.
 		_, _ = w.WriteString("</" + tag + ">\n")
 	}
 	return ast.WalkContinue, nil
-
 }
 
-type ParagraphExt struct {
-}
+type ParagraphExt struct{}
 
 func NewParagraphExt() ParagraphExt {
 	return ParagraphExt{}

@@ -71,9 +71,9 @@ func (f *FootnoteLink) Dump(source []byte, level int) {
 
 // FootnoteBody is the block content associated with a footnote link:
 //
-//   ::: footnote architecture
-//   Some *markdown*.
-//   :::
+//	::: footnote architecture
+//	Some *markdown*.
+//	:::
 type FootnoteBody struct {
 	ast.BaseBlock
 	Variant FootnoteVariant
@@ -404,8 +404,7 @@ func (fb footnoteBodyTransformer) calcDistance(source text.Reader, link *Footnot
 }
 
 // footnoteRenderer renders both FootnoteLink and FootnoteBody.
-type footnoteRenderer struct {
-}
+type footnoteRenderer struct{}
 
 func (fr footnoteRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindFootnoteLink, fr.renderFootnoteLink)

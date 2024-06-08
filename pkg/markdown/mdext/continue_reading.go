@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"bytes"
+
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
@@ -73,7 +74,6 @@ func (c contReadingParser) CanAcceptIndentedLine() bool {
 type contReadingTransformer struct{}
 
 func (c contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
-
 	var contReading ast.Node
 
 	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -97,8 +97,7 @@ func (c contReadingTransformer) Transform(doc *ast.Document, _ text.Reader, _ pa
 }
 
 // nopContReadingRenderer doesn't render the continue reading node.
-type nopContReadingRenderer struct {
-}
+type nopContReadingRenderer struct{}
 
 func (n nopContReadingRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindContinueReading, n.renderNopContReading)
@@ -127,7 +126,8 @@ func contReadingLink(link string) string {
 }
 
 func (c contReadingRenderer) render(
-	w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	w util.BufWriter, _ []byte, node ast.Node, entering bool,
+) (ast.WalkStatus, error) {
 	if entering {
 		n := node.(*ContinueReading)
 		link := contReadingLink(n.Link)

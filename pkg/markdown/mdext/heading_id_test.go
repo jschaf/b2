@@ -1,9 +1,10 @@
 package mdext
 
 import (
+	"testing"
+
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
-	"testing"
 )
 
 func TestNewHeadingIDExt(t *testing.T) {

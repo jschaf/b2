@@ -2,6 +2,7 @@ package mdext
 
 import (
 	"bytes"
+
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
 	"github.com/yuin/goldmark"
@@ -13,7 +14,8 @@ import (
 )
 
 // KindColonLine represents a block like:
-//   :toc: right
+//
+//	:toc: right
 var KindColonLine = ast.NewNodeKind("ColonLine")
 
 type ColonLineName string
@@ -26,7 +28,7 @@ const (
 // https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#table-of-contents-toc
 // For example to create a right-aligned TOC:
 //
-//   :toc: right
+//	:toc: right
 type ColonLine struct {
 	ast.BaseBlock
 	Name ColonLineName
@@ -118,9 +120,10 @@ func (cbr ColonLineRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegister
 }
 
 // ColonLineExt extends markdown with support for colon blocks, like:
-//   ::: preview http://example.com
-//   # header
-//   :::
+//
+//	::: preview http://example.com
+//	# header
+//	:::
 type ColonLineExt struct{}
 
 func NewColonLineExt() goldmark.Extender {

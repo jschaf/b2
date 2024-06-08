@@ -2,8 +2,9 @@ package htmls
 
 import (
 	"bytes"
-	"golang.org/x/net/html"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 // RenderNodes prints a normalized string representation of HTML nodes.
@@ -35,7 +36,6 @@ func RenderNode(n *html.Node, w *bytes.Buffer, indent int) {
 	default:
 		_ = html.Render(w, n)
 	}
-
 }
 
 func renderBlockElem(n *html.Node, w *bytes.Buffer, indent int) {

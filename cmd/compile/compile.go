@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/markdown/compiler"

@@ -1,9 +1,10 @@
 package mdext
 
 import (
+	"time"
+
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
-	"time"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -61,8 +62,7 @@ func (t *timeRenderer) renderTime(w util.BufWriter, _ []byte, node ast.Node, ent
 }
 
 // TimeExt extends the goldmark markdown renderer to support a time node.
-type TimeExt struct {
-}
+type TimeExt struct{}
 
 func NewTimeExt() *TimeExt {
 	return &TimeExt{}

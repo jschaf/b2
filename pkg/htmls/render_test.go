@@ -2,10 +2,11 @@ package htmls
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/texts"
 	"golang.org/x/net/html"
-	"testing"
 )
 
 func TestRenderNode(t *testing.T) {
@@ -15,8 +16,10 @@ func TestRenderNode(t *testing.T) {
 	}{
 		{elem("p"), "<p></p>"},
 		{elem("p", text("foo")), texts.Dedent("<p>\n  foo\n</p>")},
-		{elem("article", elem("p", text("foo"), elem("p", text("bar")))),
-			texts.Dedent("<article>\n    <p>\n    foo        <p>\n      bar\n    </p>\n  </p>\n</article>")},
+		{
+			elem("article", elem("p", text("foo"), elem("p", text("bar")))),
+			texts.Dedent("<article>\n    <p>\n    foo        <p>\n      bar\n    </p>\n  </p>\n</article>"),
+		},
 	}
 	for _, tt := range tests {
 		nameBuf := new(bytes.Buffer)

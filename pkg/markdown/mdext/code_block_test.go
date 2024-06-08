@@ -1,8 +1,9 @@
 package mdext
 
 import (
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"testing"
+
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 
 	"github.com/jschaf/b2/pkg/texts"
 )

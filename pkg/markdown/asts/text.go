@@ -2,6 +2,7 @@ package asts
 
 import (
 	"bytes"
+
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 )
@@ -11,10 +12,10 @@ const slugSep = '-'
 // WriteSlugText writes the node text content recursively into dest using URL
 // safe characters, namely lower case ASCII letters and digits. Applies the
 // following transformations:
-// - Converts all ASCII to lowercase.
-// - Truncates the slug so it always ends with a complete word.
-// - Removes trailing stop words like "the" and "a" but always keeps at least
-//   two words.
+//   - Converts all ASCII to lowercase.
+//   - Truncates the slug so it always ends with a complete word.
+//   - Removes trailing stop words like "the" and "a" but always keeps at least
+//     two words.
 func WriteSlugText(dest []byte, node ast.Node, src []byte) []byte {
 	offs, isTruncated := appendSlugText(dest, 0, node, src)
 	if isTruncated {

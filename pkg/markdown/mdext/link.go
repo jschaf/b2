@@ -3,13 +3,14 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"path"
+	"path/filepath"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/attrs"

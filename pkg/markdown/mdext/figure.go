@@ -1,10 +1,11 @@
 package mdext
 
 import (
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/ord"
 	"path"
 	"strings"
+
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/yuin/goldmark"
@@ -66,6 +67,7 @@ const figureCaptionMarker = "CAPTION:"
 func isSingleImgParagraph(n *ast.Paragraph) bool {
 	return n.ChildCount() == 1 && n.FirstChild().Kind() == ast.KindImage
 }
+
 func isCaption(n ast.Node, r text.Reader) bool {
 	if n == nil || n.Kind() != ast.KindParagraph || n.FirstChild() == nil ||
 		n.FirstChild().Kind() != ast.KindText {

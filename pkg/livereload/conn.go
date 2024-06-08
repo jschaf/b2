@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
 	"io"
-
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 // conn is a websocket connection to a LiveReload client.

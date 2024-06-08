@@ -3,15 +3,16 @@ package firebase
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/jschaf/b2/pkg/errs"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
-	"io"
-	"net/http"
-	"time"
 )
 
 // Uploader uploads SiteFiles for a Firebase site version.

@@ -1,6 +1,8 @@
 package mdext
 
 import (
+	"strconv"
+
 	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
@@ -9,7 +11,6 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/util"
-	"strconv"
 )
 
 // Heading anchor style determines if a paragraph symbol is shown for a heading.

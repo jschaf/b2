@@ -2,6 +2,9 @@ package mdtest
 
 import (
 	"bytes"
+	"strings"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -10,8 +13,6 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap/zaptest"
-	"strings"
-	"testing"
 )
 
 const PostPath = "/md/test/path.md"

@@ -23,8 +23,7 @@ type Fetcher interface {
 }
 
 // WikiSummaryFetcher fetches link summaries from Wikipedia.
-type WikiSummaryFetcher struct {
-}
+type WikiSummaryFetcher struct{}
 
 func (w WikiSummaryFetcher) Fetch(link string) (FetchResult, error) {
 	const url = "https://en.wikipedia.org/api/rest_v1/page/summary/"

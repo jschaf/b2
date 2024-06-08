@@ -1,9 +1,10 @@
 package asts
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"testing"
 )
 
 func TestWriteSlugText(t *testing.T) {

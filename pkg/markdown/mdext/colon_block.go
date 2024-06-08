@@ -3,11 +3,12 @@ package mdext
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/ord"
-	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -58,8 +59,10 @@ func GetPreview(pc parser.Context, url string) (Preview, bool) {
 	return p, ok
 }
 
-var footnoteLinkCtxKey = parser.NewContextKey()
-var footnoteBodyCtxKey = parser.NewContextKey()
+var (
+	footnoteLinkCtxKey = parser.NewContextKey()
+	footnoteBodyCtxKey = parser.NewContextKey()
+)
 
 func AddFootnoteLink(pc parser.Context, f *FootnoteLink) {
 	existing := GetFootnoteLinks(pc)
@@ -96,10 +99,10 @@ func GetFootnoteBodies(pc parser.Context) map[FootnoteName]*FootnoteBody {
 // https://pandoc.org/MANUAL.html#extension-fenced_divs
 // For example:
 //
-//   ::: preview http://example.com
-//   # heading
-//   Some *content*
-//   :::
+//	::: preview http://example.com
+//	# heading
+//	Some *content*
+//	:::
 type ColonBlock struct {
 	ast.BaseBlock
 
@@ -206,6 +209,7 @@ func newColonBlockRenderer() colonBlockRenderer {
 func (cbr colonBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindColonBlock, cbr.renderColonBlock)
 }
+
 func (cbr colonBlockRenderer) renderColonBlock(_ util.BufWriter, _ []byte, n ast.Node, _ bool) (ast.WalkStatus, error) {
 	c := n.(*ColonBlock)
 	switch c.Name {
@@ -220,9 +224,10 @@ func (cbr colonBlockRenderer) renderColonBlock(_ util.BufWriter, _ []byte, n ast
 }
 
 // ColonBlockExt extends markdown with support for colon blocks, like:
-//   ::: preview http://example.com
-//   # header
-//   :::
+//
+//	::: preview http://example.com
+//	# header
+//	:::
 type ColonBlockExt struct{}
 
 func NewColonBlockExt() goldmark.Extender {

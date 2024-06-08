@@ -3,6 +3,8 @@ package sites
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/jschaf/b2/pkg/css"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/js"
@@ -10,7 +12,6 @@ import (
 	"github.com/jschaf/b2/pkg/static"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"time"
 )
 
 // Rebuild rebuilds everything on the site into dir.

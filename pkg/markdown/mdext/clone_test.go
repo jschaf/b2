@@ -2,10 +2,11 @@ package mdext
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
-	"testing"
 )
 
 func TestCloneNode(t *testing.T) {

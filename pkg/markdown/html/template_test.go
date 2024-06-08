@@ -2,10 +2,11 @@ package html
 
 import (
 	"bytes"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"html/template"
 	"strings"
 	"testing"
+
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
 )
 
 func TestRenderPost(t *testing.T) {

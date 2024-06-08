@@ -111,10 +111,10 @@ func (c *TILIndexCompiler) CompileIndex() error {
 	<-done
 
 	dest := filepath.Join(c.pubDir, dirs.TIL, "index.html")
-	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return fmt.Errorf("make dir for TILs: %w", err)
 	}
-	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("open TIL index.html for write: %w", err)
 	}

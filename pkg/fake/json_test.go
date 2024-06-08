@@ -2,9 +2,10 @@ package fake
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"strconv"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type entryOpt = func(encoder *UnsafeJSONEncoder)
@@ -30,16 +31,19 @@ func TestNewUnsafeJSONEncoder(t *testing.T) {
 		{"one string", []entryOpt{strEntry("foo", "bar")}, `{"foo":"bar"}`},
 		{"one number", []entryOpt{intEntry("foo", 1234)}, `{"foo":1234}`},
 		{"negative number", []entryOpt{intEntry("foo", -10000)}, `{"foo":-10000}`},
-		{"two strings",
+		{
+			"two strings",
 			[]entryOpt{strEntry("foo", "bar"), strEntry("qux", "baz")},
-			`{"foo":"bar","qux":"baz"}`},
-		{"string-number",
+			`{"foo":"bar","qux":"baz"}`,
+		},
+		{
+			"string-number",
 			[]entryOpt{strEntry("foo", "bar"), intEntry("qux", -999)},
-			`{"foo":"bar","qux":-999}`},
+			`{"foo":"bar","qux":-999}`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			enc := NewUnsafeJSONEncoder(EncoderConfig{})
 			enc.StartObject()
 			for _, entry := range tt.entries {

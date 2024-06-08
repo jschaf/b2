@@ -3,12 +3,13 @@ package firebase
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/firebasehosting/v1beta1"
-	"os"
 )
 
 // AuthFile relative to source dir.

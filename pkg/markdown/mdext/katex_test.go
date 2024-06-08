@@ -2,10 +2,11 @@ package mdext
 
 import (
 	"bytes"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"strings"
 	"testing"
+
+	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/b2/pkg/markdown/mdtest"
 )
 
 func TestNewKatexExt_works(t *testing.T) {

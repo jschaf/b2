@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-var (
-	TimeoutErr = errors.New("timeout waiting for channel")
-)
+var TimeoutErr = errors.New("timeout waiting for channel")
 
 // Wait waits for ch to close for up to duration d. If ch doesn't close with
 // duration d, Wait returns a TimeoutError.

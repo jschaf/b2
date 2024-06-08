@@ -1,10 +1,11 @@
 package fake
 
 import (
-	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/api"
 	"math"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/jschaf/b2/pkg/api"
 )
 
 func TestEventFaker_WriteEvents_deterministic(t *testing.T) {

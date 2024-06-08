@@ -20,17 +20,17 @@ type baseCmd struct {
 
 // helloMsg is the initial handshake message.
 //
-//   {
-//      command: 'hello',
-//      protocols: [
-//        'http://livereload.com/protocols/official-7',
-//        'http://livereload.com/protocols/official-8',
-//        'http://livereload.com/protocols/official-9',
-//        'http://livereload.com/protocols/2.x-origin-version-negotiation',
-//        'http://livereload.com/protocols/2.x-remote-control'
-//      ],
-//      serverName: 'LiveReload 2'
-//   }
+//	{
+//	   command: 'hello',
+//	   protocols: [
+//	     'http://livereload.com/protocols/official-7',
+//	     'http://livereload.com/protocols/official-8',
+//	     'http://livereload.com/protocols/official-9',
+//	     'http://livereload.com/protocols/2.x-origin-version-negotiation',
+//	     'http://livereload.com/protocols/2.x-remote-control'
+//	   ],
+//	   serverName: 'LiveReload 2'
+//	}
 type helloMsg struct {
 	Command    command  `json:"command"`
 	Protocols  []string `json:"protocols"`
@@ -61,11 +61,11 @@ func validateHelloMsg(req *helloMsg) bool {
 
 // reloadMsg is a server-to-client message to reload a file.
 //
-//   {
-//      command: 'reload',
-//      path: 'path/to/file.ext',
-//      liveCSS: true
-//   }
+//	{
+//	   command: 'reload',
+//	   path: 'path/to/file.ext',
+//	   liveCSS: true
+//	}
 type reloadMsg struct {
 	Command command `json:"command"`
 	Path    string  `json:"path"`
@@ -83,10 +83,10 @@ func newReloadMsg(path string) reloadMsg {
 // alertMsg is a server-to-client message to display an alert on the
 // client.
 //
-//   {
-//      command: 'alert',
-//      message: 'HEY!'
-//   }
+//	{
+//	   command: 'alert',
+//	   message: 'HEY!'
+//	}
 type alertMsg struct {
 	Command command `json:"command"`
 	Message string  `json:"message"`
@@ -102,16 +102,16 @@ func newAlertResponse(m string) alertMsg {
 // infoMsg is a client-to-server message to share info about plugins and the
 // current URL.
 //
-//   {
-//     command: 'info',
-//     plugins: {
-//       somePlugin: {
-//         version: '1.2'
-//         arbitraryKey: ['arbitrary value'],
-//       }
-//     },
-//     url: 'http://example.com',
-//   }
+//	{
+//	  command: 'info',
+//	  plugins: {
+//	    somePlugin: {
+//	      version: '1.2'
+//	      arbitraryKey: ['arbitrary value'],
+//	    }
+//	  },
+//	  url: 'http://example.com',
+//	}
 type infoMsg struct {
 	Command command                               `json:"command"`
 	Plugins map[string]map[string]json.RawMessage `json:"plugins"`

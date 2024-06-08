@@ -2,6 +2,9 @@ package mdext
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -14,8 +17,6 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
-	"strconv"
-	"strings"
 )
 
 var KindTableCaption = ast.NewNodeKind("TableCaption")
@@ -56,8 +57,7 @@ func getNextTableNum(pc parser.Context) int {
 
 // tableCaptionTransformer is an AST transformer that moves paragraphs like
 // "TABLE: foo" as a <caption> nested under the following table.
-type tableCaptionTransformer struct {
-}
+type tableCaptionTransformer struct{}
 
 func (t tableCaptionTransformer) Transform(doc *ast.Document, r text.Reader, pc parser.Context) {
 	err := asts.WalkKind(ast2.KindTable, doc, func(n ast.Node) (ast.WalkStatus, error) {
@@ -95,8 +95,7 @@ func isTableCaption(n ast.Node, r text.Reader) bool {
 	return strings.HasPrefix(s, tableCaptionMarker)
 }
 
-type tableCaptionRenderer struct {
-}
+type tableCaptionRenderer struct{}
 
 func (t tableCaptionRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(KindTableCaption, t.renderTableCaption)
@@ -115,8 +114,7 @@ func (t tableCaptionRenderer) renderTableCaption(w util.BufWriter, _ []byte, n a
 	return ast.WalkContinue, nil
 }
 
-type TableExt struct {
-}
+type TableExt struct{}
 
 func NewTableExt() TableExt {
 	return TableExt{}

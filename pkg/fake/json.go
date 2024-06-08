@@ -180,8 +180,8 @@ var smallsInts = []byte(
 // writeInt writes a single integer into the buffer.
 // This is an optimized version of:
 //
-//   strconv.AppendInt(e.buf[e.off:e.off], int64(val), 10)
-//   e.off += len(intBuf)
+//	strconv.AppendInt(e.buf[e.off:e.off], int64(val), 10)
+//	e.off += len(intBuf)
 //
 // This version is 7% faster than the above code and doesn't allocate 64 bytes.
 func (e *UnsafeJSONEncoder) writeInt(n int) {

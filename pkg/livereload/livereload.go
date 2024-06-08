@@ -6,13 +6,12 @@ package livereload
 
 import (
 	"bytes"
-
-	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
-
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+
+	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 type LiveReload struct {

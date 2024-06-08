@@ -2,10 +2,11 @@ package mdext
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/jschaf/b2/pkg/htmls/tags"
 	"github.com/jschaf/b2/pkg/markdown/mdtest"
 	"github.com/jschaf/b2/pkg/texts"
-	"testing"
 )
 
 func anchoredH1(id, content string) string {

@@ -14,7 +14,8 @@ import (
 
 // maxHeadingIDLen controls the length of heading IDs. 36 is a good balance
 // between brevity and detail. The following phrase is 35 characters:
-//   inverted-indexes-for-experiment-ids
+//
+//	inverted-indexes-for-experiment-ids
 const maxHeadingIDLen = 36
 
 // headingIDTransformer is an AST transformer that adds an ID attribute to each

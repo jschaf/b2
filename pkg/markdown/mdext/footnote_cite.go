@@ -3,9 +3,10 @@ package mdext
 import (
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/jschaf/bibtex"
 	"github.com/yuin/goldmark/ast"
-	"strconv"
 )
 
 var KindCitation = ast.NewNodeKind("citation")
@@ -49,8 +50,10 @@ func (c *Citation) ReferenceID() string {
 	return "cite_ref_" + c.Key
 }
 
-var KindCitationRef = ast.NewNodeKind("CitationRef")
-var KindCitationReferences = ast.NewNodeKind("CitationReferences")
+var (
+	KindCitationRef        = ast.NewNodeKind("CitationRef")
+	KindCitationReferences = ast.NewNodeKind("CitationReferences")
+)
 
 type CitationRef struct {
 	ast.BaseInline
@@ -102,8 +105,7 @@ type CitationReferencesAttacher interface {
 
 // CitationArticleAttacher attaches citation references to the end of an
 // article.
-type CitationArticleAttacher struct {
-}
+type CitationArticleAttacher struct{}
 
 func NewCitationArticleAttacher() CitationArticleAttacher {
 	return CitationArticleAttacher{}

@@ -2,6 +2,8 @@ package mdext
 
 import (
 	"bytes"
+	"strconv"
+
 	"github.com/jschaf/b2/pkg/markdown/asts"
 	"github.com/jschaf/b2/pkg/markdown/attrs"
 	"github.com/jschaf/b2/pkg/markdown/extenders"
@@ -12,7 +14,6 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
-	"strconv"
 )
 
 // KindTOC represents a TOC node.
@@ -98,7 +99,6 @@ func (t tocTransformer) Transform(node *ast.Document, _ text.Reader, pc parser.C
 			headings = append(headings, h)
 		}
 		return ast.WalkSkipChildren, nil
-
 	})
 
 	// The count per 1-indexed ast.Heading.Level: 1-6. Must increment before use.

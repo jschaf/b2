@@ -2,10 +2,11 @@ package mdext
 
 import (
 	"bytes"
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/ord"
 	"html"
 	"io"
+
+	"github.com/jschaf/b2/pkg/markdown/extenders"
+	"github.com/jschaf/b2/pkg/markdown/ord"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"

@@ -33,7 +33,6 @@ func TestAddClass(t *testing.T) {
 			if diff := cmp.Diff(tt.want, string(got.([]byte))); diff != "" {
 				t.Errorf("Class attribute mismatch (-want +got):\n%s", diff)
 			}
-
 		})
 	}
 }

@@ -1,9 +1,10 @@
 package htmls
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"golang.org/x/net/html"
 )
@@ -68,7 +69,6 @@ func Test_parseFragment(t *testing.T) {
 			gotR, wantR := RenderNodes(got), RenderNodes(tt.want)
 			if gotR != wantR {
 				t.Errorf("got:\n%s\nwant:\n%s", gotR, wantR)
-
 			}
 			if diff := cmp.Diff(wantR, gotR); diff != "" {
 				t.Errorf("parseFragment() mismatch (-want +got):\n%s", diff)

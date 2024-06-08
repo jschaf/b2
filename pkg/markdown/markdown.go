@@ -2,6 +2,8 @@ package markdown
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/jschaf/b2/pkg/cite"
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -11,7 +13,6 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"go.uber.org/zap"
-	"io"
 )
 
 type AST struct {

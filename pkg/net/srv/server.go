@@ -4,11 +4,6 @@ import (
 	"context"
 	stdflag "flag"
 	"fmt"
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/log"
-	"go.uber.org/zap"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,6 +12,12 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/b2/pkg/log"
+	"go.uber.org/zap"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 const (
@@ -230,7 +231,7 @@ func (s *Server) ListenAndServe() error {
 		s.l.Error("server error", zap.Error(srvErr))
 	}
 	// TODO: Export Event like Datadog.Event instead of write to file.
-	if err := ioutil.WriteFile(termLog, termMsg, 0666); err != nil {
+	if err := ioutil.WriteFile(termLog, termMsg, 0o666); err != nil {
 		s.l.Info("write termination log", zap.String("path", termLog), zap.Error(err))
 	}
 

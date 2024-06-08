@@ -4,17 +4,16 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/jschaf/b2/pkg/chans"
 	"io"
 	"io/ioutil"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jschaf/b2/pkg/chans"
 )
 
-var (
-	TriggerNotFoundErr = errors.New("trigger not found")
-)
+var TriggerNotFoundErr = errors.New("trigger not found")
 
 type triggerState int
 

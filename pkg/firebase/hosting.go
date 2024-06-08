@@ -6,11 +6,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/sync/semaphore"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,6 +13,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jschaf/b2/pkg/errs"
+	"github.com/karrick/godirwalk"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 )
 
 func GzipFile(path string, w io.Writer) (n int64, mErr error) {
@@ -62,11 +63,11 @@ type SiteFile struct {
 // gzipped contents of the file. This is a useful data structure for uploading
 // to Firebase because deploying requires:
 //
-// 1. Uploading the URL path and the corresponding SHA256 hash of the gzipped
-//    file contents via PopulateFiles.
-// 2. Firebase responds with a list of SHA256 hashes should be uploaded and a
-//    URL.
-// 3. We upload each gzipped file using the provided URL.
+//  1. Uploading the URL path and the corresponding SHA256 hash of the gzipped
+//     file contents via PopulateFiles.
+//  2. Firebase responds with a list of SHA256 hashes should be uploaded and a
+//     URL.
+//  3. We upload each gzipped file using the provided URL.
 //
 // SiteHashes allows finding the file by it's hash and retains the gzipped
 // content so we don't need to recompute it.
@@ -117,7 +118,7 @@ func (sh *SiteHashes) PopulateFromDir(dir string) error {
 				Path: path,
 			}
 
-			var buf = bytes.Buffer{}
+			buf := bytes.Buffer{}
 			stat, err := os.Stat(path)
 			if err != nil {
 				return fmt.Errorf("stat file size: %w", err)
@@ -140,7 +141,6 @@ func (sh *SiteHashes) PopulateFromDir(dir string) error {
 				sh.l.Debugf("file %q was bigger than buffer: %d to %d (+%d) bytes, ratio=%.2f", path, size, gzSize, diff, ratio)
 			} else if diff < -4096 {
 				sh.l.Debugf("file %q was smaller than buffer: %d to %d (%d) bytes, ratio=%.2f", path, size, gzSize, diff, 1/ratio)
-
 			}
 
 			sh.mu.Lock()

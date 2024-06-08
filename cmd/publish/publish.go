@@ -3,13 +3,14 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/firebase"
 	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/sites"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"time"
 
 	"golang.org/x/net/context"
 
@@ -33,7 +34,8 @@ func servingConfig() *hosting.ServingConfig {
 				Run: &hosting.CloudRunRewrite{
 					Region:    "us-west1",
 					ServiceId: "track",
-				}},
+				},
+			},
 		},
 	}
 }
