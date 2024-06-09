@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/jschaf/b2/pkg/errs"
-	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
@@ -20,15 +20,13 @@ type Uploader struct {
 	siteHashes *SiteHashes
 	baseURL    string
 	tokSrc     oauth2.TokenSource
-	l          *zap.SugaredLogger
 }
 
-func NewUploader(siteHashes *SiteHashes, baseUploadURL string, tokSrc oauth2.TokenSource, l *zap.SugaredLogger) *Uploader {
+func NewUploader(siteHashes *SiteHashes, baseUploadURL string, tokSrc oauth2.TokenSource) *Uploader {
 	return &Uploader{
 		siteHashes: siteHashes,
 		baseURL:    baseUploadURL,
 		tokSrc:     tokSrc,
-		l:          l,
 	}
 }
 
@@ -48,7 +46,7 @@ func (u *Uploader) Upload(ctx context.Context, f SiteFile) (mErr error) {
 	}
 
 	shaUrl := u.baseURL + "/" + string(f.Hash)
-	u.l.Debugf("uploading %s url=%s", f.URL, shaUrl)
+	slog.Debug("uploading", "url", f.URL, "sha_url", shaUrl)
 	req, err := http.NewRequestWithContext(ctx, "POST", shaUrl, bytes.NewReader(gzBytes))
 	if err != nil {
 		return fmt.Errorf("upload - new request: %w", err)
@@ -97,7 +95,6 @@ func (u *Uploader) UploadAll(ctx context.Context, fs []SiteFile) error {
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("upload all wait err group: %w", err)
 	}
-	u.l.Infof("uploaded %d site files in %.3f seconds",
-		len(fs), time.Since(start).Seconds())
+	slog.Info("uploaded site files", "count", len(fs), "duration", time.Since(start))
 	return nil
 }

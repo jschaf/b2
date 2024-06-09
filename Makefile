@@ -4,6 +4,9 @@ DEV_PORT := 8080
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
 
+.PHONY: all
+all: dev
+
 .PHONY: js
 js: $(DIST_DIR)
 	cp scripts/instant.page.v1.2.2.js $(DIST_DIR)

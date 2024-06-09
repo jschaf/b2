@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,7 +19,6 @@ import (
 	"github.com/jschaf/b2/pkg/livereload"
 	"github.com/jschaf/b2/pkg/sites"
 	"github.com/jschaf/b2/pkg/static"
-	"go.uber.org/zap"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -26,13 +26,12 @@ import (
 type FSWatcher struct {
 	liveReload *livereload.LiveReload
 	watcher    *fsnotify.Watcher
-	logger     *zap.SugaredLogger
 	pubDir     string
 	stopOnce   *sync.Once
 	stopC      chan struct{}
 }
 
-func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredLogger) *FSWatcher {
+func NewFSWatcher(pubDir string, lr *livereload.LiveReload) *FSWatcher {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(err)
@@ -41,7 +40,6 @@ func NewFSWatcher(pubDir string, lr *livereload.LiveReload, logger *zap.SugaredL
 		pubDir:     pubDir,
 		liveReload: lr,
 		watcher:    watcher,
-		logger:     logger.Named("watcher"),
 		stopOnce:   &sync.Once{},
 		stopC:      make(chan struct{}),
 	}
@@ -68,7 +66,7 @@ func (f *FSWatcher) Start() (mErr error) {
 
 			rel, err := filepath.Rel(rootDir, event.Name)
 			if err != nil {
-				f.logger.Infof("failed to get relative path: %s", err)
+				slog.Info("get relative path", "error", err)
 				break
 			}
 
@@ -77,7 +75,7 @@ func (f *FSWatcher) Start() (mErr error) {
 				f.reloadMainCSS()
 
 			case strings.HasPrefix(rel, "static/"):
-				f.logger.Infof("static reload: %s", rel)
+				slog.Info("static reload", "relative_path", rel)
 				if err := static.CopyStaticFiles(f.pubDir); err != nil {
 					return fmt.Errorf("failed to copy static files: %w", err)
 				}
@@ -103,11 +101,11 @@ func (f *FSWatcher) Start() (mErr error) {
 			case filepath.Ext(rel) == ".go" && !strings.HasSuffix(rel, "_test.go"):
 				// Rebuild the server to pickup any new changes.
 				if err := f.rebuildServer(); err != nil {
-					f.logger.Errorf("rebuild server: %s", err)
+					slog.Error("rebuild server", "error", err)
 				}
 			}
 		case err := <-f.watcher.Errors:
-			f.logger.Infof("error: %s", err)
+			slog.Info("error", "error", err)
 		}
 	}
 }
@@ -119,7 +117,7 @@ func (f *FSWatcher) Stop() {
 }
 
 func (f *FSWatcher) compileMdWithGoRun() error {
-	f.logger.Infof("pkg/markdown changed, compiling all markdown")
+	slog.Info("pkg/markdown changed, compiling all markdown")
 	cmd := exec.Command("go", "run", "github.com/jschaf/b2/cmd/compiler")
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
@@ -143,7 +141,7 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd() error {
-	if err := sites.Rebuild(f.pubDir, f.logger.Desugar()); err != nil {
+	if err := sites.Rebuild(f.pubDir); err != nil {
 		return fmt.Errorf("rebuild for changed md: %w", err)
 	}
 	return nil
@@ -152,7 +150,7 @@ func (f *FSWatcher) compileReloadMd() error {
 func (f *FSWatcher) reloadMainCSS() {
 	stylePaths, err := css.CopyAllCSS(f.pubDir)
 	if err != nil {
-		f.logger.Info(err)
+		slog.Info("copy all css", "error", err)
 	}
 	for _, stylePath := range stylePaths {
 		f.liveReload.ReloadFile(stylePath)
@@ -179,7 +177,7 @@ func (f *FSWatcher) AddRecursively(name string) error {
 }
 
 func (f *FSWatcher) rebuildServer() error {
-	f.logger.Info("hot swapping server because go file changed")
+	slog.Info("hot swapping server because go file changed")
 	out := os.Args[0]
 	pkg := "github.com/jschaf/b2/cmd/server"
 	cmd := exec.Command("go", "build", "-o", out, pkg)
@@ -193,8 +191,8 @@ func (f *FSWatcher) rebuildServer() error {
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("wait for server rebuild: %w\n%s", err, buf.String())
 	}
-	f.logger.Infof("completed server rebuild in %.3f seconds", time.Since(now).Seconds())
-	f.logger.Debug("sending SIGHUP")
+	slog.Info("completed server rebuild", "duration", time.Since(now))
+	slog.Debug("sending SIGHUP")
 	if err := sendSighup(); err != nil {
 		return err
 	}

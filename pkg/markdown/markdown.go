@@ -12,7 +12,6 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"go.uber.org/zap"
 )
 
 type AST struct {
@@ -36,9 +35,8 @@ type Options struct {
 }
 
 type Markdown struct {
-	gm     goldmark.Markdown
-	logger *zap.Logger
-	opts   Options
+	gm   goldmark.Markdown
+	opts Options
 }
 
 // Option is a functional option that manipulates the Markdown struct.
@@ -93,9 +91,8 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 
 // New creates a new markdown parser and renderer allowing additional options
 // beyond the defaults.
-func New(l *zap.Logger, opts ...Option) *Markdown {
+func New(opts ...Option) *Markdown {
 	m := &Markdown{
-		logger: l,
 		opts: Options{
 			CiteStyle:          cite.IEEE,
 			CiteAttacher:       mdext.NewCitationArticleAttacher(),
@@ -121,7 +118,6 @@ func (m *Markdown) Parse(path string, r io.Reader) (*AST, error) {
 	ctx := parser.NewContext()
 	mdctx.SetFilePath(ctx, path)
 	mdctx.SetRenderer(ctx, m.gm.Renderer())
-	mdctx.SetLogger(ctx, m.logger)
 
 	node := m.gm.Parser().Parse(text.NewReader(bs), parser.WithContext(ctx))
 	if parseErrs := mdctx.PopErrors(ctx); len(parseErrs) == 1 {

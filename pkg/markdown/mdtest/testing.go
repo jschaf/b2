@@ -12,19 +12,16 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"go.uber.org/zap/zaptest"
 )
 
 const PostPath = "/md/test/path.md"
 
 // NewTester creates a new markdown with the given extensions. We can't use
 // our top level markdown because it would create a circular dependency.
-func NewTester(t *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, parser.Context) {
+func NewTester(_ *testing.T, exts ...goldmark.Extender) (goldmark.Markdown, parser.Context) {
 	md := goldmark.New(goldmark.WithExtensions(exts...))
 	pc := parser.NewContext()
-	logger := zaptest.NewLogger(t)
 	mdctx.SetFilePath(pc, PostPath)
-	mdctx.SetLogger(pc, logger)
 	mdctx.SetRenderer(pc, md.Renderer())
 
 	return md, pc

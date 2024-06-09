@@ -11,7 +11,6 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
-	"go.uber.org/zap"
 )
 
 // katexTransformer adds the katex feature to the context if the document looks
@@ -28,7 +27,6 @@ func (kt *katexTransformer) Transform(doc *ast.Document, _ text.Reader, pc parse
 			return ast.WalkContinue, nil
 		}
 		if n.Kind() == qjskatex.KindTex {
-			mdctx.GetLogger(pc).Debug("Found katex node", zap.String("path", mdctx.GetFilePath(pc)))
 			mdctx.AddFeature(pc, mdctx.FeatureKatex)
 			return ast.WalkStop, nil
 		}

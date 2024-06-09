@@ -1,9 +1,10 @@
 package livereload
 
 import (
+	"log/slog"
+
 	"github.com/gorilla/websocket"
 	"go.uber.org/atomic"
-	"go.uber.org/zap"
 )
 
 type closeReq struct {
@@ -26,35 +27,31 @@ type connPub struct {
 	attach  chan *conn         // LiveReload client connections to attach
 	detach  chan closeReq      // LiveReload client connections to detach
 	stop    chan struct{}
-	l       *zap.SugaredLogger
-	connL   *zap.SugaredLogger
 	connSeq *atomic.Int32 // the next ID to use for a connection
 }
 
-func newConnPub(l *zap.Logger) *connPub {
+func newConnPub() *connPub {
 	return &connPub{
 		conns:   make(map[*conn]struct{}),
 		publish: make(chan interface{}),
 		attach:  make(chan *conn),
 		detach:  make(chan closeReq),
 		stop:    make(chan struct{}),
-		l:       l.Sugar().Named("connPub"),
-		connL:   l.Sugar().Named("conn"),
 		connSeq: atomic.NewInt32(770),
 	}
 }
 
 func (p *connPub) start() {
-	p.l.Debugf("starting connPub")
+	slog.Debug("starting connPub")
 	// detachConn unregisters the conn from receiving new messages and closes the
 	// websocket connection. Not thread-safe.
 	detachConn := func(req closeReq) {
 		if _, ok := p.conns[req.conn]; !ok {
-			req.conn.l.Debugf("conn already deleted: %s", req.err)
+			slog.Debug("conn already deleted", "error", req.err)
 			return
 		}
 		delete(p.conns, req.conn)
-		req.conn.l.Debugf("detach conn: %s", req.err)
+		slog.Debug("detach conn", "error", req.err)
 		req.conn.close(req.err)
 	}
 
@@ -92,15 +89,15 @@ main:
 
 // runConn runs a LiveReload websocket connection and blocks until the connection closes.
 func (p *connPub) runConn(ws *websocket.Conn) {
-	c := newConn(ws, p.detach, p.connL.With("connID", p.connSeq.Add(1)))
+	c := newConn(ws, p.detach)
 	if err := c.start(); err != nil {
-		c.l.Warnf("failed to start livereload connection: %w", err)
+		slog.Error("start livereload connection", "error", err.Error())
 		return
 	}
 	p.attach <- c
 }
 
 func (p *connPub) shutdown() {
-	p.l.Debugf("shutting down connPub")
+	slog.Debug("shutting down conn pub")
 	close(p.stop)
 }

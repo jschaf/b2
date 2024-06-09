@@ -2,9 +2,10 @@ package srv
 
 import (
 	"context"
+	"errors"
 	stdflag "flag"
 	"fmt"
-	"io/ioutil"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -14,8 +15,6 @@ import (
 	"time"
 
 	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/log"
-	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -30,8 +29,6 @@ type Server struct {
 	httpHandler   http.Handler // handler for non-debug HTTP endpoints
 	drainHandlers []func()
 	stopCh        chan string // handle server stop requests
-	logLevel      zap.AtomicLevel
-	l             *zap.Logger
 }
 
 type ServerCfg struct {
@@ -50,7 +47,7 @@ func makeFlagUsage(flag *stdflag.FlagSet) func() {
 	}
 }
 
-func NewServer(cfg ServerCfg, logLvl zap.AtomicLevel, l *zap.Logger) *Server {
+func NewServer(cfg ServerCfg) *Server {
 	flag := stdflag.CommandLine
 	flag.Usage = makeFlagUsage(flag)
 
@@ -59,18 +56,15 @@ func NewServer(cfg ServerCfg, logLvl zap.AtomicLevel, l *zap.Logger) *Server {
 	if srvCfg.ShutdownGracePeriod == 0 {
 		srvCfg.ShutdownGracePeriod = defaultShutdownGracePeriod
 	}
-	logger := l.With(zap.String("name", string(srvCfg.Name)), zap.String("version", string(srvCfg.Version)))
 	return &Server{
-		Cfg:      srvCfg,
-		flag:     flag,
-		stopCh:   make(chan string),
-		logLevel: logLvl,
-		l:        logger,
+		Cfg:    srvCfg,
+		flag:   flag,
+		stopCh: make(chan string),
 	}
 }
 
 func (s *Server) Init() error {
-	s.l.Info("initialize server")
+	slog.Info("initialize server")
 	if err := s.initFlags(); err != nil {
 		return err
 	}
@@ -130,7 +124,8 @@ func (s *Server) Stop() {
 func newLnCloser(ln net.Listener) func() error {
 	return func() error {
 		if err := ln.Close(); err != nil {
-			if e, ok := err.(*net.OpError); ok && e.Err.Error() == "use of closed network connection" {
+			var e *net.OpError
+			if errors.As(err, &e) && e.Err.Error() == "use of closed network connection" {
 				// Ignore closed network connections, we already closed them.
 				return nil
 			}
@@ -148,13 +143,12 @@ func (s *Server) listenAndServe() (mErr error) {
 	// Check if Stop() was already called.
 	select {
 	case reason := <-s.stopCh:
-		s.l.Info("shutdown requested before server start", zap.String("reason", reason))
+		slog.Info("shutdown requested before server start", "reason", reason)
 	default: // continue
 	}
 
 	doneCh := make(chan error)
 	numServers := 0
-	fieldServers := zap.Intp("servers_remaining", &numServers)
 
 	// Start the non-debug HTTP server with customized support for HTTP/2.
 	ln, err := net.Listen("tcp", s.Cfg.HTTPAddr)
@@ -164,15 +158,14 @@ func (s *Server) listenAndServe() (mErr error) {
 	defer errs.Capturing(&mErr, newLnCloser(ln), "close HTTP listener")
 	http2Server := &http2.Server{}
 	httpServer := &http.Server{
-		Handler:  h2c.NewHandler(s.httpHandler, http2Server),
-		ErrorLog: zap.NewStdLog(s.l.Named("http")),
+		Handler: h2c.NewHandler(s.httpHandler, http2Server),
 	}
 
-	s.l.Info("listening http", zap.String("server", "http"), zap.String("addr", ln.Addr().String()))
+	slog.Info("listening http", "addr", ln.Addr().String())
 	numServers++
 	go func() {
 		// Ignore http.ErrServerClosed because it's returned on graceful shutdown.
-		if err := httpServer.Serve(ln); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			doneCh <- fmt.Errorf("http serve: %w", err)
 		} else {
 			doneCh <- nil
@@ -183,16 +176,16 @@ func (s *Server) listenAndServe() (mErr error) {
 	// shutdown everything.
 	select {
 	case reason := <-s.stopCh:
-		s.l.Info("shutdown requested", zap.String("reason", reason), fieldServers)
+		slog.Info("shutdown requested", "reason", reason, "servers_remaining", numServers)
 	case doneErr := <-doneCh:
 		numServers--
-		s.l.Error("server unexpectedly errored", zap.Error(doneErr), fieldServers)
+		slog.Error("server unexpectedly errored", "error", doneErr, "servers_remaining", numServers)
 	}
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), s.Cfg.ShutdownGracePeriod)
 	defer cancel()
 	go func() {
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			s.l.Error("http server shutdown", zap.Error(err))
+			slog.Error("http server shutdown", "error", err)
 		}
 	}()
 
@@ -204,10 +197,10 @@ func (s *Server) listenAndServe() (mErr error) {
 		case err := <-doneCh:
 			numServers--
 			// err is nil if shutdown occurred cleanly.
-			s.l.Info("server exited during shutdown", zap.Error(err), fieldServers)
+			slog.Info("server exited during shutdown", "error", err, "servers_remaining", numServers)
 		}
 	}
-	s.l.Info("all servers exited")
+	slog.Info("all servers exited")
 	return nil
 }
 
@@ -218,7 +211,7 @@ func (s *Server) ListenAndServe() error {
 		signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 		sig := <-sigCh
 		name := sig.String()
-		s.l.Info("got signal", zap.String("signal", name))
+		slog.Info("got signal", "signal", name)
 		signal.Stop(sigCh)
 		close(sigCh)
 		s.stopCh <- name
@@ -228,13 +221,11 @@ func (s *Server) ListenAndServe() error {
 	termLog := "/tmp/server-termination"
 	srvErr := s.listenAndServe()
 	if srvErr != nil {
-		s.l.Error("server error", zap.Error(srvErr))
+		slog.Error("server error", "error", srvErr)
 	}
-	// TODO: Export Event like Datadog.Event instead of write to file.
-	if err := ioutil.WriteFile(termLog, termMsg, 0o666); err != nil {
-		s.l.Info("write termination log", zap.String("path", termLog), zap.Error(err))
+	if err := os.WriteFile(termLog, termMsg, 0o666); err != nil {
+		slog.Info("write termination log", "path", termLog, "error", err)
 	}
 
-	log.Flush(s.l)
 	return srvErr
 }

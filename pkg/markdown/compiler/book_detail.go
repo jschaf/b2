@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,7 +18,6 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
 )
 
 const bookPostPrefix = "book"
@@ -27,20 +27,15 @@ const bookPostPrefix = "book"
 type BookDetailCompiler struct {
 	md     *markdown.Markdown
 	pubDir string
-	l      *zap.SugaredLogger
 }
 
-func NewBookDetail(pubDir string, l *zap.Logger) *BookDetailCompiler {
-	md := markdown.New(l,
-		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
-		markdown.WithTOCStyle(mdext.TOCStyleShow),
-		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
-	)
-	return &BookDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+func NewBookDetail(pubDir string) *BookDetailCompiler {
+	md := markdown.New(markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow), markdown.WithTOCStyle(mdext.TOCStyleShow), markdown.WithExtender(mdext.NewNopContinueReadingExt()))
+	return &BookDetailCompiler{md: md, pubDir: pubDir}
 }
 
 func (c *BookDetailCompiler) parse(path string) (*markdown.AST, error) {
-	c.l.Debugf("compiling book detail %s", path)
+	slog.Debug("compiling book detail", "path", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)

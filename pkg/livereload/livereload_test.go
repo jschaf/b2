@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/websocket"
 	"github.com/jschaf/b2/pkg/errs"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestServeJSHandler(t *testing.T) {
@@ -208,7 +207,7 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 }
 
 func newLiveReloadServer(t *testing.T) (*httptest.Server, *LiveReload) {
-	lr := NewServer(zaptest.NewLogger(t).Sugar())
+	lr := NewServer()
 	go lr.Start()
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }

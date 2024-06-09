@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-
-	"go.uber.org/zap/zapcore"
+	"log/slog"
 
 	"github.com/jschaf/b2/pkg/db"
-	"github.com/jschaf/b2/pkg/log"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -17,12 +14,7 @@ func main() {
 }
 
 func runMain() (err error) {
-	l, err := log.NewShortDevLogger(zapcore.InfoLevel)
-	if err != nil {
-		return fmt.Errorf("failed to create logger: %w", err)
-	}
-
-	sqlite := db.NewSQLiteStore(l)
+	sqlite := db.NewSQLiteStore()
 	if err := sqlite.Open(); err != nil {
 		return err
 	}
@@ -33,7 +25,7 @@ func runMain() (err error) {
 	fmt.Printf("\nFetches: %v\n", fetches)
 	defer func() {
 		if cErr := sqlite.Close(); cErr != nil {
-			l.Error("failed to close sqlite", zap.Error(cErr))
+			slog.Error("close sqlite", "error", cErr)
 			if err != nil {
 				err = cErr
 			}

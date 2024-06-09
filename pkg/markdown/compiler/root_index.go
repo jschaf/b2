@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -16,19 +17,17 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
-	"go.uber.org/zap"
 )
 
 // RootIndexCompiler compiles the / path, the main homepage.
 type RootIndexCompiler struct {
 	md     *markdown.Markdown
-	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewRootIndex(pubDir string, l *zap.Logger) *RootIndexCompiler {
-	md := markdown.New(l, markdown.WithExtender(mdext.NewContinueReadingExt()))
-	return &RootIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+func NewRootIndex(pubDir string) *RootIndexCompiler {
+	md := markdown.New(markdown.WithExtender(mdext.NewContinueReadingExt()))
+	return &RootIndexCompiler{md: md, pubDir: pubDir}
 }
 
 func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
@@ -37,7 +36,7 @@ func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
 		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".md" {
 			return nil, nil
 		}
-		ic.l.Debugf("compiling for index %s", path)
+		slog.Debug("compiling for index", "path", path)
 		bs, err := os.ReadFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("read post at path %s: %w", path, err)

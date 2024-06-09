@@ -6,29 +6,27 @@ package livereload
 
 import (
 	"bytes"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 
 	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
 )
 
 type LiveReload struct {
 	upgrader      websocket.Upgrader
 	connPublisher *connPub
-	logger        *zap.SugaredLogger
 }
 
-func NewServer(l *zap.SugaredLogger) *LiveReload {
+func NewServer() *LiveReload {
 	return &LiveReload{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		},
-		connPublisher: newConnPub(l.Desugar()),
-		logger:        l,
+		connPublisher: newConnPub(),
 	}
 }
 
@@ -37,10 +35,10 @@ func NewServer(l *zap.SugaredLogger) *LiveReload {
 func (lr *LiveReload) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := lr.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		lr.logger.Infof("failed to upgrade HTTP to websocket: %s", err)
+		slog.Info("upgrade http to websocket", "error", err)
 		return
 	}
-	lr.logger.Debugf("received LiveReload websocket connection")
+	slog.Debug("received livereload websocket connection")
 	lr.connPublisher.runConn(ws)
 }
 
@@ -56,7 +54,7 @@ func (lr *LiveReload) NewHTMLInjector(scriptTag string, next http.Handler) http.
 		replacement := []byte("  " + scriptTag + "\n</head>")
 		s := bytes.Replace(recorder.Body.Bytes(), headTag, replacement, 1)
 		if len(s) == len(recorder.Body.Bytes()) {
-			// lr.l.Warnf("did not inject livereload script")
+			slog.Debug("did not inject livereload script")
 		}
 		for k, vs := range recorder.Header() {
 			for _, v := range vs {
@@ -69,19 +67,19 @@ func (lr *LiveReload) NewHTMLInjector(scriptTag string, next http.Handler) http.
 	}
 }
 
-// ServeJS is a http.HandlerFunc to serve the livereload.js script.
+// ServeJSHandler is a http.HandlerFunc to serve the livereload.js script.
 func (lr *LiveReload) ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 	_, _ = w.Write(liveReloadJS)
 }
 
 func (lr *LiveReload) Start() {
-	lr.logger.Debug("starting LiveReload")
+	slog.Debug("start livereload")
 	lr.connPublisher.start()
 }
 
 func (lr *LiveReload) Shutdown() {
-	lr.logger.Debug("shutting down livereload")
+	slog.Debug("shutting down livereload")
 	lr.connPublisher.shutdown()
 }
 

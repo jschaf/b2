@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestSiteHashes_PopulateFromDir(t *testing.T) {
+	//goland:noinspection SpellCheckingInspection
 	tests := []struct {
 		dir             string
 		wantHashesByUrl map[string]string
@@ -22,7 +21,7 @@ func TestSiteHashes_PopulateFromDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.dir, func(t *testing.T) {
-			sh := NewSiteHashes(zaptest.NewLogger(t).Sugar())
+			sh := NewSiteHashes()
 			if err := sh.PopulateFromDir(tt.dir); err != nil {
 				t.Fatal(err)
 			}
@@ -34,12 +33,8 @@ func TestSiteHashes_PopulateFromDir(t *testing.T) {
 }
 
 func BenchmarkSiteHashes_PopulateFromDir(b *testing.B) {
-	b.StopTimer()
-	l, _ := zap.NewDevelopment()
-	b.StartTimer()
-
 	for i := 0; i < b.N; i++ {
-		sh := NewSiteHashes(l.Sugar())
+		sh := NewSiteHashes()
 		if err := sh.PopulateFromDir("../../public"); err != nil {
 			b.Fatal(err)
 		}

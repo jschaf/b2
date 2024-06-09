@@ -9,7 +9,6 @@ import (
 	"github.com/jschaf/b2/pkg/htmls"
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/texts"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestParse(t *testing.T) {
@@ -41,7 +40,7 @@ func TestParse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			md := New(zaptest.NewLogger(t))
+			md := New()
 			ast, err := md.Parse("", strings.NewReader(tt.input))
 			if err != nil {
 				t.Fatal(err)

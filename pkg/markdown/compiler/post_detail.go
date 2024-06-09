@@ -5,21 +5,20 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/markdown/assets"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
-	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
-
 	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
+	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/jschaf/b2/pkg/markdown/html"
+	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
+	"github.com/karrick/godirwalk"
 )
 
 // PostDetailCompiler compiles the /* paths, showing the detail page for each
@@ -27,22 +26,17 @@ import (
 type PostDetailCompiler struct {
 	md     *markdown.Markdown
 	pubDir string
-	l      *zap.SugaredLogger
 }
 
 // NewPostDetail creates a compiler for a post detail page.
-func NewPostDetail(pubDir string, l *zap.Logger) *PostDetailCompiler {
-	md := markdown.New(l,
-		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
-		markdown.WithTOCStyle(mdext.TOCStyleShow),
-		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
-	)
-	return &PostDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+func NewPostDetail(pubDir string) *PostDetailCompiler {
+	md := markdown.New(markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow), markdown.WithTOCStyle(mdext.TOCStyleShow), markdown.WithExtender(mdext.NewNopContinueReadingExt()))
+	return &PostDetailCompiler{md: md, pubDir: pubDir}
 }
 
 // parse parses a single post path into a markdown AST.
 func (c *PostDetailCompiler) parse(path string) (*markdown.AST, error) {
-	c.l.Debugf("compiling post detail %s", path)
+	slog.Debug("compiling post detail", "path", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)

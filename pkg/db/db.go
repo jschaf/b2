@@ -3,12 +3,12 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/jschaf/b2/pkg/texts"
 	_ "github.com/mattn/go-sqlite3"
-	"go.uber.org/zap"
 )
 
 type Store interface {
@@ -23,20 +23,19 @@ type RawFetch struct {
 }
 
 type SQLiteStore struct {
-	db     *sql.DB
-	logger *zap.Logger
+	db *sql.DB
 }
 
 const (
 	sqlitePath = "pkg/db/b2.db"
 )
 
-func NewSQLiteStore(l *zap.Logger) *SQLiteStore {
-	return &SQLiteStore{logger: l.Named("sqlite")}
+func NewSQLiteStore() *SQLiteStore {
+	return &SQLiteStore{}
 }
 
 func (s *SQLiteStore) Open() error {
-	s.logger.Info("opening", zap.String("db", sqlitePath))
+	slog.Info("opening", "db", sqlitePath)
 	db, err := sql.Open("sqlite3", sqlitePath)
 	if err != nil {
 		return fmt.Errorf("open sqlite db: %w", err)

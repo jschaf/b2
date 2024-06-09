@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,19 +19,17 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
 )
 
 // TILIndexCompiler compiles the /til/ path, an index of all TIL posts.
 type TILIndexCompiler struct {
 	md     *markdown.Markdown
-	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewTILIndex(pubDir string, l *zap.Logger) *TILIndexCompiler {
-	md := markdown.New(l)
-	return &TILIndexCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+func NewTILIndex(pubDir string) *TILIndexCompiler {
+	md := markdown.New()
+	return &TILIndexCompiler{md: md, pubDir: pubDir}
 }
 
 func (c *TILIndexCompiler) parse(path string) (*markdown.AST, error) {
@@ -95,7 +94,7 @@ func (c *TILIndexCompiler) CompileIndex() error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
 		}
-		c.l.Debugf("compiling til index %s", path)
+		slog.Debug("compiling til index", "path", path)
 		ast, err := c.parse(path)
 		if err != nil {
 			return fmt.Errorf("parse TIL into AST for index at path %s: %w", path, err)

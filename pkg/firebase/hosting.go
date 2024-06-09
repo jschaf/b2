@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/jschaf/b2/pkg/errs"
 	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 )
@@ -79,16 +79,14 @@ type SiteHashes struct {
 	hashes       map[SiteFile]FileHash
 	files        map[FileHash]SiteFile
 	gzipContents map[SiteFile][]byte
-	l            *zap.SugaredLogger
 	mu           sync.Mutex
 }
 
-func NewSiteHashes(l *zap.SugaredLogger) *SiteHashes {
+func NewSiteHashes() *SiteHashes {
 	return &SiteHashes{
 		hashes:       make(map[SiteFile]FileHash),
 		files:        make(map[FileHash]SiteFile),
 		gzipContents: make(map[SiteFile][]byte),
-		l:            l,
 		mu:           sync.Mutex{},
 	}
 }
@@ -138,9 +136,9 @@ func (sh *SiteHashes) PopulateFromDir(dir string) error {
 			diff := gzSize - sizeEst
 			ratio := float64(gzSize) / float64(size)
 			if 0 < diff {
-				sh.l.Debugf("file %q was bigger than buffer: %d to %d (+%d) bytes, ratio=%.2f", path, size, gzSize, diff, ratio)
+				slog.Debug("file was larger than buffer", "path", path, "size", size, "gzip_size", gzSize, "diff", diff, "ratio", ratio)
 			} else if diff < -4096 {
-				sh.l.Debugf("file %q was smaller than buffer: %d to %d (%d) bytes, ratio=%.2f", path, size, gzSize, diff, 1/ratio)
+				slog.Debug("file was smaller than buffer", "path", path, "size", size, "gzip_size", gzSize, "diff", diff, "ratio", 1/ratio)
 			}
 
 			sh.mu.Lock()
@@ -172,8 +170,7 @@ func (sh *SiteHashes) PopulateFromDir(dir string) error {
 		total += len(b)
 	}
 
-	sh.l.Infof("populated %d site files (%d KiB) in %.3f seconds",
-		len(sh.files), total/1024, time.Since(start).Seconds())
+	slog.Info("populated site files", "count", len(sh.files), "size", total, "duration", time.Since(start))
 	return nil
 }
 

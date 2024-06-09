@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
 )
 
 // conn is a websocket connection to a LiveReload client.
@@ -19,17 +19,15 @@ type conn struct {
 	send    chan interface{}
 	closer  sync.Once
 	detachC chan<- closeReq // request the connPub to stop sending messages and close this conn
-	l       *zap.SugaredLogger
 	stopC   chan struct{}
 }
 
-func newConn(ws *websocket.Conn, detachC chan<- closeReq, l *zap.SugaredLogger) *conn {
+func newConn(ws *websocket.Conn, detachC chan<- closeReq) *conn {
 	return &conn{
 		ws:      ws,
 		send:    make(chan interface{}, 5),
 		detachC: detachC,
 		closer:  sync.Once{},
-		l:       l,
 		stopC:   make(chan struct{}),
 	}
 }
@@ -98,7 +96,7 @@ func (c *conn) readInfoCmd(bs []byte) error {
 	if err != nil {
 		return newCloseError(websocket.ClosePolicyViolation, "failed to decode info message")
 	}
-	c.l.Debugf("LiveReload client info: url=%s, plugins=%s", info.URL, formatInfoMsg(info))
+	slog.Debug("LiveReload client info", "url", info.URL, "plugins", formatInfoMsg(info))
 	return nil
 }
 
@@ -123,12 +121,12 @@ func (c *conn) receiveHandshake() error {
 		c.requestDetach(fmt.Errorf("unexpected command: %s", cmd))
 		return err
 	}
-	c.l.Debugf("received handshake")
+	slog.Debug("received handshake")
 	return nil
 }
 
 func (c *conn) receive() {
-	c.l.Debugf("starting receive()")
+	slog.Debug("starting receive")
 	for {
 		bs, err := c.readText()
 		if err != nil {
@@ -163,9 +161,9 @@ func (c *conn) receive() {
 }
 
 func (c *conn) transmit() {
-	c.l.Debugf("starting transmit()")
+	slog.Debug("starting transmit")
 	for m := range c.send {
-		c.l.Debugf("sending LiveReload message: %v", m)
+		slog.Debug("sending LiveReload message", "message", m)
 		if err := c.ws.WriteJSON(m); err != nil {
 			c.requestDetach(err)
 			return
@@ -175,11 +173,12 @@ func (c *conn) transmit() {
 
 // close closes the websocket connection. Must only be called by connPublisher.
 func (c *conn) close(err error) {
-	c.l.Debugf("close livereload socket with error: %s", err)
+	slog.Debug("close livereload socket", "error", err)
 	c.closer.Do(func() {
-		c.l.Debugf("actually closing livereload socket")
+		slog.Debug("actually closing livereload socket")
 		closeCode := websocket.CloseInternalServerErr
-		if closeErr, ok := err.(*websocket.CloseError); ok {
+		var closeErr *websocket.CloseError
+		if errors.As(err, &closeErr) {
 			closeCode = closeErr.Code
 		}
 
@@ -189,11 +188,11 @@ func (c *conn) close(err error) {
 
 		writeErr := c.ws.WriteControl(websocket.CloseMessage, closeMsg, deadline)
 		if writeErr != nil && !errors.Is(writeErr, websocket.ErrCloseSent) {
-			c.l.Debugf("failed to write websocket close message: %s", writeErr)
+			slog.Debug("write websocket close message", "error", writeErr)
 		}
-		closeErr := c.ws.Close()
-		if closeErr != nil {
-			c.l.Errorf("failed to close websocket: :%s", closeErr)
+		err := c.ws.Close()
+		if err != nil {
+			slog.Error("close websocket", "error", err)
 		}
 		close(c.send)
 	})

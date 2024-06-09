@@ -1,38 +1,50 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"log/slog"
 	"os"
 	"runtime"
 	"runtime/pprof"
 
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/log"
+	"github.com/jschaf/b2/pkg/process"
 	"github.com/jschaf/b2/pkg/sites"
 )
 
 var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")
 
 func main() {
+	process.RunMain(runMain)
+}
+
+func runMain(_ context.Context) error {
+	fset := flag.CommandLine
+	logLevel := log.DefineFlags(fset)
 	flag.Parse()
-	_, logger := log.MustParseFlags()
-	l := logger.Sugar()
+	slog.SetLogLoggerLevel(logLevel)
+
 	runtime.GOMAXPROCS(1)
 	if *profileFlag != "" {
 		f, err := os.Create(*profileFlag)
 		if err != nil {
-			l.Fatalf("create profile file: %s", err)
+			slog.Error("create profile file", "error", err)
+			return err
 		}
-		l.Info("created profile file: " + f.Name())
+		slog.Info("created profile file", "file", f.Name())
 		if err = pprof.StartCPUProfile(f); err != nil {
-			l.Errorf("start CPU profile: %s", err.Error())
+			slog.Error("start CPU profile", "error", err.Error())
 		}
 		defer pprof.StopCPUProfile()
 	}
 
 	pubDir := dirs.PublicMemfs
-	if err := sites.Rebuild(pubDir, logger); err != nil {
-		l.Fatal(err)
+	if err := sites.Rebuild(pubDir); err != nil {
+		slog.Error("rebuild site", "error", err)
+		return err
 	}
-	l.Info("done")
+	slog.Info("rebuild site done")
+	return nil
 }

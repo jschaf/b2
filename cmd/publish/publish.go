@@ -3,15 +3,12 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/firebase"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/sites"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
+	"github.com/jschaf/b2/pkg/process"
 	"golang.org/x/net/context"
 
 	hosting "google.golang.org/api/firebasehosting/v1beta1"
@@ -23,6 +20,10 @@ const (
 	siteParent   = "sites/" + siteName
 	deployPubDir = dirs.PublicMemfs
 )
+
+func main() {
+	process.RunMain(runMain)
+}
 
 // servingConfig returns the known fields for the Firebase hosting config. This
 // corresponds to the hosting field in firebase.json.
@@ -40,11 +41,11 @@ func servingConfig() *hosting.ServingConfig {
 	}
 }
 
-func publish(l *zap.SugaredLogger) error {
+func runMain(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
-	l.Infof("start deployment")
+	slog.Info("start deployment")
 	start := time.Now()
 
 	accountCreds, err := firebase.ReadServiceAccountCreds()
@@ -69,14 +70,13 @@ func publish(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("create site version: %w", err)
 	}
-	l.Infof("created new version %q in %.3f seconds",
-		version.Name, time.Since(createVersionStart).Seconds())
+	slog.Info("create new version", "version", version.Name, "duration", time.Since(createVersionStart))
 
 	// Populate files: get the SHA256 hash of all gzipped files in the public
 	// directory, send them to Firebase with the URL that serves the file.
 	// Firebase returns the SHA256 hashes of the files we need to upload to
 	// firebase.
-	siteHashes := firebase.NewSiteHashes(l)
+	siteHashes := firebase.NewSiteHashes()
 	if err := siteHashes.PopulateFromDir(deployPubDir); err != nil {
 		return fmt.Errorf("populate from dir: %w", err)
 	}
@@ -88,8 +88,7 @@ func publish(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("populate files: %w", err)
 	}
-	l.Infof("populate files response requests %d files to upload in %.3f seconds",
-		len(popFilesResp.UploadRequiredHashes), time.Since(popFilesStart).Seconds())
+	slog.Info("populate files response requests", "count", len(popFilesResp.UploadRequiredHashes), "duration", time.Since(popFilesStart))
 
 	// Upload files: only upload files that have a SHA256 hash in the populate
 	// files response
@@ -97,7 +96,7 @@ func publish(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("find files for hashes: %w", err)
 	}
-	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, tokSource, l)
+	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, tokSource)
 	if err := uploader.UploadAll(ctx, filesToUpload); err != nil {
 		return fmt.Errorf("upload all: %w", err)
 	}
@@ -123,23 +122,8 @@ func publish(l *zap.SugaredLogger) error {
 	if err != nil {
 		return fmt.Errorf("create release: %w", err)
 	}
-	l.Infof("created release: %s", createReleaseResp.Name)
+	slog.Info("created release", "name", createReleaseResp.Name)
 
-	l.Infof("completed deployment in %.3f seconds", time.Since(start).Seconds())
+	slog.Info("completed deployment", "duration", time.Since(start))
 	return nil
-}
-
-func main() {
-	l, err := log.NewShortDevSugaredLogger(zapcore.InfoLevel)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	if err := sites.Rebuild(deployPubDir, l.Desugar()); err != nil {
-		l.Fatalf("rebuild site: %s", err)
-	}
-
-	if err := publish(l); err != nil {
-		l.Fatalf("failed publish: %s", err)
-	}
 }

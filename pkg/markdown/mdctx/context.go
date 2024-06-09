@@ -4,7 +4,6 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/assets"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
-	"go.uber.org/zap"
 )
 
 var errorsCtxKey = parser.NewContextKey()
@@ -117,16 +116,6 @@ func GetRenderer(pc parser.Context) (renderer.Renderer, bool) {
 // be called once per file.
 func SetRenderer(pc parser.Context, r renderer.Renderer) {
 	pc.Set(rendererCtxKey, r)
-}
-
-var loggerCtxKey = parser.NewContextKey()
-
-func GetLogger(pc parser.Context) *zap.Logger {
-	return pc.Get(loggerCtxKey).(*zap.Logger)
-}
-
-func SetLogger(pc parser.Context, l *zap.Logger) {
-	pc.Set(loggerCtxKey, l)
 }
 
 var headingIDsCtxKey = parser.NewContextKey()

@@ -3,6 +3,7 @@ package sites
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jschaf/b2/pkg/css"
@@ -10,12 +11,11 @@ import (
 	"github.com/jschaf/b2/pkg/js"
 	"github.com/jschaf/b2/pkg/markdown/compiler"
 	"github.com/jschaf/b2/pkg/static"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
 // Rebuild rebuilds everything on the site into dir.
-func Rebuild(pubDir string, l *zap.Logger) error {
+func Rebuild(pubDir string) error {
 	start := time.Now()
 
 	if err := dirs.CleanDir(pubDir); err != nil {
@@ -24,8 +24,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
-		l.Debug("Rebuild - compile post details")
-		c := compiler.NewPostDetail(pubDir, l)
+		slog.Debug("rebuild compile post details")
+		c := compiler.NewPostDetail(pubDir)
 		if err := c.CompileAll(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
 		}
@@ -33,8 +33,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile root index")
-		ic := compiler.NewRootIndex(pubDir, l)
+		slog.Debug("rebuild compile root index")
+		ic := compiler.NewRootIndex(pubDir)
 		if err := ic.CompileIndex(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)
 		}
@@ -42,8 +42,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile TIL details")
-		tc := compiler.NewTILDetail(pubDir, l)
+		slog.Debug("rebuild compile til details")
+		tc := compiler.NewTILDetail(pubDir)
 		if err := tc.CompileAll(); err != nil {
 			return fmt.Errorf("compile all TIL posts: %w", err)
 		}
@@ -51,8 +51,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile book details")
-		c := compiler.NewBookDetail(pubDir, l)
+		slog.Debug("rebuild compile book details")
+		c := compiler.NewBookDetail(pubDir)
 		if err := c.CompileAll(); err != nil {
 			return fmt.Errorf("compile all book details: %w", err)
 		}
@@ -60,8 +60,8 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - compile TIL index")
-		tc := compiler.NewTILIndex(pubDir, l)
+		slog.Debug("rebuild compile til index")
+		tc := compiler.NewTILIndex(pubDir)
 		if err := tc.CompileIndex(); err != nil {
 			return fmt.Errorf("compile TIL index: %w", err)
 		}
@@ -69,7 +69,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - copy all CSS")
+		slog.Debug("rebuild copy all css")
 		if _, err := css.CopyAllCSS(pubDir); err != nil {
 			return fmt.Errorf("copy all css: %w", err)
 		}
@@ -77,7 +77,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - Copy all fonts")
+		slog.Debug("rebuild copy all fonts")
 		if err := css.CopyAllFonts(pubDir); err != nil {
 			return fmt.Errorf("copy all fonts: %w", err)
 		}
@@ -85,7 +85,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - copy static files")
+		slog.Debug("rebuild copy static files")
 		if err := static.CopyStaticFiles(pubDir); err != nil {
 			return fmt.Errorf("copy static files: %w", err)
 		}
@@ -93,7 +93,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - link papers")
+		slog.Debug("rebuild link papers")
 		if err := static.LinkPapers(pubDir); err != nil {
 			return fmt.Errorf("link papers: %w", err)
 		}
@@ -101,7 +101,7 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 	})
 
 	g.Go(func() error {
-		l.Debug("Rebuild - typescript")
+		slog.Debug("rebuild typescript")
 		if err := js.WriteTypeScriptMain(pubDir); err != nil {
 			return fmt.Errorf("write typescript bundle: %w", err)
 		}
@@ -112,6 +112,6 @@ func Rebuild(pubDir string, l *zap.Logger) error {
 		return fmt.Errorf("rebuild wait err group: %w", err)
 	}
 
-	l.Sugar().Infof("rebuilt site in %.3f seconds", time.Since(start).Seconds())
+	slog.Info("rebuilt site", "duration", time.Since(start))
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,24 +18,22 @@ import (
 	"github.com/jschaf/b2/pkg/markdown/mdext"
 	"github.com/jschaf/b2/pkg/paths"
 	"github.com/karrick/godirwalk"
-	"go.uber.org/zap"
 )
 
 // TILDetailCompiler compiles the /til/* paths, showing the detail page for each
 // TIL post.
 type TILDetailCompiler struct {
 	md     *markdown.Markdown
-	l      *zap.SugaredLogger
 	pubDir string
 }
 
-func NewTILDetail(pubDir string, l *zap.Logger) *TILDetailCompiler {
-	md := markdown.New(l)
-	return &TILDetailCompiler{md: md, pubDir: pubDir, l: l.Sugar()}
+func NewTILDetail(pubDir string) *TILDetailCompiler {
+	md := markdown.New()
+	return &TILDetailCompiler{md: md, pubDir: pubDir}
 }
 
 func (c *TILDetailCompiler) parse(path string) (*markdown.AST, error) {
-	c.l.Debugf("compiling til %s", path)
+	slog.Debug("compiling til", "path", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
