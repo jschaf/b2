@@ -115,7 +115,7 @@ func Copy(dest, src string) (mErr error) {
 	if err != nil {
 		return err
 	}
-	defer errs.Capturing(&mErr, in.Close, "")
+	defer errs.Capture(&mErr, in.Close, "")
 
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return fmt.Errorf("mkdir to copy to dest %q: %w", dest, err)
@@ -124,7 +124,7 @@ func Copy(dest, src string) (mErr error) {
 	if err != nil {
 		return err
 	}
-	defer errs.Capturing(&mErr, out.Close, "")
+	defer errs.Capture(&mErr, out.Close, "")
 
 	_, err = io.Copy(out, in)
 	if err != nil {

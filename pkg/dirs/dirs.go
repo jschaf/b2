@@ -1,6 +1,7 @@
 package dirs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,20 +28,19 @@ func RemoveAllChildren(dir string) (mErr error) {
 	if err != nil {
 		return fmt.Errorf("open dir: %w", err)
 	}
-	defer errs.Capturing(&mErr, f.Close, "close readdir")
+	defer errs.Capture(&mErr, f.Close, "close readdir")
 
 	files, err := f.Readdir(-1)
 	if err != nil {
 		return fmt.Errorf("readdir: %w", err)
 	}
 
-	multiErr := errs.NewMultiError()
+	var es error
 	for _, file := range files {
 		path := filepath.Join(dir, file.Name())
-		err := os.RemoveAll(path)
-		multiErr.Append(err)
+		es = errors.Join(os.RemoveAll(path), es)
 	}
-	return multiErr.ErrorOrNil()
+	return es
 }
 
 // CleanDir creates dir if it doesn't exist and then deletes all children of the

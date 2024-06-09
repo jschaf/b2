@@ -25,7 +25,7 @@ func TestServeJSHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer errs.CapturingT(t, resp.Body.Close, "")
+	defer errs.CaptureT(t, resp.Body.Close, "")
 
 	if !strings.Contains(string(body), "var LiveReload") {
 		t.Error("expected LiveReload JS to contain 'var LiveReload'")

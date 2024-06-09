@@ -62,7 +62,7 @@ func (u *Uploader) Upload(ctx context.Context, f SiteFile) (mErr error) {
 	if err != nil {
 		return fmt.Errorf("upload - response: %w", err)
 	}
-	defer errs.Capturing(&mErr, resp.Body.Close, "upload - close response body")
+	defer errs.Capture(&mErr, resp.Body.Close, "upload - close response body")
 
 	content, err := io.ReadAll(resp.Body)
 	if err != nil {

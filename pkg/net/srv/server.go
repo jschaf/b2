@@ -155,7 +155,7 @@ func (s *Server) listenAndServe() (mErr error) {
 	if err != nil {
 		return fmt.Errorf("listen on HTTP address %s: %w", s.Cfg.HTTPAddr, err)
 	}
-	defer errs.Capturing(&mErr, newLnCloser(ln), "close HTTP listener")
+	defer errs.Capture(&mErr, newLnCloser(ln), "close HTTP listener")
 	http2Server := &http2.Server{}
 	httpServer := &http.Server{
 		Handler: h2c.NewHandler(s.httpHandler, http2Server),
