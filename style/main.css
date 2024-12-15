@@ -314,6 +314,9 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 
 p, blockquote, li {
   hyphens: auto;
+  hyphenate-limit-chars: 10 4 4;
+  hyphenate-limit-lines: 2;
+  hanging-punctuation: first last;
 }
 
 p, blockquote, .cite-reference {
@@ -672,7 +675,7 @@ cite.cite-inline {
   0% {
     background: var(--reference-highlight-color);
   }
-  70% {
+  80% {
     background: var(--reference-highlight-color);
   }
   100% {
