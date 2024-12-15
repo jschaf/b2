@@ -1,6 +1,7 @@
 package livereload
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/gorilla/websocket"
@@ -41,7 +42,7 @@ func newConnPub() *connPub {
 	}
 }
 
-func (p *connPub) start() {
+func (p *connPub) start(ctx context.Context) {
 	slog.Debug("starting connPub")
 	// detachConn unregisters the conn from receiving new messages and closes the
 	// websocket connection. Not thread-safe.
@@ -58,6 +59,9 @@ func (p *connPub) start() {
 main:
 	for {
 		select {
+		case <-ctx.Done():
+			break main
+
 		case <-p.stop:
 			break main
 
@@ -87,7 +91,8 @@ main:
 	}
 }
 
-// runConn runs a LiveReload websocket connection and blocks until the connection closes.
+// runConn runs a LiveReload websocket connection and blocks until the
+// connection closes.
 func (p *connPub) runConn(ws *websocket.Conn) {
 	c := newConn(ws, p.detach)
 	if err := c.start(); err != nil {

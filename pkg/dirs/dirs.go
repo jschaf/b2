@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	Book        = "book"
-	Cmd         = "cmd"
-	Fonts       = "fonts"
-	Papers      = "papers"
-	Pkg         = "pkg"
-	Posts       = "posts"
-	Static      = "static"
-	Style       = "style"
-	TIL         = "til"
-	PublicMemfs = "/opt/p/b2/public" // alternate public dir for development
+	Book   = "book"
+	Cmd    = "cmd"
+	Fonts  = "fonts"
+	Papers = "papers"
+	Pkg    = "pkg"
+	Posts  = "posts"
+	Static = "static"
+	Style  = "style"
+	TIL    = "til"
+	Public = "/opt/p/b2/public" // alternate public dir for development
 )
 
 // RemoveAllChildren removes all children in the directory.

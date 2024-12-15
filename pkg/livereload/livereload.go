@@ -6,6 +6,7 @@ package livereload
 
 import (
 	"bytes"
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -73,9 +74,9 @@ func (lr *LiveReload) ServeJSHandler(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(liveReloadJS)
 }
 
-func (lr *LiveReload) Start() {
+func (lr *LiveReload) Start(ctx context.Context) {
 	slog.Debug("start livereload")
-	lr.connPublisher.start()
+	lr.connPublisher.start(ctx)
 }
 
 func (lr *LiveReload) Shutdown() {

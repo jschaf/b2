@@ -18,7 +18,7 @@ import (
 const (
 	siteName     = "joe-blog-314159"
 	siteParent   = "sites/" + siteName
-	deployPubDir = dirs.PublicMemfs
+	deployPubDir = dirs.Public
 )
 
 func main() {

@@ -8,7 +8,7 @@ import (
 
 func BenchmarkRebuild(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		if err := Rebuild(dirs.PublicMemfs); err != nil {
+		if err := Rebuild(dirs.Public); err != nil {
 			b.Fatal(err)
 		}
 	}

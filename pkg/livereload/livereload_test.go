@@ -208,7 +208,7 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 
 func newLiveReloadServer(t *testing.T) (*httptest.Server, *LiveReload) {
 	lr := NewServer()
-	go lr.Start()
+	go lr.Start(nil)
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }
 

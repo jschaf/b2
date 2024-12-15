@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	if err := js.WriteTypeScriptMain(dirs.PublicMemfs); err != nil {
+	if err := js.WriteTypeScriptMain(dirs.Public); err != nil {
 		slog.Error("write typescript main", "error", err.Error())
 		os.Exit(1)
 	}

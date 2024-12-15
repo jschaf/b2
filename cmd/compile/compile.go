@@ -14,7 +14,7 @@ var postGlobFlag = flag.String("glob", "", "if given, only compile files that ma
 
 func compile(glob string) error {
 	slog.Info("run compile cmd", "glob", glob)
-	c := compiler.NewPostDetail(dirs.PublicMemfs)
+	c := compiler.NewPostDetail(dirs.Public)
 	if err := c.CompileAll(glob); err != nil {
 		return fmt.Errorf("compile detail posts: %w", err)
 	}

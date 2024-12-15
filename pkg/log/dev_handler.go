@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jschaf/b2/pkg/tty"
@@ -32,8 +33,9 @@ func (h *DevHandler) Enabled(_ context.Context, l slog.Level) bool {
 }
 
 const (
-	align    = 40 // make logs easier to scan by aligning the first attr
-	alignStr = "                                        "
+	align       = 40 // make logs easier to scan by aligning the first attr
+	alignStr    = "                                        "
+	readyPrefix = "ready: "
 )
 
 func (h *DevHandler) Handle(_ context.Context, r slog.Record) error {
@@ -45,9 +47,10 @@ func (h *DevHandler) Handle(_ context.Context, r slog.Record) error {
 
 	// Level
 	buf.appendByte('\t')
-	appendLevel(buf, r.Level)
+	appendLevel(buf, r)
 
 	// Message
+	r.Message = strings.TrimPrefix(r.Message, readyPrefix)
 	buf.appendByte('\t')
 	buf.appendString(r.Message)
 
@@ -108,17 +111,22 @@ func appendTime(buf *buffer, t time.Time) {
 	buf.appendByte('0' + byte(lo))
 }
 
-func appendLevel(buf *buffer, l slog.Level) {
+func appendLevel(buf *buffer, r slog.Record) {
 	switch {
-	case l < slog.LevelInfo:
+	case r.Level < slog.LevelInfo:
 		buf.appendString(tty.Magenta.Code())
 		buf.appendString("debug")
 		buf.appendString(tty.Reset.Code())
-	case l < slog.LevelWarn:
-		buf.appendString(tty.Blue.Code())
-		buf.appendString("info")
+	case r.Level < slog.LevelWarn:
+		if strings.HasPrefix(r.Message, readyPrefix) {
+			buf.appendString(tty.Green.Code())
+			buf.appendString("ready")
+		} else {
+			buf.appendString(tty.Blue.Code())
+			buf.appendString("info")
+		}
 		buf.appendString(tty.Reset.Code())
-	case l < slog.LevelError:
+	case r.Level < slog.LevelError:
 		buf.appendString(tty.Yellow.Code())
 		buf.appendString("warn")
 		buf.appendString(tty.Reset.Code())
@@ -131,9 +139,14 @@ func appendLevel(buf *buffer, l slog.Level) {
 
 func appendAttr(buf *buffer, attr slog.Attr) {
 	buf.appendByte(' ')
-	buf.appendString(attr.Key)
-	buf.appendByte('=')
-	appendValue(buf, attr.Value)
+	switch attr.Key {
+	case "url":
+		appendValue(buf, attr.Value)
+	default:
+		buf.appendString(attr.Key)
+		buf.appendByte('=')
+		appendValue(buf, attr.Value)
+	}
 }
 
 func appendValue(buf *buffer, v slog.Value) {
