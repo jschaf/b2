@@ -27,12 +27,21 @@ import (
 
 const port = "2222"
 
+// HTTPS server flags.
+var (
+	tlsCertPath = flag.String("tls-cert-path", "private/cert/localhost_cert.pem", "path to the TLS certificate file; if set, server uses https")
+	tlsKeyPath  = flag.String("tls-key-path", "private/cert/localhost_key.pem", "path to the TLS key file; if set, server uses https")
+)
+
 type Server struct {
 	// Server lifecycle context
 	// Calling serverCancel causes all background goroutines to stop. To
 	// stop the HTTP server, call Shutdown.
 	serverCtx    context.Context
 	serverCancel context.CancelFunc
+	// TLS
+	tlsCertPath string
+	tlsKeyPath  string
 	// Servers
 	httpSrv       *http.Server
 	liveReloadSrv *livereload.LiveReload
@@ -41,11 +50,26 @@ type Server struct {
 }
 
 type ServerOpts struct {
-	PubDir string
-	Cancel context.CancelFunc
+	PubDir      string
+	Cancel      context.CancelFunc
+	TLSCertPath string
+	TLSKeyPath  string
 }
 
 func InitServer(ctx context.Context, opts ServerOpts) (*Server, error) {
+	// Validate TLS.
+	if (opts.TLSCertPath == "") != (opts.TLSKeyPath == "") {
+		return nil, errors.New("tls-cert-path and tls-key-path must be set together")
+	}
+	if opts.TLSCertPath != "" {
+		if _, err := os.Stat(opts.TLSCertPath); err != nil {
+			return nil, fmt.Errorf("stat tls-cert-path: %w", err)
+		}
+		if _, err := os.Stat(opts.TLSKeyPath); err != nil {
+			return nil, fmt.Errorf("stat tls-key-path: %w", err)
+		}
+	}
+
 	if err := dirs.CleanDir(opts.PubDir); err != nil {
 		return nil, fmt.Errorf("clean public dir: %w", err)
 	}
@@ -93,6 +117,9 @@ func InitServer(ctx context.Context, opts ServerOpts) (*Server, error) {
 	return &Server{
 		serverCtx:    ctx,
 		serverCancel: opts.Cancel,
+		// TLS
+		tlsCertPath: opts.TLSCertPath,
+		tlsKeyPath:  opts.TLSKeyPath,
 		// Servers
 		httpSrv:       httpSrv,
 		liveReloadSrv: lr,
@@ -111,9 +138,20 @@ func (s *Server) ListenAndServe() (mErr error) {
 		return fmt.Errorf("listen to http port: %w", err)
 	}
 	defer errs.Capture(&mErr, srv.NewListenerCloser(ln), "close http listener")
-	slog.Info("ready: dev server listening", slog.String("url", "http://localhost:"+port))
 
-	err = s.httpSrv.Serve(ln)
+	isTLS := s.tlsCertPath != ""
+	url := "http://localhost:" + port
+	if isTLS {
+		url = "https://localhost:" + port
+	}
+	slog.Info("ready: dev server listening", slog.String("url", url), slog.Bool("tls", isTLS))
+
+	// Serve
+	if isTLS {
+		err = s.httpSrv.ServeTLS(ln, s.tlsCertPath, s.tlsKeyPath)
+	} else {
+		err = s.httpSrv.Serve(ln)
+	}
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("prod http serve: %w", err)
 	}
@@ -153,8 +191,10 @@ func runMain(ctx context.Context) (mErr error) {
 	slog.Info("start dev server", "process.args", os.Args[1:])
 
 	devSrv, err := InitServer(ctx, ServerOpts{
-		PubDir: dirs.Public,
-		Cancel: cancel,
+		PubDir:      dirs.Public,
+		Cancel:      cancel,
+		TLSCertPath: *tlsCertPath,
+		TLSKeyPath:  *tlsKeyPath,
 	})
 	if err != nil {
 		return fmt.Errorf("init server: %w", err)
