@@ -14,7 +14,7 @@ import (
 )
 
 func TestServeJSHandler(t *testing.T) {
-	server, lr := newLiveReloadServer(t)
+	server, lr := newLiveReloadServer()
 	defer server.Close()
 	req := httptest.NewRequest("GET", "http://example.com/livereload.js", nil)
 	w := httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestLiveReload_NewHTMLInjector(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server, lr := newLiveReloadServer(t)
+			server, lr := newLiveReloadServer()
 			defer server.Close()
 			req := httptest.NewRequest("GET", "http://example.com", nil)
 			w := httptest.NewRecorder()
@@ -123,7 +123,7 @@ func writeHTML(h http.Header, hs ...string) http.HandlerFunc {
 }
 
 func TestLiveReload_WebSocketHandler_ClientShouldGetHello(t *testing.T) {
-	server, _ := newLiveReloadServer(t)
+	server, _ := newLiveReloadServer()
 	defer server.Close()
 
 	conn, resp := newWebSocketClient(t, server)
@@ -135,7 +135,7 @@ func TestLiveReload_WebSocketHandler_ClientShouldGetHello(t *testing.T) {
 }
 
 func TestLiveReload_WebSocketHandler_UnknownClientMessage(t *testing.T) {
-	server, _ := newLiveReloadServer(t)
+	server, _ := newLiveReloadServer()
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -155,7 +155,7 @@ func TestLiveReload_WebSocketHandler_UnknownClientMessage(t *testing.T) {
 }
 
 func TestLiveReload_ReloadFile(t *testing.T) {
-	server, lr := newLiveReloadServer(t)
+	server, lr := newLiveReloadServer()
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -172,7 +172,7 @@ func TestLiveReload_ReloadFile(t *testing.T) {
 }
 
 func TestLiveReload_Alert(t *testing.T) {
-	server, lr := newLiveReloadServer(t)
+	server, lr := newLiveReloadServer()
 	defer server.Close()
 	conn, _ := newWebSocketClient(t, server)
 	assertReadsHelloMsg(t, conn)
@@ -206,7 +206,7 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 	}
 }
 
-func newLiveReloadServer(t *testing.T) (*httptest.Server, *LiveReload) {
+func newLiveReloadServer() (*httptest.Server, *LiveReload) {
 	lr := NewServer()
 	go lr.Start(nil)
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
