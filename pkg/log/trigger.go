@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 	"sync"
 	"time"
@@ -61,7 +60,7 @@ func NewTriggerWriter(trigger string) *TriggerWriter {
 		}
 		close(tw.doneCh)
 		// Make sure we don't block other writers before Write closes the pipe.
-		_, _ = io.Copy(ioutil.Discard, pipeR)
+		_, _ = io.Copy(io.Discard, pipeR)
 		_ = pipeR.Close()
 	}()
 
