@@ -1,10 +1,12 @@
 type AdblockStatus = 'unknown' | 'blocking' | 'none';
 
+// noinspection JSUnusedGlobalSymbols
 declare interface Window {
   adblockStatus: AdblockStatus;
   heap: HeapAnalytics;
 }
 
+// noinspection JSUnusedGlobalSymbols
 declare interface Navigator {
   connection?: NetworkInformation;
 }
@@ -26,6 +28,7 @@ enum TrackName {
   HoverPreview = 'hover preview'
 }
 
+// noinspection JSUnusedGlobalSymbols
 class HeapAnalytics extends Array<any> {
   userId?: string;
   identity?: string;
@@ -77,12 +80,15 @@ const checkDef = <T>(x: T, msg?: string): NonNullable<T> => {
   return x as NonNullable<T>;
 };
 
-const checkHtmlEL = (x: unknown, msg?: string): HTMLElement => {
-  if (x instanceof HTMLElement) {
-    return x as HTMLElement;
+const findClosestAnchor = (ev: TouchEvent | MouseEvent): HTMLAnchorElement | null => {
+  if (ev.target == null) {
+    return null
   }
-  throw new Error(msg ?? `Expected element to be an HTMLElement but was ${JSON.stringify(x)}.`);
-};
+  if (!(ev.target instanceof HTMLElement)) {
+    return null
+  }
+  return ev.target.closest('a')
+}
 
 function assertDef<T>(x: T, msg?: string): asserts x is NonNullable<T> {
   checkDef(x, msg);
@@ -550,12 +556,9 @@ class PreviewLifecycle {
     const { origin, pathname } = window.location;
     const newUrl = origin + pathname + targetHash;
     history.replaceState(null, '', newUrl);
-    copySourceEl.type = ''; // show the input so we can select it
-    copySourceEl.value = newUrl;
-    copySourceEl.focus({ preventScroll: true });
-    document.execCommand('SelectAll');
-    document.execCommand('Copy', /* show UI */ false, '');
-    copySourceEl.type = 'hidden';
+    navigator.clipboard.writeText(newUrl).catch((err) => {
+      log.warn('copy-heading-url: failed to copy to clipboard', err);
+    });
   };
 
   const targets = document.getElementsByClassName('heading-anchor');
@@ -567,8 +570,8 @@ class PreviewLifecycle {
 // Prefetch URLs on the whitelisted domains on mouseover or touch start events.
 // Forked from instant.page, https://instant.page/license.
 (() => {
+  // Check if the browser supports link preload.
   const preloads = new Set<string>(); // hrefs already preloaded
-  let mouseoverTimer = 0;
   const prefetcher = document.createElement('link');
   const supportsPrefetch = prefetcher?.relList?.supports('prefetch') ?? false;
   const isSavingData = navigator?.connection?.saveData ?? false;
@@ -588,14 +591,16 @@ class PreviewLifecycle {
     preloads.add(url);
   };
 
+  let mouseoverTimer = 0;
   const onMouseout = (ev: MouseEvent): void => {
     // On mouseout, target is the element we exited and relatedTarget is elem
     // we entered (or null).
-    let exitLink = checkHtmlEL(ev.target).closest('a');
+    let exitLink = findClosestAnchor(ev);
     let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest('a');
     if (ev.relatedTarget && exitLink === enterLink) {
       return;
     }
+
     if (mouseoverTimer !== 0) {
       log.debug(`prefetch: canceling prefetch ${exitLink?.href}`);
       clearTimeout(mouseoverTimer);
@@ -646,7 +651,7 @@ class PreviewLifecycle {
 
   // On touchstart, immediately preload the link.
   document.addEventListener('touchstart', (touchEv) => {
-    const link = checkHtmlEL(touchEv.target).closest('a');
+    const link = findClosestAnchor(touchEv);
     if (!link || !shouldPreload(link)) {
       return;
     }
@@ -658,7 +663,7 @@ class PreviewLifecycle {
     // Browsers emulate mouse events from touch events so mouseover will be
     // called after touchstart. We'll avoid double preloading because
     // shouldPreload checks to see if we've already loaded a URL.
-    const link = checkHtmlEL(ev.target).closest('a');
+    const link = findClosestAnchor(ev);
     if (!link || !shouldPreload(link)) {
       return;
     }
