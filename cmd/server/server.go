@@ -27,6 +27,9 @@ func runMain(context.Context) (mErr error) {
 	logLevel := log.DefineFlags(fset)
 	flag.Parse()
 	slog.SetLogLoggerLevel(logLevel)
+	slog.SetDefault(slog.New(log.NewDevHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
 
 	port := "8080"
 	server := srv.NewServer(srv.ServerCfg{
