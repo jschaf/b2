@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jschaf/b2/pkg/texts/humanize"
 	"github.com/jschaf/b2/pkg/tty"
 )
 
@@ -162,7 +163,7 @@ func appendValue(buf *buffer, v slog.Value) {
 	case slog.KindBool:
 		*buf = strconv.AppendBool(*buf, v.Bool())
 	case slog.KindDuration:
-		*buf = strconv.AppendInt(*buf, v.Duration().Nanoseconds(), 10)
+		buf.appendString(humanize.Duration(v.Duration()))
 	case slog.KindTime:
 		*buf = appendRFC3339Millis(*buf, v.Time())
 	case slog.KindAny:

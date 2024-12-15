@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -191,7 +192,9 @@ func (c *conn) close(err error) {
 			slog.Debug("write websocket close message", "error", writeErr)
 		}
 		err := c.ws.Close()
-		if err != nil {
+		// Ignore broken pipe since that's it means the browser client disconnected.
+		// Likely caused by reloading.
+		if err != nil && !errors.Is(err, syscall.EPIPE) {
 			slog.Error("close websocket", "error", err)
 		}
 		close(c.send)
