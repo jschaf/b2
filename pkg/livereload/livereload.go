@@ -7,6 +7,7 @@ package livereload
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -95,3 +96,6 @@ func (lr *LiveReload) ReloadFile(path string) {
 func (lr *LiveReload) Alert(msg string) {
 	lr.connPublisher.publish <- newAlertResponse(msg)
 }
+
+//go:embed dist/livereload.dist.js
+var liveReloadJS []byte
