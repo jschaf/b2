@@ -24,5 +24,9 @@ publish:
 	go run ./cmd/publish
 
 .PHONY: dev
-dev: html
+dev:
 	go run ./cmd/server
+
+.PHONY: update-katex
+update-katex:
+	./script/update-katex.sh

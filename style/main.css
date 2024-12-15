@@ -718,3 +718,7 @@ cite.cite-inline {
 .katex {
   font-size: 1.1em !important;
 }
+
+.katex-html {
+  display: none;
+}
