@@ -9,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.4.1
-	github.com/graemephi/goldmark-qjs-katex v0.3.0
+	github.com/graemephi/goldmark-qjs-katex v0.3.1-0.20241020150327-4b36bd37700f
 	github.com/jschaf/bibtex v0.0.0-20201112053810-8c74eef33877
 	github.com/karrick/godirwalk v1.15.6
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
