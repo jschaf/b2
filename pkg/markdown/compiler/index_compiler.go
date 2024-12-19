@@ -11,7 +11,6 @@ import (
 	"sort"
 
 	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/git"
 	"github.com/jschaf/b2/pkg/markdown"
 	"github.com/jschaf/b2/pkg/markdown/html"
 	"github.com/jschaf/b2/pkg/markdown/mdctx"
@@ -19,34 +18,33 @@ import (
 	"github.com/jschaf/b2/pkg/paths"
 )
 
-// RootIndexCompiler compiles the / path, the main homepage.
-type RootIndexCompiler struct {
+// IndexCompiler compiles the / path, the main homepage.
+type IndexCompiler struct {
 	md     *markdown.Markdown
 	pubDir string
 }
 
-func NewRootIndex(pubDir string) *RootIndexCompiler {
+func NewIndexCompiler(pubDir string) *IndexCompiler {
 	md := markdown.New(markdown.WithExtender(mdext.NewContinueReadingExt()))
-	return &RootIndexCompiler{md: md, pubDir: pubDir}
+	return &IndexCompiler{md: md, pubDir: pubDir}
 }
 
-func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
-	postASTs, err := ic.collectASTs(filepath.Join(git.RootDir(), dirs.Posts))
-	if err != nil {
-		return nil, fmt.Errorf("collect posts: %w", err)
+func (ic *IndexCompiler) parseDirs(dirs ...string) ([]*markdown.AST, error) {
+	asts := make([]*markdown.AST, 0, len(dirs)*8)
+	for _, dir := range dirs {
+		as, err := ic.collectASTs(dir)
+		if err != nil {
+			return nil, fmt.Errorf("collectASTs for dir %s: %w", dir, err)
+		}
+		asts = append(asts, as...)
 	}
-	tilASTs, err := ic.collectASTs(filepath.Join(git.RootDir(), dirs.TIL))
-	if err != nil {
-		return nil, fmt.Errorf("collect TILs: %w", err)
-	}
-	postASTs = append(postASTs, tilASTs...)
-	sort.Slice(postASTs, func(i, j int) bool {
-		return postASTs[i].Meta.Date.After(postASTs[j].Meta.Date)
+	sort.Slice(asts, func(i, j int) bool {
+		return asts[i].Meta.Date.After(asts[j].Meta.Date)
 	})
-	return postASTs, nil
+	return asts, nil
 }
 
-func (ic *RootIndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
+func (ic *IndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
 	asts, err := paths.WalkCollect(dir, func(path string, dirent fs.DirEntry) ([]*markdown.AST, error) {
 		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".md" {
 			return nil, nil
@@ -58,14 +56,14 @@ func (ic *RootIndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
 		}
 		ast, err := ic.md.Parse(path, bytes.NewReader(bs))
 		if err != nil {
-			return nil, fmt.Errorf("parse markdown for root index: %w", err)
+			return nil, fmt.Errorf("parseFile markdown for root index: %w", err)
 		}
 		return []*markdown.AST{ast}, nil
 	})
 	return asts, err
 }
 
-func (ic *RootIndexCompiler) renderPosts(asts []*markdown.AST) ([]html.RootPostData, error) {
+func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.RootPostData, error) {
 	posts := make([]html.RootPostData, 0, len(asts))
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
@@ -86,20 +84,21 @@ func (ic *RootIndexCompiler) renderPosts(asts []*markdown.AST) ([]html.RootPostD
 	return posts, nil
 }
 
-func (ic *RootIndexCompiler) CompileIndex() error {
-	postASTs, err := ic.parsePosts()
+func (ic *IndexCompiler) Compile() error {
+	asts, err := ic.parseDirs(dirs.Posts, dirs.TIL)
 	if err != nil {
 		return err
 	}
 
 	featureSet := mdctx.NewFeatureSet()
-	for _, ast := range postASTs {
+	featureSet.Add(mdctx.FeatureKatex)
+	for _, ast := range asts {
 		featureSet.AddAll(ast.Features)
 	}
 
-	posts, err := ic.renderPosts(postASTs)
+	posts, err := ic.renderASTs(asts)
 	if err != nil {
-		return fmt.Errorf("compile postASTs for index: %w", err)
+		return fmt.Errorf("compileAST asts for index: %w", err)
 	}
 
 	if err := os.MkdirAll(ic.pubDir, 0o755); err != nil {

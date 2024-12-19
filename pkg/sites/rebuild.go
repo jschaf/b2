@@ -25,8 +25,8 @@ func Rebuild(pubDir string) error {
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		slog.Debug("rebuild compile post details")
-		c := compiler.NewPostDetail(pubDir)
-		if err := c.CompileAll(""); err != nil {
+		c := compiler.NewDetailCompiler(pubDir)
+		if err := c.Compile(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
 		}
 		return nil
@@ -34,18 +34,9 @@ func Rebuild(pubDir string) error {
 
 	g.Go(func() error {
 		slog.Debug("rebuild compile root index")
-		ic := compiler.NewRootIndex(pubDir)
-		if err := ic.CompileIndex(); err != nil {
+		ic := compiler.NewIndexCompiler(pubDir)
+		if err := ic.Compile(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		slog.Debug("rebuild compile book details")
-		c := compiler.NewBookDetail(pubDir)
-		if err := c.CompileAll(); err != nil {
-			return fmt.Errorf("compile all book details: %w", err)
 		}
 		return nil
 	})

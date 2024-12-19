@@ -19,11 +19,8 @@ func compileTemplates() map[string]*template.Template {
 	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
 	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
 	layouts := []string{
-		"book_detail.gohtml",
-		"post_detail.gohtml",
-		"root_index.gohtml",
-		"til_detail.gohtml",
-		"til_index.gohtml",
+		"detail.gohtml",
+		"index.gohtml",
 	}
 	for _, name := range layouts {
 		f := filepath.Join(layoutDir, name)
@@ -43,21 +40,6 @@ func render(w io.Writer, name string, data map[string]any) error {
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
-type BookDetailData struct {
-	Title    string
-	Features *mdctx.FeatureSet
-	Content  template.HTML
-}
-
-func RenderBookDetail(w io.Writer, d BookDetailData) error {
-	m := map[string]any{
-		"Title":      d.Title,
-		"Content":    d.Content,
-		"FeatureSet": d.Features,
-	}
-	return render(w, "book_detail.gohtml", m)
-}
-
 type PostDetailData struct {
 	Title    string
 	Features *mdctx.FeatureSet
@@ -70,7 +52,7 @@ func RenderPostDetail(w io.Writer, d PostDetailData) error {
 		"Content":    d.Content,
 		"FeatureSet": d.Features,
 	}
-	return render(w, "post_detail.gohtml", m)
+	return render(w, "detail.gohtml", m)
 }
 
 type RootPostData struct {
@@ -92,5 +74,5 @@ func RenderRootIndex(w io.Writer, d RootIndexData) error {
 		"Posts":      d.Posts,
 		"FeatureSet": d.Features,
 	}
-	return render(w, "root_index.gohtml", m)
+	return render(w, "index.gohtml", m)
 }
