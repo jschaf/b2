@@ -24,7 +24,7 @@ func newCloseError(code int, msg string) *websocket.CloseError {
 // connPub publishes messages to all attached LiveReload websocket connections.
 type connPub struct {
 	conns   map[*conn]struct{} // all connections registered on this connPub
-	publish chan interface{}   // messages to publish to all LiveReload client connections
+	publish chan any           // messages to publish to all LiveReload client connections
 	attach  chan *conn         // LiveReload client connections to attach
 	detach  chan closeReq      // LiveReload client connections to detach
 	stop    chan struct{}
@@ -34,7 +34,7 @@ type connPub struct {
 func newConnPub() *connPub {
 	return &connPub{
 		conns:   make(map[*conn]struct{}),
-		publish: make(chan interface{}),
+		publish: make(chan any),
 		attach:  make(chan *conn),
 		detach:  make(chan closeReq),
 		stop:    make(chan struct{}),

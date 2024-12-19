@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io"
 	"path/filepath"
-	"reflect"
 	"time"
 
 	"github.com/jschaf/b2/pkg/dirs"
@@ -34,7 +33,7 @@ func compileTemplates() map[string]*template.Template {
 	return templates
 }
 
-func render(w io.Writer, name string, data map[string]interface{}) error {
+func render(w io.Writer, name string, data map[string]any) error {
 	templates := compileTemplates()
 	tmpl, ok := templates[name]
 	if !ok {
@@ -51,7 +50,7 @@ type BookDetailData struct {
 }
 
 func RenderBookDetail(w io.Writer, d BookDetailData) error {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"Title":      d.Title,
 		"Content":    d.Content,
 		"FeatureSet": d.Features,
@@ -66,7 +65,7 @@ type PostDetailData struct {
 }
 
 func RenderPostDetail(w io.Writer, d PostDetailData) error {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"Title":      d.Title,
 		"Content":    d.Content,
 		"FeatureSet": d.Features,
@@ -85,57 +84,13 @@ type RootIndexData struct {
 	Title    string
 	Features *mdctx.FeatureSet
 	Posts    []RootPostData
-	TILs     []TILIndexData
 }
 
 func RenderRootIndex(w io.Writer, d RootIndexData) error {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"Title":      d.Title,
 		"Posts":      d.Posts,
-		"TILs":       d.TILs,
 		"FeatureSet": d.Features,
 	}
 	return render(w, "root_index.gohtml", m)
-}
-
-type TILIndexData struct {
-	Title    string
-	Features *mdctx.FeatureSet
-	Bodies   []template.HTML
-}
-
-func RenderTILIndex(w io.Writer, d TILIndexData) error {
-	m := map[string]interface{}{
-		"Title":      d.Title,
-		"Bodies":     d.Bodies,
-		"FeatureSet": d.Features,
-	}
-	return render(w, "til_index.gohtml", m)
-}
-
-type TILDetailData struct {
-	Title    string
-	Features *mdctx.FeatureSet
-	Content  template.HTML
-}
-
-func RenderTILDetail(w io.Writer, d TILDetailData) error {
-	m := make(map[string]interface{})
-	m["Title"] = d.Title
-	m["Content"] = d.Content
-	m["FeatureSet"] = d.Features
-	return render(w, "til_detail.gohtml", m)
-}
-
-// isLast returns true if index is the last index in item.
-func isLast(index int, item interface{}) (bool, error) {
-	v := reflect.ValueOf(item)
-	if !v.IsValid() {
-		return false, fmt.Errorf("isLast of untyped nil")
-	}
-	switch v.Kind() {
-	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
-		return index == v.Len()-1, nil
-	}
-	return false, fmt.Errorf("isLast of type %s", v.Type())
 }

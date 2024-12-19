@@ -17,7 +17,7 @@ import (
 // conn is a websocket connection to a LiveReload client.
 type conn struct {
 	ws      *websocket.Conn
-	send    chan interface{}
+	send    chan any
 	closer  sync.Once
 	detachC chan<- closeReq // request the connPub to stop sending messages and close this conn
 	stopC   chan struct{}
@@ -26,7 +26,7 @@ type conn struct {
 func newConn(ws *websocket.Conn, detachC chan<- closeReq) *conn {
 	return &conn{
 		ws:      ws,
-		send:    make(chan interface{}, 5),
+		send:    make(chan any, 5),
 		detachC: detachC,
 		closer:  sync.Once{},
 		stopC:   make(chan struct{}),

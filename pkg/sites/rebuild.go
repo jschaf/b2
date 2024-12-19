@@ -42,28 +42,10 @@ func Rebuild(pubDir string) error {
 	})
 
 	g.Go(func() error {
-		slog.Debug("rebuild compile til details")
-		tc := compiler.NewTILDetail(pubDir)
-		if err := tc.CompileAll(); err != nil {
-			return fmt.Errorf("compile all TIL posts: %w", err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
 		slog.Debug("rebuild compile book details")
 		c := compiler.NewBookDetail(pubDir)
 		if err := c.CompileAll(); err != nil {
 			return fmt.Errorf("compile all book details: %w", err)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		slog.Debug("rebuild compile til index")
-		tc := compiler.NewTILIndex(pubDir)
-		if err := tc.CompileIndex(); err != nil {
-			return fmt.Errorf("compile TIL index: %w", err)
 		}
 		return nil
 	})

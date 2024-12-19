@@ -24,7 +24,7 @@ func Capture(errPtr *error, errFunc func() error, msg string) {
 // testingTB is a subset of *testing.T and *testing.B methods.
 type testingTB interface {
 	Helper()
-	Errorf(format string, args ...interface{})
+	Errorf(format string, args ...any)
 }
 
 // CaptureT call t.Error if errF returns an error with an optional message.

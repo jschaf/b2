@@ -190,7 +190,7 @@ func TestLiveReload_Alert(t *testing.T) {
 	}
 }
 
-func writeClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
+func writeClientJSON(t *testing.T, conn *websocket.Conn, value any) {
 	t.Helper()
 	if err := conn.WriteJSON(value); err != nil {
 		t.Fatal(err)
@@ -199,7 +199,7 @@ func writeClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
 	<-time.After(time.Millisecond)
 }
 
-func readClientJSON(t *testing.T, conn *websocket.Conn, value interface{}) {
+func readClientJSON(t *testing.T, conn *websocket.Conn, value any) {
 	t.Helper()
 	if err := conn.ReadJSON(value); err != nil {
 		t.Fatal(err)

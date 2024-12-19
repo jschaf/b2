@@ -31,8 +31,23 @@ func NewRootIndex(pubDir string) *RootIndexCompiler {
 }
 
 func (ic *RootIndexCompiler) parsePosts() ([]*markdown.AST, error) {
-	postsDir := filepath.Join(git.RootDir(), dirs.Posts)
-	asts, err := paths.WalkCollect(postsDir, func(path string, dirent fs.DirEntry) ([]*markdown.AST, error) {
+	postASTs, err := ic.collectASTs(filepath.Join(git.RootDir(), dirs.Posts))
+	if err != nil {
+		return nil, fmt.Errorf("collect posts: %w", err)
+	}
+	tilASTs, err := ic.collectASTs(filepath.Join(git.RootDir(), dirs.TIL))
+	if err != nil {
+		return nil, fmt.Errorf("collect TILs: %w", err)
+	}
+	postASTs = append(postASTs, tilASTs...)
+	sort.Slice(postASTs, func(i, j int) bool {
+		return postASTs[i].Meta.Date.After(postASTs[j].Meta.Date)
+	})
+	return postASTs, nil
+}
+
+func (ic *RootIndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
+	asts, err := paths.WalkCollect(dir, func(path string, dirent fs.DirEntry) ([]*markdown.AST, error) {
 		if !dirent.Type().IsRegular() || filepath.Ext(path) != ".md" {
 			return nil, nil
 		}

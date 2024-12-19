@@ -34,9 +34,9 @@ var (
 )
 
 type Server struct {
-	// Server lifecycle context
-	// Calling serverCancel causes all background goroutines to stop. To
-	// stop the HTTP server, call Shutdown.
+	// Lifecycle context.
+	// Calling serverCancel causes all background goroutines to stop. To stop the
+	// HTTP server, call Shutdown.
 	serverCtx    context.Context
 	serverCancel context.CancelFunc
 	// TLS

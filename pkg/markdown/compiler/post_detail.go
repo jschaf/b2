@@ -91,8 +91,19 @@ func (c *PostDetailCompiler) compile(ast *markdown.AST, w io.Writer) error {
 }
 
 func (c *PostDetailCompiler) CompileAll(glob string) error {
-	postsDir := filepath.Join(git.RootDir(), dirs.Posts)
-	err := paths.WalkConcurrent(postsDir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
+	err := c.compileDir(filepath.Join(git.RootDir(), dirs.Posts), glob)
+	if err != nil {
+		return fmt.Errorf("compile posts dir: %w", err)
+	}
+	err = c.compileDir(filepath.Join(git.RootDir(), dirs.TIL), glob)
+	if err != nil {
+		return fmt.Errorf("compile TIL dir: %w", err)
+	}
+	return nil
+}
+
+func (c *PostDetailCompiler) compileDir(dir string, glob string) error {
+	err := paths.WalkConcurrent(dir, runtime.NumCPU(), func(path string, dirent *godirwalk.Dirent) error {
 		if !dirent.IsRegular() || filepath.Ext(path) != ".md" {
 			return nil
 		}
@@ -112,8 +123,5 @@ func (c *PostDetailCompiler) CompileAll(glob string) error {
 		}
 		return nil
 	})
-	if err != nil {
-		return fmt.Errorf("compile all posts: %w", err)
-	}
-	return nil
+	return err
 }
