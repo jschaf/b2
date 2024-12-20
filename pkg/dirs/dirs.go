@@ -19,7 +19,7 @@ const (
 	Static = "static"
 	Style  = "style"
 	TIL    = "til"
-	Public = "/opt/p/b2/public" // alternate public dir for development
+	Dist   = "dist"
 )
 
 // RemoveAllChildren removes all children in the directory.

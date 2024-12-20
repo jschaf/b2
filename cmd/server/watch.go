@@ -26,18 +26,18 @@ import (
 type FSWatcher struct {
 	liveReload *livereload.LiveReload
 	watcher    *fsnotify.Watcher
-	pubDir     string
+	distDir    string
 	stopOnce   *sync.Once
 	stopC      chan struct{}
 }
 
-func NewFSWatcher(pubDir string, lr *livereload.LiveReload) *FSWatcher {
+func NewFSWatcher(distDir string, lr *livereload.LiveReload) *FSWatcher {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(err)
 	}
 	return &FSWatcher{
-		pubDir:     pubDir,
+		distDir:    distDir,
 		liveReload: lr,
 		watcher:    watcher,
 		stopOnce:   &sync.Once{},
@@ -76,7 +76,7 @@ func (f *FSWatcher) Start() (mErr error) {
 
 			case strings.HasPrefix(rel, "static/"):
 				slog.Info("static reload", "relative_path", rel)
-				if err := static.CopyStaticFiles(f.pubDir); err != nil {
+				if err := static.CopyStaticFiles(f.distDir); err != nil {
 					return fmt.Errorf("failed to copy static files: %w", err)
 				}
 				// Send empty string which should reload all LiveReload clients
@@ -141,14 +141,14 @@ func (f *FSWatcher) watchDirs(dirs ...string) error {
 }
 
 func (f *FSWatcher) compileReloadMd() error {
-	if err := sites.Rebuild(f.pubDir); err != nil {
+	if err := sites.Rebuild(f.distDir); err != nil {
 		return fmt.Errorf("rebuild for changed md: %w", err)
 	}
 	return nil
 }
 
 func (f *FSWatcher) reloadMainCSS() {
-	stylePaths, err := css.CopyAllCSS(f.pubDir)
+	stylePaths, err := css.CopyAllCSS(f.distDir)
 	if err != nil {
 		slog.Info("copy all css", "error", err)
 	}

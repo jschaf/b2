@@ -50,7 +50,7 @@ type Server struct {
 }
 
 type ServerOpts struct {
-	PubDir      string
+	DistDir     string
 	Cancel      context.CancelFunc
 	TLSCertPath string
 	TLSKeyPath  string
@@ -70,12 +70,12 @@ func InitServer(ctx context.Context, opts ServerOpts) (*Server, error) {
 		}
 	}
 
-	if err := dirs.CleanDir(opts.PubDir); err != nil {
+	if err := dirs.CleanDir(opts.DistDir); err != nil {
 		return nil, fmt.Errorf("clean public dir: %w", err)
 	}
 
 	// Rebuild in case content changed since last run.
-	if err := sites.Rebuild(opts.PubDir); err != nil {
+	if err := sites.Rebuild(opts.DistDir); err != nil {
 		return nil, fmt.Errorf("rebuild site: %w", err)
 	}
 
@@ -84,7 +84,7 @@ func InitServer(ctx context.Context, opts ServerOpts) (*Server, error) {
 	go lr.Start(ctx)
 
 	// File system watcher.
-	watcher := NewFSWatcher(opts.PubDir, lr)
+	watcher := NewFSWatcher(opts.DistDir, lr)
 	root := git.RootDir()
 	if err := watcher.watchDirs(
 		filepath.Join(root, dirs.Book),
@@ -106,8 +106,8 @@ func InitServer(ctx context.Context, opts ServerOpts) (*Server, error) {
 
 	// HTTP server.
 	routeHandler := buildRoutes(buildRoutesOpts{
-		pubDir: opts.PubDir,
-		lr:     lr,
+		distDir: opts.DistDir,
+		lr:      lr,
 	})
 	h2s := &http2.Server{}
 	httpSrv := &http.Server{
@@ -191,7 +191,7 @@ func runMain(ctx context.Context) (mErr error) {
 	slog.Info("start dev server", "process.args", os.Args[1:])
 
 	devSrv, err := InitServer(ctx, ServerOpts{
-		PubDir:      dirs.Public,
+		DistDir:     dirs.Dist,
 		Cancel:      cancel,
 		TLSCertPath: *tlsCertPath,
 		TLSKeyPath:  *tlsKeyPath,

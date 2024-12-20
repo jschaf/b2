@@ -9,8 +9,8 @@ import (
 )
 
 type buildRoutesOpts struct {
-	pubDir string
-	lr     *livereload.LiveReload
+	distDir string
+	lr      *livereload.LiveReload
 }
 
 func buildRoutes(opts buildRoutesOpts) *http.ServeMux {
@@ -21,13 +21,13 @@ func buildRoutes(opts buildRoutesOpts) *http.ServeMux {
 	mux.HandleFunc(lrJSPath, opts.lr.ServeJSHandler)
 	mux.HandleFunc(lrPath, opts.lr.WebSocketHandler)
 
-	pubDirHandler := http.FileServer(http.Dir(opts.pubDir))
+	distDirHandler := http.FileServer(http.Dir(opts.distDir))
 
 	lrScript := strings.Join([]string{
 		fmt.Sprintf("<script defer src=%s?port=%s&path=%s type='application/javascript'>",
 			lrJSPath, port, strings.TrimLeft(lrPath, "/")),
 		"</script>",
 	}, "")
-	mux.Handle("/", opts.lr.NewHTMLInjector(lrScript, pubDirHandler))
+	mux.Handle("/", opts.lr.NewHTMLInjector(lrScript, distDirHandler))
 	return mux
 }

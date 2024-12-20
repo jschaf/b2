@@ -20,13 +20,13 @@ import (
 
 // IndexCompiler compiles the / path, the main homepage.
 type IndexCompiler struct {
-	md     *markdown.Markdown
-	pubDir string
+	md      *markdown.Markdown
+	distDir string
 }
 
-func NewIndexCompiler(pubDir string) *IndexCompiler {
+func NewIndexCompiler(distDir string) *IndexCompiler {
 	md := markdown.New(markdown.WithExtender(mdext.NewContinueReadingExt()))
-	return &IndexCompiler{md: md, pubDir: pubDir}
+	return &IndexCompiler{md: md, distDir: distDir}
 }
 
 func (ic *IndexCompiler) parseDirs(dirs ...string) ([]*markdown.AST, error) {
@@ -63,8 +63,8 @@ func (ic *IndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
 	return asts, err
 }
 
-func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.RootPostData, error) {
-	posts := make([]html.RootPostData, 0, len(asts))
+func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.IndexPostData, error) {
+	posts := make([]html.IndexPostData, 0, len(asts))
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue
@@ -73,7 +73,7 @@ func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.RootPostData, 
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
 			return nil, fmt.Errorf("render markdown for index: %w", err)
 		}
-		posts = append(posts, html.RootPostData{
+		posts = append(posts, html.IndexPostData{
 			Title: ast.Meta.Title,
 			Slug:  ast.Meta.Slug,
 			Date:  ast.Meta.Date,
@@ -91,31 +91,31 @@ func (ic *IndexCompiler) Compile() error {
 	}
 
 	featureSet := mdctx.NewFeatureSet()
-	featureSet.Add(mdctx.FeatureKatex)
 	for _, ast := range asts {
 		featureSet.AddAll(ast.Features)
 	}
+	featureSet.Add(mdctx.FeatureKatex)
 
 	posts, err := ic.renderASTs(asts)
 	if err != nil {
 		return fmt.Errorf("compileAST asts for index: %w", err)
 	}
 
-	if err := os.MkdirAll(ic.pubDir, 0o755); err != nil {
+	if err := os.MkdirAll(ic.distDir, 0o755); err != nil {
 		return fmt.Errorf("make dir for index: %w", err)
 	}
-	dest := filepath.Join(ic.pubDir, "index.html")
+	dest := filepath.Join(ic.distDir, "index.html")
 
 	destFile, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("open index.html file for write: %w", err)
 	}
-	data := html.RootIndexData{
+	data := html.IndexParams{
 		Title:    "Joe Schafer's Blog",
 		Posts:    posts,
 		Features: featureSet,
 	}
-	if err := html.RenderRootIndex(destFile, data); err != nil {
+	if err := html.RenderIndex(destFile, data); err != nil {
 		return fmt.Errorf("execute index template: %w", err)
 	}
 

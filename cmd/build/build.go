@@ -40,8 +40,8 @@ func runMain(_ context.Context) error {
 		defer pprof.StopCPUProfile()
 	}
 
-	pubDir := dirs.Public
-	if err := sites.Rebuild(pubDir); err != nil {
+	distDir := dirs.Dist
+	if err := sites.Rebuild(distDir); err != nil {
 		slog.Error("rebuild site", "error", err)
 		return err
 	}

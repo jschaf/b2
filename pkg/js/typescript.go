@@ -33,9 +33,9 @@ func (jsCache *jsCache) isUnchanged(mainJSPath string) (bool, uint64, error) {
 	return false, newKey, nil
 }
 
-func bundleTypeScript(pubDir string) (api.BuildResult, error) {
+func bundleTypeScript(distDir string) (api.BuildResult, error) {
 	mainTS := filepath.Join(git.RootDir(), dirs.Static, "main.ts")
-	mainTSOut := filepath.Join(pubDir, "main.js")
+	mainTSOut := filepath.Join(distDir, "main.js")
 
 	// Check if file is same and skip JS bundle.
 	mainJSCache.mu.Lock()
@@ -72,8 +72,8 @@ func bundleTypeScript(pubDir string) (api.BuildResult, error) {
 	return result, nil
 }
 
-func WriteTypeScriptMain(pubDir string) error {
-	result, err := bundleTypeScript(pubDir)
+func WriteTypeScriptMain(distDir string) error {
+	result, err := bundleTypeScript(distDir)
 	if err != nil {
 		return fmt.Errorf("write main.ts bundle: %w", err)
 	}

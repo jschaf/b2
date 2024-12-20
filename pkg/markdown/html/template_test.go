@@ -13,7 +13,7 @@ func TestRenderPost(t *testing.T) {
 	w := &bytes.Buffer{}
 	title := "foo_title"
 	content := "<b>foo_content</b>"
-	err := RenderPostDetail(w, PostDetailData{
+	err := RenderDetail(w, DetailParams{
 		Title:    title,
 		Content:  template.HTML(content),
 		Features: mdctx.NewFeatureSet(),
@@ -34,13 +34,13 @@ func TestRenderIndex(t *testing.T) {
 	title := "foo_title"
 	body1 := "<div>body1</div>"
 	body2 := "<div>body2</div>"
-	data := RootIndexData{
+	data := IndexParams{
 		Title:    title,
 		Bodies:   []template.HTML{template.HTML(body1), template.HTML(body2)},
 		Features: mdctx.NewFeatureSet(),
 	}
 
-	if err := RenderRootIndex(w, data); err != nil {
+	if err := RenderIndex(w, data); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(w.String(), title) {

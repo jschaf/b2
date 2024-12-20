@@ -194,7 +194,7 @@ func (c *conn) close(err error) {
 		err := c.ws.Close()
 		// Ignore broken pipe since that's it means the browser client disconnected.
 		// Likely caused by reloading.
-		if err != nil && !errors.Is(err, syscall.EPIPE) {
+		if err != nil && !errors.Is(err, syscall.EPIPE) && !errors.Is(err, syscall.ECONNRESET) {
 			slog.Error("close websocket", "error", err)
 		}
 		close(c.send)

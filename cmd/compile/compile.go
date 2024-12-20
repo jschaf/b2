@@ -23,7 +23,7 @@ func compile(glob string) error {
 		globStr = "all"
 	}
 	slog.Info("start compile", slog.String("glob", globStr))
-	c := compiler.NewDetailCompiler(dirs.Public)
+	c := compiler.NewDetailCompiler(dirs.Dist)
 	if err := c.Compile(glob); err != nil {
 		return fmt.Errorf("compile detail posts: %w", err)
 	}

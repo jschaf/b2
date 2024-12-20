@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	siteName     = "joe-blog-314159"
-	siteParent   = "sites/" + siteName
-	deployPubDir = dirs.Public
+	siteName   = "joe-blog-314159"
+	siteParent = "sites/" + siteName
 )
 
 func main() {
@@ -77,7 +76,7 @@ func runMain(ctx context.Context) error {
 	// Firebase returns the SHA256 hashes of the files we need to upload to
 	// firebase.
 	siteHashes := firebase.NewSiteHashes()
-	if err := siteHashes.PopulateFromDir(deployPubDir); err != nil {
+	if err := siteHashes.PopulateFromDir(dirs.Dist); err != nil {
 		return fmt.Errorf("populate from dir: %w", err)
 	}
 	popFilesStart := time.Now()

@@ -25,19 +25,23 @@ import (
 // DetailCompiler compiles the /* paths, showing the detail page for each
 // post. Posts don't have another directory prefix.
 type DetailCompiler struct {
-	md     *markdown.Markdown
-	pubDir string
+	md      *markdown.Markdown
+	distDir string
 }
 
 // NewDetailCompiler creates a compiler for a post detail page.
-func NewDetailCompiler(pubDir string) *DetailCompiler {
-	md := markdown.New(markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow), markdown.WithTOCStyle(mdext.TOCStyleShow), markdown.WithExtender(mdext.NewNopContinueReadingExt()))
-	return &DetailCompiler{md: md, pubDir: pubDir}
+func NewDetailCompiler(distDir string) *DetailCompiler {
+	md := markdown.New(
+		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
+		markdown.WithTOCStyle(mdext.TOCStyleShow),
+		markdown.WithExtender(mdext.NewNopContinueReadingExt()),
+	)
+	return &DetailCompiler{md: md, distDir: distDir}
 }
 
 // parseFile parses a single post path into a markdown AST.
 func (c *DetailCompiler) parseFile(path string) (*markdown.AST, error) {
-	slog.Debug("compiling post detail", "path", path)
+	slog.Debug("compiling detail", "path", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open TIL post %s: %w", path, err)
@@ -58,7 +62,7 @@ func (c *DetailCompiler) createDestFile(ast *markdown.AST) (*os.File, error) {
 	if slug == "" {
 		return nil, fmt.Errorf("empty slug for path: %s", ast.Path)
 	}
-	slugDir := filepath.Join(c.pubDir, slug)
+	slugDir := filepath.Join(c.distDir, slug)
 	if err := os.MkdirAll(slugDir, 0o755); err != nil {
 		return nil, fmt.Errorf("make dir for slug %s: %w", slug, err)
 	}
@@ -76,16 +80,16 @@ func (c *DetailCompiler) compileAST(ast *markdown.AST, w io.Writer) error {
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to render markdown: %w", err)
 	}
-	data := html.PostDetailData{
+	data := html.DetailParams{
 		Title:    ast.Meta.Title,
 		Content:  template.HTML(b.String()),
 		Features: ast.Features,
 	}
-	if err := html.RenderPostDetail(w, data); err != nil {
+	if err := html.RenderDetail(w, data); err != nil {
 		return fmt.Errorf("failed to execute post template: %w", err)
 	}
 
-	if err := assets.CopyAll(c.pubDir, ast.Assets); err != nil {
+	if err := assets.CopyAll(c.distDir, ast.Assets); err != nil {
 		return err
 	}
 	return nil

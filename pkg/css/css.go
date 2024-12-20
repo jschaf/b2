@@ -14,10 +14,10 @@ import (
 	"github.com/jschaf/b2/pkg/paths"
 )
 
-// CopyAllCSS copies all CSS files into pubDir/style.
-func CopyAllCSS(pubDir string) ([]string, error) {
+// CopyAllCSS copies all CSS files into distDir/style.
+func CopyAllCSS(distDir string) ([]string, error) {
 	styleDir := filepath.Join(git.RootDir(), dirs.Style)
-	destDir := filepath.Join(pubDir, dirs.Style)
+	destDir := filepath.Join(distDir, dirs.Style)
 	if err := os.MkdirAll(filepath.Dir(destDir), 0o755); err != nil {
 		return nil, fmt.Errorf("create public style dir: %w", err)
 	}
@@ -44,10 +44,10 @@ func CopyAllCSS(pubDir string) ([]string, error) {
 	return cssPaths, nil
 }
 
-// CopyAllFonts copies all font files into pubDir/fonts.
-func CopyAllFonts(pubDir string) error {
+// CopyAllFonts copies all font files into distDir/fonts.
+func CopyAllFonts(distDir string) error {
 	fontDir := filepath.Join(git.RootDir(), dirs.Style, dirs.Fonts)
-	destDir := filepath.Join(pubDir, dirs.Style, dirs.Fonts)
+	destDir := filepath.Join(distDir, dirs.Style, dirs.Fonts)
 	if err := os.MkdirAll(filepath.Dir(destDir), 0o755); err != nil {
 		return fmt.Errorf("create public font dir: %w", err)
 	}

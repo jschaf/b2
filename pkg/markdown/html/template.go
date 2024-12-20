@@ -13,6 +13,43 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 )
 
+type IndexParams struct {
+	Title    string
+	Features *mdctx.FeatureSet
+	Posts    []IndexPostData
+}
+
+func RenderIndex(w io.Writer, p IndexParams) error {
+	m := map[string]any{
+		"Title":      p.Title,
+		"Posts":      p.Posts,
+		"FeatureSet": p.Features,
+	}
+	return render(w, "index.gohtml", m)
+}
+
+type DetailParams struct {
+	Title    string
+	Features *mdctx.FeatureSet
+	Content  template.HTML
+}
+
+func RenderDetail(w io.Writer, d DetailParams) error {
+	m := map[string]any{
+		"Title":      d.Title,
+		"Content":    d.Content,
+		"FeatureSet": d.Features,
+	}
+	return render(w, "detail.gohtml", m)
+}
+
+type IndexPostData struct {
+	Title string
+	Slug  string
+	Body  template.HTML
+	Date  time.Time
+}
+
 func compileTemplates() map[string]*template.Template {
 	templates := make(map[string]*template.Template, 8)
 	rootDir := git.RootDir()
@@ -38,41 +75,4 @@ func render(w io.Writer, name string, data map[string]any) error {
 	}
 
 	return tmpl.ExecuteTemplate(w, "base", data)
-}
-
-type PostDetailData struct {
-	Title    string
-	Features *mdctx.FeatureSet
-	Content  template.HTML
-}
-
-func RenderPostDetail(w io.Writer, d PostDetailData) error {
-	m := map[string]any{
-		"Title":      d.Title,
-		"Content":    d.Content,
-		"FeatureSet": d.Features,
-	}
-	return render(w, "detail.gohtml", m)
-}
-
-type RootPostData struct {
-	Title string
-	Slug  string
-	Body  template.HTML
-	Date  time.Time
-}
-
-type RootIndexData struct {
-	Title    string
-	Features *mdctx.FeatureSet
-	Posts    []RootPostData
-}
-
-func RenderRootIndex(w io.Writer, d RootIndexData) error {
-	m := map[string]any{
-		"Title":      d.Title,
-		"Posts":      d.Posts,
-		"FeatureSet": d.Features,
-	}
-	return render(w, "index.gohtml", m)
 }

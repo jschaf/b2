@@ -12,8 +12,8 @@ import (
 )
 
 // CopyStaticFiles copies static files from the source static dir into
-// pubDir/static.
-func CopyStaticFiles(pubDir string) error {
+// distDir/static.
+func CopyStaticFiles(distDir string) error {
 	dir := git.RootDir()
 	staticDir := filepath.Join(dir, dirs.Static)
 	err := filepath.Walk(staticDir, func(path string, info os.FileInfo, err error) error {
@@ -25,7 +25,7 @@ func CopyStaticFiles(pubDir string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get rel path for static files: %w", err)
 		}
-		dest := filepath.Join(pubDir, rel)
+		dest := filepath.Join(distDir, rel)
 		return paths.Copy(dest, path)
 	})
 	if err != nil {
@@ -35,11 +35,11 @@ func CopyStaticFiles(pubDir string) error {
 }
 
 // LinkPapers symlinks academic papers from the source papers dir into
-// pubDir/papers.
-func LinkPapers(pubDir string) error {
+// distDir/papers.
+func LinkPapers(distDir string) error {
 	dir := git.RootDir()
 	papersDir := filepath.Join(dir, dirs.Papers)
-	pubPapersDir := filepath.Join(pubDir, "papers")
+	pubPapersDir := filepath.Join(distDir, "papers")
 	err := os.Symlink(papersDir, pubPapersDir)
 	if err != nil && !errors.Is(err.(*os.LinkError).Unwrap(), os.ErrExist) {
 		return fmt.Errorf("link papers symlink: %w", err.(*os.LinkError).Unwrap())

@@ -16,10 +16,10 @@ type Blob struct {
 	GenFunc func() error
 }
 
-// CopyAll copies all assets into the pubDir, overwriting existing files.
-func CopyAll(pubDir string, assets []Blob) error {
+// CopyAll copies all assets into the distDir, overwriting existing files.
+func CopyAll(distDir string, assets []Blob) error {
 	for _, blob := range assets {
-		dest := filepath.Join(pubDir, blob.Dest)
+		dest := filepath.Join(distDir, blob.Dest)
 		if _, err := paths.CopyLazy(dest, blob.Src); err != nil {
 			return fmt.Errorf("failed to copy asset to dest: %w", err)
 		}
