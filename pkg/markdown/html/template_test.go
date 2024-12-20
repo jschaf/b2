@@ -35,8 +35,8 @@ func TestRenderIndex(t *testing.T) {
 	data := IndexParams{
 		Title: title,
 		Posts: []IndexPostParams{
-			{Title: "post1", Body: template.HTML("body")},
-			{Title: "post2", Body: template.HTML("body")},
+			{TitleHTML: "post1", Body: template.HTML("body")},
+			{TitleHTML: "post2", Body: template.HTML("body")},
 		},
 		Features: mdctx.NewFeatureSet(),
 	}

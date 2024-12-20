@@ -38,10 +38,11 @@ type IndexParams struct {
 }
 
 type IndexPostParams struct {
-	Title string
-	Slug  string
-	Body  template.HTML
-	Date  time.Time
+	Title     string
+	TitleHTML template.HTML
+	Slug      string
+	Body      template.HTML
+	Date      time.Time
 }
 
 func RenderIndex(w io.Writer, p IndexParams) error {

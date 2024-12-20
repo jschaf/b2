@@ -2,6 +2,7 @@ package mdctx
 
 import (
 	"github.com/jschaf/b2/pkg/markdown/assets"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 )
@@ -68,13 +69,18 @@ func AddFeature(pc parser.Context, feat Feature) {
 
 var titleCtxKey = parser.NewContextKey()
 
-// GetTitle returns the title as parsed from the first H1 header in the
-// document.
-func GetTitle(pc parser.Context) string {
-	return pc.Get(titleCtxKey).(string)
+type Title struct {
+	Text string
+	Node ast.Node
 }
 
-func SetTitle(pc parser.Context, title string) {
+// GetTitle returns the title as parsed from the first H1 header in the
+// document.
+func GetTitle(pc parser.Context) Title {
+	return pc.Get(titleCtxKey).(Title)
+}
+
+func SetTitle(pc parser.Context, title Title) {
 	pc.Set(titleCtxKey, title)
 }
 

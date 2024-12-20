@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -126,7 +127,8 @@ func (m *Markdown) Parse(path string, r io.Reader) (*AST, error) {
 		return nil, fmt.Errorf("parse errors in context: %v", parseErrs)
 	}
 	meta := mdext.GetTOMLMeta(ctx)
-	meta.Title = mdctx.GetTitle(ctx)
+	meta.Title = mdctx.GetTitle(ctx).Text
+	meta.TitleNode = mdctx.GetTitle(ctx).Node
 	mdAssets := mdctx.GetAssets(ctx)
 	mdFeats := mdctx.GetFeatures(ctx)
 	return &AST{
@@ -139,6 +141,11 @@ func (m *Markdown) Parse(path string, r io.Reader) (*AST, error) {
 	}, nil
 }
 
+// Renderer returns a Goldmark renderer.
+func (m *Markdown) Renderer() renderer.Renderer {
+	return m.gm.Renderer()
+}
+
 func (m *Markdown) Render(w io.Writer, source []byte, p *AST) error {
-	return m.gm.Renderer().Render(w, source, p.Node)
+	return m.Renderer().Render(w, source, p.Node)
 }

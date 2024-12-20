@@ -62,7 +62,8 @@ func TestArticleExt(t *testing.T) {
 				NewHeaderExt())
 			doc := mdtest.MustParseMarkdown(t, md, ctx, tt.src)
 			mdtest.AssertNoRenderDiff(t, doc, md, tt.src, tt.want)
-			if diff := cmp.Diff(mdctx.GetTitle(ctx), tt.wantTitle); diff != "" {
+			got := mdctx.GetTitle(ctx)
+			if diff := cmp.Diff(got.Text, tt.wantTitle); diff != "" {
 				t.Errorf("Article title mismatch (-got +want):\n%s", diff)
 			}
 		})

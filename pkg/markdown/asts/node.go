@@ -1,4 +1,4 @@
-// package asts contains utilities for working with Goldmark ASTs.
+// Package asts package asts contains utilities for working with Goldmark ASTs.
 package asts
 
 import (

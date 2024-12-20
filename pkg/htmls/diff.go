@@ -71,6 +71,8 @@ func normalizeNode(node *html.Node) {
 			normalizeNode(cur)
 			cur = next
 		}
+	default:
+		// Ignore
 	}
 	sort.Slice(node.Attr, func(i, j int) bool {
 		x := node.Attr[i]

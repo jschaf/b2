@@ -35,7 +35,8 @@ type PostMeta struct {
 	// The absolute URL path for this post, e.g. "/foo-bar". Has trailing slash.
 	Path string
 	// The title extracted from the first header.
-	Title string
+	Title     string
+	TitleNode ast.Node
 	// The date from the markdown frontmatter.
 	Date time.Time
 	// Either draft or published.

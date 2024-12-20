@@ -48,8 +48,7 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 		mdctx.PushError(pc, errors.New("no main heading in file: "+mdctx.GetFilePath(pc)))
 		return
 	}
-	title := string(heading.Text(reader.Source()))
-	mdctx.SetTitle(pc, title)
+	title := heading.Text(reader.Source())
 
 	parent := heading.Parent()
 	if parent == nil {
@@ -59,9 +58,13 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	article := NewArticle()
 	header := NewHeader()
 	link := ast.NewLink()
-	link.Title = []byte(title)
+	link.Title = title
 	link.Destination = []byte(meta.Path)
 	asts.Reparent(link, heading)
+	mdctx.SetTitle(pc, mdctx.Title{
+		Text: string(title),
+		Node: link,
+	})
 	newHeading := ast.NewHeading(1)
 	newHeading.SetAttribute([]byte("class"), []byte("title"))
 	newHeading.AppendChild(newHeading, link)
@@ -81,7 +84,7 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	parent.ReplaceChild(parent, heading, article)
 }
 
-func firstHeading(doc *ast.Document) ast.Node {
+func firstHeading(doc *ast.Document) *ast.Heading {
 	var hNode ast.Node
 
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -97,7 +100,7 @@ func firstHeading(doc *ast.Document) ast.Node {
 	if err != nil {
 		return nil
 	}
-	return hNode
+	return hNode.(*ast.Heading)
 }
 
 // articleRenderer is the HTML renderer for an article node.

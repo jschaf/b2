@@ -9,9 +9,9 @@
       <meta name="robots" content="index, follow">
       <link rel="icon" href="/favicon.ico">
       <link rel="stylesheet" href="/style/main.css">
-      {{ if .Features.Has "katex" }}
+      {{ if .Features.Has "katex" -}}
         <link rel="preload" href="/style/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      {{ end }}
+      {{- end }}
     </head>
     <body>
     <header>

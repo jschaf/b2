@@ -73,15 +73,37 @@ func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.IndexPostParam
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
 			return nil, fmt.Errorf("render markdown for index: %w", err)
 		}
+		titleHTML, err := ic.renderTitle(ast)
+		if err != nil {
+			return nil, fmt.Errorf("render index title: %w", err)
+		}
 		posts = append(posts, html.IndexPostParams{
-			Title: ast.Meta.Title,
-			Slug:  ast.Meta.Slug,
-			Date:  ast.Meta.Date,
-			Body:  template.HTML(b.String()),
+			Title:     ast.Meta.Title,
+			TitleHTML: titleHTML,
+			Slug:      ast.Meta.Slug,
+			Date:      ast.Meta.Date,
+			Body:      template.HTML(b.String()),
 		})
 	}
 	sort.Slice(posts, func(i, j int) bool { return posts[i].Date.After(posts[j].Date) })
 	return posts, nil
+}
+
+func (ic *IndexCompiler) renderTitle(ast *markdown.AST) (template.HTML, error) {
+	b := new(bytes.Buffer)
+	r := ic.md.Renderer()
+
+	// Don't render the element, which is a link. The gohtml chooses how to
+	// build the link.
+	node := ast.Meta.TitleNode
+	for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+		err := r.Render(b, ast.Source, c)
+		if err != nil {
+			return "", fmt.Errorf("render title node child: %w", err)
+		}
+	}
+
+	return template.HTML(b.String()), nil
 }
 
 func (ic *IndexCompiler) Compile() error {
