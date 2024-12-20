@@ -32,11 +32,12 @@ func TestRenderPost(t *testing.T) {
 func TestRenderIndex(t *testing.T) {
 	w := &bytes.Buffer{}
 	title := "foo_title"
-	body1 := "<div>body1</div>"
-	body2 := "<div>body2</div>"
 	data := IndexParams{
-		Title:    title,
-		Bodies:   []template.HTML{template.HTML(body1), template.HTML(body2)},
+		Title: title,
+		Posts: []IndexPostData{
+			{Title: "post1", Body: template.HTML("body")},
+			{Title: "post2", Body: template.HTML("body")},
+		},
 		Features: mdctx.NewFeatureSet(),
 	}
 
@@ -46,10 +47,10 @@ func TestRenderIndex(t *testing.T) {
 	if !strings.Contains(w.String(), title) {
 		t.Errorf("rendered content doesn't include %q:\n\n%s", title, w.String())
 	}
-	if !strings.Contains(w.String(), body1) {
-		t.Errorf("rendered content doesn't include %q:\n\n%s", body1, w.String())
+	if !strings.Contains(w.String(), "post1") {
+		t.Errorf("rendered content doesn't include %q:\n\n%s", "post1", w.String())
 	}
-	if !strings.Contains(w.String(), body2) {
-		t.Errorf("rendered content doesn't include %q:\n\n%s", body2, w.String())
+	if !strings.Contains(w.String(), "post2") {
+		t.Errorf("rendered content doesn't include %q:\n\n%s", "post2", w.String())
 	}
 }
