@@ -56,13 +56,15 @@ func (h *DevHandler) Handle(_ context.Context, r slog.Record) error {
 	buf.appendString(r.Message)
 
 	// Attrs
-	padCount := max(align-len(r.Message), 2)
-	pad := alignStr[:padCount]
-	buf.appendString(pad)
-	r.Attrs(func(attr slog.Attr) bool {
-		appendAttr(buf, attr)
-		return true
-	})
+	if r.NumAttrs() > 0 {
+		padCount := max(align-len(r.Message), 2)
+		pad := alignStr[:padCount]
+		buf.appendString(pad)
+		r.Attrs(func(attr slog.Attr) bool {
+			appendAttr(buf, attr)
+			return true
+		})
+	}
 
 	// Newline
 	buf.appendByte('\n')

@@ -63,8 +63,8 @@ func (ic *IndexCompiler) collectASTs(dir string) ([]*markdown.AST, error) {
 	return asts, err
 }
 
-func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.IndexPostData, error) {
-	posts := make([]html.IndexPostData, 0, len(asts))
+func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.IndexPostParams, error) {
+	posts := make([]html.IndexPostParams, 0, len(asts))
 	for _, ast := range asts {
 		if ast.Meta.Visibility != mdext.VisibilityPublished {
 			continue
@@ -73,7 +73,7 @@ func (ic *IndexCompiler) renderASTs(asts []*markdown.AST) ([]html.IndexPostData,
 		if err := ic.md.Render(b, ast.Source, ast); err != nil {
 			return nil, fmt.Errorf("render markdown for index: %w", err)
 		}
-		posts = append(posts, html.IndexPostData{
+		posts = append(posts, html.IndexPostParams{
 			Title: ast.Meta.Title,
 			Slug:  ast.Meta.Slug,
 			Date:  ast.Meta.Date,

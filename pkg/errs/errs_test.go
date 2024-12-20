@@ -37,9 +37,9 @@ func TestCloseWithErrCapture(t *testing.T) {
 		{"nil_nil", errP(nil), closer(nil), "msg", "<nil error>"},
 		{"err_nil", errP(e("orig")), closer(nil), "msg", "orig"},
 		{"nil_err", errP(nil), closer(e("cl")), "msg", "msg: cl"},
-		{"nil_err_msg", errP(nil), closer(e("cl")), "", "cl"},
-		{"err_err", errP(e("orig")), closer(e("cl")), "msg", "2 errors: orig; msg: cl"},
-		{"multiErr_err", errP(errors.Join(e("o1"), e("o2"))), closer(e("cl")), "", "3 errors: o1; o2; cl"},
+		{"nil_err_msg", errP(nil), closer(e("cl")), "", ": cl"},
+		{"err_err", errP(e("orig")), closer(e("cl")), "msg", "orig\nmsg: cl"},
+		{"multiErr_err", errP(errors.Join(e("o1"), e("o2"))), closer(e("cl")), "", "o1\no2\n: cl"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

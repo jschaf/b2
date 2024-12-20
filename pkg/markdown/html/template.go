@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/jschaf/b2/pkg/dirs"
@@ -13,19 +14,42 @@ import (
 	"github.com/jschaf/b2/pkg/git"
 )
 
+var (
+	layoutDir = filepath.Join(git.RootDir(), dirs.Pkg, "markdown", "html")
+	baseTmpl  = filepath.Join(layoutDir, "base.gohtml")
+
+	indexTmpl = sync.OnceValue(func() *template.Template {
+		tmpl := filepath.Join(layoutDir, "index.gohtml")
+		return template.Must(
+			template.New("index").Funcs(TemplateFuncs()).ParseFiles(tmpl, baseTmpl))
+	})
+
+	detailTmpl = sync.OnceValue(func() *template.Template {
+		tmpl := filepath.Join(layoutDir, "detail.gohtml")
+		return template.Must(
+			template.New("detail").Funcs(TemplateFuncs()).ParseFiles(tmpl, baseTmpl))
+	})
+)
+
 type IndexParams struct {
 	Title    string
 	Features *mdctx.FeatureSet
-	Posts    []IndexPostData
+	Posts    []IndexPostParams
+}
+
+type IndexPostParams struct {
+	Title string
+	Slug  string
+	Body  template.HTML
+	Date  time.Time
 }
 
 func RenderIndex(w io.Writer, p IndexParams) error {
-	m := map[string]any{
-		"Title":      p.Title,
-		"Posts":      p.Posts,
-		"FeatureSet": p.Features,
+	err := indexTmpl().ExecuteTemplate(w, "base", p)
+	if err != nil {
+		return fmt.Errorf("execute index template: %w", err)
 	}
-	return render(w, "index.gohtml", m)
+	return nil
 }
 
 type DetailParams struct {
@@ -34,45 +58,10 @@ type DetailParams struct {
 	Content  template.HTML
 }
 
-func RenderDetail(w io.Writer, d DetailParams) error {
-	m := map[string]any{
-		"Title":      d.Title,
-		"Content":    d.Content,
-		"FeatureSet": d.Features,
+func RenderDetail(w io.Writer, p DetailParams) error {
+	err := detailTmpl().ExecuteTemplate(w, "base", p)
+	if err != nil {
+		return fmt.Errorf("execute detail template: %w", err)
 	}
-	return render(w, "detail.gohtml", m)
-}
-
-type IndexPostData struct {
-	Title string
-	Slug  string
-	Body  template.HTML
-	Date  time.Time
-}
-
-func compileTemplates() map[string]*template.Template {
-	templates := make(map[string]*template.Template, 8)
-	rootDir := git.RootDir()
-	layoutDir := filepath.Join(rootDir, dirs.Pkg, "markdown", "html")
-	baseTmpl := filepath.Join(layoutDir, "base.gohtml")
-	layouts := []string{
-		"detail.gohtml",
-		"index.gohtml",
-	}
-	for _, name := range layouts {
-		f := filepath.Join(layoutDir, name)
-		templates[name] = template.Must(
-			template.New(name).Funcs(TemplateFuncs()).ParseFiles(f, baseTmpl))
-	}
-	return templates
-}
-
-func render(w io.Writer, name string, data map[string]any) error {
-	templates := compileTemplates()
-	tmpl, ok := templates[name]
-	if !ok {
-		return fmt.Errorf("template %s does not exist", name)
-	}
-
-	return tmpl.ExecuteTemplate(w, "base", data)
+	return nil
 }

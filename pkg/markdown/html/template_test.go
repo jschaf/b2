@@ -34,7 +34,7 @@ func TestRenderIndex(t *testing.T) {
 	title := "foo_title"
 	data := IndexParams{
 		Title: title,
-		Posts: []IndexPostData{
+		Posts: []IndexPostParams{
 			{Title: "post1", Body: template.HTML("body")},
 			{Title: "post2", Body: template.HTML("body")},
 		},

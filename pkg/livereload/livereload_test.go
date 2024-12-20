@@ -1,6 +1,7 @@
 package livereload
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -207,8 +208,9 @@ func readClientJSON(t *testing.T, conn *websocket.Conn, value any) {
 }
 
 func newLiveReloadServer() (*httptest.Server, *LiveReload) {
+	ctx := context.Background()
 	lr := NewServer()
-	go lr.Start(nil)
+	go lr.Start(ctx)
 	return httptest.NewServer(http.HandlerFunc(lr.WebSocketHandler)), lr
 }
 
