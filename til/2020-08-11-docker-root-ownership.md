@@ -4,7 +4,7 @@ date = 2020-10-03
 visibility = "published"
 +++
 
-# Set the Docker user and group so that Docker files aren't owned by root
+# Avoid Docker root ownership
 
 On Linux, the docker daemon typically runs as root. This is troublesome when using 
 Docker to generate files to place on the host system using a bind mount. I ran

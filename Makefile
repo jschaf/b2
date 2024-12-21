@@ -25,7 +25,7 @@ publish:
 
 .PHONY: dev
 dev:
-	go run ./cmd/server
+	go run ./cmd/server --log-level=debug
 
 .PHONY: update-katex
 update-katex:

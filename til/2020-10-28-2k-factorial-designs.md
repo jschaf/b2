@@ -22,9 +22,9 @@ second (MIPS) is measured by varying the cache size of 1 and 2 KB, and the
 memory size of 4 MB and 16 MB.
 
 | Cache size (KB) | MIPS (Memory size = 4 MB) | MIPS (Memory Size = 16 MB) |
-|----------------:|-------------------:|--------------------:|
-|               1 |                 15 |                  45 |
-|               2 |                 25 |                  75 |
+|----------------:|--------------------------:|---------------------------:|
+|               1 |                        15 |                         45 |
+|               2 |                        25 |                         75 |
 
 We'll define two variables: $x_A$ is -1 for 4MB of memory and 1 for 16 MB of 
 memory. $x_B$ is -1 for 1 KB of cache and 1 for 2 KB of cache.

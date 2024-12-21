@@ -24,7 +24,7 @@ func Rebuild(distDir string) error {
 
 	g, _ := errgroup.WithContext(context.Background())
 	g.Go(func() error {
-		slog.Debug("rebuild compile post details")
+		slog.Debug("rebuild compile details")
 		c := compiler.NewDetailCompiler(distDir)
 		if err := c.Compile(""); err != nil {
 			return fmt.Errorf("compile all detail posts: %w", err)
@@ -33,7 +33,7 @@ func Rebuild(distDir string) error {
 	})
 
 	g.Go(func() error {
-		slog.Debug("rebuild compile root index")
+		slog.Debug("rebuild compile index")
 		ic := compiler.NewIndexCompiler(distDir)
 		if err := ic.Compile(); err != nil {
 			return fmt.Errorf("compile main index: %w", err)

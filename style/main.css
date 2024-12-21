@@ -275,6 +275,17 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
   text-decoration: none;
 }
 
+article.index-post {
+  display: flex;
+  justify-content: space-between;
+}
+
+.index-post a, .index-post time {
+  text-decoration: none;
+  padding: 0.75rem 0;
+}
+
+
 .toc {
   float: left;
   max-width: var(--toc-max-width);

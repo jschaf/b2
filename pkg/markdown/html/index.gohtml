@@ -3,13 +3,12 @@
     {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.IndexParams*/ -}}
     <section>
         {{range $i, $post := .Posts}}
-          <time datetime="{{$post.Date.UTC.Format "2006-01-02"}}">{{$post.Date.UTC.Format "2006-01-02"}}</time>
-          <a href="/{{$post.Slug}}/">
-              {{$post.TitleHTML}}
-          </a>
-          {{if not (isLast $i $.Posts)}}
-            <hr class="article-split">
-          {{end}}
+          <article class="index-post">
+            <a href="/{{$post.Slug}}/">
+                {{$post.TitleHTML}}
+            </a>
+            <time datetime="{{$post.Date.UTC.Format "2006-01-02"}}">{{$post.Date.UTC.Format "2006-01-02"}}</time>
+          </article>
         {{end}}
     </section>
 {{ end }}
