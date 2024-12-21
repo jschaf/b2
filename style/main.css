@@ -63,11 +63,11 @@ html {
 }
 
 body {
-  display:flex;
+  display: flex;
   min-height: 100vh;
   flex-direction: column;
-  font-family:-apple-system, system-ui, BlinkMacSystemFont, segoe ui, Roboto,
-    helvetica neue, Arial, sans-serif;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, segoe ui, Roboto,
+  helvetica neue, Arial, sans-serif;
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-color);
@@ -108,6 +108,7 @@ body > main {
   html {
     font-size: calc(100% * 16 / 16); /* Set 1rem size to 16px. */
   }
+
   body {
     margin: 0 16px;
   }
@@ -278,13 +279,23 @@ h2:hover .heading-anchor, h3:hover .heading-anchor {
 article.index-post {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-height: 4rem;
 }
 
-.index-post a, .index-post time {
+.index-post > a {
+  flex: 1;
   text-decoration: none;
   padding: 0.75rem 0;
 }
 
+.index-post > time {
+  padding: 0.75rem 0;
+  white-space: nowrap;
+  color: #767676;
+  font-size: var(--font-size-caption);
+}
 
 .toc {
   float: left;
@@ -536,7 +547,7 @@ thead th {
 code {
   font-size: 15px;
   font-family: SFMono-Regular, Consolas, liberation mono, Menlo, Courier,
-    monospace;
+  monospace;
 }
 
 code-kw {
@@ -576,15 +587,18 @@ code-fn {
   transform: translateY(-100%); /* Why do we need this? */
   transition: opacity 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
+
 #preview-content {
   background: white;
   padding: 8px 10px;
   width: 580px;
   scroll-padding-bottom: 20px;
 }
+
 #preview-content > p:first-child {
   margin-top: 0;
 }
+
 .preview-disabled #preview-shadow {
   opacity: 0;
   transition: opacity 0s; /* Instant transition when disabling. */
