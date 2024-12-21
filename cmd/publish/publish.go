@@ -2,12 +2,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/firebase"
+	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/process"
 	"golang.org/x/net/context"
 
@@ -43,6 +46,16 @@ func servingConfig() *hosting.ServingConfig {
 func runMain(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
+
+	fset := flag.CommandLine
+	logLevel := log.DefineFlags(fset)
+	if err := fset.Parse(os.Args[1:]); err != nil {
+		return fmt.Errorf("parse flags: %w", err)
+	}
+
+	slog.SetDefault(slog.New(log.NewDevHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	})))
 
 	slog.Info("start deployment")
 	start := time.Now()

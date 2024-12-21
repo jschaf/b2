@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -23,8 +24,13 @@ func main() {
 func runMain(_ context.Context) error {
 	fset := flag.CommandLine
 	logLevel := log.DefineFlags(fset)
-	flag.Parse()
-	slog.SetLogLoggerLevel(logLevel)
+	if err := fset.Parse(os.Args[1:]); err != nil {
+		return fmt.Errorf("parse flags: %w", err)
+	}
+
+	slog.SetDefault(slog.New(log.NewDevHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	})))
 
 	runtime.GOMAXPROCS(1)
 	if *profileFlag != "" {
