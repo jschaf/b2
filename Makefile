@@ -30,3 +30,9 @@ dev:
 .PHONY: update-katex
 update-katex:
 	./script/update-katex.sh
+
+.PHONY: cert
+cert:
+	mkdir -p private/cert
+	mkcert -cert-file=private/cert/localhost_cert.pem -key-file=private/cert/localhost_key.pem localhost
+	mkcert -install
