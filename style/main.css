@@ -13,6 +13,9 @@
   --line-height-body: calc(1rem * 1.3333);
   --line-height-caption: 1rem;
 
+  --color-light-gray: #767676;
+
+
   /** The highlight color for a reference. */
   --reference-highlight-color: rgba(255, 220, 0, 0.3);
 
@@ -223,7 +226,7 @@ article > header {
 header > time {
   display: block;
   margin-top: 0.45rem;
-  color: #767676;
+  color: var(--color-light-gray);
   font-size: var(--font-size-caption);
   font-weight: 700;
   transition: color 3.5s ease;
@@ -525,10 +528,19 @@ thead th {
 
 .code-block-container {
   margin-top: .75rem;
+  border: none; /* disable fieldset automatic border */
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   padding-left: 5px;
   overflow-x: visible
+}
+
+.code-block-lang {
+  line-height: 0; /* prevent extra space */
+  margin-left: auto; /* right align */
+  font-variant-caps: all-small-caps;
+  color: var(--color-light-gray);
+  font-size: var(--font-size-caption);
 }
 
 .code-block {
@@ -542,6 +554,8 @@ thead th {
   font-size: 15px;
   font-family: SFMono-Regular, Consolas, liberation mono, Menlo, Courier,
   monospace;
+  font-variant-numeric: normal; /** don't use old style numbers for code */
+  font-feature-settings: normal;
 }
 
 code {
@@ -743,4 +757,3 @@ cite.cite-inline {
 .katex {
   font-size: 1.1em !important; /** default is a bit too big */
 }
-

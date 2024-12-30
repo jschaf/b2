@@ -136,7 +136,7 @@ func Copy(dest, src string) (mErr error) {
 // CopyLazy copies the contents of the src file to dest only if the contents
 // are different. If the files are different, the existing file will be
 // overwritten and will not copy file attributes. Returns true if the file was
-// same, otherwise false.
+// the same, otherwise false.
 func CopyLazy(dest, src string) (b bool, mErr error) {
 	if isSame, err := files.IsSameBytes(src, dest); errors.Is(err, os.ErrNotExist) {
 		// Ok for file not to exist.

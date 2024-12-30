@@ -2,11 +2,10 @@ package mdext
 
 import (
 	"bytes"
-	"html"
-	"io"
-
 	"github.com/jschaf/b2/pkg/markdown/extenders"
 	"github.com/jschaf/b2/pkg/markdown/ord"
+	"html"
+	"io"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"
@@ -63,11 +62,14 @@ func getLexer(language string) chroma.Lexer {
 }
 
 func formatCodeBlock(w io.Writer, iterator chroma.Iterator, lang string) error {
-	writeStrings(w, "<div class='code-block-container'>")
+	writeStrings(w, "<fieldset class='code-block-container'>")
+	lines := chroma.SplitTokensIntoLines(iterator.Tokens())
+	minLineLegend := 3
+	if lang != "" && lang != "text" && len(lines) > minLineLegend {
+		writeStrings(w, "<legend class='code-block-lang'>", lang, "</legend>")
+	}
 	writeStrings(w, "<pre class='code-block'>")
 
-	tokens := iterator.Tokens()
-	lines := chroma.SplitTokensIntoLines(tokens)
 	for _, tokens := range lines {
 		for i, token := range tokens {
 			h := html.EscapeString(token.String())
@@ -158,7 +160,7 @@ func formatCodeBlock(w io.Writer, iterator chroma.Iterator, lang string) error {
 	}
 
 	writeStrings(w, "</pre>")
-	writeStrings(w, "</div>")
+	writeStrings(w, "</fieldset>")
 	return nil
 }
 
@@ -168,7 +170,7 @@ func writeStrings(w io.Writer, ss ...string) {
 	}
 }
 
-// CodeBlockExt extends markdown to better render code blocks with syntax
+// CodeBlockExt extends Markdown to better render code blocks with syntax
 // highlighting.
 type CodeBlockExt struct{}
 
