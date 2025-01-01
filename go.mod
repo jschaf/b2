@@ -12,7 +12,6 @@ require (
 	github.com/graemephi/goldmark-qjs-katex v0.3.1-0.20241020150327-4b36bd37700f
 	github.com/jschaf/bibtex v0.0.0-20241229042510-32da5555c141
 	github.com/karrick/godirwalk v1.17.0
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/yuin/goldmark v1.7.8
 	go.uber.org/atomic v1.11.0
 	golang.org/x/net v0.33.0
