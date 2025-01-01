@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/jsc/pkg/errs"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"

@@ -11,8 +11,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/files"
+	"github.com/jschaf/jsc/pkg/errs"
+	"github.com/jschaf/jsc/pkg/files"
 	"github.com/karrick/godirwalk"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"

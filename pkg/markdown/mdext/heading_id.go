@@ -1,11 +1,11 @@
 package mdext
 
 import (
-	"github.com/jschaf/b2/pkg/markdown/asts"
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"github.com/jschaf/b2/pkg/markdown/ord"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/markdown/asts"
+	"github.com/jschaf/jsc/pkg/markdown/extenders"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/markdown/ord"
+	"github.com/jschaf/jsc/pkg/texts"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"

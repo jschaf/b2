@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/jsc/pkg/errs"
 	"github.com/karrick/godirwalk"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"

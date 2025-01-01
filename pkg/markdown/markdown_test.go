@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/htmls"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/htmls"
+	"github.com/jschaf/jsc/pkg/markdown/mdext"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestParse(t *testing.T) {

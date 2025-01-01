@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/git"
 	"github.com/karrick/godirwalk"
 
-	"github.com/jschaf/b2/pkg/paths"
+	"github.com/jschaf/jsc/pkg/paths"
 )
 
 // CopyAllCSS copies all CSS files into distDir/style.

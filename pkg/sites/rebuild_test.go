@@ -3,7 +3,7 @@ package sites
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/dirs"
 )
 
 func BenchmarkRebuild(b *testing.B) {

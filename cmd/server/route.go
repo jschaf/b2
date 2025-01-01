@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jschaf/b2/pkg/livereload"
+	"github.com/jschaf/jsc/pkg/livereload"
 )
 
 type buildRoutesOpts struct {

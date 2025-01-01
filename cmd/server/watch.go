@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/jschaf/b2/pkg/css"
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/livereload"
-	"github.com/jschaf/b2/pkg/sites"
-	"github.com/jschaf/b2/pkg/static"
+	"github.com/jschaf/jsc/pkg/css"
+	"github.com/jschaf/jsc/pkg/errs"
+	"github.com/jschaf/jsc/pkg/git"
+	"github.com/jschaf/jsc/pkg/livereload"
+	"github.com/jschaf/jsc/pkg/sites"
+	"github.com/jschaf/jsc/pkg/static"
 )
 
 // FSWatcher watches the filesystem for modifications and sends LiveReload
@@ -118,7 +118,7 @@ func (f *FSWatcher) Stop() {
 
 func (f *FSWatcher) compileMdWithGoRun() error {
 	slog.Info("pkg/markdown changed, compiling all markdown")
-	cmd := exec.Command("go", "run", "github.com/jschaf/b2/cmd/compiler")
+	cmd := exec.Command("go", "run", "github.com/jschaf/jsc/cmd/compiler")
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf
 	cmd.Stderr = buf
@@ -179,7 +179,7 @@ func (f *FSWatcher) AddRecursively(name string) error {
 func (f *FSWatcher) rebuildServer() error {
 	slog.Info("hot swapping server because go file changed")
 	out := os.Args[0]
-	pkg := "github.com/jschaf/b2/cmd/server"
+	pkg := "github.com/jschaf/jsc/cmd/server"
 	cmd := exec.Command("go", "build", "-o", out, pkg)
 	buf := &bytes.Buffer{}
 	cmd.Stdout = buf

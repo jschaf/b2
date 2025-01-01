@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/texts"
 	"golang.org/x/net/html"
 )
 

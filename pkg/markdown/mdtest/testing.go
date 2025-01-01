@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/htmls"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/htmls"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"

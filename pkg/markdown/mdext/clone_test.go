@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/htmls"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/htmls"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestCloneNode(t *testing.T) {

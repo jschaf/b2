@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/dirs"
 )
 
 func BenchmarkNewDetailCompiler_Compile(b *testing.B) {

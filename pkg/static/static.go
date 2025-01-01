@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/paths"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/git"
+	"github.com/jschaf/jsc/pkg/paths"
 )
 
 // CopyStaticFiles copies static files from the source static dir into

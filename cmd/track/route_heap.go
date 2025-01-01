@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/net/srv"
+	"github.com/jschaf/jsc/pkg/errs"
+	"github.com/jschaf/jsc/pkg/net/srv"
 	"golang.org/x/sync/singleflight"
 	"io"
 	"net/http"

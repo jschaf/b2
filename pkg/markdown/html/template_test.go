@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
 )
 
 func TestRenderPost(t *testing.T) {

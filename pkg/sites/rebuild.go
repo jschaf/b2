@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/jschaf/b2/pkg/css"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/js"
-	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/static"
+	"github.com/jschaf/jsc/pkg/css"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/js"
+	"github.com/jschaf/jsc/pkg/markdown/compiler"
+	"github.com/jschaf/jsc/pkg/static"
 	"golang.org/x/sync/errgroup"
 )
 

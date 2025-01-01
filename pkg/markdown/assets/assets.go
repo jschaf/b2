@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/jschaf/b2/pkg/paths"
+	"github.com/jschaf/jsc/pkg/paths"
 )
 
 type Blob struct {

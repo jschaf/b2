@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jschaf/b2/pkg/errs"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/net/srv"
-	"github.com/jschaf/b2/pkg/process"
+	"github.com/jschaf/jsc/pkg/errs"
+	"github.com/jschaf/jsc/pkg/log"
+	"github.com/jschaf/jsc/pkg/net/srv"
+	"github.com/jschaf/jsc/pkg/process"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )

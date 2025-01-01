@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/process"
-	"github.com/jschaf/b2/pkg/sites"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/log"
+	"github.com/jschaf/jsc/pkg/process"
+	"github.com/jschaf/jsc/pkg/sites"
 )
 
 var profileFlag = flag.String("cpu-profile", "", "write cpu profile to file")

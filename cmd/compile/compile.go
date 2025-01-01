@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/markdown/compiler"
-	"github.com/jschaf/b2/pkg/process"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/log"
+	"github.com/jschaf/jsc/pkg/markdown/compiler"
+	"github.com/jschaf/jsc/pkg/process"
 )
 
 var postGlobFlag = flag.String("glob", "", "if given, only compile files that match glob")

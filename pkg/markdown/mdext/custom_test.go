@@ -3,7 +3,7 @@ package mdext
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
 	"github.com/yuin/goldmark/ast"
 )
 

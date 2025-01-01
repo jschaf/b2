@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jschaf/b2/pkg/texts/humanize"
-	"github.com/jschaf/b2/pkg/tty"
+	"github.com/jschaf/jsc/pkg/texts/humanize"
+	"github.com/jschaf/jsc/pkg/tty"
 )
 
 type DevHandler struct {

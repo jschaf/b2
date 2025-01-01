@@ -3,7 +3,7 @@
 /dist/
 /firebase-debug.log
 /.idea/
-/b2.iml
+/jsc.iml
 /.firebase/
 *.webp
 

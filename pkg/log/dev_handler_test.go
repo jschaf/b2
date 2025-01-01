@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jschaf/b2/pkg/testing/difftest"
-	"github.com/jschaf/b2/pkg/testing/require"
-	"github.com/jschaf/b2/pkg/tty"
+	"github.com/jschaf/jsc/pkg/testing/difftest"
+	"github.com/jschaf/jsc/pkg/testing/require"
+	"github.com/jschaf/jsc/pkg/tty"
 )
 
 func TestDevHandler_Sample(t *testing.T) {

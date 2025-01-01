@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/js"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/process"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/js"
+	"github.com/jschaf/jsc/pkg/log"
+	"github.com/jschaf/jsc/pkg/process"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package git
 import (
 	"sync"
 
-	"github.com/jschaf/b2/pkg/paths"
+	"github.com/jschaf/jsc/pkg/paths"
 )
 
 var rootFunc = sync.OnceValues[string, error](func() (string, error) {

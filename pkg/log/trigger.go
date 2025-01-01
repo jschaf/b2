@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jschaf/b2/pkg/chans"
+	"github.com/jschaf/jsc/pkg/chans"
 )
 
 var TriggerNotFoundErr = errors.New("trigger not found")

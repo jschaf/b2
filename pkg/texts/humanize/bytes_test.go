@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/testing/difftest"
+	"github.com/jschaf/jsc/pkg/testing/difftest"
 )
 
 func TestBytes(t *testing.T) {

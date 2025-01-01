@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/firebase"
-	"github.com/jschaf/b2/pkg/log"
-	"github.com/jschaf/b2/pkg/process"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/firebase"
+	"github.com/jschaf/jsc/pkg/log"
+	"github.com/jschaf/jsc/pkg/process"
 	"golang.org/x/net/context"
 	hosting "google.golang.org/api/firebasehosting/v1beta1"
 )

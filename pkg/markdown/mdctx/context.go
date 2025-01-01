@@ -1,7 +1,7 @@
 package mdctx
 
 import (
-	"github.com/jschaf/b2/pkg/markdown/assets"
+	"github.com/jschaf/jsc/pkg/markdown/assets"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"

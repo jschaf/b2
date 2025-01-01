@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/markdown"
-	"github.com/jschaf/b2/pkg/markdown/html"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"github.com/jschaf/b2/pkg/markdown/mdext"
-	"github.com/jschaf/b2/pkg/paths"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/markdown"
+	"github.com/jschaf/jsc/pkg/markdown/html"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/markdown/mdext"
+	"github.com/jschaf/jsc/pkg/paths"
 )
 
 // IndexCompiler compiles the / path, the main homepage.

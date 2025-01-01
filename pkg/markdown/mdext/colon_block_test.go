@@ -3,10 +3,10 @@ package mdext
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestNewColonBlockExt_preview(t *testing.T) {

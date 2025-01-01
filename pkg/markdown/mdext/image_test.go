@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/markdown/assets"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/markdown/assets"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
 
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestNewImageExt(t *testing.T) {

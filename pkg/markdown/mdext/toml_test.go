@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/git"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestMeta(t *testing.T) {

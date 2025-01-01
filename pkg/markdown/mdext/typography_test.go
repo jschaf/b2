@@ -3,9 +3,9 @@ package mdext
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
 
-	"github.com/jschaf/b2/pkg/htmls/tags"
+	"github.com/jschaf/jsc/pkg/htmls/tags"
 )
 
 func TestNewTypographyExt(t *testing.T) {

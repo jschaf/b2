@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jschaf/b2/pkg/htmls/tags"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/htmls/tags"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func anchoredH1(id, content string) string {

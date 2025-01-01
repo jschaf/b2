@@ -1,4 +1,4 @@
-module github.com/jschaf/b2
+module github.com/jschaf/jsc
 
 go 1.23.4
 

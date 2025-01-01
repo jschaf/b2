@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/htmls/tags"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"github.com/jschaf/b2/pkg/texts"
 	"github.com/jschaf/bibtex"
+	"github.com/jschaf/jsc/pkg/cite"
+	"github.com/jschaf/jsc/pkg/htmls/tags"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/texts"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 )

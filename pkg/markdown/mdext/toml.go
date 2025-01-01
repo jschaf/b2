@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/git"
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/mdctx"
-	"github.com/jschaf/b2/pkg/markdown/ord"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/git"
+	"github.com/jschaf/jsc/pkg/markdown/extenders"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
+	"github.com/jschaf/jsc/pkg/markdown/ord"
 
 	"github.com/BurntSushi/toml"
 	"github.com/yuin/goldmark"

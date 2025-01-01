@@ -3,9 +3,9 @@ package mdext
 import (
 	"testing"
 
-	"github.com/jschaf/b2/pkg/cite"
-	"github.com/jschaf/b2/pkg/markdown/mdtest"
-	"github.com/jschaf/b2/pkg/texts"
+	"github.com/jschaf/jsc/pkg/cite"
+	"github.com/jschaf/jsc/pkg/markdown/mdtest"
+	"github.com/jschaf/jsc/pkg/texts"
 )
 
 func TestNewFootnoteExt(t *testing.T) {

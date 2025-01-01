@@ -8,10 +8,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/jschaf/b2/pkg/markdown/asts"
-	"github.com/jschaf/b2/pkg/texts"
 	"github.com/jschaf/bibtex"
 	bibast "github.com/jschaf/bibtex/ast"
+	"github.com/jschaf/jsc/pkg/markdown/asts"
+	"github.com/jschaf/jsc/pkg/texts"
 	"github.com/yuin/goldmark/renderer"
 
 	"github.com/yuin/goldmark/ast"

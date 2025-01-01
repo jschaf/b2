@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
-	"github.com/jschaf/b2/pkg/dirs"
-	"github.com/jschaf/b2/pkg/files"
-	"github.com/jschaf/b2/pkg/git"
+	"github.com/jschaf/jsc/pkg/dirs"
+	"github.com/jschaf/jsc/pkg/files"
+	"github.com/jschaf/jsc/pkg/git"
 )
 
 // Single entry cache for main.js.

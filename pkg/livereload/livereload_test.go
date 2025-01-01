@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/websocket"
-	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/jsc/pkg/errs"
 )
 
 func TestServeJSHandler(t *testing.T) {

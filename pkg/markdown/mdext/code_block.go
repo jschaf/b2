@@ -2,8 +2,8 @@ package mdext
 
 import (
 	"bytes"
-	"github.com/jschaf/b2/pkg/markdown/extenders"
-	"github.com/jschaf/b2/pkg/markdown/ord"
+	"github.com/jschaf/jsc/pkg/markdown/extenders"
+	"github.com/jschaf/jsc/pkg/markdown/ord"
 	"html"
 	"io"
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jschaf/b2/pkg/errs"
+	"github.com/jschaf/jsc/pkg/errs"
 )
 
 const (

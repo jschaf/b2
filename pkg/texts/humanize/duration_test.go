@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jschaf/b2/pkg/testing/difftest"
+	"github.com/jschaf/jsc/pkg/testing/difftest"
 )
 
 func TestDuration(t *testing.T) {
