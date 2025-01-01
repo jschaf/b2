@@ -1,9 +1,9 @@
-name: release blog
+name: blog
 on: push
 
 jobs:
-  release_blog:
-    name: release_blog
+  release:
+    name: release
     runs-on: ubuntu-latest
     permissions:
       contents: read

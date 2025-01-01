@@ -37,7 +37,7 @@ func bundleTypeScript(distDir string) (api.BuildResult, error) {
 	mainTS := filepath.Join(git.RootDir(), dirs.Static, "main.ts")
 	mainTSOut := filepath.Join(distDir, "main.js")
 
-	// Check if file is same and skip JS bundle.
+	// Check if the file is the same; if so, skip the bundle step.
 	mainJSCache.mu.Lock()
 	defer mainJSCache.mu.Unlock()
 	ok, newKey, err := mainJSCache.isUnchanged(mainTS)
@@ -53,11 +53,7 @@ func bundleTypeScript(distDir string) (api.BuildResult, error) {
 		Target:      api.ES2019,
 		Bundle:      false,
 		Write:       true,
-		Loaders: map[string]api.Loader{
-			".ts": api.LoaderTS,
-		},
-		ErrorLimit: 3,
-		LogLevel:   api.LogLevelInfo,
+		LogLevel:    api.LogLevelInfo,
 	})
 	if len(result.Errors) > 0 {
 		msg := ""

@@ -20,11 +20,11 @@ func TestCodeBlockExt(t *testing.T) {
 				"func foo() {}\n" +
 				"```\n"),
 			texts.Dedent(`
-					<div class="code-block-container">
+					<fieldset class="code-block-container">
 						<pre class="code-block">
 							<code-kw>func</code-kw> <code-fn>foo</code-fn>() {}
 						</pre>
-					</div>
+					</fieldset>
     `),
 		},
 		{
@@ -33,11 +33,11 @@ func TestCodeBlockExt(t *testing.T) {
 				"Foo 28%\n" +
 				"```\n"),
 			texts.Dedent(`
-					<div class="code-block-container">
+					<fieldset class="code-block-container">
 						<pre class="code-block">
 							Foo 28%
 						</pre>
-					</div>
+					</fieldset>
      `),
 		},
 		{
@@ -46,11 +46,11 @@ func TestCodeBlockExt(t *testing.T) {
 				"func (t *T) foo() {}\n" +
 				"```\n"),
 			texts.Dedent(`
-					<div class="code-block-container">
+					<fieldset class="code-block-container">
 						<pre class="code-block">
 							<code-kw>func</code-kw> (t *T) <code-fn>foo</code-fn>() {}
 						</pre>
-					</div>
+					</fieldset>
      `),
 		},
 	}

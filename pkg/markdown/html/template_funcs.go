@@ -14,7 +14,7 @@ func TemplateFuncs() template.FuncMap {
 	}
 }
 
-// isLast returns true if index is the last index in item.
+// isLast returns true if the index is the last index in the item.
 func isLast(index int, item any) (bool, error) {
 	v := reflect.ValueOf(item)
 	if !v.IsValid() {
