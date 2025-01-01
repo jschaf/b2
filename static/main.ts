@@ -122,7 +122,7 @@ const log = Logger.forConsole();
 // real heap.js downloads. The real heap.js is templated into base.gohtml.
 window.heap = HeapAnalytics.forEnvId(
     '1506018335',
-    { trackingServer: 'https://joe.schafer.dev' },
+    { trackingServer: '/_/heap' },
 );
 
 // Detect adblock.

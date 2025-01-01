@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"golang.org/x/oauth2/google"
 	"log/slog"
 	"os"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/jschaf/b2/pkg/process"
 	"golang.org/x/net/context"
 	hosting "google.golang.org/api/firebasehosting/v1beta1"
-	"google.golang.org/api/option"
 )
 
 const (
@@ -32,10 +32,10 @@ func servingConfig() *hosting.ServingConfig {
 	return &hosting.ServingConfig{
 		Rewrites: []*hosting.Rewrite{
 			{
-				Glob: "/h",
+				Glob: "/_/heap/",
 				Run: &hosting.CloudRunRewrite{
-					Region:    "us-west1",
-					ServiceId: "track",
+					Region:    "us-west2",
+					ServiceId: "track-server",
 				},
 			},
 		},
@@ -59,13 +59,12 @@ func runMain(ctx context.Context) error {
 	slog.Info("start deployment")
 	start := time.Now()
 
-	accountCreds, err := firebase.ReadServiceAccountCreds()
+	accountCreds, err := google.FindDefaultCredentials(ctx, hosting.FirebaseScope)
 	if err != nil {
-		return err
+		return fmt.Errorf("find default credentials: %w", err)
 	}
-	tokSource := firebase.NewTokenSource(ctx, accountCreds)
 
-	svc, err := hosting.NewService(ctx, option.WithTokenSource(tokSource))
+	svc, err := hosting.NewService(ctx)
 	if err != nil {
 		return fmt.Errorf("new hosting service: %w", err)
 	}
@@ -107,7 +106,7 @@ func runMain(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("find files for hashes: %w", err)
 	}
-	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, tokSource)
+	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, accountCreds.TokenSource)
 	if err := uploader.UploadAll(ctx, filesToUpload); err != nil {
 		return fmt.Errorf("upload all: %w", err)
 	}
