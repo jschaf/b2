@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/evanw/esbuild/pkg/api"
+	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/jschaf/b2/pkg/dirs"
 	"github.com/jschaf/b2/pkg/files"
 	"github.com/jschaf/b2/pkg/git"
@@ -16,7 +16,7 @@ import (
 type jsCache struct {
 	mu           sync.Mutex
 	key          uint64
-	bundleResult api.BuildResult
+	bundleResult esbuild.BuildResult
 }
 
 var mainJSCache = &jsCache{}
@@ -33,7 +33,7 @@ func (jsCache *jsCache) isUnchanged(mainJSPath string) (bool, uint64, error) {
 	return false, newKey, nil
 }
 
-func bundleTypeScript(distDir string) (api.BuildResult, error) {
+func bundleTypeScript(distDir string) (esbuild.BuildResult, error) {
 	mainTS := filepath.Join(git.RootDir(), dirs.Static, "main.ts")
 	mainTSOut := filepath.Join(distDir, "main.js")
 
@@ -42,25 +42,25 @@ func bundleTypeScript(distDir string) (api.BuildResult, error) {
 	defer mainJSCache.mu.Unlock()
 	ok, newKey, err := mainJSCache.isUnchanged(mainTS)
 	if err != nil {
-		return api.BuildResult{}, err
+		return esbuild.BuildResult{}, err
 	} else if ok {
 		return mainJSCache.bundleResult, nil
 	}
 
-	result := api.Build(api.BuildOptions{
+	result := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{mainTS},
 		Outfile:     mainTSOut,
-		Target:      api.ES2019,
+		Target:      esbuild.ES2019,
 		Bundle:      false,
 		Write:       true,
-		LogLevel:    api.LogLevelInfo,
+		LogLevel:    esbuild.LogLevelError,
 	})
 	if len(result.Errors) > 0 {
 		msg := ""
 		for _, e := range result.Errors {
 			msg += "\n" + e.Text
 		}
-		return api.BuildResult{}, fmt.Errorf("bundle typescript errors:" + msg)
+		return esbuild.BuildResult{}, fmt.Errorf("bundle typescript errors:" + msg)
 	}
 
 	mainJSCache.key = newKey
