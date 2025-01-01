@@ -13,13 +13,12 @@ import (
 	"github.com/jschaf/b2/pkg/log"
 	"github.com/jschaf/b2/pkg/process"
 	"golang.org/x/net/context"
-
 	hosting "google.golang.org/api/firebasehosting/v1beta1"
 	"google.golang.org/api/option"
 )
 
 const (
-	siteName   = "joe-blog-314159"
+	siteName   = "jschaf"
 	siteParent = "sites/" + siteName
 )
 
@@ -44,7 +43,7 @@ func servingConfig() *hosting.ServingConfig {
 }
 
 func runMain(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*60)
 	defer cancel()
 
 	fset := flag.CommandLine
@@ -72,7 +71,7 @@ func runMain(ctx context.Context) error {
 	}
 	versionSvc := svc.Projects.Sites.Versions
 
-	// Create version: we'll eventually release this version.
+	// Create the version: we'll eventually release this version.
 	createVersionStart := time.Now()
 	createVersion := versionSvc.Create(siteParent, &hosting.Version{
 		Config: servingConfig(),
@@ -102,8 +101,8 @@ func runMain(ctx context.Context) error {
 	}
 	slog.Info("populate files response requests", "count", len(popFilesResp.UploadRequiredHashes), "duration", time.Since(popFilesStart))
 
-	// Upload files: only upload files that have a SHA256 hash in the populate
-	// files response
+	// Upload files: only upload files that have a SHA256 hash in the
+	// populateFiles response.
 	filesToUpload, err := siteHashes.FindFilesForHashes(popFilesResp.UploadRequiredHashes)
 	if err != nil {
 		return fmt.Errorf("find files for hashes: %w", err)
@@ -113,7 +112,7 @@ func runMain(ctx context.Context) error {
 		return fmt.Errorf("upload all: %w", err)
 	}
 
-	// Finalize version: prevent adding any new resources.
+	// Finalize the version: prevent adding any new resources.
 	versionFinal := hosting.Version{Status: "FINALIZED"}
 	patchVersion := versionSvc.Patch(version.Name, &versionFinal)
 	patchVersion.Context(ctx)

@@ -1,14 +1,8 @@
 {
   "projects": {
-    "default": "blog-6f2f1"
+    "jschaf": "jschaf",
+    "default": "jschaf"
   },
-  "targets": {
-    "blog-6f2f1": {
-      "hosting": {
-        "new-blog": [
-          "joe-blog-314159"
-        ]
-      }
-    }
-  }
+  "targets": {},
+  "etags": {}
 }

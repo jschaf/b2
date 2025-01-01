@@ -13,7 +13,7 @@ import (
 )
 
 // AuthFile relative to source dir.
-const AuthFile = "private/firebase/b2-admin-sdk.json"
+const AuthFile = "private/creds/blog-releaser.json"
 
 type ServiceAccountCreds struct {
 	Type         string `json:"type"`

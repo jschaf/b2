@@ -1,0 +1,30 @@
+name: release blog
+on: push
+
+jobs:
+  release_blog:
+    name: release_blog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: gcp auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: jschaf
+          workload_identity_provider: projects/191693554478/locations/global/workloadIdentityPools/jsc-iam-pool-github/providers/jsc-iam-pool-github
+
+      - name: install go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: html
+        run: make html
+
+      - name: publish
+        run: make publish
