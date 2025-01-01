@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 	"log/slog"
 	"os"
 	"time"
@@ -59,12 +60,12 @@ func runMain(ctx context.Context) error {
 	slog.Info("start deployment")
 	start := time.Now()
 
-	accountCreds, err := google.FindDefaultCredentials(ctx, hosting.FirebaseScope)
+	creds, err := google.FindDefaultCredentials(ctx, hosting.FirebaseScope)
 	if err != nil {
 		return fmt.Errorf("find default credentials: %w", err)
 	}
 
-	svc, err := hosting.NewService(ctx)
+	svc, err := hosting.NewService(ctx, option.WithTokenSource(creds.TokenSource))
 	if err != nil {
 		return fmt.Errorf("new hosting service: %w", err)
 	}
@@ -106,7 +107,7 @@ func runMain(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("find files for hashes: %w", err)
 	}
-	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, accountCreds.TokenSource)
+	uploader := firebase.NewUploader(siteHashes, popFilesResp.UploadUrl, creds.TokenSource)
 	if err := uploader.UploadAll(ctx, filesToUpload); err != nil {
 		return fmt.Errorf("upload all: %w", err)
 	}
