@@ -20,12 +20,12 @@ type AST struct {
 	Meta   mdext.PostMeta
 	Source []byte
 	Assets []assets.Blob
-	// The full path to the markdown file that this AST represents.
+	// The full path to the Markdown file that this AST represents.
 	Path     string
 	Features *mdctx.FeatureSet
 }
 
-// Options are global configuration options for parsing and rendering markdown.
+// Options are global configuration options for parsing and rendering Markdown.
 type Options struct {
 	CiteStyle    cite.Style
 	CiteAttacher mdext.CitationReferencesAttacher
@@ -90,7 +90,7 @@ func defaultExtensions(opts Options) []goldmark.Extender {
 	}
 }
 
-// New creates a new markdown parser and renderer allowing additional options
+// New creates a new Markdown parser and renderer allowing additional options
 // beyond the defaults.
 func New(opts ...Option) *Markdown {
 	m := &Markdown{

@@ -13,7 +13,7 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-// Heading anchor style determines if a paragraph symbol is shown for a heading.
+// HeadingAnchorStyle determines if a paragraph symbol is shown for a heading.
 type HeadingAnchorStyle int
 
 const (

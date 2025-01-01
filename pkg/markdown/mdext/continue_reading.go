@@ -136,7 +136,7 @@ func (c contReadingRenderer) render(
 	return ast.WalkContinue, nil
 }
 
-// ContinueReadingExt extends markdown with support to show the continue reading
+// ContinueReadingExt extends Markdown with support to show the continue reading
 // block and truncate all nodes after the continue reading block
 type ContinueReadingExt struct{}
 

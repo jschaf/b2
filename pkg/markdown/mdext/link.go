@@ -113,7 +113,7 @@ func renderPreview(pc parser.Context, origDest string, reader text.Reader, link 
 	if colonBlock == nil {
 		return
 	}
-	// Assume title is first child.
+	// Assume title is the first child.
 	title := colonBlock.FirstChild()
 	if title == nil {
 		return

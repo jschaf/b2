@@ -15,7 +15,7 @@ import (
 
 var KindTime = ast.NewNodeKind("Time")
 
-// Time is the date time from the TOML metadata of the publish date of a post.
+// Time is the date time from the TOML metadata of the post publish-date.
 type Time struct {
 	ast.BaseInline
 	Date time.Time
@@ -61,7 +61,7 @@ func (t *timeRenderer) renderTime(w util.BufWriter, _ []byte, node ast.Node, ent
 	return ast.WalkContinue, nil
 }
 
-// TimeExt extends the goldmark markdown renderer to support a time node.
+// TimeExt extends the goldmark Markdown renderer to support a time node.
 type TimeExt struct{}
 
 func NewTimeExt() *TimeExt {

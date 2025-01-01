@@ -40,19 +40,19 @@ func (cir customInlineRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegis
 func (cir customInlineRenderer) renderCustom(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	c := n.(*CustomInline)
 	if entering {
-		w.WriteByte('<')
-		w.WriteString(c.Tag)
+		_ = w.WriteByte('<')
+		_, _ = w.WriteString(c.Tag)
 		attrs.RenderAll(w, c)
-		w.WriteByte('>')
+		_ = w.WriteByte('>')
 	} else {
-		w.WriteString("</")
-		w.WriteString(c.Tag)
-		w.WriteByte('>')
+		_, _ = w.WriteString("</")
+		_, _ = w.WriteString(c.Tag)
+		_ = w.WriteByte('>')
 	}
 	return ast.WalkContinue, nil
 }
 
-// CustomExt extends markdown with the custom tag renderers.
+// CustomExt extends Markdown with the custom tag renderers.
 type CustomExt struct{}
 
 func NewCustomExt() CustomExt {

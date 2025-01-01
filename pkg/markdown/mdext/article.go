@@ -34,7 +34,7 @@ func (a *Article) Kind() ast.NodeKind {
 	return KindArticle
 }
 
-// articleTransformer wraps the markdown document in an HTML article tag.
+// articleTransformer wraps the Markdown document in an HTML article tag.
 type articleTransformer struct{}
 
 func newArticleTransformer() *articleTransformer {

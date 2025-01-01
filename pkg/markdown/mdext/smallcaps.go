@@ -17,7 +17,8 @@ const (
 
 var KindSmallCaps = ast.NewNodeKind("SmallCaps")
 
-// SmallCaps is an inline node of text that should be in small caps, e.g. NASA.
+// SmallCaps is an inline node of the text that should be in small caps, e.g.,
+// NASA.
 type SmallCaps struct {
 	ast.BaseInline
 	Segment text.Segment
@@ -40,7 +41,7 @@ type smallCapsParser struct{}
 
 func (p *smallCapsParser) Trigger() []byte {
 	// ' ' indicates whitespace and newlines.
-	// We trigger on * so we can parse the small cap inside emphasized text.
+	// We trigger on * so we can parse the small cap inside the emphasized text.
 	return []byte{' ', '*', '_', '~', '('}
 }
 
@@ -61,7 +62,7 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 	}
 	startChar := byte('\n')
 	endChar := byte('\n')
-	// Advance if current position is not the start of a newline.
+	// Advance if the current position is not the start of a newline.
 	if c == ' ' || c == '*' || c == '_' || c == '~' || c == '(' {
 		startChar = c
 		consumes++
@@ -101,7 +102,7 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 		case ' ', '\n', '.', '!', '?', ')', '*', ']', ',':
 			// Only use small caps if the run is ended by punctuation or space.
 		case 's':
-			// s is okay only if followed by a punctuation, e.g. TLAs.
+			// s is okay only if followed by punctuation, e.g., TLAs.
 			if run+1 < len(line) {
 				nextNext := line[run+1]
 				switch nextNext {
@@ -116,7 +117,7 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 	}
 
 	// We want to convert acronyms inside parens to small caps, e.g.: (NASA).
-	// 1 means the small caps is surrounded by parens.
+	// 1 means that parentheses contain the small caps.
 	parens := 0
 	if startChar == '(' && endChar == ')' {
 		parens = 1

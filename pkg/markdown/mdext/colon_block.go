@@ -223,7 +223,7 @@ func (cbr colonBlockRenderer) renderColonBlock(_ util.BufWriter, _ []byte, n ast
 	}
 }
 
-// ColonBlockExt extends markdown with support for colon blocks, like:
+// ColonBlockExt extends Markdown with support for colon blocks, like:
 //
 //	::: preview http://example.com
 //	# header

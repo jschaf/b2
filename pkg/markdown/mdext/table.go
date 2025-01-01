@@ -67,7 +67,7 @@ func (t tableCaptionTransformer) Transform(doc *ast.Document, r text.Reader, pc 
 			return ast.WalkSkipChildren, nil
 		}
 
-		// Trim the marker "TABLE:"
+		// Trim the marker TABLE:
 		txt := capt.FirstChild().(*ast.Text)
 		txt.Segment.Start += len(tableCaptionMarker)
 		tblCapt := NewTableCaption()
@@ -104,12 +104,12 @@ func (t tableCaptionRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegiste
 func (t tableCaptionRenderer) renderTableCaption(w util.BufWriter, _ []byte, n ast.Node, entering bool) (ast.WalkStatus, error) {
 	tc := n.(*TableCaption)
 	if entering {
-		w.WriteString("<caption>")
-		w.WriteString("<span class=table-caption-order>Table ")
-		w.WriteString(strconv.Itoa(tc.Order))
-		w.WriteString(": </span>")
+		_, _ = w.WriteString("<caption>")
+		_, _ = w.WriteString("<span class=table-caption-order>Table ")
+		_, _ = w.WriteString(strconv.Itoa(tc.Order))
+		_, _ = w.WriteString(": </span>")
 	} else {
-		w.WriteString("</caption>")
+		_, _ = w.WriteString("</caption>")
 	}
 	return ast.WalkContinue, nil
 }

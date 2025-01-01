@@ -22,7 +22,7 @@ var KindTOC = ast.NewNodeKind("TOC")
 type TOCStyle int
 
 const (
-	// The inclusive start of TOC headings. 2 means consider H2 as the top level
+	// The inclusive start of TOC headings. Two means use H2 as the top level
 	// TOC.
 	tocStartLevel = 2
 )
@@ -161,8 +161,9 @@ func resetCounts(counts []int, level int) {
 
 // buildCountTag builds an HTML string representing the current TOC level at
 // depth of level. For example, a level of 3 produces an HTML tag with contents
-// like "4.2" which means this TOC entry is the 4th <h2> and 2nd <h3>. We ignore
-// levels less than tocStartLevel which is why there's no <h1> in the example.
+// like "4.2" which means this TOC entry is the fourth <h2> and second <h3>.
+// We ignore levels less than tocStartLevel, which is why there's no <h1> in the
+// example.
 func buildCountTag(counts []int, level int) *ast.String {
 	counts[level]++
 	b := new(bytes.Buffer)
@@ -202,9 +203,9 @@ func (tr tocRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 
 func renderTOC(w util.BufWriter, _ []byte, _ ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
-		w.WriteString("<div class=toc>")
+		_, _ = w.WriteString("<div class=toc>")
 	} else {
-		w.WriteString("</div>")
+		_, _ = w.WriteString("</div>")
 	}
 	return ast.WalkContinue, nil
 }

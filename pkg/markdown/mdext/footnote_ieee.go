@@ -73,22 +73,22 @@ func allCiteIDs(cr *CitationRef) []string {
 
 func (fr *footnoteIEEERenderer) renderCiteRef(w util.BufWriter, cr *CitationRef) {
 	citeIDs := allCiteIDs(cr)
-	w.WriteString(`<div id="`)
-	w.WriteString(cr.Citation.ReferenceID())
-	w.WriteString(`" class=cite-reference>`)
-	w.WriteString(`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="`)
+	_, _ = w.WriteString(`<div id="`)
+	_, _ = w.WriteString(cr.Citation.ReferenceID())
+	_, _ = w.WriteString(`" class=cite-reference>`)
+	_, _ = w.WriteString(`<cite class=preview-target data-link-type=cite-reference-num data-cite-ids="`)
 	for i, c := range citeIDs {
 		if i > 0 {
-			w.WriteByte(' ')
+			_ = w.WriteByte(' ')
 		}
-		w.WriteString(c)
+		_, _ = w.WriteString(c)
 	}
-	w.WriteString(`">`)
-	w.WriteString("[" + strconv.Itoa(cr.Order) + "]")
-	w.WriteString(`</cite> `)
+	_, _ = w.WriteString(`">`)
+	_, _ = w.WriteString("[" + strconv.Itoa(cr.Order) + "]")
+	_, _ = w.WriteString(`</cite> `)
 
 	renderCiteRefContent(w, cr.Citation)
-	w.WriteString(`</div>`)
+	_, _ = w.WriteString(`</div>`)
 }
 
 // renderCiteRefContent is the main formatter for an IEEE citation.
@@ -101,9 +101,9 @@ func renderCiteRefContent(w util.BufWriter, c *Citation) {
 	hasInfoAfterTitle := false
 	writeSep := func() {
 		if hasInfoAfterTitle {
-			w.WriteRune(',')
+			_, _ = w.WriteRune(',')
 		}
-		w.WriteRune(' ')
+		_, _ = w.WriteRune(' ')
 		hasInfoAfterTitle = true
 	}
 
@@ -122,39 +122,39 @@ func renderCiteRefContent(w util.BufWriter, c *Citation) {
 
 	if vol := c.Bibtex.Tags[bibtex.FieldVolume]; vol != nil {
 		writeSep()
-		w.WriteString("Vol. ")
-		w.WriteString(assertSimpleText(vol))
+		_, _ = w.WriteString("Vol. ")
+		_, _ = w.WriteString(assertSimpleText(vol))
 	}
 
 	if num := c.Bibtex.Tags[bibtex.FieldNumber]; num != nil {
 		writeSep()
-		w.WriteString("no. ")
-		w.WriteString(assertSimpleText(num))
+		_, _ = w.WriteString("no. ")
+		_, _ = w.WriteString(assertSimpleText(num))
 	}
 
 	if c.Bibtex.Type == bibtex.EntryBook {
 		if pub := c.Bibtex.Tags[bibtex.FieldPublisher]; pub != nil {
 			writeSep()
-			w.WriteString(assertSimpleText(pub))
+			_, _ = w.WriteString(assertSimpleText(pub))
 		}
 	}
 
 	if year := c.Bibtex.Tags[bibtex.FieldYear]; year != nil {
 		writeSep()
-		w.WriteString(assertSimpleText(year))
+		_, _ = w.WriteString(assertSimpleText(year))
 	}
 
 	if p := c.Bibtex.Tags[bibtex.FieldPages]; p != nil {
 		writeSep()
-		w.WriteString("pp. ")
-		w.WriteString(strings.Replace(assertSimpleText(p), "--", texts.EnDash, 1))
+		_, _ = w.WriteString("pp. ")
+		_, _ = w.WriteString(strings.Replace(assertSimpleText(p), "--", texts.EnDash, 1))
 	}
 
 	if doi := c.Bibtex.Tags["doi"]; doi != nil {
 		writeSep()
 		renderDOI(w, doi)
 	}
-	w.WriteString(".")
+	_, _ = w.WriteString(".")
 }
 
 func renderAuthors(w util.BufWriter, x bibast.Expr) {
@@ -166,20 +166,20 @@ func renderAuthors(w util.BufWriter, x bibast.Expr) {
 	// author's name followed by et al.
 	if len(authors) > 6 {
 		renderAuthor(w, authors[0])
-		w.WriteString(", <em>et al.</em>")
+		_, _ = w.WriteString(", <em>et al.</em>")
 		return
 	}
 
 	for i, author := range authors {
 		renderAuthor(w, author)
 		if i < len(authors)-2 {
-			w.WriteString(", ")
+			_, _ = w.WriteString(", ")
 		} else if i == len(authors)-2 {
 			if authors[len(authors)-1].IsOthers() {
-				w.WriteString(" <em>et al.</em>")
+				_, _ = w.WriteString(" <em>et al.</em>")
 				break
 			} else {
-				w.WriteString(" and ")
+				_, _ = w.WriteString(" and ")
 			}
 		}
 	}
@@ -192,11 +192,11 @@ func renderAuthor(w util.BufWriter, author *bibast.Author) {
 	sp := strings.Split(assertSimpleText(author.First), " ")
 	for _, s := range sp {
 		if r, _ := utf8.DecodeRuneInString(s); r != utf8.RuneError {
-			w.WriteRune(r)
-			w.WriteString(". ")
+			_, _ = w.WriteRune(r)
+			_, _ = w.WriteString(". ")
 		}
 	}
-	w.WriteString(assertSimpleText(author.Last))
+	_, _ = w.WriteString(assertSimpleText(author.Last))
 }
 
 func renderTitle(w util.BufWriter, c *Citation) {
@@ -208,31 +208,31 @@ func renderTitle(w util.BufWriter, c *Citation) {
 	hasURL := c.Bibtex.Tags["url"] != nil
 	openURL := func() {
 		if hasURL {
-			w.WriteString(`<a href="`)
+			_, _ = w.WriteString(`<a href="`)
 			url := assertSimpleText(c.Bibtex.Tags["url"])
-			w.Write(util.EscapeHTML([]byte(url)))
-			w.WriteString(`">`)
+			_, _ = w.Write(util.EscapeHTML([]byte(url)))
+			_, _ = w.WriteString(`">`)
 		}
 	}
 	closeURL := func() {
 		if hasURL {
-			w.WriteString("</a>")
+			_, _ = w.WriteString("</a>")
 		}
 	}
 
 	switch c.Bibtex.Type {
 	case bibtex.EntryBook:
-		w.WriteString(`, <em class=cite-book>`)
+		_, _ = w.WriteString(`, <em class=cite-book>`)
 		openURL()
-		w.WriteString(title)
+		_, _ = w.WriteString(title)
 		closeURL()
-		w.WriteString(`</em>,`)
+		_, _ = w.WriteString(`</em>,`)
 	default:
-		w.WriteString(`, "`)
+		_, _ = w.WriteString(`, "`)
 		openURL()
-		w.WriteString(title)
+		_, _ = w.WriteString(title)
 		closeURL()
-		w.WriteString(`,"`)
+		_, _ = w.WriteString(`,"`)
 	}
 }
 
@@ -251,9 +251,9 @@ func assertSimpleText(x bibast.Expr) string {
 }
 
 func renderJournal(w util.BufWriter, journal bibast.Expr) {
-	w.WriteString("in <em class=cite-journal>")
+	_, _ = w.WriteString("in <em class=cite-journal>")
 	_, _ = ieeeAbbrevReplacer.WriteString(w, assertSimpleText(journal))
-	w.WriteString("</em>")
+	_, _ = w.WriteString("</em>")
 }
 
 // renderConference formats a conference name in IEEE style.
@@ -268,19 +268,19 @@ func renderJournal(w util.BufWriter, journal bibast.Expr) {
 //     "Proc. 1996 Robotics and Automation Conf."
 //  3. All published conference or proceedings papers have page numbers.
 func renderConference(w util.BufWriter, c bibast.Expr) {
-	w.WriteString("in <em class=cite-conference>")
+	_, _ = w.WriteString("in <em class=cite-conference>")
 	_, _ = ieeeAbbrevReplacer.WriteString(w, assertSimpleText(c))
-	w.WriteString("</em>")
+	_, _ = w.WriteString("</em>")
 }
 
 func renderDOI(w util.BufWriter, doi bibast.Expr) {
 	doiTxt := assertSimpleText(doi)
-	w.WriteString("doi: ")
-	w.WriteString(`<a href="https://doi.org/`)
-	w.WriteString(doiTxt)
-	w.WriteString(`">`)
-	w.WriteString(doiTxt)
-	w.WriteString(`</a>`)
+	_, _ = w.WriteString("doi: ")
+	_, _ = w.WriteString(`<a href="https://doi.org/`)
+	_, _ = w.WriteString(doiTxt)
+	_, _ = w.WriteString(`">`)
+	_, _ = w.WriteString(doiTxt)
+	_, _ = w.WriteString(`</a>`)
 }
 
 var ieeeAbbrevReplacer = strings.NewReplacer(
@@ -307,8 +307,8 @@ var ieeeAbbrevReplacer = strings.NewReplacer(
 	"Symposium", "Symp.",
 	"Technical", "Tech.",
 	"Transactions", "Trans.",
-	// Replace numbers with ordinals. The general case requires a custom replacer
-	// so hard-code common numbers instead.
+	// Replace numbers with ordinals. The general case requires a custom
+	// replacer, so hard-code common numbers instead.
 	"First", "1st",
 	"Second", "2nd",
 	"Third", "3rd",
@@ -329,10 +329,10 @@ var ieeeAbbrevReplacer = strings.NewReplacer(
 	"Eighteenth", "18th",
 	"Nineteenth", "19th",
 	// To replace articles, we need to anchor with spaces. This isn't a perfect
-	// way to replace all articles but it's good enough. The best method is to
+	// way to replace all articles, but it's good enough. The best method is to
 	// write our own replacer. Multiple runs of articles must be replaced
 	// separately.
-	// Two word articles. Must come before single word articles.
+	// Two-word articles. Must come before single word articles.
 	" in the ", " ",
 	" of the ", " ",
 	" of a ", " ",

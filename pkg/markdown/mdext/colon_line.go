@@ -24,9 +24,9 @@ const (
 	ColonLineTOC ColonLineName = "toc"
 )
 
-// ColonLine parses colon delimited directives inspired by
-// https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#table-of-contents-toc
-// For example to create a right-aligned TOC:
+// ColonLine parses colon-delimited directives inspired by
+// https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#table-of-contents-toc.
+// For example, to create a right-aligned TOC:
 //
 //	:toc: right
 type ColonLine struct {
@@ -119,7 +119,7 @@ func (cbr ColonLineRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegister
 	})
 }
 
-// ColonLineExt extends markdown with support for colon blocks, like:
+// ColonLineExt extends Markdown with support for colon blocks, like:
 //
 //	::: preview http://example.com
 //	# header

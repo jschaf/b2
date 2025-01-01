@@ -63,14 +63,14 @@ func (ir imageRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindImage, ir.renderImage)
 }
 
-func (ir imageRenderer) renderImage(w util.BufWriter, source []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
+func (ir imageRenderer) renderImage(w util.BufWriter, _ []byte, node ast.Node, entering bool) (status ast.WalkStatus, err error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}
 	n := node.(*ast.Image)
 	tag := fmt.Sprintf(
 		"<img src=%q alt=%q title=%q",
-		n.Destination, n.Text(source), n.Title)
+		n.Destination, n.Title, n.Title)
 	_, _ = w.WriteString(tag)
 	if n.Attributes() != nil {
 		html.RenderAttributes(w, n, html.ImageAttributeFilter)
@@ -79,7 +79,7 @@ func (ir imageRenderer) renderImage(w util.BufWriter, source []byte, node ast.No
 	return ast.WalkSkipChildren, nil
 }
 
-// ImageExt extends markdown with the transformer and renderer.
+// ImageExt extends Markdown with the transformer and renderer.
 type ImageExt struct{}
 
 func NewImageExt() *ImageExt {
