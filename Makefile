@@ -1,5 +1,4 @@
 DIST_DIR := public
-DEV_PORT := 8080
 
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
@@ -7,20 +6,16 @@ $(DIST_DIR):
 .PHONY: all
 all: dev
 
-.PHONY: js
-js: $(DIST_DIR)
-	cp scripts/instant.page.v1.2.2.js $(DIST_DIR)
-
 .PHONY: html
 html: clean $(DIST_DIR)
-	go run github.com/jschaf/b2/cmd/compile
+	go run ./cmd/compile
 
 .PHONY: clean
 clean:
 	rm -rf $(DIST_DIR)
 
 .PHONY: publish
-publish:
+publish: html
 	go run ./cmd/publish
 
 # Run the dev server.
@@ -48,7 +43,6 @@ track:
 	docker tag track:latest us-west2-docker.pkg.dev/jschaf/jsc-art-uswe2-docker/track_server:latest
 	docker push us-west2-docker.pkg.dev/jschaf/jsc-art-uswe2-docker/track_server:latest
 	gcloud run deploy track-server --image=us-west2-docker.pkg.dev/jschaf/jsc-art-uswe2-docker/track_server:latest --region=us-west2 --platform=managed --allow-unauthenticated --port=3355
-
 
 # Run Terraform apply.
 .PHONY: terraform
