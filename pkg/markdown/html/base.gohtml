@@ -1,5 +1,5 @@
 {{ define "base" }}
-    {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.MainTemplateData*/ -}}
+    {{- /*gotype: github.com/jschaf/b2/pkg/markdown/html.IndexParams*/ -}}
     <!doctype html>
     <html lang="en">
     <head>
@@ -9,9 +9,9 @@
       <meta name="robots" content="index, follow">
       <link rel="icon" href="/favicon.ico">
       <link rel="stylesheet" href="/style/main.css">
-      {{ if .Features.Has "katex" -}}
-        <link rel="preload" href="/style/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      {{- end }}
+        {{ if .Features.Has "katex" -}}
+          <link rel="preload" href="/style/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        {{- end }}
     </head>
     <body>
     <header>

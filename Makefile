@@ -8,7 +8,7 @@ all: dev
 
 .PHONY: html
 html: clean $(DIST_DIR)
-	go run ./cmd/compile
+	go run ./cmd/build
 
 .PHONY: clean
 clean:

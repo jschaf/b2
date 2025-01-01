@@ -22,14 +22,13 @@ import (
 	"github.com/karrick/godirwalk"
 )
 
-// DetailCompiler compiles the /* paths, showing the detail page for each
-// post. Posts don't have another directory prefix.
+// DetailCompiler compiles the detail page for each post.
 type DetailCompiler struct {
 	md      *markdown.Markdown
 	distDir string
 }
 
-// NewDetailCompiler creates a compiler for a post detail page.
+// NewDetailCompiler creates a compiler for a detail page.
 func NewDetailCompiler(distDir string) *DetailCompiler {
 	md := markdown.New(
 		markdown.WithHeadingAnchorStyle(mdext.HeadingAnchorStyleShow),
@@ -39,7 +38,7 @@ func NewDetailCompiler(distDir string) *DetailCompiler {
 	return &DetailCompiler{md: md, distDir: distDir}
 }
 
-// parseFile parses a single post path into a markdown AST.
+// parseFile parses a single path into a markdown AST.
 func (c *DetailCompiler) parseFile(path string) (*markdown.AST, error) {
 	slog.Debug("compiling detail", "path", path)
 	f, err := os.Open(path)

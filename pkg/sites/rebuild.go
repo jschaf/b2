@@ -16,6 +16,7 @@ import (
 
 // Rebuild rebuilds everything on the site into distDir.
 func Rebuild(distDir string) error {
+	slog.Info("start rebuild site")
 	start := time.Now()
 
 	if err := dirs.CleanDir(distDir); err != nil {
@@ -85,6 +86,6 @@ func Rebuild(distDir string) error {
 		return fmt.Errorf("rebuild wait err group: %w", err)
 	}
 
-	slog.Info("rebuilt site", "duration", time.Since(start))
+	slog.Info("finish rebuild site", "duration", time.Since(start))
 	return nil
 }

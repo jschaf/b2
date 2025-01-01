@@ -51,6 +51,5 @@ func runMain(_ context.Context) error {
 		slog.Error("rebuild site", "error", err)
 		return err
 	}
-	slog.Info("rebuild site done")
 	return nil
 }
