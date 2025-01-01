@@ -157,14 +157,15 @@ window.heap = HeapAnalytics.forEnvId(
  * The transitions are complex, resulting from interactions between the target
  * link and preview div. Use-cases we want to support:
  *
- * - Continue showing the preview when moving from the target to preview box
+ * - Continue showing the preview when moving from the target to the preview box
  *   for a grace period.
  *
  * - Continue showing the preview when leaving the box but quickly returning for
  *   a grace period.
  *
  * - Choosing whether to display the preview box above or below the target. We
- *   generally prefer above to avoid blocking lines the user will read.
+ *   generally prefer the above options to avoid blocking lines the user will
+ *   read.
  *
  * - Dynamically generating preview box content for things like citation hovers.
  *   We dynamically generate previews when the content exists on the current
@@ -177,7 +178,7 @@ class PreviewLifecycle {
   static readonly hidePreviewDelayMs = 200;
 
   // The current, displayed preview target pending or displayed. If no preview
-  // is displayed, currentTarget is null.
+  // is displayed, then the currentTarget is null.
   private currentTarget: HTMLLinkElement | null = null;
 
   private hoverStart: number | null = null;
@@ -241,11 +242,11 @@ class PreviewLifecycle {
     }
 
     if (this.currentTarget === targetEl) {
-      // We're showing a preview box and the user moved the mouse out and then
-      // back-in before the hide timer finished. Keep showing the preview.
+      // We're showing a preview box, and the user moved the mouse out and then
+      // back in before the hide timer finished. Keep showing the preview.
       clearTimeout(this.hidePreviewTimer);
     } else {
-      // Only request to show preview box if it's not currently displayed to
+      // Only request to show the preview box if it's not currently displayed to
       // avoid a flicker because we hide the preview box for 1 frame to get the
       // correct height.
       this.showPreviewTimer = setTimeout(
@@ -267,8 +268,8 @@ class PreviewLifecycle {
   /** Callback for when the mouse enters the preview target bounding box. */
   onPreviewMouseOver(ev: Event): void {
     ev.preventDefault();
-    // We moved out of the preview back into to the preview so the user wants to
-    // keep using the preview.
+    // We moved out of the preview back into to the preview, so the user wants
+    // to keep using the preview.
     clearTimeout(this.hidePreviewTimer);
   }
 
@@ -308,7 +309,7 @@ class PreviewLifecycle {
 
   /**
    * Builds content to show in the preview box with info about the target
-   * element. Returns the HTML contents of the preview box, or empty if failed
+   * element. Returns the HTML contents of the preview box or empty if failed
    * to build the preview box.
    */
   buildPreviewContent(targetEl: HTMLElement): string {
@@ -388,14 +389,14 @@ class PreviewLifecycle {
     assertDef(this.contentEl, `contentEl was null for showPreviewBox`);
 
     this.boxEl.classList.add('preview-disabled');
-    // Remove all children to replace them with new title and snippet.
+    // Remove all children to replace them with a new title and snippet.
     while (this.contentEl.firstChild) {
       this.contentEl.firstChild.remove();
     }
     this.contentEl.insertAdjacentHTML('afterbegin', content);
     this.contentEl.style.overflowY = '';
     this.contentEl.style.maxHeight = '';
-    // Reset transforms so we don't have to correct them in next frame.
+    // Reset transforms so we don't have to correct them in the next frame.
     this.boxEl.style.transform = 'translateX(0) translateY(0)';
     this.currentTarget = targetEl;
     this.hoverStart = Date.now();
@@ -452,7 +453,7 @@ class PreviewLifecycle {
 
   /**
    * Calculate the vertical delta needed to align the preview box with the
-   * target. Also returns the max height and if preview elements needs a scroll
+   * target. Also returns the max height and if preview elements need a scroll
    * bar
    */
   calcVertDelta(targetBox: DOMRect, previewBox: DOMRect): { hasScroll: boolean, maxHeight: number, vertDelta: number } {
@@ -463,14 +464,15 @@ class PreviewLifecycle {
     const spaceBelow = docHeight - tb.bottom;
     const marginVert = 20; // Breathing room to the top and bottom.
 
-    // Place preview above target by default to avoid masking text below.
+    // Place the preview above target by default to avoid masking the text
+    // below.
     let vertDelta = tb.top - pb.top - pb.height;
     const vertNudge = 4; // Give a little nudge for breathing space.
     let maxHeight = spaceAbove - vertNudge - marginVert;
 
     if (spaceAbove < pb.height && pb.height < spaceBelow) {
-      // Place preview below target only if it can contain the entire preview
-      // and the space above cannot.
+      // Place the preview below target only if it can contain the entire
+      // preview and the space above cannot.
       log.debug('preview: placing below target - no overflow');
       vertDelta = tb.bottom - pb.top + vertNudge;
       return { vertDelta: vertDelta, maxHeight, hasScroll: false };
@@ -513,7 +515,7 @@ class PreviewLifecycle {
 // On hover, we re-use a global element, #preview-box, to display the
 // attributes. The preview is a no-op on devices with touch.
 (() => {
-  // Detect touch based devices as a proxy for not having hover.
+  // Detect touch-based devices as a proxy for not having hover.
   // https://stackoverflow.com/a/8758536/30900
   let hasHover = false;
   try {
@@ -531,7 +533,7 @@ class PreviewLifecycle {
   preview.addListeners();
 })();
 
-// Copy heading link when clicking the paragraph symbol.
+// Copy the heading link when clicking the paragraph symbol.
 (() => {
   const copySourceEl = document.createElement('input');
   copySourceEl.id = 'copy-source';
@@ -567,7 +569,7 @@ class PreviewLifecycle {
   }
 })();
 
-// Prefetch URLs on the whitelisted domains on mouseover or touch start events.
+// Prefetch URLs on the allowlisted domains on mouseover or touch start events.
 // Forked from instant.page, https://instant.page/license.
 (() => {
   // Check if the browser supports link preload.
@@ -593,8 +595,8 @@ class PreviewLifecycle {
 
   let mouseoverTimer = 0;
   const onMouseout = (ev: MouseEvent): void => {
-    // On mouseout, target is the element we exited and relatedTarget is elem
-    // we entered (or null).
+    // On mouseout, target is the element we exited, and relatedTarget is the
+    // elem we entered, or relatedTarget is null.
     let exitLink = findClosestAnchor(ev);
     let enterLink = (ev?.relatedTarget as HTMLLinkElement)?.closest('a');
     if (ev.relatedTarget && exitLink === enterLink) {
@@ -660,7 +662,7 @@ class PreviewLifecycle {
 
   // On mouseover, preload the link after a delay.
   document.addEventListener('mouseover', (ev: MouseEvent) => {
-    // Browsers emulate mouse events from touch events so mouseover will be
+    // Browsers emulate mouse events from touch events. The mouseover will be
     // called after touchstart. We'll avoid double preloading because
     // shouldPreload checks to see if we've already loaded a URL.
     const link = findClosestAnchor(ev);
