@@ -15,8 +15,7 @@ jobs:
       - name: gcp auth
         uses: google-github-actions/auth@v2
         with:
-          project_id: jschaf
-          workload_identity_provider: projects/191693554478/locations/global/workloadIdentityPools/jsc-iam-pool-github/providers/jsc-iam-pool-github
+          credentials_json: '${{ secrets.BLOG_RELEASER_SERVICE_ACCOUNT_CREDS }}'
 
       - name: install go
         uses: actions/setup-go@v5

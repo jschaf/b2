@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/option"
 	"log/slog"
 	"os"
 	"time"
@@ -65,7 +64,7 @@ func runMain(ctx context.Context) error {
 		return fmt.Errorf("find default credentials: %w", err)
 	}
 
-	svc, err := hosting.NewService(ctx, option.WithTokenSource(creds.TokenSource))
+	svc, err := hosting.NewService(ctx)
 	if err != nil {
 		return fmt.Errorf("new hosting service: %w", err)
 	}
