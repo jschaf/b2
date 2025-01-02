@@ -30,9 +30,10 @@ func main() {
 // corresponds to the hosting field in firebase.json.
 func servingConfig() *hosting.ServingConfig {
 	return &hosting.ServingConfig{
+		TrailingSlashBehavior: "REMOVE",
 		Rewrites: []*hosting.Rewrite{
 			{
-				Glob: "/_/heap/",
+				Glob: "/_/heap/**",
 				Run: &hosting.CloudRunRewrite{
 					Region:    "us-west2",
 					ServiceId: "track-server",

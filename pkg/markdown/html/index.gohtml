@@ -4,7 +4,7 @@
     <section>
         {{range $i, $post := .Posts}}
           <article class="index-post">
-            <a href="/{{$post.Slug}}/">
+            <a href="/{{$post.Slug}}">
                 {{$post.TitleHTML}}
             </a>
             <time datetime="{{$post.Date.UTC.Format "2006-01-02"}}">{{$post.Date.UTC.Format "2006-01-02"}}</time>
