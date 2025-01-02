@@ -95,8 +95,7 @@ func (ic *IndexCompiler) renderTitle(ast *markdown.AST) (template.HTML, error) {
 
 	// Don't render the element, which is a link. The gohtml chooses how to
 	// build the link.
-	node := ast.Meta.TitleNode
-	for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+	for c := ast.Meta.TitleNode.FirstChild(); c != nil; c = c.NextSibling() {
 		err := r.Render(b, ast.Source, c)
 		if err != nil {
 			return "", fmt.Errorf("render title node child: %w", err)

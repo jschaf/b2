@@ -2,7 +2,6 @@ package mdext
 
 import (
 	"errors"
-
 	"github.com/jschaf/jsc/pkg/markdown/asts"
 	"github.com/jschaf/jsc/pkg/markdown/extenders"
 	"github.com/jschaf/jsc/pkg/markdown/mdctx"
@@ -48,7 +47,7 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 		mdctx.PushError(pc, errors.New("no main heading in file: "+mdctx.GetFilePath(pc)))
 		return
 	}
-	title := heading.Text(reader.Source())
+	titleText := renderTextTitle(reader, heading)
 
 	parent := heading.Parent()
 	if parent == nil {
@@ -58,11 +57,11 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 	article := NewArticle()
 	header := NewHeader()
 	link := ast.NewLink()
-	link.Title = title
+	link.Title = []byte(titleText)
 	link.Destination = []byte(meta.Path)
 	asts.Reparent(link, heading)
 	mdctx.SetTitle(pc, mdctx.Title{
-		Text: string(title),
+		Text: titleText,
 		Node: link,
 	})
 	newHeading := ast.NewHeading(1)
@@ -79,8 +78,8 @@ func (at *articleTransformer) Transform(doc *ast.Document, reader text.Reader, p
 		cur = next
 	}
 	// This step must come last. When we move a node in Goldmark, it detaches
-	// from the parent and connects its prev sibling to the next sibling. Since we
-	// use heading for location info, move it last so we don't disconnect it.
+	// from the parent and connects its prev sibling to the next sibling. Since
+	// we use heading for location info, move it last so we don't disconnect it.
 	parent.ReplaceChild(parent, heading, article)
 }
 
