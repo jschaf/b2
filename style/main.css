@@ -538,6 +538,7 @@ thead th {
 .code-block-lang {
   line-height: 0; /* prevent extra space */
   margin-left: auto; /* right align */
+  padding-bottom: 2px; /* better centering in .code-block-container border */
   font-variant-caps: all-small-caps;
   color: var(--color-light-gray);
   font-size: var(--font-size-caption);
