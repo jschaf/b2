@@ -75,6 +75,7 @@ func (u *Uploader) Upload(ctx context.Context, f SiteFile) (mErr error) {
 }
 
 func (u *Uploader) UploadAll(ctx context.Context, fs []SiteFile) error {
+	slog.Info("start upload site files", "count", len(fs))
 	start := time.Now()
 	const maxUploads = 16
 	sem := semaphore.NewWeighted(maxUploads)
@@ -93,8 +94,8 @@ func (u *Uploader) UploadAll(ctx context.Context, fs []SiteFile) error {
 		})
 	}
 	if err := g.Wait(); err != nil {
-		return fmt.Errorf("upload all wait err group: %w", err)
+		return fmt.Errorf("upload all: %w", err)
 	}
-	slog.Info("uploaded site files", "count", len(fs), "duration", time.Since(start))
+	slog.Info("finish upload site files", "duration", time.Since(start))
 	return nil
 }
