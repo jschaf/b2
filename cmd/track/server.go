@@ -104,8 +104,9 @@ func runMain(ctx context.Context) (mErr error) {
 	}
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     logLevel,
+		ReplaceAttr: log.GCPReplaceAttr,
+		AddSource:   true,
+		Level:       logLevel,
 	})))
 
 	slog.Info("start track server", "process.args", os.Args[1:])

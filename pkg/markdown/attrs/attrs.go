@@ -31,7 +31,8 @@ func AddClass(n ast.Node, class ...string) {
 
 	newer := old
 	if cap(old) < len(old)+size {
-		// The existing slice capacity can't hold everything so allocate a new slice.
+		// The existing slice capacity can't hold everything,
+		// so allocate a new slice.
 		newer = make([]byte, len(old), len(old)+size)
 		copy(newer, old)
 	}
@@ -67,23 +68,23 @@ func GetStringAttr(n ast.Node, k string) string {
 // RenderAll renders all of a given node's attributes.
 func RenderAll(w util.BufWriter, node ast.Node) {
 	for _, attr := range node.Attributes() {
-		w.WriteByte(' ')
-		w.Write(attr.Name)
-		w.WriteString(`="`)
+		_ = w.WriteByte(' ')
+		_, _ = w.Write(attr.Name)
+		_, _ = w.WriteString(`="`)
 		switch v := attr.Value.(type) {
 		case []byte:
-			w.Write(util.EscapeHTML(v))
+			_, _ = w.Write(util.EscapeHTML(v))
 		case string:
-			w.Write(util.EscapeHTML(texts.ReadOnlyBytes(v)))
+			_, _ = w.Write(util.EscapeHTML(texts.ReadOnlyBytes(v)))
 		case int:
-			w.WriteString(strconv.Itoa(v))
+			_, _ = w.WriteString(strconv.Itoa(v))
 		case int64:
-			w.WriteString(strconv.FormatInt(v, 10))
+			_, _ = w.WriteString(strconv.FormatInt(v, 10))
 		case uint64:
-			w.WriteString(strconv.FormatUint(v, 10))
+			_, _ = w.WriteString(strconv.FormatUint(v, 10))
 		case uint:
-			w.WriteString(strconv.FormatUint(uint64(v), 10))
+			_, _ = w.WriteString(strconv.FormatUint(uint64(v), 10))
 		}
-		w.WriteByte('"')
+		_ = w.WriteByte('"')
 	}
 }
