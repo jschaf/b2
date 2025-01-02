@@ -3,7 +3,8 @@ package mdctx
 type Feature string
 
 const (
-	FeatureKatex Feature = "katex"
+	FeatureKatex    Feature = "katex"
+	FeatureComments Feature = "comments"
 )
 
 // FeatureSet is a special feature of a post. If a post has a feature, we might

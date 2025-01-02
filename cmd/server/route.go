@@ -20,6 +20,9 @@ func buildRoutes(opts buildRoutesOpts) *http.ServeMux {
 
 	mux.HandleFunc(lrJSPath, opts.lr.ServeJSHandler)
 	mux.HandleFunc(lrPath, opts.lr.WebSocketHandler)
+	mux.HandleFunc("GET /_/heap/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK) // do nothing
+	})
 
 	distDirHandler := http.FileServer(http.Dir(opts.distDir))
 

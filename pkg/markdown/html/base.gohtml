@@ -1,6 +1,7 @@
 {{ define "base" }}
     {{- /*gotype: github.com/jschaf/jsc/pkg/markdown/html.IndexParams*/ -}}
     <!doctype html>
+    <!--suppress HtmlUnknownTarget -->
     <html lang="en">
     <head>
       <title>{{ template "title" . }}</title>
@@ -37,6 +38,7 @@
     </div>
     <script src="/main.js"></script>
     <script src="/_/heap/js/heap-1506018335.js" defer async></script>
+    {{template "script" . }}
     </body>
     </html>
 {{ end }}
@@ -45,3 +47,4 @@
    * block in child templates that don't need them */}}
 {{ define "title" }}{{ end }}
 {{ define "content" }}{{ end }}
+{{ define "script" }}{{ end }}

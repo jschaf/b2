@@ -1,3 +1,23 @@
 {{- /*gotype: github.com/jschaf/jsc/pkg/markdown/html.DetailParams*/ -}}
 {{ define "title" }}{{ .Title }}{{ end }}
 {{ define "content" }}{{ .Content }}{{ end }}
+{{ define "script" }}
+    {{ if .Features.Has "comments" -}}
+      <script src="https://giscus.app/client.js"
+              data-repo="jschaf/jsc"
+              data-repo-id="MDEwOlJlcG9zaXRvcnkyMDc3Mjk1NzM="
+              data-category="Announcements"
+              data-category-id="DIC_kwDODGGzpc4ClqdQ"
+              data-mapping="pathname"
+              data-strict="1"
+              data-reactions-enabled="1"
+              data-emit-metadata="1"
+              data-input-position="bottom"
+              data-theme="preferred_color_scheme"
+              data-lang="en"
+              data-loading="lazy"
+              crossorigin="anonymous"
+              async>
+      </script>
+    {{- end }}
+{{ end }}

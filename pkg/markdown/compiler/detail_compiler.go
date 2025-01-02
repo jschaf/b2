@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"github.com/jschaf/jsc/pkg/markdown/mdctx"
 	"html/template"
 	"io"
 	"log/slog"
@@ -79,6 +80,7 @@ func (c *DetailCompiler) compileAST(ast *markdown.AST, w io.Writer) error {
 	if err := c.md.Render(b, ast.Source, ast); err != nil {
 		return fmt.Errorf("failed to render markdown: %w", err)
 	}
+	ast.Features.Add(mdctx.FeatureComments)
 	data := html.DetailParams{
 		Title:    ast.Meta.Title,
 		Content:  template.HTML(b.String()),
