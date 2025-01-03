@@ -540,8 +540,8 @@ thead th {
   margin-top: calc(-1 * var(--font-size-caption));
   margin-right: 0.5rem;
   background-color: white;
-  padding-left: 2px;
-  padding-right: 2px;
+  padding-left: 3px;
+  padding-right: 3px;
   font-variant-caps: all-small-caps;
   color: var(--color-light-gray);
 }

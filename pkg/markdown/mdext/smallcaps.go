@@ -69,7 +69,10 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 		line = line[1:]
 	}
 	// We only handle ASCII.
-	if len(line) < smallCapsThreshold || line[0] < 'A' || 'Z' < line[0] {
+	isCapitalized := 'A' <= line[0] && line[0] <= 'Z'
+	isKPrefix := line[0] == 'k' && len(line) > 1 && 'A' <= line[1] && line[1] <= 'Z'
+	isCandidate := isCapitalized || isKPrefix
+	if len(line) < smallCapsThreshold || !isCandidate {
 		return nil
 	}
 
@@ -77,6 +80,8 @@ func (p *smallCapsParser) Parse(parent ast.Node, block text.Reader, _ parser.Con
 	for _, b := range line {
 		if 'A' <= b && b <= 'Z' {
 			run += 1
+		} else if run == 0 && b == 'k' {
+			run += 1 // allow kLOC
 		} else {
 			break
 		}

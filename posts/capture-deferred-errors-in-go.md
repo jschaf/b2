@@ -30,8 +30,8 @@ func populateFile() error
 
 Problematically, we ignore the error when closing the file. The usual remedy is
 to defer an immediately invoked function expression ([IIFE] for short, a term our
-JavaScript friends might recognize). The IIFE colloquially-named `err` return
-argument.
+JavaScript friends might recognize). The IIFE overwrites the colloquially-named
+`err` return argument.
 
 [IIFE]: https://developer.mozilla.org/en-US/docs/Glossary/IIFE
 
@@ -61,6 +61,8 @@ problem. If `f.Close` errors, we overwrite the error from
 `writeInterestingData`. We need to combine the errors. Before reaching to Uber's
 [multierr] package, we'll lean on [`errors.Join`] to combine multiple errors,
 introduced by Go 1.20.
+
+[`errors.Join`]: https://pkg.go.dev/errors#Join
 
 ```go
 func populateFile() (err error)
@@ -99,10 +101,10 @@ the error with an existing named error.
 ```go
 // CloseWithErrCapture closes closer, wraps any error with message from
 // fmt and args, and stores this in err.
-func CloseWithErrCapture(err *error, closer io.Closer, format string, a ...any) {
+func CloseWithErrCapture(err *error, c io.Closer, format string, a ...any) {
 	merr := errutil.MultiError{}
 	merr.Add(*err)
-	merr.Add(errors.Wrapf(closer.Close(), format, a...))
+	merr.Add(errors.Wrapf(c.Close(), format, a...))
 	*err = merr.Err()
 }
 ```
@@ -115,7 +117,7 @@ func populateFile() (err error)
 	if err != nil {
 		return fmt.Errorf("open file: %w", err)
 	}
-	defer CloseWithErrCapture(&err, f, "close file")
+	defer runutil.CloseWithErrCapture(&err, f, "close file")
 
 	err = writeInterestingData(f)
 	if err != nil {
@@ -181,7 +183,7 @@ Third, the function stands alone, implemented solely in the standard library.
 
 [bad package name]: https://go.dev/blog/package-names#bad-package-names
 
-## An err of sophistication
+## Extensions
 
 We've considered a few extensions to `errs.Capture`. The only one we implement
 in our monorepo is `errs.CaptureT` for capturing errors in a test. We call it

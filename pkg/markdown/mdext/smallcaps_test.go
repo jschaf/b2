@@ -33,6 +33,7 @@ func TestSmallCapsExt(t *testing.T) {
 		{"STUBBLE", tags.SC("STUBBLE")},
 		{"FOO BAR", tags.SC("FOO") + " " + tags.SC("BAR")},
 		{"The (MOTD)", "The " + tags.SC("(MOTD)")},
+		{"kLOC", tags.SC("kLOC")},
 	}
 
 	for _, tt := range tests {
