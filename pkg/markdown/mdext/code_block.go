@@ -62,11 +62,11 @@ func getLexer(language string) chroma.Lexer {
 }
 
 func formatCodeBlock(w io.Writer, iterator chroma.Iterator, lang string) error {
-	writeStrings(w, "<fieldset class='code-block-container'>")
+	writeStrings(w, "<div class='code-block-container'>")
 	lines := chroma.SplitTokensIntoLines(iterator.Tokens())
 	minLineLegend := 3
 	if lang != "" && lang != "text" && len(lines) > minLineLegend {
-		writeStrings(w, "<legend class='code-block-lang'>", lang, "</legend>")
+		writeStrings(w, "<div class='code-block-lang'>", lang, "</div>")
 	}
 	writeStrings(w, "<pre class='code-block'>")
 
@@ -160,7 +160,7 @@ func formatCodeBlock(w io.Writer, iterator chroma.Iterator, lang string) error {
 	}
 
 	writeStrings(w, "</pre>")
-	writeStrings(w, "</fieldset>")
+	writeStrings(w, "</div>")
 	return nil
 }
 
