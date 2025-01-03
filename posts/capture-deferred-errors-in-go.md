@@ -175,19 +175,20 @@ func populateFile() (err error)
 }
 ```
 
-Our `errs.Capture` outshines on `runutil.CloseWithErrCapture` in three ways. First,
-the name is shorter, more direct, and avoids the [bad package name] `runutil`.
-Second, by generalizing to any error-returning function, we've moved `Close` out
-of the implementation and to the call site, removing a layer of indirection.
-Third, the function stands alone, implemented solely in the standard library.
+Our `errs.Capture` outshines on `runutil.CloseWithErrCapture` in three ways.
+First, the name is shorter, more direct, and avoids the [bad package name]
+`runutil`. Second, by generalizing to any error-returning function, we've moved
+`Close` out of the implementation and to the call site, removing a layer of
+indirection. Third, the function stands alone, implemented solely in the
+standard library.
 
 [bad package name]: https://go.dev/blog/package-names#bad-package-names
 
 ## Extensions
 
-We've considered a few extensions to `errs.Capture`. The only one we implement
-in our monorepo is `errs.CaptureT` for capturing errors in a test. We call it
-125 times in our 300 kLOC monorepo.
+We've considered a few similar capture functions but only implemented
+`errs.CaptureT` to capture errors in a test. We call the testing variant 125
+times in our 300 kLOC monorepo.
 
 ```go
 package errs
@@ -207,14 +208,18 @@ func CaptureT(t testingTB, errFunc func() error, msg string) {
 }
 ```
 
-Two other extensions we haven't implemented:
+Extensions we haven't implemented since the [utility and ubiquity] is low:
+
+[utility and ubiquity]: https://github.com/google/guava/wiki/PhilosophyExplained#when-in-doubt
 
 - `errs.CaptureContext` for capturing errors from functions that take a
   context.Context and return an error. It's not much more code to use errs.Capture
-  with an anonymous function. Only use 25 of the 554 calls to `errs.Capture` need
+  with an anonymous function. Only 25 of the 554 calls to `errs.Capture` need
   a context.
 
 - `errs.CaptureLog` to log the error. We only log deferred errors a handful of
-  times. Both the [utility and ubiquity] of this function are low.
+  times.
 
-[utility and ubiquity]: https://github.com/google/guava/wiki/PhilosophyExplained#when-in-doubt
+- `errs.Capture` support for formatted errors. We only used format support a
+  handful of times. The pain of calling fmt.Sprintf didn't outweigh the (minor)
+  complexity of supporting formatted arguments.
