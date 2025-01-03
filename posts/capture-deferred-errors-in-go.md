@@ -6,11 +6,11 @@ visibility = "published"
 
 # Capture deferred errors in Go
 
-I rarely ignore errors in Go as I usually regret when I do ignore them. Go is
-lauded and criticzed for it's straightforward approach to error handling,
-leaning on `if err != nil { return fmt.Errrorf(...) }`. That's all well and
-good, but one of the more tedious types of errors to capture are errors in a
-deferred function. For example, when opening a file:
+One of my obsessions is to capture errors diligently. Most often, I satiate my
+desire with the divisive incantation `if err != nil { return fmt.Errorf(...) }`.
+Errors in defer statements require a more delicate touch. Opening a file demands
+a matching close to avoid leaking file descriptors. For example, we might open a
+file and write interesting data:
 
 ```go
 func populateFile() error
@@ -19,14 +19,21 @@ func populateFile() error
 		return fmt.Errorf("open file: %w", err)
 	}
 	defer f.Close() // BAD: ignored error
-	writeInterestingData(f)
+	
+	err = writeInterestingData(f)
+	if err != nil {
+		return fmt.Errorf("write data: %w", err)
+	}
 	return nil
 }
 ```
 
-The problem is that we've ignored the error from closing the file. The usual way
-is to defer an immediately invoked anonymous function and then overwrite the
-named return argument.
+Problematically, we ignore the error when closing the file. The usual remedy is
+to defer an immediately invoked function expression ([IIFE] for short, a term our
+JavaScript friends might recognize). The IIFE colloquially-named `err` return
+argument.
+
+[IIFE]: https://developer.mozilla.org/en-US/docs/Glossary/IIFE
 
 ```go
 func populateFile() (err error)
@@ -37,37 +44,70 @@ func populateFile() (err error)
 	defer func() {
 		if closeErr := f.Close(); err != nil {
 			// BAD: overwrites existing error
-			err = fmt.Errorf("close file: %w", closeErr) 
+			err = fmt.Errorf("close file: %w", closeErr)
 		}
 	}()
-	writeInterestingData(f)
+
+	err = writeInterestingData(f)
+	if err != nil {
+		return fmt.Errorf("write data: %w", err)
+	}
 	return nil
 }
 ```
 
-## Close by Thanos
-
-Inspired by Thanos' [coding style guide] we can simplify the somewhat unwieldy
-anonymous function. Thanos defines [`CloseWithErrCapture`], which calls Close
-and joins the error with an existing error, using a pointer to an error. The
-function is:
-
-[coding style guide]: https://thanos.io/tip/contributing/coding-style-guide.md/#defers-dont-forget-to-check-returned-errors
-[`CloseWithErrCapture`]: https://github.com/thanos-io/thanos/blob/ca40906c83d94cfcbe4bcc181a286663aeb268d5/pkg/runutil/runutil.go#L156,
+Alas, this solution brings its own set of problems. The remedy introduces a new
+problem. If `f.Close` errors, we overwrite the error from
+`writeInterestingData`. We need to combine the errors. Before reaching to Uber's
+[multierr] package, we'll lean on [`errors.Join`] to combine multiple errors,
+introduced by Go 1.20.
 
 ```go
-// CloseWithErrCapture closes closer, wraps any error with message from fmt and args, and stores this in err.
-func CloseWithErrCapture(err *error, closer io.Closer, format string, a ...interface{}) {
-	merr := errutil.MultiError{}
+func populateFile() (err error)
+	f, err := os.Open("foo.txt", os.O_CREATE, 0o644)
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	defer func() {
+		if closeErr := f.Close(); err != nil {
+			err = errors.Join(err, fmt.Errorf("close file: %w", closeErr))
+		}
+	}()
 
+	err = writeInterestingData(f)
+	if err != nil {
+		return fmt.Errorf("write data: %w", err)
+	}
+	return nil
+}
+```
+
+The solution does not please the eyes and requires choosing a name other than
+`err` for the error from `f.Close`.
+
+[multierr]: https://github.com/uber-go/multierr
+
+## Captured by Thanos
+
+Inspired by Thanos' [coding style guide], we'll simplify the unwieldy anonymous
+function. Thanos defines [`runutil.CloseWithErrCapture`], which calls Close and combines
+the error with an existing named error.
+
+[coding style guide]: https://thanos.io/tip/contributing/coding-style-guide.md/#defers-dont-forget-to-check-returned-errors
+[`runutil.CloseWithErrCapture`]: https://github.com/thanos-io/thanos/blob/ca40906c83d94cfcbe4bcc181a286663aeb268d5/pkg/runutil/runutil.go#L156
+
+```go
+// CloseWithErrCapture closes closer, wraps any error with message from
+// fmt and args, and stores this in err.
+func CloseWithErrCapture(err *error, closer io.Closer, format string, a ...any) {
+	merr := errutil.MultiError{}
 	merr.Add(*err)
 	merr.Add(errors.Wrapf(closer.Close(), format, a...))
-
 	*err = merr.Err()
 }
 ```
 
-Armed with our helper, we simplify populateFile to:
+Armed by Thanos, we'll replace the anonymous function with `CloseWithErrCapture`.
 
 ```go
 func populateFile() (err error)
@@ -76,17 +116,23 @@ func populateFile() (err error)
 		return fmt.Errorf("open file: %w", err)
 	}
 	defer CloseWithErrCapture(&err, f, "close file")
-	writeInterestingData(f)
+
+	err = writeInterestingData(f)
+	if err != nil {
+		return fmt.Errorf("write data: %w", err)
+	}
 	return nil
 }
 ```
 
 ## An err of simplicity
 
-I happily used Thanos' approach but was troubled that I could use it for similar
-cleanup functions like Flush, Stop, Shutdown. Additionally, Go 1.20 introduced
-[￼`errors.Join`￼](https://pkg.go.dev/errors#Join), meaning we can skip defining
-a custom `MultiError` type.
+We'll cull half the complexity from `CloseWithErrCapture` with a snap. While
+we're at it, we'll generalize the pattern to any error-returning function named
+`errs.Capture`. In our 300 kLOC monorepo, we use `errs.Capture` 554 times. Only
+60% of the calls are for `io.Closer.Close`. The remaining calls are cleanup
+functions, like `Flush`, `Shutdown`, and functions requiring context, like
+`pgx.Conn.Close(ctx)`.
 
 ```go
 package errs
@@ -96,9 +142,9 @@ import (
 	"fmt"
 )
 
-// Capture runs errFunc and assigns the error, if any, to *errPtr. Preserves the
-// original error by wrapping with errors.Join if errFunc returns a non-nil
-// error.
+// Capture runs errFunc and assigns the error, if any, to *errPtr.
+// Preserves the original error by wrapping with errors.Join if
+// errFunc returns a non-nil error.
 func Capture(errPtr *error, errFunc func() error, msg string) {
 	err := errFunc()
 	if err == nil {
@@ -108,8 +154,8 @@ func Capture(errPtr *error, errFunc func() error, msg string) {
 }
 ```
 
-At the call site, we pass the function method instead of an interface type
-implementing `io.Closer`.
+Instead of using an `io.Closer` interface, we'll pass the function method at the
+call-site.
 
 ```go
 func populateFile() (err error)
@@ -118,10 +164,55 @@ func populateFile() (err error)
 		return fmt.Errorf("open file: %w", err)
 	}
 	defer errs.Capture(&err, f.Close, "close file")
-	writeInterestingData(f)
+
+	err = writeInterestingData(f)
+	if err != nil {
+		return fmt.Errorf("write data: %w", err)
+	}
 	return nil
 }
 ```
 
-I think `errs.Capture` improves on `CloseWithErrCapture` by capturing any error
-returning function, and is less wordy to boot.
+Our `errs.Capture` outshines on `runutil.CloseWithErrCapture` in three ways. First,
+the name is shorter, more direct, and avoids the [bad package name] `runutil`.
+Second, by generalizing to any error-returning function, we've moved `Close` out
+of the implementation and to the call site, removing a layer of indirection.
+Third, the function stands alone, implemented solely in the standard library.
+
+[bad package name]: https://go.dev/blog/package-names#bad-package-names
+
+## An err of sophistication
+
+We've considered a few extensions to `errs.Capture`. The only one we implement
+in our monorepo is `errs.CaptureT` for capturing errors in a test. We call it
+125 times in our 300 kLOC monorepo.
+
+```go
+package errs
+
+// testingTB is a subset of *testing.T and *testing.B methods.
+type testingTB interface {
+	Helper()
+	Errorf(format string, args ...interface{})
+}
+
+// CaptureT call t.Errorf if errFunc returns an error with a message.
+func CaptureT(t testingTB, errFunc func() error, msg string) {
+	t.Helper()
+	if err := errFunc(); err != nil {
+		t.Errorf("%s: %s", msg, err)
+	}
+}
+```
+
+Two other extensions we haven't implemented:
+
+- `errs.CaptureContext` for capturing errors from functions that take a
+  context.Context and return an error. It's not much more code to use errs.Capture
+  with an anonymous function. Only use 25 of the 554 calls to `errs.Capture` need
+  a context.
+
+- `errs.CaptureLog` to log the error. We only log deferred errors a handful of
+  times. Both the [utility and ubiquity] of this function are low.
+
+[utility and ubiquity]: https://github.com/google/guava/wiki/PhilosophyExplained#when-in-doubt
